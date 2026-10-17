@@ -31,7 +31,7 @@ El juego combina un entorno industrial orgánico con relieve y colisiones 3D con
 
 ## 🇬🇧 English
 
-**Traces of Rust** is a 3D horror survival roguelike prototype in third-person, mechanically inspired by *Megabonk*-style survivors games and visually rooted in the dark, lo-fi, and claustrophobic aesthetics.
+**Traces of Rust** is a 3D horror survival roguelike prototype in third-person, mechanically inspired by survivor-style games and visually rooted in the dark, lo-fi, and claustrophobic aesthetics.
 
 The game blends an organic industrial 3D environment featuring height variations and collisions with the nostalgic agility of 8-directional animated 2D billboard sprites.
 
