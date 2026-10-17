@@ -1,4 +1,4 @@
-# ECHOES OF THE RUST // Buckshot Horror Roguelike
+# Traces of Rust // Buckshot Horror Roguelike
 
 [🇪🇸 Español](#español) | [🇬🇧 English](#english)
 
@@ -6,7 +6,7 @@
 
 ## 🇪🇸 Español
 
-**Echoes of the Rust** es un prototipo de juego de terror y supervivencia roguelike en 3D con perspectiva en tercera persona, inspirado mecánicamente en títulos tipo *Megabonk* y visualmente en la estética oscura, lo-fi y claustrofóbica de *Buckshot Roulette*. 
+**Traces of Rust** es un prototipo de juego de terror y supervivencia roguelike en 3D con perspectiva en tercera persona, inspirado mecánicamente en títulos tipo *Megabonk* y visualmente en la estética oscura, lo-fi y claustrofóbica de *Buckshot Roulette*. 
 
 El juego combina un entorno industrial orgánico con relieve y colisiones 3D con la agilidad y nostalgia de los *sprites* 2D tipo *billboard* animados en 8 direcciones.
 
@@ -31,7 +31,7 @@ El juego combina un entorno industrial orgánico con relieve y colisiones 3D con
 
 ## 🇬🇧 English
 
-**Echoes of the Rust** is a 3D horror survival roguelike prototype in third-person, mechanically inspired by *Megabonk*-style survivors games and visually rooted in the dark, lo-fi, and claustrophobic aesthetics of *Buckshot Roulette*.
+**Traces of Rust** is a 3D horror survival roguelike prototype in third-person, mechanically inspired by *Megabonk*-style survivors games and visually rooted in the dark, lo-fi, and claustrophobic aesthetics of *Buckshot Roulette*.
 
 The game blends an organic industrial 3D environment featuring height variations and collisions with the nostalgic agility of 8-directional animated 2D billboard sprites.
 
