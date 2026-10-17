@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ECHOES OF THE RUST // Buckshot Horror Roguelike</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="css/style.css">
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.160.0/build/three.module.js"
+      }
+    }
+  </script>
+</head>
+<body>
+  <div id="game-container"></div>
+
+  <!-- Capas de Post-Procesado estilo Buckshot Roulette -->
+  <div id="crt-overlay"></div>
+  <div id="vignette-overlay"></div>
+  <div id="damage-flash"></div>
+  <div id="scare-flash"></div>
+
+  <!-- Barra superior de herramientas -->
+  <div id="top-bar">
+    <button class="term-btn" id="btn-open-sheets">📼 Exportar Spritesheets (.PNG) [TAB]</button>
+  </div>
+
+  <!-- Modal Inspector / Descargador de Spritesheets -->
+  <div id="sheets-modal" class="overlay hidden">
+    <div class="term-panel wide-panel">
+      <div class="term-header">
+        <span>// ARCHIVO DE SPRITESHEETS ANIMADOS (256x256 · 4x4 FRAMES · NEAREST)</span>
+        <button class="term-btn-sm" id="btn-close-sheets">[X] CERRAR</button>
+      </div>
+      <p class="term-sub">Filas: 1. IDLE (4f) | 2. MOVIMIENTO (4f) | 3. ATAQUE (4f) | 4. DAÑO/MUERTE (4f). Haz clic en cualquiera para descargar el PNG.</p>
+      <div id="sheets-grid"></div>
+    </div>
+  </div>
+
+  <!-- HUD en partida -->
+  <div id="hud" class="hidden">
+    <div class="hud-box hud-left">
+      <div class="hud-title">// CONSTANTES VITALES</div>
+      <div class="bar-row"><span>PULSO</span><span id="hp-text">100/100</span></div>
+      <div class="bar-track"><div id="hp-bar"></div></div>
+
+      <div class="bar-row"><span>DOSIS</span><span id="level-text">CICLO 1</span></div>
+      <div class="bar-track exp-track"><div id="exp-bar"></div></div>
+
+      <div class="bar-row"><span>ADRENALINA</span><span>[SHIFT]</span></div>
+      <div class="bar-track stam-track"><div id="stam-bar"></div></div>
+
+      <div class="hud-counters">
+        <span id="kills-text">BAJAS: 0</span>
+        <span id="souls-hud">DIENTES: 0 🦷</span>
+      </div>
+      <div id="skills-bar"></div>
+    </div>
+
+    <div class="hud-box hud-right">
+      <div id="timer-text">00:00</div>
+      <div id="wave-text">PRESIÓN: BAJA</div>
+    </div>
+
+    <div id="crosshair"></div>
+    <div id="interact-prompt" class="hidden">[E] USAR TERMINAL DE TRANSFUSIÓN</div>
+  </div>
+
+  <!-- Pantalla de Inicio -->
+  <div id="start-screen" class="overlay">
+    <div class="term-panel">
+      <div class="term-tag">PROTOCOLO DE SUPERVIVENCIA // REV. 04</div>
+      <h1>ECHOES OF THE RUST</h1>
+      <p class="term-sub">MUNDO 3D INDUSTRIAL · BILLBOARDS 2D ANIMADOS · ESTÉTICA LO-FI</p>
+      <div class="teeth-box">🦷 DIENTES ACUMULADOS: <span id="start-souls">0</span></div>
+      <div class="controls-box">
+        <b>WASD</b> Caminar · <b>SHIFT</b> Esquiva Brusca · <b>ESPACIO</b> Saltar · <b>TAB</b> Spritesheets<br>
+        <b>E</b> Terminal de Sangre · <b>RATÓN</b> Linterna (Mira a <i>El Observador</i> para frenarlo)
+      </div>
+      <div class="btn-group">
+        <button class="term-btn primary" id="btn-start">[ FIRMAR Y ENTRAR ]</button>
+        <button class="term-btn" id="btn-open-shop">[ MESA DEL CIRUJANO ]</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tienda / Mesa del Cirujano -->
+  <div id="shop-screen" class="overlay hidden">
+    <div class="term-panel">
+      <h2>// MESA DEL CIRUJANO (<span id="shop-souls">0</span> 🦷)</h2>
+      <p class="term-sub">Intercambia dientes arrancados por mejoras permanentes.</p>
+      <div id="shop-list"></div>
+      <button class="term-btn" id="btn-close-shop">[ VOLVER ]</button>
+    </div>
+  </div>
+
+  <!-- Subida de Nivel -->
+  <div id="level-up-screen" class="overlay hidden">
+    <div class="term-panel">
+      <h2>// SELECCIONA INSTRUMENTO O DOSIS</h2>
+      <div id="upgrade-container"></div>
+    </div>
+  </div>
+
+  <!-- Game Over -->
+  <div id="game-over-screen" class="overlay hidden">
+    <div class="term-panel">
+      <h1 style="color:#a82020">PACIENTE EXPIRADO</h1>
+      <p class="term-sub">Tiempo en planta: <b id="go-time">00:00</b> · Dientes extraídos: <b id="go-souls" style="color:#c9a648">0 🦷</b></p>
+      <button class="term-btn primary" id="btn-restart">[ REINICIAR PROTOCOLO ]</button>
+    </div>
+  </div>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
