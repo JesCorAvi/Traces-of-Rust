@@ -12,15 +12,19 @@ export const CONFIG = {
       IDLE: 0,              // Columnas 0..3
       WALK: 1,              // Columnas 4..7
       JUMP: 2,              // Columnas 8..11
-      ATTACK: 3,            // Columnas 12..15
-      HURT: 4               // Columnas 16..19
+      ATTACK: 3,            // Columnas 12..15 (Atacar quieto)
+      HURT: 4,              // Columnas 16..19
+      ATTACK_WALK: 5,       // Columnas 20..23 (Atacar caminando / moviendo las piernas)
+      DASH: 6               // Columnas 24..27 (Animación de esquiva fluida)
     },
     ANIM_FPS: {
       IDLE: 5,
       WALK: 9,
       JUMP: 7,
       ATTACK: 13,
-      HURT: 9
+      HURT: 9,
+      ATTACK_WALK: 12,
+      DASH: 15
     },
     // Número de direcciones por entidad (1, 4 u 8) para reutilizar el componente en enemigos/bosses
     ENTITY_DIRS: {
@@ -97,47 +101,55 @@ export const CONFIG = {
     ENDGAME_SPAWN_BURST: 4
   },
 
-  // CATÁLOGO DE 8 ARMAS
+  // CATÁLOGO DE 8 ARMAS (usesMultishot define si se benefician de Recámara Modificada)
   SKILLS: {
     slash: {
       name: 'Sierra de Amputación', icon: '🪚',
       baseDmg: 28, baseCd: 0.88, baseRange: 4.5, scalePerLvl: 0.25,
-      desc: 'Arco de sierra dentada con estela de sangre, destello 3D y empuje.'
+      usesMultishot: false,
+      desc: 'Arco de sierra dentada con estela de sangre, destello 3D y empuje. (No afectada por +Proyectiles).'
     },
     shotgun: {
       name: 'Escopeta Calibre 12', icon: '🔫',
       baseDmg: 10.0, baseCd: 1.4, baseRange: 14.5, scalePerLvl: 0.24,
+      usesMultishot: true,
       desc: 'Abanico de postas físicas con fogonazo y expulsión de cartucho.'
     },
     flamethrower: {
       name: 'Soplete Incinerador', icon: '🔥',
       baseDmg: 8.0, baseCd: 0.11, baseRange: 7.4, scalePerLvl: 0.25,
-      desc: 'Cono continuo de fuego que ilumina y aplica Quemadura por segundo.'
+      usesMultishot: false,
+      desc: 'Cono continuo de fuego que ilumina y aplica Quemadura por segundo. (No afectada por +Proyectiles).'
     },
     aura: {
       name: 'Incensario de Bilis', icon: '☣️',
       baseDmg: 15, baseCd: 0.34, baseRange: 3.5, scalePerLvl: 0.22,
-      desc: 'Campo corrosivo alrededor del jugador que daña y frena a la horda.'
+      usesMultishot: false,
+      desc: 'Campo corrosivo alrededor del jugador que daña y frena a la horda. (No afectada por +Proyectiles).'
     },
     mines: {
       name: 'Minas de Metralla', icon: '💣',
       baseDmg: 55, baseCd: 2.4, baseRange: 3.3, scalePerLvl: 0.28,
+      usesMultishot: true,
       desc: 'Arroja minas con sensor rojo que detonan en área al pisarlas.'
     },
     harpoon: {
       name: 'Arpón Neumático', icon: '🔱',
       baseDmg: 44, baseCd: 1.55, baseRange: 18.0, scalePerLvl: 0.26,
+      usesMultishot: true,
       desc: 'Proyectil perforante que atraviesa en línea recta a múltiples enemigos.'
     },
     orbital: {
       name: 'Jaula de Carnicero', icon: '🪝',
       baseDmg: 26, baseCd: 0.2, baseRange: 3.3, scalePerLvl: 0.25,
+      usesMultishot: true,
       desc: 'Jaulas con cráneos y ganchos giran dejando estela y desgarrando.'
     },
     bolt: {
       name: 'Desfibrilador Roto', icon: '⚡',
       baseDmg: 27, baseCd: 1.8, baseRange: 13.0, scalePerLvl: 0.25,
-      desc: 'Descarga eléctrica de alto voltaje que salta entre varios cuerpos.'
+      usesMultishot: false,
+      desc: 'Descarga eléctrica de alto voltaje que salta entre varios cuerpos. (No afectada por +Proyectiles).'
     }
   },
 
@@ -145,46 +157,55 @@ export const CONFIG = {
   PASSIVES: {
     multishot: {
       name: 'Recámara Modificada', icon: '🎱', perLevel: 1,
+      targetType: 'multishot_weapons',
       format: lvl => `+${lvl} Proyectil${lvl > 1 ? 'es' : ''}`,
-      desc: 'Añade +1 proyectil, tajo, arpón, mina, chorro u orbital adicional.'
+      desc: 'Añade +1 proyectil a Escopeta, Minas, Arpón y Jaula Orbital.'
     },
     dmg: {
       name: 'Pólvora Prensada', icon: '💥', perLevel: 0.15,
+      targetType: 'all_weapons',
       format: lvl => `+${Math.round(lvl * 15)}% Daño`,
       desc: 'Aumenta el daño de todas las armas un +15% por nivel.'
     },
     atkSpd: {
       name: 'Servomotor Oxidado', icon: '⚙️', perLevel: 0.10,
+      targetType: 'all_weapons',
       format: lvl => `+${Math.round(lvl * 10)}% Cadencia`,
       desc: 'Aumenta la velocidad de ataque y giro un +10% por nivel.'
     },
     maxHp: {
       name: 'Placas Quirúrgicas', icon: '🫀', perLevel: 25,
+      targetType: 'player_stat',
       format: lvl => `+${lvl * 25} Pulso Máx`,
       desc: 'Aumenta el Pulso máximo en +25 y los restaura al instante.'
     },
     regen: {
       name: 'Goteo Intravenoso', icon: '🩸', perLevel: 0.9,
+      targetType: 'player_stat',
       format: lvl => `+${(lvl * 0.9).toFixed(1)} HP/s`,
       desc: 'Regenera +0.9 de Pulso por segundo de forma continua.'
     },
     moveSpd: {
       name: 'Efedrina Industrial', icon: '💉', perLevel: 0.08,
+      targetType: 'player_stat',
       format: lvl => `+${Math.round(lvl * 8)}% Velocidad`,
       desc: 'Aumenta la velocidad de movimiento un +8% por nivel.'
     },
     area: {
       name: 'Metralla Expandida', icon: '📡', perLevel: 0.12,
+      targetType: 'all_weapons',
       format: lvl => `+${Math.round(lvl * 12)}% Área`,
       desc: 'Aumenta el tamaño y alcance de ataques un +12% por nivel.'
     },
     crit: {
       name: 'Lente de Carnicero', icon: '👁️', perLevel: 0.07,
+      targetType: 'all_weapons',
       format: lvl => `+${Math.round(lvl * 7)}% Crítico`,
       desc: 'Añade +7% de probabilidad de infligir doble daño (x2).'
     },
     magnet: {
       name: 'Imán de Grúa', icon: '🧲', perLevel: 1.6,
+      targetType: 'player_stat',
       format: lvl => `+${(lvl * 1.6).toFixed(1)}m Imán`,
       desc: 'Aumenta el radio de recogida de suero y dientes.'
     }

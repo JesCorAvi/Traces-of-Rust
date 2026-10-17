@@ -3,6 +3,45 @@ import { CONFIG } from './config.js';
 import { SpriteSheets } from './spritesheets.js';
 import { AudioSys } from './audio.js';
 
+// Geometrías compartidas en VRAM para evitar tirones del Garbage Collector
+export const SHARED_GEO = {
+  spark: new THREE.BoxGeometry(0.18, 0.18, 0.18),
+  shell: new THREE.BoxGeometry(0.1, 0.22, 0.1),
+  flame: new THREE.PlaneGeometry(0.55, 0.55),
+  muzzleFlash: new THREE.PlaneGeometry(1.2, 1.2),
+  mineBody: new THREE.CylinderGeometry(0.38, 0.45, 0.18, 8),
+  mineLed: new THREE.BoxGeometry(0.14, 0.14, 0.14),
+  orbitalPlane: new THREE.PlaneGeometry(1.35, 1.35),
+  bossProj: new THREE.BoxGeometry(0.42, 0.42, 0.42)
+};
+
+// Luz de fogonazo única y persistente (evita recompilar shaders WebGL al disparar)
+let combatFlashLight = null;
+let combatFlashTimer = 0;
+
+export function initCombatLight(scene) {
+  if (!combatFlashLight) {
+    combatFlashLight = new THREE.PointLight(0xffaa33, 0, 12, 1.5);
+    scene.add(combatFlashLight);
+  }
+}
+
+export function triggerCombatFlash(pos, colorHex, intensity, duration = 0.09) {
+  if (!combatFlashLight) return;
+  combatFlashLight.position.copy(pos);
+  combatFlashLight.color.setHex(colorHex);
+  combatFlashLight.intensity = intensity;
+  combatFlashTimer = duration;
+}
+
+export function updateCombatLight(dt) {
+  if (!combatFlashLight || combatFlashTimer <= 0) return;
+  combatFlashTimer -= dt;
+  if (combatFlashTimer <= 0) {
+    combatFlashLight.intensity = 0;
+  }
+}
+
 function getWeaponScaling(id, level) {
   const cfg = CONFIG.SKILLS[id];
   const mult = 1 + (level - 1) * cfg.scalePerLvl;
@@ -19,13 +58,10 @@ export function getDirectionalHandPos(playerPos, facingYaw, forwardDist = 0.85, 
     .add(new THREE.Vector3(0, heightOffset, 0));
 }
 
-// 1. SIERRA DE AMPUTACIÓN
-// facingYaw = dirección de ataque (hacia donde mira la cámara)
-// bodyYaw   = orientación del sprite (solo se usa para la posición de la mano)
+// 1. SIERRA DE AMPUTACIÓN (No afectada por multishot: siempre 1 tajo letal)
 export function executeSawSlash(scene, playerPos, facingYaw, level, mods, enemies, vfx, onDamage, onMicroShake, bodyYaw = facingYaw) {
   const { cfg, mult } = getWeaponScaling('slash', level);
   const size = (3.1 + level * 0.3) * mods.areaMult;
-  const slashCount = 1 + (mods.bonusProjectiles || 0);
   const dmg = cfg.baseDmg * mult * mods.dmgMult;
   const range = (cfg.baseRange + level * 0.28) * mods.areaMult;
 
@@ -34,70 +70,64 @@ export function executeSawSlash(scene, playerPos, facingYaw, level, mods, enemie
   if (onMicroShake) onMicroShake(0.09);
 
   const handOrigin = getDirectionalHandPos(playerPos, bodyYaw, 0.5, 0.32, 1.05);
+  const fwd = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), facingYaw);
 
-  for (let s = 0; s < slashCount; s++) {
-    const angleOffset = slashCount === 1 ? 0 : ((s / (slashCount - 1)) - 0.5) * Math.min(Math.PI * 1.2, slashCount * 0.42);
-    const fwd = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), facingYaw + angleOffset);
+  const slashTex = SpriteSheets.env.slash.tex.clone();
+  slashTex.needsUpdate = true;
+  slashTex.repeat.set(0.25, 1);
+  slashTex.offset.set(0, 0);
 
-    const slashTex = SpriteSheets.env.slash.tex.clone();
-    slashTex.needsUpdate = true;
-    slashTex.repeat.set(0.25, 1);
-    slashTex.offset.set(0, 0);
+  const slashPos = handOrigin.clone().add(fwd.clone().multiplyScalar(1.35 * mods.areaMult));
+  triggerCombatFlash(slashPos, 0xd95326, 85, 0.12);
 
-    const slashPos = handOrigin.clone().add(fwd.clone().multiplyScalar((1.35 + (s % 2) * 0.35) * mods.areaMult));
+  const geo = new THREE.PlaneGeometry(size, size * 0.75);
+  const mat = new THREE.MeshBasicMaterial({
+    map: slashTex,
+    transparent: true,
+    alphaTest: 0.15,
+    side: THREE.DoubleSide
+  });
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.position.copy(slashPos);
+  scene.add(mesh);
 
-    const group = new THREE.Group();
-    group.position.copy(slashPos);
+  vfx.push({
+    mesh,
+    disposeGeo: true,
+    disposeMat: true,
+    disposeTex: slashTex,
+    life: 0.2,
+    maxLife: 0.2,
+    billboard: true,
+    sheetTex: slashTex,
+    totalFrames: 4
+  });
 
-    const mesh = new THREE.Mesh(
-      new THREE.PlaneGeometry(size, size * 0.75),
-      new THREE.MeshBasicMaterial({
-        map: slashTex,
-        transparent: true,
-        alphaTest: 0.15,
-        side: THREE.DoubleSide
-      })
-    );
-    if (s === 0) {
-      const flashLight = new THREE.PointLight(0xd95326, 95, 8, 1.6);
-      group.add(flashLight);
-    }
-    group.add(mesh);
-    scene.add(group);
+  enemies.forEach(e => {
+    if (e.state === 'dead') return;
+    const toE = new THREE.Vector3().subVectors(e.group.position, playerPos);
+    if (Math.abs(toE.y) < 2.2 && toE.length() < range && fwd.angleTo(toE.clone().setY(0).normalize()) < 1.15) {
+      onDamage(e, dmg, toE.clone().setY(0).normalize().multiplyScalar(1.65));
 
-    vfx.push({
-      mesh: group,
-      life: 0.2,
-      maxLife: 0.2,
-      billboard: true,
-      sheetTex: slashTex,
-      totalFrames: 4
-    });
-
-    enemies.forEach(e => {
-      if (e.state === 'dead') return;
-      const toE = new THREE.Vector3().subVectors(e.group.position, playerPos);
-      if (Math.abs(toE.y) < 2.2 && toE.length() < range && fwd.angleTo(toE.clone().setY(0).normalize()) < 1.15) {
-        onDamage(e, dmg, toE.clone().setY(0).normalize().multiplyScalar(1.65));
-
-        for (let p = 0; p < 3; p++) {
-          const spark = new THREE.Mesh(
-            new THREE.BoxGeometry(0.18, 0.18, 0.18),
-            new THREE.MeshBasicMaterial({ color: p % 2 === 0 ? 0xa52020 : 0xffe699 })
-          );
-          spark.position.copy(e.group.position).add(new THREE.Vector3(0, 1.0, 0));
-          scene.add(spark);
-          vfx.push({
-            mesh: spark,
-            life: 0.24,
-            vel: new THREE.Vector3((Math.random() - 0.5) * 6, 2.5 + Math.random() * 3, (Math.random() - 0.5) * 6),
-            gravity: 16,
-            floorY: playerPos.y + 0.05
-          });
-        }
+      for (let p = 0; p < 3; p++) {
+        const spark = new THREE.Mesh(
+          SHARED_GEO.spark,
+          new THREE.MeshBasicMaterial({ color: p % 2 === 0 ? 0xa52020 : 0xffe699 })
+        );
+        spark.position.copy(e.group.position).add(new THREE.Vector3(0, 1.0, 0));
+        scene.add(spark);
+        vfx.push({
+          mesh: spark,
+          disposeMat: true,
+          life: 0.24,
+          vel: new THREE.Vector3((Math.random() - 0.5) * 6, 2.5 + Math.random() * 3, (Math.random() - 0.5) * 6),
+          gravity: 16,
+          floorY: playerPos.y + 0.05
+        });
       }
-    });
-  }
+    }
+  });
+
   return facingYaw;
 }
 
@@ -108,7 +138,7 @@ export function createOrbitalUnit(scene, angle) {
   orbTex.repeat.set(0.25, 1);
 
   const sprite = new THREE.Mesh(
-    new THREE.PlaneGeometry(1.35, 1.35),
+    SHARED_GEO.orbitalPlane,
     new THREE.MeshBasicMaterial({
       map: orbTex,
       transparent: true,
@@ -116,14 +146,13 @@ export function createOrbitalUnit(scene, angle) {
       side: THREE.DoubleSide
     })
   );
-  const eerieLight = new THREE.PointLight(0xd97724, 24, 5.5);
-  group.add(sprite, eerieLight);
+  group.add(sprite);
   scene.add(group);
 
-  return { group, sprite, eerieLight, orbTex, angle, animTimer: Math.random(), trailTimer: 0, hitCd: 0 };
+  return { group, sprite, orbTex, angle, animTimer: Math.random(), trailTimer: 0, hitCd: 0 };
 }
 
-// 2. ESCOPETA CALIBRE 12 (dispara hacia aimYaw; bodyYaw solo posiciona el cañón en la mano del sprite)
+// 2. ESCOPETA CALIBRE 12 (Sí afectada por multishot)
 export function fireBuckshot(scene, playerPos, aimYaw, bodyYaw, level, mods, enemies, vfx, onDamage, triggerFlash) {
   const alive = enemies.filter(e => e.state !== 'dead');
   if (!alive.length) return null;
@@ -140,29 +169,28 @@ export function fireBuckshot(scene, playerPos, aimYaw, bodyYaw, level, mods, ene
   if (triggerFlash) triggerFlash();
 
   const baseDir = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), aimYaw);
-  const targetYaw = aimYaw;
   const rightDir = new THREE.Vector3(-baseDir.z, 0, baseDir.x);
   const muzzlePos = getDirectionalHandPos(playerPos, bodyYaw, 0.95, 0.38, 1.12);
 
-  const flashGroup = new THREE.Group();
-  flashGroup.position.copy(muzzlePos);
-  const flashLight = new THREE.PointLight(0xffaa33, 160, 14, 1.5);
+  triggerCombatFlash(muzzlePos, 0xffaa33, 150, 0.08);
+
   const flashSprite = new THREE.Mesh(
-    new THREE.PlaneGeometry(1.2, 1.2),
+    SHARED_GEO.muzzleFlash,
     new THREE.MeshBasicMaterial({ color: 0xffe699, transparent: true, opacity: 0.95, side: THREE.DoubleSide })
   );
-  flashGroup.add(flashLight, flashSprite);
-  scene.add(flashGroup);
-  vfx.push({ mesh: flashGroup, life: 0.08, maxLife: 0.08, billboard: true, scaleSpeed: 6 });
+  flashSprite.position.copy(muzzlePos);
+  scene.add(flashSprite);
+  vfx.push({ mesh: flashSprite, disposeMat: true, life: 0.08, maxLife: 0.08, billboard: true, scaleSpeed: 6 });
 
   const shell = new THREE.Mesh(
-    new THREE.BoxGeometry(0.1, 0.22, 0.1),
+    SHARED_GEO.shell,
     new THREE.MeshBasicMaterial({ color: 0xa52020 })
   );
   shell.position.copy(muzzlePos);
   scene.add(shell);
   vfx.push({
     mesh: shell,
+    disposeMat: true,
     life: 1.0,
     vel: rightDir.clone().multiplyScalar(3.5 + Math.random()).add(new THREE.Vector3(0, 4.0, 0)),
     gravity: 16,
@@ -170,8 +198,9 @@ export function fireBuckshot(scene, playerPos, aimYaw, bodyYaw, level, mods, ene
     spin: { x: 18, z: 14 }
   });
 
-  const pelletCount = 7 + level * 2 + (mods.bonusProjectiles || 0) * 3;
-  const spreadArc = (0.48 + level * 0.03 + (mods.bonusProjectiles || 0) * 0.06) * mods.areaMult;
+  const bonusProj = cfg.usesMultishot ? (mods.bonusProjectiles || 0) : 0;
+  const pelletCount = 7 + level * 2 + bonusProj * 3;
+  const spreadArc = (0.48 + level * 0.03 + bonusProj * 0.06) * mods.areaMult;
   const dmgPerPellet = cfg.baseDmg * mult * mods.dmgMult;
 
   for (let i = 0; i < pelletCount; i++) {
@@ -202,33 +231,32 @@ export function fireBuckshot(scene, playerPos, aimYaw, bodyYaw, level, mods, ene
       new THREE.LineBasicMaterial({ color: i % 2 === 0 ? 0xffe699 : 0xd97724, transparent: true, opacity: 0.85 })
     );
     scene.add(tracer);
-    vfx.push({ mesh: tracer, life: 0.13, maxLife: 0.13, fade: true });
+    vfx.push({ mesh: tracer, disposeGeo: true, disposeMat: true, life: 0.13, maxLife: 0.13, fade: true });
 
     if (hitEnemy) {
       onDamage(hitEnemy, dmgPerPellet, pelletDir.clone().multiplyScalar(0.42));
     }
   }
-  return targetYaw;
+  return aimYaw;
 }
 
-// 3. SOPLETE INCINERADOR (Sale desde la boquilla de la mano derecha en la dirección actual)
+// 3. SOPLETE INCINERADOR (No afectado por multishot)
 export function fireFlamethrower(scene, playerPos, facingYaw, level, mods, enemies, vfx, onDamage, bodyYaw = facingYaw) {
   const { cfg, mult } = getWeaponScaling('flamethrower', level);
   const fwd = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), facingYaw);
   const nozzle = getDirectionalHandPos(playerPos, bodyYaw, 0.92, 0.36, 1.05);
   const range = (cfg.baseRange + level * 0.45) * mods.areaMult;
-  const extraStreams = mods.bonusProjectiles || 0;
 
   if (Math.random() < 0.45) AudioSys.play(110 + Math.random() * 40, 0.08, 'sawtooth', 0.03);
 
-  const particleCount = 3 + extraStreams * 2;
-  const coneHalfAngle = 0.65 + extraStreams * 0.12;
+  const particleCount = 3;
+  const coneHalfAngle = 0.65 * mods.areaMult;
 
   for (let i = 0; i < particleCount; i++) {
     const spread = (Math.random() - 0.5) * (coneHalfAngle * 1.4);
     const dir = fwd.clone().applyAxisAngle(new THREE.Vector3(0, 1, 0), spread);
     const flame = new THREE.Mesh(
-      new THREE.PlaneGeometry(0.55, 0.55),
+      SHARED_GEO.flame,
       new THREE.MeshBasicMaterial({
         color: Math.random() < 0.5 ? 0xff7711 : 0xffcc33,
         transparent: true,
@@ -240,8 +268,9 @@ export function fireFlamethrower(scene, playerPos, facingYaw, level, mods, enemi
     scene.add(flame);
     vfx.push({
       mesh: flame,
-      life: 0.26,
-      maxLife: 0.26,
+      disposeMat: true,
+      life: 0.24,
+      maxLife: 0.24,
       billboard: true,
       fade: true,
       scaleSpeed: 3.5,
@@ -261,20 +290,21 @@ export function fireFlamethrower(scene, playerPos, facingYaw, level, mods, enemi
   });
 }
 
-// 4. MINAS DE METRALLA
+// 4. MINAS DE METRALLA (Sí afectadas por multishot)
 export function spawnShrapnelMine(scene, playerPos, level, mods, worldPhysics, minesList) {
-  const count = 1 + (mods.bonusProjectiles || 0);
+  const cfg = CONFIG.SKILLS.mines;
+  const count = 1 + (cfg.usesMultishot ? (mods.bonusProjectiles || 0) : 0);
   AudioSys.play(420, 0.06, 'sine', 0.04);
 
   for (let i = 0; i < count; i++) {
     const group = new THREE.Group();
     const body = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.38, 0.45, 0.18, 8),
+      SHARED_GEO.mineBody,
       new THREE.MeshStandardMaterial({ color: 0x3b2316, roughness: 0.85 })
     );
     body.position.y = 0.09;
     const led = new THREE.Mesh(
-      new THREE.BoxGeometry(0.14, 0.14, 0.14),
+      SHARED_GEO.mineLed,
       new THREE.MeshBasicMaterial({ color: 0xff2222 })
     );
     led.position.y = 0.2;
@@ -292,16 +322,15 @@ export function spawnShrapnelMine(scene, playerPos, level, mods, worldPhysics, m
   }
 }
 
-// 5. ARPÓN NEUMÁTICO (dispara hacia facingYaw = cámara; bodyYaw solo posiciona la mano del sprite)
+// 5. ARPÓN NEUMÁTICO (Sí afectado por multishot)
 export function fireHarpoon(scene, playerPos, facingYaw, level, mods, enemies, vfx, onDamage, bodyYaw = facingYaw) {
   const alive = enemies.filter(e => e.state !== 'dead');
   const { cfg, mult } = getWeaponScaling('harpoon', level);
   const maxRange = cfg.baseRange * mods.areaMult;
-  const count = 1 + (mods.bonusProjectiles || 0);
+  const count = 1 + (cfg.usesMultishot ? (mods.bonusProjectiles || 0) : 0);
 
   const baseDir = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), facingYaw);
 
-  const targetYaw = facingYaw;
   AudioSys.play(150, 0.18, 'triangle', 0.08);
   const start = getDirectionalHandPos(playerPos, bodyYaw, 0.85, 0.36, 1.08);
   const dmg = cfg.baseDmg * mult * mods.dmgMult;
@@ -317,7 +346,7 @@ export function fireHarpoon(scene, playerPos, facingYaw, level, mods, enemies, v
       new THREE.LineBasicMaterial({ color: 0xc8c2ac })
     );
     scene.add(cable);
-    vfx.push({ mesh: cable, life: 0.18, maxLife: 0.18, fade: true });
+    vfx.push({ mesh: cable, disposeGeo: true, disposeMat: true, life: 0.18, maxLife: 0.18, fade: true });
 
     let pierced = 0;
     alive.forEach(e => {
@@ -335,20 +364,18 @@ export function fireHarpoon(scene, playerPos, facingYaw, level, mods, enemies, v
       }
     });
   }
-  return targetYaw;
+  return facingYaw;
 }
 
-// 6. DESFIBRILADOR ROTO
+// 6. DESFIBRILADOR ROTO (No afectado por multishot)
 export function fireDefibrillator(scene, playerPos, facingYaw, level, mods, enemies, vfx, onDamage) {
   const { cfg, mult } = getWeaponScaling('bolt', level);
   const range = cfg.baseRange * mods.areaMult;
-  const maxTargets = 2 + level + (mods.bonusProjectiles || 0) * 2;
+  const maxTargets = 2 + level;
   const near = enemies
     .filter(e => e.state !== 'dead' && e.group.position.distanceTo(playerPos) < range)
     .slice(0, maxTargets);
   if (!near.length) return null;
-
-  const targetYaw = facingYaw;
 
   AudioSys.play(480, 0.14, 'sawtooth', 0.06);
   const pts = [getDirectionalHandPos(playerPos, facingYaw, 0.6, 0.3, 1.1)];
@@ -363,8 +390,8 @@ export function fireDefibrillator(scene, playerPos, facingYaw, level, mods, enem
     new THREE.LineBasicMaterial({ color: 0xb89c46 })
   );
   scene.add(bolt);
-  vfx.push({ mesh: bolt, life: 0.12 });
-  return targetYaw;
+  vfx.push({ mesh: bolt, disposeGeo: true, disposeMat: true, life: 0.12 });
+  return facingYaw;
 }
 
 // === ATAQUES ESPECIALES TELEGRAFIADOS DE LOS BOSSES ===
@@ -449,7 +476,7 @@ export function triggerBossSpecialAttack(scene, boss, attackType, playerPos, wor
       const a = baseAngle + (i / count) * Math.PI * 2;
       const dir = new THREE.Vector3(Math.sin(a), 0, Math.cos(a));
       const pMesh = new THREE.Mesh(
-        new THREE.BoxGeometry(0.42, 0.42, 0.42),
+        SHARED_GEO.bossProj,
         new THREE.MeshBasicMaterial({ color: attackType === 'spiral_blades' ? 0xe6d7a5 : 0xff6611 })
       );
       pMesh.position.copy(bPos).add(new THREE.Vector3(0, 1.1, 0));

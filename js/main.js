@@ -5,6 +5,9 @@ import { SpriteSheets, getPlayerLoadoutSheet } from './spritesheets.js';
 import { createWorld } from './world.js';
 import { createBillboardSprite, EnemyPool } from './entities.js';
 import {
+  SHARED_GEO,
+  initCombatLight,
+  updateCombatLight,
   executeSawSlash,
   createOrbitalUnit,
   fireBuckshot,
@@ -22,6 +25,7 @@ const saveGame = () => localStorage.setItem(CONFIG.SAVE_KEY, JSON.stringify(save
 
 // Escena 3D Industrial con Relieve y Física
 const { scene, ambientLight, propBillboards, ceilingLights, dust, worldPhysics } = createWorld();
+initCombatLight(scene);
 const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 100);
 
 const renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: 'high-performance' });
@@ -57,6 +61,14 @@ const playerLanternLight = new THREE.PointLight(0xffe0a3, 28, 8.5, 1.4);
 scene.add(playerLanternLight);
 
 let currentHandWeapon = 'slash';
+const HAND_WEAPONS = ['slash', 'shotgun', 'flamethrower', 'harpoon', 'bolt', 'mines'];
+
+// Pre-genera las hojas de todas las armas equipadas al subir de nivel para evitar tirones en combate
+function prewarmLoadoutSheets() {
+  HAND_WEAPONS.forEach(w => {
+    if (skills[w]) getPlayerLoadoutSheet(skills, w);
+  });
+}
 
 // Actualiza el Atlas 8-Dir del jugador según el arma que acaba de disparar/atacar,
 // conservando la dirección (dirRow) y el frame actual sin reiniciar la animación
@@ -106,17 +118,29 @@ scene.add(flashlight, flashlight.target);
 // Pool de Enemigos
 const enemyPool = new EnemyPool(scene, CONFIG.DIFFICULTY.MAX_ACTIVE_ENEMIES);
 
-// Variables de estado de partida y orientación 3D del personaje
+// Variables de estado de partida y movimiento/dash
 let state = 'START', lastMenuScreen = 'start-screen';
 let yaw = 0, pitch = -0.22, playerFacingYaw = 0, aimLockTimer = 0;
 let gameTime = 0, runSouls = 0, kills = 0;
 let stats = {}, skills = {}, passives = {}, rerollsLeft = CONFIG.LIMITS.REROLLS_PER_RUN;
 let playerYVel = 0, isGrounded = true, dashCd = 0, invuln = 0, atkAnimTimer = 0;
+let dashTimer = 0, dashGhostTimer = 0;
+const dashDirVec = new THREE.Vector3();
 let camShake = 0, targetFov = 70, spawnTimer = 0;
 let nextBossIdx = 0, activeBoss = null, bossesDefeated = 0, isEndgame = false;
 
 const weaponTimers = { slash: 0, shotgun: 0, flamethrower: 0, aura: 0, mines: 0, harpoon: 0, bolt: 0 };
 const drops = [], orbitals = [], minesList = [], vfx = [], bossHazards = [], bossProjectiles = [];
+const dropGeo = new THREE.PlaneGeometry(0.62, 0.62);
+const chestGeo = new THREE.BoxGeometry(0.95, 0.75, 0.75);
+const ghostGeo = new THREE.PlaneGeometry(2.0, 2.0);
+
+function cleanupVfxItem(v) {
+  scene.remove(v.mesh);
+  if (v.disposeGeo && v.mesh.geometry) v.mesh.geometry.dispose();
+  if (v.disposeMat && v.mesh.material) v.mesh.material.dispose();
+  if (v.disposeTex) v.disposeTex.dispose();
+}
 
 function getActiveModifiers() {
   const permDmg = 1 + (save.dmg || 0) * 0.03;
@@ -136,6 +160,34 @@ function getActiveModifiers() {
   };
 }
 
+// Genera el bloque HTML con las armas equipadas a las que afecta una pasiva
+function getPassiveAffectedWeaponsHTML(passiveId) {
+  const pCfg = CONFIG.PASSIVES[passiveId];
+  if (!pCfg) return '';
+
+  if (pCfg.targetType === 'player_stat') {
+    return `<div class="passive-affected-weapons"><span>Afecta a:</span> <span class="passive-weapon-pill">👤 Traje / Jugador</span></div>`;
+  }
+
+  const equippedIds = Object.keys(skills).filter(k => skills[k] > 0);
+  const matching = equippedIds.filter(wId => {
+    const wCfg = CONFIG.SKILLS[wId];
+    if (!wCfg) return false;
+    if (pCfg.targetType === 'multishot_weapons') return wCfg.usesMultishot === true;
+    return true; // 'all_weapons'
+  });
+
+  if (matching.length === 0) {
+    return `<div class="passive-affected-weapons"><span>Armas:</span> <span class="passive-weapon-none">Ninguna equipada compatible</span></div>`;
+  }
+
+  const pills = matching
+    .map(wId => `<span class="passive-weapon-pill">${CONFIG.SKILLS[wId].icon} ${CONFIG.SKILLS[wId].name.split(' ')[0]}</span>`)
+    .join('');
+
+  return `<div class="passive-affected-weapons"><span>Armas:</span> ${pills}</div>`;
+}
+
 function syncOrbitalsCount() {
   if (!skills.orbital) return;
   const targetCount = skills.orbital + (passives.multishot || 0);
@@ -147,18 +199,45 @@ function syncOrbitalsCount() {
   });
 }
 
-// Cambia inmediatamente el sprite del arma en la mano del jugador cuando ataca con ella
-// y orienta al personaje hacia el ángulo del disparo/tajo
 function triggerWeaponVisualAttack(weaponId, targetYaw = null, animDuration = 0.24) {
-  // El sprite NO se gira al atacar: solo cambia el arma y se activa la animación de ataque.
-  // El ataque sale hacia `yaw` (hacia donde mira la cámara).
   atkAnimTimer = animDuration;
   syncPlayerVisualLoadout(weaponId);
 }
 
+// Crea una estela fantasma translúcida durante el Dash
+function spawnDashAfterimage() {
+  const ghostTex = playerBillboard.tex.clone();
+  ghostTex.needsUpdate = true;
+  ghostTex.repeat.copy(playerBillboard.tex.repeat);
+  ghostTex.offset.copy(playerBillboard.tex.offset);
+
+  const ghostMat = new THREE.MeshBasicMaterial({
+    map: ghostTex,
+    transparent: true,
+    opacity: 0.55,
+    alphaTest: 0.2,
+    color: 0xd4af37,
+    side: THREE.DoubleSide
+  });
+  const ghostMesh = new THREE.Mesh(ghostGeo, ghostMat);
+  ghostMesh.position.copy(playerGroup.position).add(new THREE.Vector3(0, 1.0, 0));
+  ghostMesh.rotation.y = playerBillboard.mesh.rotation.y;
+  scene.add(ghostMesh);
+
+  vfx.push({
+    mesh: ghostMesh,
+    disposeMat: true,
+    disposeTex: ghostTex,
+    life: 0.18,
+    maxLife: 0.18,
+    fade: true,
+    billboard: true
+  });
+}
+
 function triggerScare(intensity = 0.42) {
   camShake = Math.max(camShake, intensity);
-  camera.fov = 52;
+  camera.fov = 56;
   camera.updateProjectionMatrix();
   AudioSys.playScare();
 
@@ -186,12 +265,33 @@ window.addEventListener('keydown', e => {
   keys[k] = true;
   if (state !== 'PLAYING') return;
 
-  if (k === 'shift' && dashCd <= 0 && stats.stamina >= 35) {
-    stats.stamina -= 35; dashCd = 0.85; invuln = 0.35;
-    const dashDir = new THREE.Vector3(-Math.sin(playerFacingYaw), 0, -Math.cos(playerFacingYaw));
-    playerGroup.position.add(dashDir.multiplyScalar(3.8));
-    worldPhysics.resolveCollision(playerGroup.position, 0.55, playerGroup.position.y);
-    AudioSys.play(340, 0.09, 'triangle');
+  // Dash fluido con velocidad continua y animación
+  if (k === 'shift' && dashCd <= 0 && stats.stamina >= 35 && dashTimer <= 0) {
+    stats.stamina -= 35;
+    dashCd = 0.85;
+    dashTimer = 0.22;
+    dashGhostTimer = 0;
+    invuln = 0.35;
+
+    const camFwd = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), yaw);
+    const camRight = new THREE.Vector3(1, 0, 0).applyAxisAngle(new THREE.Vector3(0, 1, 0), yaw);
+    dashDirVec.set(0, 0, 0);
+    if (keys.w) dashDirVec.add(camFwd);
+    if (keys.s) dashDirVec.sub(camFwd);
+    if (keys.d) dashDirVec.add(camRight);
+    if (keys.a) dashDirVec.sub(camRight);
+
+    if (dashDirVec.lengthSq() > 0) {
+      dashDirVec.normalize();
+      playerFacingYaw = Math.atan2(-dashDirVec.x, -dashDirVec.z);
+    } else {
+      dashDirVec.set(-Math.sin(playerFacingYaw), 0, -Math.cos(playerFacingYaw)).normalize();
+    }
+
+    camera.fov = 77;
+    camera.updateProjectionMatrix();
+    AudioSys.play(340, 0.11, 'triangle', 0.07);
+    AudioSys.play(160, 0.14, 'sawtooth', 0.05);
   }
   if (e.code === 'Space' && isGrounded) {
     playerYVel = 9.2;
@@ -240,7 +340,7 @@ function damageEnemy(en, amount, knockback, isDoT = false) {
       AudioSys.playBossHorn();
 
       const chest = new THREE.Mesh(
-        new THREE.BoxGeometry(0.95, 0.75, 0.75),
+        chestGeo,
         new THREE.MeshBasicMaterial({ color: 0xd4af37 })
       );
       chest.position.copy(en.group.position).add(new THREE.Vector3(0, 0.5, 0));
@@ -253,7 +353,7 @@ function damageEnemy(en, amount, knockback, isDoT = false) {
     } else {
       const isTooth = Math.random() < 0.26;
       const dropSprite = new THREE.Mesh(
-        new THREE.PlaneGeometry(0.62, 0.62),
+        dropGeo,
         new THREE.MeshBasicMaterial({ color: isTooth ? 0xe6d7a5 : 0xa52020, side: THREE.DoubleSide })
       );
       dropSprite.position.copy(en.group.position).add(new THREE.Vector3(0, 0.45, 0));
@@ -276,9 +376,10 @@ function applyUpgradeOption(opt) {
     if (opt.id === 'orbital') {
       syncOrbitalsCount();
     }
-    if (['shotgun', 'flamethrower', 'harpoon', 'slash', 'bolt', 'mines'].includes(opt.id)) {
+    if (HAND_WEAPONS.includes(opt.id)) {
       currentHandWeapon = opt.id;
     }
+    prewarmLoadoutSheets();
     syncPlayerVisualLoadout(currentHandWeapon);
   } else if (opt.category === 'passive') {
     const current = passives[opt.id] || 0;
@@ -330,7 +431,9 @@ function buildAvailableUpgradePool() {
       category: 'passive', id, name: p.name, icon: p.icon,
       currentLvl: lvl, nextLvl: lvl + 1,
       badge: lvl === 0 ? 'PASIVA NUEVA' : 'MEJORA PASIVA',
-      badgeClass: 'badge-passive', desc: `${p.desc} (${p.format(lvl + 1)})`
+      badgeClass: 'badge-passive',
+      desc: `${p.desc} (${p.format(lvl + 1)})`,
+      affectedHtml: getPassiveAffectedWeaponsHTML(id)
     });
   });
 
@@ -373,7 +476,8 @@ function rollLevelUpCards() {
         <span>${opt.icon} ${opt.name}</span>
         <span class="upg-lvl-pill">${lvlLabel}</span>
       </div>
-      <p style="font-size:0.74rem;color:#a89f88;margin:6px 0 0">${opt.desc}</p>
+      <p style="font-size:0.74rem;color:#a89f88;margin:6px 0 4px">${opt.desc}</p>
+      ${opt.affectedHtml || ''}
     `;
     card.onmouseenter = () => AudioSys.playUIClick();
     card.onclick = () => {
@@ -476,9 +580,16 @@ function updateHUD() {
     if (pEntries[i]) {
       const [k, v] = pEntries[i];
       const p = CONFIG.PASSIVES[k];
-      pHtml += `<div class="passive-slot"><span>${p.icon} ${p.name} <b>+${v}</b></span><span>${p.format(v)}</span></div>`;
+      pHtml += `
+        <div class="passive-slot">
+          <div class="passive-slot-top">
+            <span>${p.icon} ${p.name} <b>+${v}</b></span>
+            <span>${p.format(v)}</span>
+          </div>
+          ${getPassiveAffectedWeaponsHTML(k)}
+        </div>`;
     } else {
-      pHtml += `<div class="passive-slot empty"><span>[ RANURA DE IMPLANTE VACÍA ]</span><span>--</span></div>`;
+      pHtml += `<div class="passive-slot empty"><div class="passive-slot-top"><span>[ RANURA DE IMPLANTE VACÍA ]</span><span>--</span></div></div>`;
     }
   }
   document.getElementById('passives-bar').innerHTML = pHtml;
@@ -495,12 +606,12 @@ function startGame() {
   ambientLight.color.setHex(0x1e281d);
 
   enemyPool.clearAll();
-  drops.forEach(d => scene.remove(d.mesh)); drops.length = 0;
-  orbitals.forEach(o => scene.remove(o.group)); orbitals.length = 0;
+  drops.forEach(d => { scene.remove(d.mesh); d.mesh.material.dispose(); }); drops.length = 0;
+  orbitals.forEach(o => { scene.remove(o.group); o.orbTex.dispose(); o.sprite.material.dispose(); }); orbitals.length = 0;
   minesList.forEach(m => scene.remove(m.group)); minesList.length = 0;
-  vfx.forEach(v => scene.remove(v.mesh)); vfx.length = 0;
-  bossHazards.forEach(h => scene.remove(h.mesh)); bossHazards.length = 0;
-  bossProjectiles.forEach(p => scene.remove(p.mesh)); bossProjectiles.length = 0;
+  vfx.forEach(v => cleanupVfxItem(v)); vfx.length = 0;
+  bossHazards.forEach(h => { scene.remove(h.mesh); h.mesh.geometry.dispose(); h.mesh.material.dispose(); }); bossHazards.length = 0;
+  bossProjectiles.forEach(p => { scene.remove(p.mesh); p.mesh.material.dispose(); }); bossProjectiles.length = 0;
 
   const baseHp = 100 + (save.hp || 0) * 5;
   stats = { maxHp: baseHp, hp: baseHp, stamina: 100, level: 1, exp: 0, maxExp: 5 };
@@ -517,6 +628,8 @@ function startGame() {
   yaw = 0;
   playerFacingYaw = 0;
   aimLockTimer = 0;
+  dashTimer = 0;
+  prewarmLoadoutSheets();
   syncPlayerVisualLoadout('slash');
   auraMesh.visible = false;
 
@@ -611,9 +724,13 @@ function renderShop() {
 
 // Bucle Principal
 const clock = new THREE.Clock();
+let regenHudTimer = 0;
+
 function animate() {
   requestAnimationFrame(animate);
   const dt = Math.min(clock.getDelta(), 0.1);
+
+  updateCombatLight(dt);
 
   ceilingLights.forEach(cl => {
     cl.light.intensity = Math.random() < (isEndgame ? 0.15 : 0.04) ? 2 : cl.baseIntensity;
@@ -630,14 +747,20 @@ function animate() {
     if (atkAnimTimer > 0) atkAnimTimer -= dt;
     if (aimLockTimer > 0) aimLockTimer -= dt;
     stats.stamina = Math.min(100, stats.stamina + dt * 22);
+    document.getElementById('stam-bar').style.width = stats.stamina + '%';
 
     if (mods.regenPerSec > 0 && stats.hp < stats.maxHp) {
       stats.hp = Math.min(stats.maxHp, stats.hp + mods.regenPerSec * dt);
-      updateHUD();
+      regenHudTimer += dt;
+      if (regenHudTimer >= 0.25) {
+        regenHudTimer = 0;
+        document.getElementById('hp-bar').style.width = Math.max(0, (stats.hp / stats.maxHp) * 100) + '%';
+        document.getElementById('hp-text').textContent = `${Math.ceil(Math.max(0, stats.hp))} / ${stats.maxHp}`;
+      }
     }
 
     if (Math.abs(camera.fov - targetFov) > 0.2) {
-      camera.fov += (targetFov - camera.fov) * dt * 6;
+      camera.fov += (targetFov - camera.fov) * dt * 8;
       camera.updateProjectionMatrix();
     }
 
@@ -651,10 +774,20 @@ function animate() {
     if (keys.a) move.sub(camRight);
     const isMoving = move.lengthSq() > 0;
 
-    if (isMoving) {
+    // Movimiento de Dash fluido vs Movimiento normal
+    if (dashTimer > 0) {
+      dashTimer -= dt;
+      const dashSpeed = 20.5;
+      playerGroup.position.addScaledVector(dashDirVec, dashSpeed * dt);
+      worldPhysics.resolveCollision(playerGroup.position, 0.55, playerGroup.position.y);
+
+      dashGhostTimer -= dt;
+      if (dashGhostTimer <= 0) {
+        dashGhostTimer = 0.045;
+        spawnDashAfterimage();
+      }
+    } else if (isMoving) {
       move.normalize();
-      // Si no está bloqueado apuntando un disparo, el personaje mira hacia donde camina
-      // (permite ver las 8 direcciones al moverse con WASD o al orbitar la cámara con el ratón)
       if (aimLockTimer <= 0) {
         playerFacingYaw = Math.atan2(-move.x, -move.z);
       }
@@ -691,17 +824,21 @@ function animate() {
     }
     camera.lookAt(playerGroup.position.clone().add(new THREE.Vector3(0, 1.3, 0)));
 
-    // Selección de vista entre las 8 direcciones (según ángulo entre playerFacingYaw y camera.position)
+    // Selección de vista entre las 8 direcciones
     playerBillboard.faceCamera(camera.position);
 
-    // Selección de estado de animación (0:IDLE, 1:WALK, 2:JUMP, 3:ATTACK, 4:HURT) sin reiniciar el frame al girar
+    // Selección de estado de animación incluyendo DASH y ATTACK_WALK (atacar + mover piernas)
     const ST = CONFIG.DIRECTIONAL.STATES;
     const FPS = CONFIG.DIRECTIONAL.ANIM_FPS;
     let pState = ST.IDLE;
     let fps = FPS.IDLE;
 
-    if (invuln > 0.35) {
+    if (dashTimer > 0) {
+      pState = ST.DASH; fps = FPS.DASH;
+    } else if (invuln > 0.38) {
       pState = ST.HURT; fps = FPS.HURT;
+    } else if (atkAnimTimer > 0 && isMoving) {
+      pState = ST.ATTACK_WALK; fps = FPS.ATTACK_WALK;
     } else if (atkAnimTimer > 0) {
       pState = ST.ATTACK; fps = FPS.ATTACK;
     } else if (!isGrounded) {
@@ -753,7 +890,7 @@ function animate() {
       activateEndgamePhase();
     }
 
-    // === EJECUCIÓN DE LAS 8 ARMAS (CADA ARMA CAMBIA EL SPRITE AL ATACAR CON ELLA) ===
+    // === EJECUCIÓN DE LAS 8 ARMAS ===
     const cdFactor = 1 / mods.atkSpeedMult;
     const activeEnemies = enemyPool.active;
 
@@ -800,10 +937,10 @@ function animate() {
       }
     }
 
-    // 4. Incensario de Bilis (Aura)
+    // 4. Incensario de Bilis (Aura - No afectada por multishot)
     if (skills.aura) {
       auraMesh.visible = true;
-      const auraRadius = (CONFIG.SKILLS.aura.baseRange + skills.aura * 0.35 + mods.bonusProjectiles * 0.35) * mods.areaMult;
+      const auraRadius = (CONFIG.SKILLS.aura.baseRange + skills.aura * 0.35) * mods.areaMult;
       auraMesh.scale.set(auraRadius * 2, auraRadius * 2, 1);
       auraMesh.position.set(playerGroup.position.x, playerGroup.position.y + 0.06, playerGroup.position.z);
       auraMesh.rotation.z += dt * 1.4;
@@ -863,7 +1000,6 @@ function animate() {
       o.angle += dt * (2.7 + lvl * 0.38) * mods.atkSpeedMult;
       o.animTimer += dt * 8;
       o.orbTex.offset.set((Math.floor(o.animTimer) % 4) * 0.25, 0);
-      o.eerieLight.intensity = Math.random() < 0.1 ? 8 : 24;
 
       const r = (CONFIG.SKILLS.orbital.baseRange + lvl * 0.15) * mods.areaMult;
       o.group.position.set(
@@ -875,14 +1011,14 @@ function animate() {
 
       o.trailTimer -= dt;
       if (o.trailTimer <= 0) {
-        o.trailTimer = 0.055;
+        o.trailTimer = 0.065;
         const ember = new THREE.Mesh(
-          new THREE.BoxGeometry(0.16, 0.16, 0.16),
+          SHARED_GEO.spark,
           new THREE.MeshBasicMaterial({ color: Math.random() < 0.5 ? 0xb89c46 : 0x6e1414, transparent: true, opacity: 0.8 })
         );
         ember.position.copy(o.group.position);
         scene.add(ember);
-        vfx.push({ mesh: ember, life: 0.22, maxLife: 0.22, fade: true, scaleSpeed: -2.5 });
+        vfx.push({ mesh: ember, disposeMat: true, life: 0.2, maxLife: 0.2, fade: true, scaleSpeed: -2.5 });
       }
 
       if (o.hitCd > 0) o.hitCd -= dt;
@@ -895,13 +1031,13 @@ function animate() {
             o.hitCd = 0.18;
             AudioSys.play(310, 0.05, 'sawtooth', 0.03);
             const blood = new THREE.Mesh(
-              new THREE.BoxGeometry(0.2, 0.2, 0.2),
+              SHARED_GEO.spark,
               new THREE.MeshBasicMaterial({ color: 0xa52020 })
             );
             blood.position.copy(o.group.position);
             scene.add(blood);
             vfx.push({
-              mesh: blood, life: 0.2,
+              mesh: blood, disposeMat: true, life: 0.2,
               vel: new THREE.Vector3((Math.random() - 0.5) * 4, 2.5, (Math.random() - 0.5) * 4),
               gravity: 15, floorY: playerGroup.position.y + 0.05
             });
@@ -932,7 +1068,7 @@ function animate() {
         );
         blast.position.copy(m.group.position).add(new THREE.Vector3(0, 1.0, 0));
         scene.add(blast);
-        vfx.push({ mesh: blast, life: 0.2, maxLife: 0.2, billboard: true, fade: true });
+        vfx.push({ mesh: blast, disposeGeo: true, disposeMat: true, life: 0.2, maxLife: 0.2, billboard: true, fade: true });
 
         activeEnemies.forEach(e => {
           if (e.state !== 'dead' && e.group.position.distanceTo(m.group.position) < blastRadius) {
@@ -967,7 +1103,7 @@ function animate() {
           );
           pillar.position.copy(h.center).add(new THREE.Vector3(0, 1.8, 0));
           scene.add(pillar);
-          vfx.push({ mesh: pillar, life: 0.22, maxLife: 0.22, fade: true });
+          vfx.push({ mesh: pillar, disposeGeo: true, disposeMat: true, life: 0.22, maxLife: 0.22, fade: true });
 
           if (playerGroup.position.distanceTo(h.center) <= h.radius) {
             dealDamageToPlayer(h.dmg);
@@ -981,6 +1117,8 @@ function animate() {
           }
         }
         scene.remove(h.mesh);
+        if (h.mesh.geometry) h.mesh.geometry.dispose();
+        if (h.mesh.material) h.mesh.material.dispose();
         bossHazards.splice(i, 1);
       }
     }
@@ -999,11 +1137,12 @@ function animate() {
       }
       if (p.life <= 0) {
         scene.remove(p.mesh);
+        if (p.mesh.material) p.mesh.material.dispose();
         bossProjectiles.splice(i, 1);
       }
     }
 
-    // VFX
+    // VFX con limpieza de memoria VRAM
     for (let i = vfx.length - 1; i >= 0; i--) {
       const v = vfx[i];
       v.life -= dt;
@@ -1027,7 +1166,10 @@ function animate() {
       if (v.fade && v.mesh.material && v.maxLife) {
         v.mesh.material.opacity = Math.max(0, v.life / v.maxLife);
       }
-      if (v.life <= 0) { scene.remove(v.mesh); vfx.splice(i, 1); }
+      if (v.life <= 0) {
+        cleanupVfxItem(v);
+        vfx.splice(i, 1);
+      }
     }
 
     // Actualización del Pool de Enemigos
@@ -1088,6 +1230,7 @@ function animate() {
       }
       if (dist < 1.4) {
         scene.remove(d.mesh);
+        d.mesh.material.dispose();
         drops.splice(i, 1);
 
         if (d.isBossChest) {
@@ -1122,7 +1265,6 @@ function animate() {
       ? '⚠️ EXTERMINIO ACTIVO'
       : `AMENAZA: NIVEL ${1 + Math.floor(gameTime / 90)}`;
   } else if (state === 'START') {
-    // En la pantalla de inicio la cámara orbita 360° alrededor del personaje mostrando las 8 direcciones
     const t = performance.now() * 0.00045;
     camera.position.set(Math.sin(t) * 11, 3.6, Math.cos(t) * 11);
     camera.lookAt(0, 1.1, 0);

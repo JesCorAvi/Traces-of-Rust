@@ -44,28 +44,32 @@ function applyEnvironmentDither(ctx, w, h) {
   ctx.putImageData(img, 0, 0);
 }
 
-// Contorno negro limpio de 1px (#050605) optimizado para atlas de cualquier tamaño (w x h)
+// Contorno negro limpio de 1px (#050605) optimizado con Uint32Array para evitar tirones de CPU
 function applyCleanSpriteOutlineRect(ctx, w, h) {
   const src = ctx.getImageData(0, 0, w, h);
   const out = ctx.createImageData(w, h);
-  const s = src.data;
-  const d = out.data;
-  d.set(s);
+  const s32 = new Uint32Array(src.data.buffer);
+  const d32 = new Uint32Array(out.data.buffer);
+  d32.set(s32);
 
-  const dirs = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+  // #050605 con alpha 255 en Little Endian (AABBGGRR) = 0xFF050605
+  const OUTLINE_COLOR = 0xFF050605;
+
   for (let y = 1; y < h - 1; y++) {
-    if (y % 64 === 0 || y % 64 === 63) continue;
+    if ((y & 63) === 0 || (y & 63) === 63) continue;
+    const rowOffset = y * w;
     for (let x = 1; x < w - 1; x++) {
-      if (x % 64 === 0 || x % 64 === 63) continue;
-      const idx = (y * w + x) * 4;
-      if (s[idx + 3] > 128) continue;
+      if ((x & 63) === 0 || (x & 63) === 63) continue;
+      const idx = rowOffset + x;
+      if ((s32[idx] >>> 24) > 128) continue;
 
-      for (let k = 0; k < 4; k++) {
-        const nIdx = ((y + dirs[k][1]) * w + (x + dirs[k][0])) * 4;
-        if (s[nIdx + 3] > 128) {
-          d[idx] = 5; d[idx + 1] = 6; d[idx + 2] = 5; d[idx + 3] = 255;
-          break;
-        }
+      if (
+        (s32[idx - 1] >>> 24) > 128 ||
+        (s32[idx + 1] >>> 24) > 128 ||
+        (s32[idx - w] >>> 24) > 128 ||
+        (s32[idx + w] >>> 24) > 128
+      ) {
+        d32[idx] = OUTLINE_COLOR;
       }
     }
   }
@@ -85,10 +89,10 @@ function makeTexture(canvas, repeat = 1) {
 }
 
 // ============================================================================
-// DIBUJO DE CADA ARMA EN MANO SEGÚN LA DIRECCIÓN (0..7) Y EL ESTADO (IDLE/WALK/JUMP/ATTACK/HURT)
+// DIBUJO DE CADA ARMA EN MANO SEGÚN LA DIRECCIÓN (0..7) Y EL ESTADO
 // ============================================================================
 function renderWeaponByDirection(px, glow, handWeapon, dir, stateIdx, col, anchorX, anchorY, facingSign) {
-  const isAtk = stateIdx === 3;
+  const isAtk = stateIdx === 3 || stateIdx === 5; // ATTACK quieto o ATTACK_WALK en movimiento
   const isFront = dir === 4;
   const isBack = dir === 0;
   const kickX = isAtk && col < 2 ? -2 * facingSign : 0;
@@ -220,9 +224,8 @@ function renderWeaponByDirection(px, glow, handWeapon, dir, stateIdx, col, ancho
 }
 
 // ============================================================================
-// DIBUJO DEL JUGADOR EN 8 DIRECCIONES (Filas 0..7) x 5 ESTADOS (Cols 0..19)
-// Dir 0: N (Espalda) | Dir 1: NE | Dir 2: E (Perfil Der) | Dir 3: SE
-// Dir 4: S (Frente)  | Dir 5: SW | Dir 6: W (Perfil Izq) | Dir 7: NW
+// DIBUJO DEL JUGADOR EN 8 DIRECCIONES (Filas 0..7) x 7 ESTADOS (Cols 0..27)
+// Estados: 0:IDLE, 1:WALK, 2:JUMP, 3:ATTACK, 4:HURT, 5:ATTACK_WALK, 6:DASH
 // ============================================================================
 function drawPlayer8DirCell(ctx, gCtx, dir, stateIdx, col, ox, oy, skills = { slash: 1 }, activeHand = 'slash') {
   ctx.save(); gCtx.save();
@@ -238,18 +241,27 @@ function drawPlayer8DirCell(ctx, gCtx, dir, stateIdx, col, ox, oy, skills = { sl
 
   const phase = (col / 4) * Math.PI * 2;
   const isIdle = stateIdx === 0;
-  const isWalk = stateIdx === 1;
+  const isWalk = stateIdx === 1 || stateIdx === 5; // Camina tanto en WALK como en ATTACK_WALK
   const isJump = stateIdx === 2;
-  const isAtk  = stateIdx === 3;
+  const isAtk  = stateIdx === 3 || stateIdx === 5; // Ataca tanto en ATTACK como en ATTACK_WALK
   const isHurt = stateIdx === 4;
+  const isDash = stateIdx === 6;
 
-  // Desplazamiento vertical según estado (respiración, paso, salto/caída o daño)
-  const bobY = isWalk
-    ? Math.round(Math.abs(Math.sin(phase)) * 2)
-    : isJump
-      ? (col === 0 ? 2 : col === 1 ? -4 : col === 2 ? -3 : 1)
-      : (isIdle && col % 2 === 1 ? 1 : 0);
-  const hurtX = isHurt ? (col % 2 === 0 ? -2 : 2) : 0;
+  const isBackView = (effectiveDir === 0 || effectiveDir === 1 || effectiveDir === 7);
+  const isSideProfile = (effectiveDir === 2 || effectiveDir === 6);
+  const facingSign = (effectiveDir === 5 || effectiveDir === 6 || effectiveDir === 7) ? -1 : 1;
+
+  // Desplazamiento vertical y de impulso (dash)
+  const bobY = isDash
+    ? -2
+    : isWalk
+      ? Math.round(Math.abs(Math.sin(phase)) * 2)
+      : isJump
+        ? (col === 0 ? 2 : col === 1 ? -4 : col === 2 ? -3 : 1)
+        : (isIdle && col % 2 === 1 ? 1 : 0);
+
+  const dashShiftX = isDash && effectiveDir !== 0 && effectiveDir !== 4 ? facingSign * 3 : 0;
+  const hurtX = isHurt ? (col % 2 === 0 ? -2 : 2) : dashShiftX;
 
   ctx.translate(hurtX, bobY);
   gCtx.translate(hurtX, bobY);
@@ -264,9 +276,13 @@ function drawPlayer8DirCell(ctx, gCtx, dir, stateIdx, col, ox, oy, skills = { sl
     gCtx.fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h));
   };
 
-  const isBackView = (effectiveDir === 0 || effectiveDir === 1 || effectiveDir === 7);
-  const isSideProfile = (effectiveDir === 2 || effectiveDir === 6);
-  const facingSign = (effectiveDir === 5 || effectiveDir === 6 || effectiveDir === 7) ? -1 : 1;
+  // Líneas cinéticas de velocidad durante el DASH
+  if (isDash) {
+    const trailDir = isSideProfile ? -facingSign : 1;
+    glow(14 - col * 2 * trailDir, 16 + (col % 2) * 4, 7, 1, '#b89c46');
+    glow(12 - col * 3 * trailDir, 28 - (col % 2) * 3, 9, 1, '#e6d7a5');
+    glow(15 - col * 2 * trailDir, 42 + (col % 2) * 2, 6, 1, '#b89c46');
+  }
 
   // 1. En vistas traseras, el arma se dibuja ANTES del torso para que quede parcialmente detrás del cuerpo
   if (isBackView) {
@@ -287,26 +303,31 @@ function drawPlayer8DirCell(ctx, gCtx, dir, stateIdx, col, ox, oy, skills = { sl
     }
   }
 
-  // 3. PIERNAS Y BOTAS (Adaptadas a perfil vs frente/espalda y salto)
-  const stride = isWalk ? Math.round(Math.sin(phase) * 3) : (isJump ? (col === 1 || col === 2 ? -3 : 1) : 0);
+  // 3. PIERNAS Y BOTAS (Activas en WALK, ATTACK_WALK, JUMP y DASH)
+  const stride = isDash
+    ? 5
+    : isWalk
+      ? Math.round(Math.sin(phase) * 3.5)
+      : (isJump ? (col === 1 || col === 2 ? -3 : 1) : 0);
 
   if (isSideProfile) {
-    // En perfil (E / W), las piernas se cruzan horizontalmente al caminar
+    // En perfil (E / W), las piernas se cruzan horizontalmente al caminar o impulsarse
     const legBackX = 27 - stride * facingSign;
     const legFrontX = 27 + stride * facingSign;
+    const dashLift = isDash ? -3 : 0;
     // Pierna trasera (más oscura)
-    px(legBackX, 44, 5, 9, '#0d120d');
-    px(legBackX, 53, 6, 6, '#050605');
+    px(legBackX, 44 + dashLift, 5, 9, '#0d120d');
+    px(legBackX, 53 + dashLift, 6, 6, '#050605');
     // Pierna delantera (iluminada)
-    px(legFrontX, 44, 5, 9, '#182018');
-    px(legFrontX + 1, 44, 2, 9, '#243022');
-    px(legFrontX, 53, 6, 6, '#050605');
-    px(legFrontX + 1, 53, 4, 2, '#4a2518');
-    px(legFrontX, 58, 6, 1, '#364832');
+    px(legFrontX, 44 + dashLift, 5, 9, '#182018');
+    px(legFrontX + 1, 44 + dashLift, 2, 9, '#243022');
+    px(legFrontX, 53 + dashLift, 6, 6, '#050605');
+    px(legFrontX + 1, 53 + dashLift, 4, 2, '#4a2518');
+    px(legFrontX, 58 + dashLift, 6, 1, '#364832');
   } else {
-    // En frente, espalda y diagonales, las dos piernas están separadas con 4px de aire en el centro
-    const stepL = isJump ? stride : stride;
-    const stepR = isJump ? stride : -stride;
+    // En frente, espalda y diagonales, las dos piernas se alternan verticalmente
+    const stepL = isJump ? stride : (isDash ? -3 : stride);
+    const stepR = isJump ? stride : (isDash ? 2 : -stride);
     // Pierna izquierda
     px(22, 44 + stepL, 5, 9, '#121812');
     px(23, 44 + stepL, 2, 9, '#243022');
@@ -321,8 +342,8 @@ function drawPlayer8DirCell(ctx, gCtx, dir, stateIdx, col, ox, oy, skills = { sl
     px(31, 58 + stepR, 6, 1, '#364832');
   }
 
-  // 4. TORSO Y GABARDINA SEGÚN LA DIRECCIÓN
-  const coatFlare = isJump && (col === 1 || col === 2) ? 2 : (isWalk && col % 2 === 0 ? 1 : 0);
+  // 4. TORSO Y GABARDINA SEGÚN LA DIRECCIÓN (Ondea con fuerza en el DASH)
+  const coatFlare = isDash ? 4 : (isJump && (col === 1 || col === 2) ? 2 : (isWalk && col % 2 === 0 ? 1 : 0));
 
   if (isSideProfile) {
     // Torso de perfil (más estrecho: 11px)
@@ -334,7 +355,7 @@ function drawPlayer8DirCell(ctx, gCtx, dir, stateIdx, col, ox, oy, skills = { sl
     px(24, 34, 11, 2, '#4a2518');              // Cinturón lateral
     px(29 + facingSign * 3, 34, 2, 2, '#b89c46');
   } else {
-    // Faldones inferiores de la gabardina (se abren al saltar o caminar)
+    // Faldones inferiores de la gabardina (se abren al saltar, caminar o hacer dash)
     px(20 - coatFlare, 36, 7, 10, '#121812');
     px(21 - coatFlare, 36, 4, 9, '#243022');
     px(31 + coatFlare, 36, 7, 10, '#121812');
@@ -400,10 +421,11 @@ function drawPlayer8DirCell(ctx, gCtx, dir, stateIdx, col, ox, oy, skills = { sl
   }
 
   // 5. CABEZA, CAPUCHA Y MÁSCARA ANTIGÁS EN LAS 8 DIRECCIONES
-  px(24, 19, 10, 3, '#050605'); // Cuello
-  px(25, 19, 8, 2, '#4a2518');
-  px(25, 7, 8, 2, '#243022');   // Cima redondeada de la capucha
-  px(23, 9, 12, 10, '#182018'); // Volumen de la capucha
+  const headLean = isDash && isSideProfile ? facingSign * 2 : 0;
+  px(24 + headLean, 19, 10, 3, '#050605'); // Cuello
+  px(25 + headLean, 19, 8, 2, '#4a2518');
+  px(25 + headLean, 7, 8, 2, '#243022');   // Cima redondeada de la capucha
+  px(23 + headLean, 9, 12, 10, '#182018'); // Volumen de la capucha
 
   if (effectiveDir === 0) {
     // Dir 0 (ESPALDA PURA): Parte trasera de la capucha con costura vertical y correa occipital
@@ -419,12 +441,12 @@ function drawPlayer8DirCell(ctx, gCtx, dir, stateIdx, col, ox, oy, skills = { sl
     px(sideX + facingSign, 16, 2, 3, '#4a2518'); // Borde del filtro
   } else if (effectiveDir === 2 || effectiveDir === 6) {
     // Dir 2 / Dir 6 (PERFIL PURO E / W): Capucha de perfil, 1 lente y hocico del respirador sobresaliendo
-    const maskX = effectiveDir === 2 ? 30 : 23;
-    const snoutX = effectiveDir === 2 ? 34 : 20;
-    px(effectiveDir === 2 ? 24 : 28, 8, 6, 10, '#364832'); // Lateral de la capucha
+    const maskX = (effectiveDir === 2 ? 30 : 23) + headLean;
+    const snoutX = (effectiveDir === 2 ? 34 : 20) + headLean;
+    px((effectiveDir === 2 ? 24 : 28) + headLean, 8, 6, 10, '#364832'); // Lateral de la capucha
     px(maskX, 10, 5, 8, '#050605');
     px(maskX, 10, 4, 2, '#877a5c'); // Venda lateral
-    glow(effectiveDir === 2 ? 32 : 24, 13, 3, 3, '#e6d7a5'); // Lente ocular de perfil
+    glow((effectiveDir === 2 ? 32 : 24) + headLean, 13, 3, 3, '#e6d7a5'); // Lente ocular de perfil
     px(snoutX, 15, 4, 4, '#243022'); // Hocico respirador sobresaliendo en perfil
     px(snoutX + (effectiveDir === 2 ? 2 : 0), 16, 2, 3, '#4a2518');
   } else if (effectiveDir === 4) {
@@ -703,7 +725,7 @@ function buildEnemyDirectionalSheet(type) {
 }
 
 // ============================================================================
-// CACHÉ DE ATLAS DE 8 DIRECCIONES x 5 ANIMACIONES DEL JUGADOR (20 cols x 8 rows = 1280x512)
+// CACHÉ DE ATLAS DE 8 DIRECCIONES x 7 ANIMACIONES DEL JUGADOR (28 cols x 8 rows)
 // ============================================================================
 const playerLoadoutCache = new Map();
 
@@ -715,10 +737,11 @@ export function getPlayerLoadoutSheet(skills = { slash: 1 }, activeHand = 'slash
     return playerLoadoutCache.get(signature);
   }
 
-  const cols = 20; // 5 estados (IDLE, WALK, JUMP, ATTACK, HURT) x 4 frames
-  const rows = 8;  // 8 direcciones (N, NE, E, SE, S, SW, W, NW)
-  const w = cols * CONFIG.FRAME_SIZE; // 1280 px
-  const h = rows * CONFIG.FRAME_SIZE; // 512 px
+  const numStates = Object.keys(CONFIG.DIRECTIONAL.STATES).length; // 7 estados
+  const cols = numStates * 4; // 28 columnas
+  const rows = 8;             // 8 direcciones
+  const w = cols * CONFIG.FRAME_SIZE;
+  const h = rows * CONFIG.FRAME_SIZE;
 
   const canvas = document.createElement('canvas');
   canvas.width = w; canvas.height = h;
@@ -729,7 +752,7 @@ export function getPlayerLoadoutSheet(skills = { slash: 1 }, activeHand = 'slash
   const gCtx = glowCanvas.getContext('2d');
 
   for (let dir = 0; dir < rows; dir++) {
-    for (let stateIdx = 0; stateIdx < 5; stateIdx++) {
+    for (let stateIdx = 0; stateIdx < numStates; stateIdx++) {
       for (let f = 0; f < 4; f++) {
         const colIdx = stateIdx * 4 + f;
         drawPlayer8DirCell(
@@ -747,15 +770,6 @@ export function getPlayerLoadoutSheet(skills = { slash: 1 }, activeHand = 'slash
   tex.repeat.set(1 / cols, 1 / rows);
   const glowTex = makeTexture(glowCanvas);
   glowTex.repeat.set(1 / cols, 1 / rows);
-
-  // Actualizar vista previa en el modal [TAB]
-  if (SpriteSheets && SpriteSheets.player && SpriteSheets.player.canvas) {
-    SpriteSheets.player.canvas.width = w;
-    SpriteSheets.player.canvas.height = h;
-    const pCtx = SpriteSheets.player.canvas.getContext('2d');
-    pCtx.clearRect(0, 0, w, h);
-    pCtx.drawImage(canvas, 0, 0);
-  }
 
   const entry = { name: `player_8dir_${activeHand}`, cols, rows, numDirs: 8, tex, glowTex, canvas };
   playerLoadoutCache.set(signature, entry);
