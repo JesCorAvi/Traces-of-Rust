@@ -150,12 +150,9 @@ function syncOrbitalsCount() {
 // Cambia inmediatamente el sprite del arma en la mano del jugador cuando ataca con ella
 // y orienta al personaje hacia el ángulo del disparo/tajo
 function triggerWeaponVisualAttack(weaponId, targetYaw = null, animDuration = 0.24) {
+  // El sprite NO se gira al atacar: solo cambia el arma y se activa la animación de ataque.
+  // El ataque sale hacia `yaw` (hacia donde mira la cámara).
   atkAnimTimer = animDuration;
-  if (targetYaw !== null && targetYaw !== undefined) {
-    playerFacingYaw = targetYaw;
-    playerBillboard.facingYaw = playerFacingYaw;
-    aimLockTimer = animDuration + 0.08;
-  }
   syncPlayerVisualLoadout(weaponId);
 }
 
@@ -767,8 +764,9 @@ function animate() {
       if (weaponTimers.slash >= cd) {
         weaponTimers.slash = 0;
         const slashYaw = executeSawSlash(
-          scene, playerGroup.position, playerFacingYaw, skills.slash, mods,
-          activeEnemies, vfx, damageEnemy, s => { camShake = Math.max(camShake, s); }
+          scene, playerGroup.position, yaw, skills.slash, mods,
+          activeEnemies, vfx, damageEnemy, s => { camShake = Math.max(camShake, s); },
+          playerFacingYaw
         );
         triggerWeaponVisualAttack('slash', slashYaw, 0.22);
       }
@@ -780,7 +778,7 @@ function animate() {
       const cd = Math.max(0.4, (CONFIG.SKILLS.shotgun.baseCd - skills.shotgun * 0.08) * cdFactor);
       if (weaponTimers.shotgun >= cd) {
         const shotYaw = fireBuckshot(
-          scene, playerGroup.position, skills.shotgun, mods,
+          scene, playerGroup.position, yaw, playerFacingYaw, skills.shotgun, mods,
           activeEnemies, vfx, damageEnemy, () => { camShake = Math.max(camShake, 0.2); }
         );
         if (shotYaw !== null) {
@@ -795,7 +793,7 @@ function animate() {
       weaponTimers.flamethrower += dt;
       if (weaponTimers.flamethrower >= CONFIG.SKILLS.flamethrower.baseCd * cdFactor) {
         weaponTimers.flamethrower = 0;
-        fireFlamethrower(scene, playerGroup.position, yaw, skills.flamethrower, mods, activeEnemies, vfx, damageEnemy);
+        fireFlamethrower(scene, playerGroup.position, yaw, skills.flamethrower, mods, activeEnemies, vfx, damageEnemy, playerFacingYaw);
         if (atkAnimTimer <= 0.05) {
           triggerWeaponVisualAttack('flamethrower', yaw, 0.14);
         }
@@ -841,7 +839,7 @@ function animate() {
       const cd = Math.max(0.5, (CONFIG.SKILLS.harpoon.baseCd - skills.harpoon * 0.1) * cdFactor);
       if (weaponTimers.harpoon >= cd) {
         weaponTimers.harpoon = 0;
-        const harpoonYaw = fireHarpoon(scene, playerGroup.position, playerFacingYaw, skills.harpoon, mods, activeEnemies, vfx, damageEnemy);
+        const harpoonYaw = fireHarpoon(scene, playerGroup.position, yaw, skills.harpoon, mods, activeEnemies, vfx, damageEnemy, playerFacingYaw);
         triggerWeaponVisualAttack('harpoon', harpoonYaw, 0.25);
       }
     }

@@ -20,7 +20,9 @@ export function getDirectionalHandPos(playerPos, facingYaw, forwardDist = 0.85, 
 }
 
 // 1. SIERRA DE AMPUTACIÓN
-export function executeSawSlash(scene, playerPos, facingYaw, level, mods, enemies, vfx, onDamage, onMicroShake) {
+// facingYaw = dirección de ataque (hacia donde mira la cámara)
+// bodyYaw   = orientación del sprite (solo se usa para la posición de la mano)
+export function executeSawSlash(scene, playerPos, facingYaw, level, mods, enemies, vfx, onDamage, onMicroShake, bodyYaw = facingYaw) {
   const { cfg, mult } = getWeaponScaling('slash', level);
   const size = (3.1 + level * 0.3) * mods.areaMult;
   const slashCount = 1 + (mods.bonusProjectiles || 0);
@@ -31,7 +33,7 @@ export function executeSawSlash(scene, playerPos, facingYaw, level, mods, enemie
   AudioSys.play(90, 0.09, 'square', 0.04);
   if (onMicroShake) onMicroShake(0.09);
 
-  const handOrigin = getDirectionalHandPos(playerPos, facingYaw, 0.5, 0.32, 1.05);
+  const handOrigin = getDirectionalHandPos(playerPos, bodyYaw, 0.5, 0.32, 1.05);
 
   for (let s = 0; s < slashCount; s++) {
     const angleOffset = slashCount === 1 ? 0 : ((s / (slashCount - 1)) - 0.5) * Math.min(Math.PI * 1.2, slashCount * 0.42);
@@ -121,8 +123,8 @@ export function createOrbitalUnit(scene, angle) {
   return { group, sprite, eerieLight, orbTex, angle, animTimer: Math.random(), trailTimer: 0, hitCd: 0 };
 }
 
-// 2. ESCOPETA CALIBRE 12 (Devuelve el ángulo hacia el enemigo disparado para girar el sprite del jugador)
-export function fireBuckshot(scene, playerPos, level, mods, enemies, vfx, onDamage, triggerFlash) {
+// 2. ESCOPETA CALIBRE 12 (dispara hacia aimYaw; bodyYaw solo posiciona el cañón en la mano del sprite)
+export function fireBuckshot(scene, playerPos, aimYaw, bodyYaw, level, mods, enemies, vfx, onDamage, triggerFlash) {
   const alive = enemies.filter(e => e.state !== 'dead');
   if (!alive.length) return null;
 
@@ -137,10 +139,10 @@ export function fireBuckshot(scene, playerPos, level, mods, enemies, vfx, onDama
   AudioSys.play(260, 0.09, 'square', 0.06);
   if (triggerFlash) triggerFlash();
 
-  const baseDir = new THREE.Vector3().subVectors(closest.group.position, playerPos).setY(0).normalize();
-  const targetYaw = Math.atan2(-baseDir.x, -baseDir.z);
+  const baseDir = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), aimYaw);
+  const targetYaw = aimYaw;
   const rightDir = new THREE.Vector3(-baseDir.z, 0, baseDir.x);
-  const muzzlePos = getDirectionalHandPos(playerPos, targetYaw, 0.95, 0.38, 1.12);
+  const muzzlePos = getDirectionalHandPos(playerPos, bodyYaw, 0.95, 0.38, 1.12);
 
   const flashGroup = new THREE.Group();
   flashGroup.position.copy(muzzlePos);
@@ -210,10 +212,10 @@ export function fireBuckshot(scene, playerPos, level, mods, enemies, vfx, onDama
 }
 
 // 3. SOPLETE INCINERADOR (Sale desde la boquilla de la mano derecha en la dirección actual)
-export function fireFlamethrower(scene, playerPos, facingYaw, level, mods, enemies, vfx, onDamage) {
+export function fireFlamethrower(scene, playerPos, facingYaw, level, mods, enemies, vfx, onDamage, bodyYaw = facingYaw) {
   const { cfg, mult } = getWeaponScaling('flamethrower', level);
   const fwd = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), facingYaw);
-  const nozzle = getDirectionalHandPos(playerPos, facingYaw, 0.92, 0.36, 1.05);
+  const nozzle = getDirectionalHandPos(playerPos, bodyYaw, 0.92, 0.36, 1.05);
   const range = (cfg.baseRange + level * 0.45) * mods.areaMult;
   const extraStreams = mods.bonusProjectiles || 0;
 
@@ -290,26 +292,18 @@ export function spawnShrapnelMine(scene, playerPos, level, mods, worldPhysics, m
   }
 }
 
-// 5. ARPÓN NEUMÁTICO (Devuelve el ángulo del disparo para girar el sprite del jugador)
-export function fireHarpoon(scene, playerPos, facingYaw, level, mods, enemies, vfx, onDamage) {
+// 5. ARPÓN NEUMÁTICO (dispara hacia facingYaw = cámara; bodyYaw solo posiciona la mano del sprite)
+export function fireHarpoon(scene, playerPos, facingYaw, level, mods, enemies, vfx, onDamage, bodyYaw = facingYaw) {
   const alive = enemies.filter(e => e.state !== 'dead');
   const { cfg, mult } = getWeaponScaling('harpoon', level);
   const maxRange = cfg.baseRange * mods.areaMult;
   const count = 1 + (mods.bonusProjectiles || 0);
 
-  let baseDir = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), facingYaw);
-  if (alive.length > 0) {
-    const closest = alive.reduce((a, b) =>
-      a.group.position.distanceTo(playerPos) < b.group.position.distanceTo(playerPos) ? a : b
-    );
-    if (closest.group.position.distanceTo(playerPos) < maxRange) {
-      baseDir = new THREE.Vector3().subVectors(closest.group.position, playerPos).setY(0).normalize();
-    }
-  }
+  const baseDir = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), facingYaw);
 
-  const targetYaw = Math.atan2(-baseDir.x, -baseDir.z);
+  const targetYaw = facingYaw;
   AudioSys.play(150, 0.18, 'triangle', 0.08);
-  const start = getDirectionalHandPos(playerPos, targetYaw, 0.85, 0.36, 1.08);
+  const start = getDirectionalHandPos(playerPos, bodyYaw, 0.85, 0.36, 1.08);
   const dmg = cfg.baseDmg * mult * mods.dmgMult;
   const maxPierce = 2 + level;
 
@@ -354,11 +348,10 @@ export function fireDefibrillator(scene, playerPos, facingYaw, level, mods, enem
     .slice(0, maxTargets);
   if (!near.length) return null;
 
-  const firstDir = new THREE.Vector3().subVectors(near[0].group.position, playerPos).setY(0).normalize();
-  const targetYaw = Math.atan2(-firstDir.x, -firstDir.z);
+  const targetYaw = facingYaw;
 
   AudioSys.play(480, 0.14, 'sawtooth', 0.06);
-  const pts = [getDirectionalHandPos(playerPos, targetYaw, 0.6, 0.3, 1.1)];
+  const pts = [getDirectionalHandPos(playerPos, facingYaw, 0.6, 0.3, 1.1)];
   const dmg = cfg.baseDmg * mult * mods.dmgMult;
 
   near.forEach(e => {
