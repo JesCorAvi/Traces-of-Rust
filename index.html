@@ -19,99 +19,195 @@
 
   <!-- Capas de Post-Procesado estilo Buckshot Roulette -->
   <div id="crt-overlay"></div>
+  <div id="grain-overlay"></div>
   <div id="vignette-overlay"></div>
   <div id="damage-flash"></div>
   <div id="scare-flash"></div>
 
-  <!-- Barra superior de herramientas -->
+  <!-- Barra superior para exportar spritesheets -->
   <div id="top-bar">
-    <button class="term-btn" id="btn-open-sheets">📼 Exportar Spritesheets (.PNG) [TAB]</button>
+    <button class="rust-btn sm" id="btn-open-sheets">📼 ARCHIVO DE SPRITES (.PNG) [TAB]</button>
   </div>
 
   <!-- Modal Inspector / Descargador de Spritesheets -->
   <div id="sheets-modal" class="overlay hidden">
-    <div class="term-panel wide-panel">
-      <div class="term-header">
-        <span>// ARCHIVO DE SPRITESHEETS ANIMADOS (256x256 · 4x4 FRAMES · NEAREST)</span>
-        <button class="term-btn-sm" id="btn-close-sheets">[X] CERRAR</button>
+    <div class="metal-plate wide-plate">
+      <div class="screw tl"></div><div class="screw tr"></div><div class="screw bl"></div><div class="screw br"></div>
+      <div class="plate-header">
+        <span class="tape-label">// ARCHIVO DE SPRITESHEETS PIXEL-ART (NEAREST)</span>
+        <button class="rust-btn sm" id="btn-close-sheets">[X] CERRAR</button>
       </div>
-      <p class="term-sub">Filas: 1. IDLE (4f) | 2. MOVIMIENTO (4f) | 3. ATAQUE (4f) | 4. DAÑO/MUERTE (4f). Haz clic en cualquiera para descargar el PNG.</p>
+      <p class="plate-sub">Hojas 4x4 (Personajes y 5 Bosses) + Hojas de Ataque Básico, Orbital y Texturas. Haz clic para descargar PNG.</p>
       <div id="sheets-grid"></div>
     </div>
   </div>
 
-  <!-- HUD en partida -->
+  <!-- HUD en partida estilo Buckshot Roulette -->
   <div id="hud" class="hidden">
-    <div class="hud-box hud-left">
-      <div class="hud-title">// CONSTANTES VITALES</div>
-      <div class="bar-row"><span>PULSO</span><span id="hp-text">100/100</span></div>
-      <div class="bar-track"><div id="hp-bar"></div></div>
-
-      
-      <div class="bar-row"><span>DOSIS</span><span id="level-text">CICLO 1</span></div>
-      <div class="bar-track exp-track"><div id="exp-bar"></div></div>
-
-      <div class="bar-row"><span>ADRENALINA</span><span>[SHIFT]</span></div>
-      <div class="bar-track stam-track"><div id="stam-bar"></div></div>
-
-      <div class="hud-counters">
-        <span id="kills-text">BAJAS: 0</span>
-        <span id="souls-hud">DIENTES: 0 🦷</span>
+    <!-- Barra de Vida del Boss (Centro Superior) -->
+    <div id="boss-hud" class="hidden">
+      <div class="boss-plate">
+        <div class="screw tl"></div><div class="screw tr"></div>
+        <div class="boss-header">
+          <span id="boss-name">// EL AMPUTADOR DE PLANTA</span>
+          <span id="boss-phase" class="phase-tag">FASE I</span>
+        </div>
+        <div class="boss-bar-frame">
+          <div id="boss-hp-bar"></div>
+          <div id="boss-hp-segments"></div>
+        </div>
       </div>
-      <div id="skills-bar"></div>
     </div>
 
-    <div class="hud-box hud-right">
+    <!-- Banner de Fase Final (Minuto 15+) -->
+    <div id="endgame-banner" class="hidden">
+      ⚠️ FALLO DE CONTENCIÓN TOTAL // PROTOCOLO DE EXTERMINIO ACTIVO ⚠️
+    </div>
+
+    <!-- Panel Izquierdo: Constantes e Inventario 4/4 -->
+    <div class="metal-plate hud-left">
+      <div class="screw tl"></div><div class="screw tr"></div><div class="screw bl"></div><div class="screw br"></div>
+      <div class="tape-strip">MONITOR BIOMÉTRICO // UNIDAD 04</div>
+
+      <div class="stat-label-row">
+        <span>PULSO CARDÍACO</span>
+        <span id="hp-text" class="led-val">100 / 100</span>
+      </div>
+      <div class="segmented-bar hp-frame">
+        <div id="hp-bar"></div>
+        <div class="bar-grid-overlay"></div>
+      </div>
+
+      <div class="stat-label-row">
+        <span>DOSIS DE SUERO</span>
+        <span id="level-text" class="led-val amber">CICLO 01</span>
+      </div>
+      <div class="segmented-bar exp-frame">
+        <div id="exp-bar"></div>
+        <div class="bar-grid-overlay"></div>
+      </div>
+
+      <div class="stat-label-row">
+        <span>VÁLVULA DE ESCAPE [SHIFT]</span>
+        <span id="elev-text" class="led-dim">COTA: 0.0m</span>
+      </div>
+      <div class="segmented-bar stam-frame">
+        <div id="stam-bar"></div>
+      </div>
+
+      <div class="counters-strip">
+        <div>BAJAS: <b id="kills-text">0</b></div>
+        <div>DIENTES: <b id="souls-hud">0 🦷</b></div>
+        <div>BOSSES: <b id="bosses-killed-hud">0/5</b></div>
+      </div>
+
+      <div class="slot-section-title">RANURAS DE ARMAS [<span id="weapons-count">1/4</span>] · MÁX +8</div>
+      <div id="skills-bar" class="slots-grid"></div>
+
+      <div class="slot-section-title">IMPLANTES PASIVOS [<span id="passives-count">0/4</span>] · MÁX +8</div>
+      <div id="passives-bar" class="passives-list"></div>
+    </div>
+
+    <!-- Panel Derecho: Cronómetro Industrial -->
+    <div class="metal-plate hud-right">
+      <div class="screw tl"></div><div class="screw br"></div>
+      <div class="clock-label">TIEMPO EN PLANTA</div>
       <div id="timer-text">00:00</div>
-      <div id="wave-text">PRESIÓN: BAJA</div>
+      <div id="wave-text">AMENAZA: NIVEL 1</div>
+      <div id="next-boss-text">PRÓX. BOSS: 03:00</div>
     </div>
 
     <div id="crosshair"></div>
-    <div id="interact-prompt" class="hidden">[E] USAR TERMINAL DE TRANSFUSIÓN</div>
+    <div id="boss-alert" class="hidden">⚠️ ALERTA SÍSMICA: PRESENCIA HOSTIL DETECTADA ⚠️</div>
   </div>
 
   <!-- Pantalla de Inicio -->
   <div id="start-screen" class="overlay">
-    <div class="term-panel">
-      <div class="term-tag">PROTOCOLO DE SUPERVIVENCIA // REV. 04</div>
-      <h1>ECHOES OF THE RUST</h1>
-      <p class="term-sub">MUNDO 3D INDUSTRIAL · BILLBOARDS 2D ANIMADOS · ESTÉTICA LO-FI</p>
-      <div class="teeth-box">🦷 DIENTES ACUMULADOS: <span id="start-souls">0</span></div>
-      <div class="controls-box">
-        <b>WASD</b> Caminar · <b>SHIFT</b> Esquiva Brusca · <b>ESPACIO</b> Saltar · <b>TAB</b> Spritesheets<br>
-        <b>E</b> Terminal de Sangre · <b>RATÓN</b> Linterna (Mira a <i>El Observador</i> para frenarlo)
+    <div class="metal-plate main-menu-plate">
+      <div class="screw tl"></div><div class="screw tr"></div><div class="screw bl"></div><div class="screw br"></div>
+      <div class="tape-strip">DOCUMENTO DE EXENCIÓN DE RESPONSABILIDAD // REV. 06</div>
+      <h1 class="buckshot-title">ECHOES OF THE RUST</h1>
+      <p class="plate-sub">SUPERVIVENCIA INDUSTRIAL 3D · BILLBOARDS LO-FI · 5 BOSSES · FASE FINAL</p>
+
+      <div class="teeth-banner">🦷 DIENTES EN RESERVA: <span id="start-souls">0</span></div>
+
+      <div class="paper-note">
+        <b>INSTRUCCIONES OPERATIVAS:</b><br>
+        • <b>WASD</b> Moverse por rampas y plataformas · <b>ESPACIO</b> Saltar · <b>SHIFT</b> Esquiva Brusca<br>
+        • <b>RATÓN</b> Apuntar linterna (Alumbra de frente a <i>El Observador</i> para paralizarlo)<br>
+        • <b>SUBIDA DE NIVEL:</b> Equipa hasta <b>4 Armas</b> y <b>4 Pasivas</b> (Nivel máx. <b>+8</b>). Usa <b>Actualizar</b> para cambiar opciones.<br>
+        • <b>MEJORAS PERMANENTES:</b> Recoge <b>Dientes (🦷)</b> durante la partida y gástalos al morir en la <b>Mesa del Cirujano</b>.
       </div>
+
       <div class="btn-group">
-        <button class="term-btn primary" id="btn-start">[ FIRMAR Y ENTRAR ]</button>
-        <button class="term-btn" id="btn-open-shop">[ MESA DEL CIRUJANO ]</button>
+        <button class="rust-btn primary" id="btn-start">[ FIRMAR CONTRATO Y ENTRAR ]</button>
+        <button class="rust-btn" id="btn-open-shop">[ 🦷 MESA DEL CIRUJANO ]</button>
       </div>
     </div>
   </div>
 
-  <!-- Tienda / Mesa del Cirujano -->
+  <!-- Tienda Permanente Fuera de Partida (Mesa del Cirujano) -->
   <div id="shop-screen" class="overlay hidden">
-    <div class="term-panel">
-      <h2>// MESA DEL CIRUJANO (<span id="shop-souls">0</span> 🦷)</h2>
-      <p class="term-sub">Intercambia dientes arrancados por mejoras permanentes.</p>
-      <div id="shop-list"></div>
-      <button class="term-btn" id="btn-close-shop">[ VOLVER ]</button>
+    <div class="metal-plate main-menu-plate">
+      <div class="screw tl"></div><div class="screw tr"></div><div class="screw bl"></div><div class="screw br"></div>
+      <div class="plate-header">
+        <span class="tape-label">// MESA DEL CIRUJANO (MEJORAS PERMANENTES)</span>
+        <span class="led-val amber">RESERVA: <span id="shop-souls">0</span> 🦷</span>
+      </div>
+      <p class="plate-sub">Intercambia los dientes extraídos en tus partidas por implantes permanentes:</p>
+
+      <div id="shop-list" class="shop-container"></div>
+
+      <div class="btn-group" style="margin-top:14px;">
+        <button class="rust-btn primary" id="btn-shop-play">[ ENTRAR DIRECTO A PLANTA ]</button>
+        <button class="rust-btn" id="btn-close-shop">[ VOLVER ]</button>
+      </div>
     </div>
   </div>
 
-  <!-- Subida de Nivel -->
+  <!-- Subida de Nivel (Armas + Pasivas + Botón Actualizar) -->
   <div id="level-up-screen" class="overlay hidden">
-    <div class="term-panel">
-      <h2>// SELECCIONA INSTRUMENTO O DOSIS</h2>
+    <div class="metal-plate levelup-plate">
+      <div class="screw tl"></div><div class="screw tr"></div><div class="screw bl"></div><div class="screw br"></div>
+      <div class="plate-header">
+        <span class="tape-label">// SELECCIONA MUTACIÓN, ARMA O IMPLANTE PASIVO</span>
+        <span id="lvlup-slots-info" class="led-val amber">ARMAS: 1/4 | PASIVAS: 0/4</span>
+      </div>
+      <p class="plate-sub">Elige 1 de las siguientes opciones (Tope máximo por pieza: +8):</p>
+
       <div id="upgrade-container"></div>
+
+      <div class="reroll-bar">
+        <button class="rust-btn reroll-btn" id="btn-reroll">
+          🔄 ACTUALIZAR OPCIONES (<span id="reroll-count">3</span> RESTANTES)
+        </button>
+      </div>
     </div>
   </div>
 
-  <!-- Game Over -->
+  <!-- Pantalla de Muerte / Informe de Autopsia -->
   <div id="game-over-screen" class="overlay hidden">
-    <div class="term-panel">
-      <h1 style="color:#a82020">PACIENTE EXPIRADO</h1>
-      <p class="term-sub">Tiempo en planta: <b id="go-time">00:00</b> · Dientes extraídos: <b id="go-souls" style="color:#c9a648">0 🦷</b></p>
-      <button class="term-btn primary" id="btn-restart">[ REINICIAR PROTOCOLO ]</button>
+    <div class="metal-plate gameover-plate">
+      <div class="screw tl"></div><div class="screw tr"></div><div class="screw bl"></div><div class="screw br"></div>
+      <div class="tape-strip">CERTIFICADO DE DEFUNCIÓN // EXPEDIENTE CERRADO</div>
+      <h1 class="buckshot-title dead-title">PACIENTE EXPIRADO</h1>
+      <p id="go-cause" class="plate-sub">CAUSA: DESMEMBRAMIENTO EN PLANTA INDUSTRIAL</p>
+
+      <div class="paper-note stats-report">
+        <div class="report-row"><span>TIEMPO SOBREVIVIDO:</span><b id="go-time">00:00</b></div>
+        <div class="report-row"><span>BOSSES DERROTADOS:</span><b id="go-bosses" style="color:#d4af37">0 / 5</b></div>
+        <div class="report-row"><span>ENEMIGOS ELIMINADOS:</span><b id="go-kills" style="color:#b83232">0</b></div>
+        <div class="report-row"><span>DIENTES EXTRAÍDOS EN PARTIDA:</span><b id="go-souls" style="color:#d4af37">+0 🦷</b></div>
+        <div class="report-row"><span>RESERVA TOTAL DE DIENTES:</span><b id="go-total-souls" style="color:#d4af37">0 🦷</b></div>
+        <div class="report-row"><span>CICLO ALCANZADO:</span><b id="go-level">CICLO 1</b></div>
+        <div class="report-row"><span>ESTADO DE FASE FINAL:</span><b id="go-endgame">NO ALCANZADA</b></div>
+        <div class="report-loadout" id="go-loadout"></div>
+      </div>
+
+      <div class="btn-group">
+        <button class="rust-btn primary" id="btn-restart">[ NUEVA PARTIDA ]</button>
+        <button class="rust-btn" id="btn-go-shop">[ 🦷 COMPRAR MEJORAS PERMANENTES ]</button>
+      </div>
     </div>
   </div>
 

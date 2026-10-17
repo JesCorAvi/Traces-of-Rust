@@ -1,73 +1,158 @@
 import * as THREE from 'three';
+import { CONFIG } from './config.js';
 import { SpriteSheets } from './spritesheets.js';
 import { AudioSys } from './audio.js';
 
-export function executeSawSlash(scene, playerPos, yaw, level, dmgMult, enemies, vfx, onDamage) {
-  const size = 2.8 + level * 0.4;
-  const mesh = new THREE.Mesh(
-    new THREE.PlaneGeometry(size, size),
+function getWeaponScaling(id, level) {
+  const cfg = CONFIG.SKILLS[id];
+  const mult = 1 + (level - 1) * cfg.scalePerLvl;
+  return { cfg, mult };
+}
+
+// Calcula la posición exacta de la mano derecha / boca del cañón en el mundo 3D según la dirección a la que mira el jugador
+export function getDirectionalHandPos(playerPos, facingYaw, forwardDist = 0.85, rightOffset = 0.36, heightOffset = 1.08) {
+  const fwd = new THREE.Vector3(-Math.sin(facingYaw), 0, -Math.cos(facingYaw));
+  const right = new THREE.Vector3(Math.cos(facingYaw), 0, -Math.sin(facingYaw));
+  return playerPos.clone()
+    .addScaledVector(fwd, forwardDist)
+    .addScaledVector(right, rightOffset)
+    .add(new THREE.Vector3(0, heightOffset, 0));
+}
+
+// 1. SIERRA DE AMPUTACIÓN
+export function executeSawSlash(scene, playerPos, facingYaw, level, mods, enemies, vfx, onDamage, onMicroShake) {
+  const { cfg, mult } = getWeaponScaling('slash', level);
+  const size = (3.1 + level * 0.3) * mods.areaMult;
+  const slashCount = 1 + (mods.bonusProjectiles || 0);
+  const dmg = cfg.baseDmg * mult * mods.dmgMult;
+  const range = (cfg.baseRange + level * 0.28) * mods.areaMult;
+
+  AudioSys.play(195, 0.13, 'sawtooth', 0.06);
+  AudioSys.play(90, 0.09, 'square', 0.04);
+  if (onMicroShake) onMicroShake(0.09);
+
+  const handOrigin = getDirectionalHandPos(playerPos, facingYaw, 0.5, 0.32, 1.05);
+
+  for (let s = 0; s < slashCount; s++) {
+    const angleOffset = slashCount === 1 ? 0 : ((s / (slashCount - 1)) - 0.5) * Math.min(Math.PI * 1.2, slashCount * 0.42);
+    const fwd = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), facingYaw + angleOffset);
+
+    const slashTex = SpriteSheets.env.slash.tex.clone();
+    slashTex.needsUpdate = true;
+    slashTex.repeat.set(0.25, 1);
+    slashTex.offset.set(0, 0);
+
+    const slashPos = handOrigin.clone().add(fwd.clone().multiplyScalar((1.35 + (s % 2) * 0.35) * mods.areaMult));
+
+    const group = new THREE.Group();
+    group.position.copy(slashPos);
+
+    const mesh = new THREE.Mesh(
+      new THREE.PlaneGeometry(size, size * 0.75),
+      new THREE.MeshBasicMaterial({
+        map: slashTex,
+        transparent: true,
+        alphaTest: 0.15,
+        side: THREE.DoubleSide
+      })
+    );
+    if (s === 0) {
+      const flashLight = new THREE.PointLight(0xd95326, 95, 8, 1.6);
+      group.add(flashLight);
+    }
+    group.add(mesh);
+    scene.add(group);
+
+    vfx.push({
+      mesh: group,
+      life: 0.2,
+      maxLife: 0.2,
+      billboard: true,
+      sheetTex: slashTex,
+      totalFrames: 4
+    });
+
+    enemies.forEach(e => {
+      if (e.state === 'dead') return;
+      const toE = new THREE.Vector3().subVectors(e.group.position, playerPos);
+      if (Math.abs(toE.y) < 2.2 && toE.length() < range && fwd.angleTo(toE.clone().setY(0).normalize()) < 1.15) {
+        onDamage(e, dmg, toE.clone().setY(0).normalize().multiplyScalar(1.65));
+
+        for (let p = 0; p < 3; p++) {
+          const spark = new THREE.Mesh(
+            new THREE.BoxGeometry(0.18, 0.18, 0.18),
+            new THREE.MeshBasicMaterial({ color: p % 2 === 0 ? 0xa52020 : 0xffe699 })
+          );
+          spark.position.copy(e.group.position).add(new THREE.Vector3(0, 1.0, 0));
+          scene.add(spark);
+          vfx.push({
+            mesh: spark,
+            life: 0.24,
+            vel: new THREE.Vector3((Math.random() - 0.5) * 6, 2.5 + Math.random() * 3, (Math.random() - 0.5) * 6),
+            gravity: 16,
+            floorY: playerPos.y + 0.05
+          });
+        }
+      }
+    });
+  }
+  return facingYaw;
+}
+
+export function createOrbitalUnit(scene, angle) {
+  const group = new THREE.Group();
+  const orbTex = SpriteSheets.env.orbital.tex.clone();
+  orbTex.needsUpdate = true;
+  orbTex.repeat.set(0.25, 1);
+
+  const sprite = new THREE.Mesh(
+    new THREE.PlaneGeometry(1.35, 1.35),
     new THREE.MeshBasicMaterial({
-      map: SpriteSheets.env.slash.tex,
+      map: orbTex,
       transparent: true,
       alphaTest: 0.2,
       side: THREE.DoubleSide
     })
   );
-  const fwd = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), yaw);
-  mesh.position.copy(playerPos).add(fwd.clone().multiplyScalar(1.7));
-  mesh.position.y = 1.05;
-  scene.add(mesh);
-  vfx.push({ mesh, life: 0.16, maxLife: 0.16, billboard: true });
-  AudioSys.play(210, 0.11, 'sawtooth', 0.06);
+  const eerieLight = new THREE.PointLight(0xd97724, 24, 5.5);
+  group.add(sprite, eerieLight);
+  scene.add(group);
 
-  const dmg = 26 * dmgMult * (1 + level * 0.3);
-  enemies.forEach(e => {
-    if (e.state === 'dead') return;
-    const toE = new THREE.Vector3().subVectors(e.group.position, playerPos);
-    if (toE.length() < 4.3 + level * 0.35 && fwd.angleTo(toE.clone().normalize()) < 1.15) {
-      onDamage(e, dmg, toE.normalize().multiplyScalar(1.6));
-    }
-  });
+  return { group, sprite, eerieLight, orbTex, angle, animTimer: Math.random(), trailTimer: 0, hitCd: 0 };
 }
 
-export function fireBuckshot(scene, playerPos, level, dmgMult, enemies, vfx, onDamage, triggerFlash) {
+// 2. ESCOPETA CALIBRE 12 (Devuelve el ángulo hacia el enemigo disparado para girar el sprite del jugador)
+export function fireBuckshot(scene, playerPos, level, mods, enemies, vfx, onDamage, triggerFlash) {
   const alive = enemies.filter(e => e.state !== 'dead');
-  if (!alive.length) return;
+  if (!alive.length) return null;
 
-  // Apunta hacia el enemigo más cercano dentro de 16m
+  const { cfg, mult } = getWeaponScaling('shotgun', level);
+  const maxRange = cfg.baseRange * mods.areaMult;
   const closest = alive.reduce((a, b) =>
     a.group.position.distanceTo(playerPos) < b.group.position.distanceTo(playerPos) ? a : b
   );
-  if (closest.group.position.distanceTo(playerPos) > 16) return;
+  if (closest.group.position.distanceTo(playerPos) > maxRange) return null;
 
-  // Sonido potente de escopeta en capas (grave + chasquido metálico)
-  AudioSys.play(75, 0.24, 'sawtooth', 0.11);
-  AudioSys.play(260, 0.09, 'square', 0.07);
+  AudioSys.play(75, 0.24, 'sawtooth', 0.1);
+  AudioSys.play(260, 0.09, 'square', 0.06);
   if (triggerFlash) triggerFlash();
 
-  // Dirección central del disparo y posición de la boca del cañón
-  const baseDir = new THREE.Vector3()
-    .subVectors(closest.group.position, playerPos)
-    .setY(0)
-    .normalize();
+  const baseDir = new THREE.Vector3().subVectors(closest.group.position, playerPos).setY(0).normalize();
+  const targetYaw = Math.atan2(-baseDir.x, -baseDir.z);
   const rightDir = new THREE.Vector3(-baseDir.z, 0, baseDir.x);
-  const muzzlePos = playerPos.clone()
-    .add(baseDir.clone().multiplyScalar(0.9))
-    .add(new THREE.Vector3(0, 1.15, 0));
+  const muzzlePos = getDirectionalHandPos(playerPos, targetYaw, 0.95, 0.38, 1.12);
 
-  // 1. Fogonazo de luz 3D + destello visual en la boca del cañón
   const flashGroup = new THREE.Group();
   flashGroup.position.copy(muzzlePos);
-  const flashLight = new THREE.PointLight(0xffaa33, 180, 14, 1.5);
+  const flashLight = new THREE.PointLight(0xffaa33, 160, 14, 1.5);
   const flashSprite = new THREE.Mesh(
-    new THREE.PlaneGeometry(1.3, 1.3),
+    new THREE.PlaneGeometry(1.2, 1.2),
     new THREE.MeshBasicMaterial({ color: 0xffe699, transparent: true, opacity: 0.95, side: THREE.DoubleSide })
   );
   flashGroup.add(flashLight, flashSprite);
   scene.add(flashGroup);
   vfx.push({ mesh: flashGroup, life: 0.08, maxLife: 0.08, billboard: true, scaleSpeed: 6 });
 
-  // 2. Expulsión del cartucho rojo calibre 12 (estilo Buckshot Roulette)
   const shell = new THREE.Mesh(
     new THREE.BoxGeometry(0.1, 0.22, 0.1),
     new THREE.MeshBasicMaterial({ color: 0xa52020 })
@@ -76,54 +161,32 @@ export function fireBuckshot(scene, playerPos, level, dmgMult, enemies, vfx, onD
   scene.add(shell);
   vfx.push({
     mesh: shell,
-    life: 1.1,
-    vel: rightDir.clone().multiplyScalar(3.5 + Math.random() * 1.5).add(new THREE.Vector3(0, 4.2, 0)),
+    life: 1.0,
+    vel: rightDir.clone().multiplyScalar(3.5 + Math.random()).add(new THREE.Vector3(0, 4.0, 0)),
     gravity: 16,
+    floorY: playerPos.y + 0.05,
     spin: { x: 18, z: 14 }
   });
 
-  // 3. Bocanadas de humo de pólvora
-  for (let s = 0; s < 3; s++) {
-    const smoke = new THREE.Mesh(
-      new THREE.PlaneGeometry(0.55, 0.55),
-      new THREE.MeshBasicMaterial({ color: 0x877a5c, transparent: true, opacity: 0.55, side: THREE.DoubleSide })
-    );
-    smoke.position.copy(muzzlePos).add(baseDir.clone().multiplyScalar(0.4 + s * 0.35));
-    scene.add(smoke);
-    vfx.push({
-      mesh: smoke,
-      life: 0.35,
-      maxLife: 0.35,
-      billboard: true,
-      fade: true,
-      scaleSpeed: 2.8,
-      vel: baseDir.clone().multiplyScalar(2.2).add(new THREE.Vector3((Math.random() - 0.5) * 1.2, 1.4, (Math.random() - 0.5) * 1.2))
-    });
-  }
-
-  // 4. Abanico de perdigones individuales (9 postas en Nv.1 hasta 17 en Nv.5)
-  const pelletCount = 7 + level * 2;
-  const spreadArc = 0.52 + level * 0.04;
-  const maxRange = 14.5;
-  const dmgPerPellet = (9.5 + level * 2.2) * dmgMult;
+  const pelletCount = 7 + level * 2 + (mods.bonusProjectiles || 0) * 3;
+  const spreadArc = (0.48 + level * 0.03 + (mods.bonusProjectiles || 0) * 0.06) * mods.areaMult;
+  const dmgPerPellet = cfg.baseDmg * mult * mods.dmgMult;
 
   for (let i = 0; i < pelletCount; i++) {
     const t = pelletCount > 1 ? (i / (pelletCount - 1)) - 0.5 : 0;
-    const yawOffset = t * spreadArc + (Math.random() - 0.5) * 0.08;
-    const pelletDir = baseDir.clone().applyAxisAngle(new THREE.Vector3(0, 1, 0), yawOffset);
-    pelletDir.y = (Math.random() - 0.5) * 0.14;
-    pelletDir.normalize();
+    const yawOffset = t * spreadArc + (Math.random() - 0.5) * 0.06;
+    const pelletDir = baseDir.clone().applyAxisAngle(new THREE.Vector3(0, 1, 0), yawOffset).normalize();
 
     let hitEnemy = null;
-    let hitDist = maxRange * (0.82 + Math.random() * 0.25);
+    let hitDist = maxRange * (0.85 + Math.random() * 0.2);
 
     alive.forEach(e => {
       const toE = new THREE.Vector3().subVectors(e.group.position, muzzlePos);
+      if (Math.abs(toE.y) > 2.2) return;
       toE.y = 0;
-      const horizDir = new THREE.Vector3(pelletDir.x, 0, pelletDir.z).normalize();
-      const forwardDist = toE.dot(horizDir);
+      const forwardDist = toE.dot(pelletDir);
       if (forwardDist > 0.4 && forwardDist < hitDist) {
-        const perpDist = toE.clone().sub(horizDir.multiplyScalar(forwardDist)).length();
+        const perpDist = toE.clone().sub(pelletDir.clone().multiplyScalar(forwardDist)).length();
         if (perpDist < 0.95) {
           hitDist = forwardDist;
           hitEnemy = e;
@@ -132,66 +195,175 @@ export function fireBuckshot(scene, playerPos, level, dmgMult, enemies, vfx, onD
     });
 
     const endPos = muzzlePos.clone().add(pelletDir.clone().multiplyScalar(hitDist));
-
-    // Estela incandescente de cada posta
-    const tracerMat = new THREE.LineBasicMaterial({
-      color: i % 2 === 0 ? 0xffe699 : 0xd97724,
-      transparent: true,
-      opacity: 0.9
-    });
     const tracer = new THREE.Line(
       new THREE.BufferGeometry().setFromPoints([muzzlePos.clone(), endPos]),
-      tracerMat
+      new THREE.LineBasicMaterial({ color: i % 2 === 0 ? 0xffe699 : 0xd97724, transparent: true, opacity: 0.85 })
     );
     scene.add(tracer);
-    vfx.push({ mesh: tracer, life: 0.14, maxLife: 0.14, fade: true });
+    vfx.push({ mesh: tracer, life: 0.13, maxLife: 0.13, fade: true });
 
-    // Perdigón físico viajando a alta velocidad por el aire
-    const pelletMesh = new THREE.Mesh(
-      new THREE.BoxGeometry(0.14, 0.14, 0.14),
-      new THREE.MeshBasicMaterial({ color: 0xfff0b3 })
-    );
-    pelletMesh.position.copy(muzzlePos);
-    scene.add(pelletMesh);
-    const speed = 52 + Math.random() * 14;
-    vfx.push({
-      mesh: pelletMesh,
-      life: Math.min(0.22, hitDist / speed),
-      vel: pelletDir.clone().multiplyScalar(speed)
-    });
-
-    // Impacto del perdigón: daño, empuje y salpicadura de sangre/chispas
     if (hitEnemy) {
-      const knock = pelletDir.clone().setY(0).normalize().multiplyScalar(0.45);
-      onDamage(hitEnemy, dmgPerPellet, knock);
-
-      const spark = new THREE.Mesh(
-        new THREE.BoxGeometry(0.22, 0.22, 0.22),
-        new THREE.MeshBasicMaterial({ color: 0xa52020 })
-      );
-      spark.position.copy(endPos);
-      scene.add(spark);
-      vfx.push({
-        mesh: spark,
-        life: 0.22,
-        vel: new THREE.Vector3((Math.random() - 0.5) * 4, 2 + Math.random() * 2, (Math.random() - 0.5) * 4),
-        gravity: 14
-      });
+      onDamage(hitEnemy, dmgPerPellet, pelletDir.clone().multiplyScalar(0.42));
     }
+  }
+  return targetYaw;
+}
+
+// 3. SOPLETE INCINERADOR (Sale desde la boquilla de la mano derecha en la dirección actual)
+export function fireFlamethrower(scene, playerPos, facingYaw, level, mods, enemies, vfx, onDamage) {
+  const { cfg, mult } = getWeaponScaling('flamethrower', level);
+  const fwd = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), facingYaw);
+  const nozzle = getDirectionalHandPos(playerPos, facingYaw, 0.92, 0.36, 1.05);
+  const range = (cfg.baseRange + level * 0.45) * mods.areaMult;
+  const extraStreams = mods.bonusProjectiles || 0;
+
+  if (Math.random() < 0.45) AudioSys.play(110 + Math.random() * 40, 0.08, 'sawtooth', 0.03);
+
+  const particleCount = 3 + extraStreams * 2;
+  const coneHalfAngle = 0.65 + extraStreams * 0.12;
+
+  for (let i = 0; i < particleCount; i++) {
+    const spread = (Math.random() - 0.5) * (coneHalfAngle * 1.4);
+    const dir = fwd.clone().applyAxisAngle(new THREE.Vector3(0, 1, 0), spread);
+    const flame = new THREE.Mesh(
+      new THREE.PlaneGeometry(0.55, 0.55),
+      new THREE.MeshBasicMaterial({
+        color: Math.random() < 0.5 ? 0xff7711 : 0xffcc33,
+        transparent: true,
+        opacity: 0.85,
+        side: THREE.DoubleSide
+      })
+    );
+    flame.position.copy(nozzle);
+    scene.add(flame);
+    vfx.push({
+      mesh: flame,
+      life: 0.26,
+      maxLife: 0.26,
+      billboard: true,
+      fade: true,
+      scaleSpeed: 3.5,
+      vel: dir.multiplyScalar(range * 3.2).add(new THREE.Vector3(0, 1.1, 0))
+    });
+  }
+
+  const dmg = cfg.baseDmg * mult * mods.dmgMult;
+  enemies.forEach(e => {
+    if (e.state === 'dead') return;
+    const toE = new THREE.Vector3().subVectors(e.group.position, playerPos);
+    if (Math.abs(toE.y) < 2.2 && toE.length() < range && fwd.angleTo(toE.clone().setY(0).normalize()) < coneHalfAngle) {
+      onDamage(e, dmg);
+      e.burnTimer = 2.5 + level * 0.3;
+      e.burnDps = dmg * 1.6;
+    }
+  });
+}
+
+// 4. MINAS DE METRALLA
+export function spawnShrapnelMine(scene, playerPos, level, mods, worldPhysics, minesList) {
+  const count = 1 + (mods.bonusProjectiles || 0);
+  AudioSys.play(420, 0.06, 'sine', 0.04);
+
+  for (let i = 0; i < count; i++) {
+    const group = new THREE.Group();
+    const body = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.38, 0.45, 0.18, 8),
+      new THREE.MeshStandardMaterial({ color: 0x3b2316, roughness: 0.85 })
+    );
+    body.position.y = 0.09;
+    const led = new THREE.Mesh(
+      new THREE.BoxGeometry(0.14, 0.14, 0.14),
+      new THREE.MeshBasicMaterial({ color: 0xff2222 })
+    );
+    led.position.y = 0.2;
+    group.add(body, led);
+
+    const ang = (i / count) * Math.PI * 2 + Math.random() * 0.5;
+    const dist = i === 0 ? 0 : 1.4 + Math.random() * 0.8;
+    const mx = playerPos.x + Math.cos(ang) * dist;
+    const mz = playerPos.z + Math.sin(ang) * dist;
+    const my = worldPhysics ? worldPhysics.getGroundHeight(mx, mz, playerPos.y) : playerPos.y;
+
+    group.position.set(mx, my, mz);
+    scene.add(group);
+    minesList.push({ group, led, level, armTimer: 0.45, life: 14.0 });
   }
 }
 
-export function fireDefibrillator(scene, playerPos, level, dmgMult, enemies, vfx, onDamage) {
+// 5. ARPÓN NEUMÁTICO (Devuelve el ángulo del disparo para girar el sprite del jugador)
+export function fireHarpoon(scene, playerPos, facingYaw, level, mods, enemies, vfx, onDamage) {
+  const alive = enemies.filter(e => e.state !== 'dead');
+  const { cfg, mult } = getWeaponScaling('harpoon', level);
+  const maxRange = cfg.baseRange * mods.areaMult;
+  const count = 1 + (mods.bonusProjectiles || 0);
+
+  let baseDir = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), facingYaw);
+  if (alive.length > 0) {
+    const closest = alive.reduce((a, b) =>
+      a.group.position.distanceTo(playerPos) < b.group.position.distanceTo(playerPos) ? a : b
+    );
+    if (closest.group.position.distanceTo(playerPos) < maxRange) {
+      baseDir = new THREE.Vector3().subVectors(closest.group.position, playerPos).setY(0).normalize();
+    }
+  }
+
+  const targetYaw = Math.atan2(-baseDir.x, -baseDir.z);
+  AudioSys.play(150, 0.18, 'triangle', 0.08);
+  const start = getDirectionalHandPos(playerPos, targetYaw, 0.85, 0.36, 1.08);
+  const dmg = cfg.baseDmg * mult * mods.dmgMult;
+  const maxPierce = 2 + level;
+
+  for (let h = 0; h < count; h++) {
+    const offsetAngle = count === 1 ? 0 : ((h / (count - 1)) - 0.5) * Math.min(0.85, count * 0.18);
+    const dir = baseDir.clone().applyAxisAngle(new THREE.Vector3(0, 1, 0), offsetAngle).normalize();
+    const end = start.clone().add(dir.clone().multiplyScalar(maxRange));
+
+    const cable = new THREE.Line(
+      new THREE.BufferGeometry().setFromPoints([start, end]),
+      new THREE.LineBasicMaterial({ color: 0xc8c2ac })
+    );
+    scene.add(cable);
+    vfx.push({ mesh: cable, life: 0.18, maxLife: 0.18, fade: true });
+
+    let pierced = 0;
+    alive.forEach(e => {
+      if (pierced >= maxPierce) return;
+      const toE = new THREE.Vector3().subVectors(e.group.position, playerPos);
+      if (Math.abs(toE.y) > 2.2) return;
+      toE.y = 0;
+      const fwdDist = toE.dot(dir);
+      if (fwdDist > 0 && fwdDist < maxRange) {
+        const perp = toE.clone().sub(dir.clone().multiplyScalar(fwdDist)).length();
+        if (perp < 1.05 * mods.areaMult) {
+          pierced++;
+          onDamage(e, dmg, dir.clone().multiplyScalar(2.2));
+        }
+      }
+    });
+  }
+  return targetYaw;
+}
+
+// 6. DESFIBRILADOR ROTO
+export function fireDefibrillator(scene, playerPos, facingYaw, level, mods, enemies, vfx, onDamage) {
+  const { cfg, mult } = getWeaponScaling('bolt', level);
+  const range = cfg.baseRange * mods.areaMult;
+  const maxTargets = 2 + level + (mods.bonusProjectiles || 0) * 2;
   const near = enemies
-    .filter(e => e.state !== 'dead' && e.group.position.distanceTo(playerPos) < 13)
-    .slice(0, 2 + level);
-  if (!near.length) return;
+    .filter(e => e.state !== 'dead' && e.group.position.distanceTo(playerPos) < range)
+    .slice(0, maxTargets);
+  if (!near.length) return null;
+
+  const firstDir = new THREE.Vector3().subVectors(near[0].group.position, playerPos).setY(0).normalize();
+  const targetYaw = Math.atan2(-firstDir.x, -firstDir.z);
 
   AudioSys.play(480, 0.14, 'sawtooth', 0.06);
-  const pts = [playerPos.clone().add(new THREE.Vector3(0, 1.1, 0))];
+  const pts = [getDirectionalHandPos(playerPos, targetYaw, 0.6, 0.3, 1.1)];
+  const dmg = cfg.baseDmg * mult * mods.dmgMult;
+
   near.forEach(e => {
     pts.push(e.group.position.clone().add(new THREE.Vector3(0, 1.1, 0)));
-    onDamage(e, 24 * dmgMult * (1 + level * 0.25));
+    onDamage(e, dmg);
   });
   const bolt = new THREE.Line(
     new THREE.BufferGeometry().setFromPoints(pts),
@@ -199,4 +371,104 @@ export function fireDefibrillator(scene, playerPos, level, dmgMult, enemies, vfx
   );
   scene.add(bolt);
   vfx.push({ mesh: bolt, life: 0.12 });
+  return targetYaw;
+}
+
+// === ATAQUES ESPECIALES TELEGRAFIADOS DE LOS BOSSES ===
+export function triggerBossSpecialAttack(scene, boss, attackType, playerPos, worldPhysics, hazards, projectiles, onSummon) {
+  const bPos = boss.group.position.clone();
+  const isP2 = boss.phase === 2;
+  AudioSys.play(115, 0.35, 'sawtooth', 0.08);
+
+  if (attackType === 'cone_saw') {
+    const dir = new THREE.Vector3().subVectors(playerPos, bPos).setY(0).normalize();
+    const angle = Math.atan2(dir.x, dir.z);
+    const radius = isP2 ? 8.5 : 6.8;
+    const geo = new THREE.CircleGeometry(radius, 18, -Math.PI * 0.28, Math.PI * 0.56);
+    const mat = new THREE.MeshBasicMaterial({ color: 0xc42020, transparent: true, opacity: 0.45, side: THREE.DoubleSide });
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.rotation.x = -Math.PI / 2;
+    mesh.rotation.z = angle - Math.PI / 2;
+    mesh.position.set(bPos.x, bPos.y + 0.06, bPos.z);
+    scene.add(mesh);
+
+    hazards.push({
+      type: 'cone', mesh, origin: bPos.clone(), dir, radius, arc: 0.9,
+      timer: isP2 ? 0.75 : 0.95, maxTimer: isP2 ? 0.75 : 0.95, dmg: boss.dmg * 1.25
+    });
+  } else if (attackType === 'charge') {
+    const dir = new THREE.Vector3().subVectors(playerPos, bPos).setY(0).normalize();
+    const len = 14;
+    const mesh = new THREE.Mesh(
+      new THREE.PlaneGeometry(2.2, len),
+      new THREE.MeshBasicMaterial({ color: 0xd4af37, transparent: true, opacity: 0.45, side: THREE.DoubleSide })
+    );
+    mesh.rotation.x = -Math.PI / 2;
+    mesh.rotation.z = -Math.atan2(dir.x, dir.z);
+    mesh.position.copy(bPos).addScaledVector(dir, len * 0.5).setY(bPos.y + 0.06);
+    scene.add(mesh);
+
+    hazards.push({
+      type: 'charge_line', mesh, boss, dir,
+      timer: 0.75, maxTimer: 0.75, dmg: 0
+    });
+  } else if (attackType === 'shockwave') {
+    const radius = isP2 ? 9.5 : 7.5;
+    const mesh = new THREE.Mesh(
+      new THREE.RingGeometry(0.4, radius, 24),
+      new THREE.MeshBasicMaterial({ color: 0xc42020, transparent: true, opacity: 0.45, side: THREE.DoubleSide })
+    );
+    mesh.rotation.x = -Math.PI / 2;
+    mesh.position.set(bPos.x, bPos.y + 0.06, bPos.z);
+    scene.add(mesh);
+
+    hazards.push({
+      type: 'circle', mesh, center: bPos.clone(), radius,
+      timer: isP2 ? 0.85 : 1.05, maxTimer: isP2 ? 0.85 : 1.05, dmg: boss.dmg * 1.3
+    });
+  } else if (attackType === 'floor_bombs') {
+    const count = isP2 ? 6 : 4;
+    for (let i = 0; i < count; i++) {
+      const offsetX = i === 0 ? 0 : (Math.random() - 0.5) * 11;
+      const offsetZ = i === 0 ? 0 : (Math.random() - 0.5) * 11;
+      const cx = playerPos.x + offsetX;
+      const cz = playerPos.z + offsetZ;
+      const cy = worldPhysics ? worldPhysics.getGroundHeight(cx, cz, playerPos.y) : 0;
+      const radius = 2.6;
+
+      const mesh = new THREE.Mesh(
+        new THREE.CircleGeometry(radius, 18),
+        new THREE.MeshBasicMaterial({ color: 0xd9381e, transparent: true, opacity: 0.45, side: THREE.DoubleSide })
+      );
+      mesh.rotation.x = -Math.PI / 2;
+      mesh.position.set(cx, cy + 0.07, cz);
+      scene.add(mesh);
+
+      hazards.push({
+        type: 'circle', mesh, center: new THREE.Vector3(cx, cy, cz), radius,
+        timer: 1.05 + i * 0.12, maxTimer: 1.05 + i * 0.12, dmg: boss.dmg * 1.15
+      });
+    }
+  } else if (attackType === 'radial_slag' || attackType === 'spiral_blades') {
+    const count = isP2 ? 12 : 8;
+    const baseAngle = Math.random() * Math.PI * 2;
+    for (let i = 0; i < count; i++) {
+      const a = baseAngle + (i / count) * Math.PI * 2;
+      const dir = new THREE.Vector3(Math.sin(a), 0, Math.cos(a));
+      const pMesh = new THREE.Mesh(
+        new THREE.BoxGeometry(0.42, 0.42, 0.42),
+        new THREE.MeshBasicMaterial({ color: attackType === 'spiral_blades' ? 0xe6d7a5 : 0xff6611 })
+      );
+      pMesh.position.copy(bPos).add(new THREE.Vector3(0, 1.1, 0));
+      scene.add(pMesh);
+      projectiles.push({
+        mesh: pMesh,
+        vel: dir.multiplyScalar(isP2 ? 10.5 : 8.2),
+        life: 3.2,
+        dmg: boss.dmg * 0.85
+      });
+    }
+  } else if (attackType === 'summon') {
+    if (onSummon) onSummon(isP2 ? 5 : 3);
+  }
 }
