@@ -52,7 +52,6 @@ function applyCleanSpriteOutlineRect(ctx, w, h) {
   const d32 = new Uint32Array(out.data.buffer);
   d32.set(s32);
 
-  // #050605 con alpha 255 en Little Endian (AABBGGRR) = 0xFF050605
   const OUTLINE_COLOR = 0xFF050605;
 
   for (let y = 1; y < h - 1; y++) {
@@ -92,23 +91,22 @@ function makeTexture(canvas, repeat = 1) {
 // DIBUJO DE CADA ARMA EN MANO SEGÚN LA DIRECCIÓN (0..7) Y EL ESTADO
 // ============================================================================
 function renderWeaponByDirection(px, glow, handWeapon, dir, stateIdx, col, anchorX, anchorY, facingSign) {
-  const isAtk = stateIdx === 3 || stateIdx === 5; // ATTACK quieto o ATTACK_WALK en movimiento
+  const isAtk = stateIdx === 3 || stateIdx === 5;
   const isFront = dir === 4;
   const isBack = dir === 0;
   const kickX = isAtk && col < 2 ? -2 * facingSign : 0;
   const wx = anchorX + kickX;
   const wy = anchorY;
 
-  // Si es vista frontal o trasera pura, el arma se ve en escorzo (apuntando hacia cámara o alejándose)
   if (isFront || isBack) {
     if (handWeapon === 'shotgun') {
-      px(wx - 2, wy - 1, 5, 6, '#4a2518'); // Guardamanos/culata en escorzo
-      px(wx - 1, wy - 3, 3, 5, '#877a5c'); // Cañón
-      if (isFront) px(wx, wy - 2, 2, 2, '#050605'); // Boca negra del cañón apuntando a cámara
+      px(wx - 2, wy - 1, 5, 6, '#4a2518');
+      px(wx - 1, wy - 3, 3, 5, '#877a5c');
+      if (isFront) px(wx, wy - 2, 2, 2, '#050605');
       if (isAtk && col < 2) {
         glow(wx - 4, wy - 6, 9, 9, '#e6d7a5');
         glow(wx - 2, wy - 4, 5, 5, '#b89c46');
-        px(wx + 4, wy - 5 - col * 2, 3, 2, '#a52020'); // Cartucho rojo expulsado
+        px(wx + 4, wy - 5 - col * 2, 3, 2, '#a52020');
       }
     } else if (handWeapon === 'flamethrower') {
       px(wx - 2, wy - 2, 6, 6, '#4a2518');
@@ -124,17 +122,14 @@ function renderWeaponByDirection(px, glow, handWeapon, dir, stateIdx, col, ancho
       px(wx, wy - 6, 2, 7, '#c8c2ac');
       glow(wx - 1, wy - 7, 4, 3, '#b89c46');
     } else if (handWeapon === 'bolt') {
-      // Electrodos del desfibrilador en ambas manos con arco eléctrico
       px(wx - 2, wy, 4, 4, '#b89c46');
       if (isAtk || col % 2 === 0) {
         glow(wx - 3, wy - 3, 6, 4, '#e6d7a5');
       }
     } else if (handWeapon === 'mines') {
-      // Mina circular con sensor rojo en la mano
       px(wx - 3, wy, 6, 4, '#243022');
       glow(wx - 1, wy + 1, 2, 2, col % 2 === 0 ? '#a52020' : '#e6d7a5');
     } else {
-      // Sierra de Amputación (`slash`) en escorzo / tajo cruzado
       const swingX = isAtk ? (col < 2 ? -4 : 6) : 0;
       const swingY = isAtk ? (col < 2 ? -5 : 2) : 0;
       px(wx + swingX - 1, wy + swingY - 2, 4, 3, '#b89c46');
@@ -145,7 +140,6 @@ function renderWeaponByDirection(px, glow, handWeapon, dir, stateIdx, col, ancho
     return;
   }
 
-  // Vistas laterales y diagonales (facingSign = +1 hacia la derecha en dir 1,2,3; -1 hacia la izquierda en dir 5,6,7)
   const isDiag = (dir === 1 || dir === 3 || dir === 5 || dir === 7);
   const lenScale = isDiag ? 0.8 : 1.0;
 
@@ -161,77 +155,69 @@ function renderWeaponByDirection(px, glow, handWeapon, dir, stateIdx, col, ancho
   };
 
   if (handWeapon === 'shotgun') {
-    // Escopeta Calibre 12 con acción de bombeo en el ataque
     const pumpShift = (isAtk && col >= 2) ? -3 : 0;
-    rPx(-5, 0, 6, 3, '#4a2518');               // Culata de madera
-    rPx(1, -1, 6, 3, '#243022');               // Cajón de mecanismos
-    rPx(7, -1, 13, 1, '#c8c2ac');              // Cañón largo superior
-    rPx(7, 0, 12, 1, '#877a5c');               // Tubo cargador inferior
-    rPx(9 + pumpShift, 1, 5, 2, '#743718');    // Guardamanos de corredera (se mueve al recargar)
+    rPx(-5, 0, 6, 3, '#4a2518');
+    rPx(1, -1, 6, 3, '#243022');
+    rPx(7, -1, 13, 1, '#c8c2ac');
+    rPx(7, 0, 12, 1, '#877a5c');
+    rPx(9 + pumpShift, 1, 5, 2, '#743718');
     if (isAtk && col < 2) {
-      rGlow(20, -4, 6, 8, '#e6d7a5');          // Fogonazo estelar
+      rGlow(20, -4, 6, 8, '#e6d7a5');
       rGlow(18, -2, 4, 4, '#b89c46');
-      rPx(2, -6 - col * 3, 3, 2, '#a52020');   // Cartucho rojo saltando
+      rPx(2, -6 - col * 3, 3, 2, '#a52020');
     }
   } else if (handWeapon === 'flamethrower') {
-    // Soplete Incinerador con manguera y chorro de fuego
-    rPx(-6, 4, 8, 2, '#050605');               // Manguera negra al tanque
-    rPx(0, -1, 10, 4, '#4a2518');              // Cuerpo del soplete
-    rPx(3, -2, 5, 2, '#b89c46');               // Cámara de latón
-    rPx(10, -1, 8, 2, '#877a5c');              // Boquilla perforada
+    rPx(-6, 4, 8, 2, '#050605');
+    rPx(0, -1, 10, 4, '#4a2518');
+    rPx(3, -2, 5, 2, '#b89c46');
+    rPx(10, -1, 8, 2, '#877a5c');
     if (isAtk) {
       rGlow(18, -5, 8, 10, '#e6d7a5');
       rGlow(15, -3, 7, 6, '#b89c46');
     } else {
-      rGlow(18, -2, 2, 2, '#b89c46');          // Llama piloto
+      rGlow(18, -2, 2, 2, '#b89c46');
     }
   } else if (handWeapon === 'harpoon') {
-    // Lanzador de Arpón Neumático
     const shotOut = (isAtk && col < 2) ? 5 : 0;
     rPx(-2, -1, 12, 4, '#364832');
     rPx(1, -2, 6, 2, '#b89c46');
-    rPx(10 + shotOut, 0, 10, 1, '#c8c2ac');    // Asta del arpón
-    rGlow(18 + shotOut, -1, 3, 3, '#b89c46');  // Punta barbada
+    rPx(10 + shotOut, 0, 10, 1, '#c8c2ac');
+    rGlow(18 + shotOut, -1, 3, 3, '#b89c46');
   } else if (handWeapon === 'bolt') {
-    // Desfibrilador de Alto Voltaje
     rPx(0, -1, 6, 4, '#4a2518');
-    rPx(6, -2, 4, 6, '#b89c46');               // Pala conductora
+    rPx(6, -2, 4, 6, '#b89c46');
     if (isAtk || col % 2 === 0) {
       rGlow(10, -4, 6, 8, '#e6d7a5');
       rGlow(8, -2, 5, 4, '#b89c46');
     }
   } else if (handWeapon === 'mines') {
-    // Mina de Metralla en mano (y lanzada en el frame de ataque)
     const throwDist = isAtk ? col * 3 : 0;
     rPx(1 + throwDist, 0, 7, 4, '#243022');
     rPx(2 + throwDist, -1, 5, 2, '#4a2518');
     rGlow(3 + throwDist, -2, 3, 2, col % 2 === 0 ? '#a52020' : '#e6d7a5');
   } else {
-    // Sierra de Amputación (`slash`)
     const swingY = isAtk ? (col === 0 ? -6 : col === 1 ? 3 : 1) : 0;
-    rPx(0, 0 + swingY, 5, 2, '#4a2518');       // Mango
-    rPx(4, -2 + swingY, 2, 6, '#b89c46');      // Guarda de latón
-    rPx(6, -3 + swingY, 13, 5, '#877a5c');     // Hoja dentada
-    rPx(6, -3 + swingY, 12, 1, '#e6d7a5');     // Lomo brillante
-    rPx(8, 1 + swingY, 9, 1, '#a52020');       // Sangre en dientes
+    rPx(0, 0 + swingY, 5, 2, '#4a2518');
+    rPx(4, -2 + swingY, 2, 6, '#b89c46');
+    rPx(6, -3 + swingY, 13, 5, '#877a5c');
+    rPx(6, -3 + swingY, 12, 1, '#e6d7a5');
+    rPx(8, 1 + swingY, 9, 1, '#a52020');
     for (let t = 0; t < 4; t++) {
       rPx(7 + t * 3, 2 + swingY, 1, 1, '#c8c2ac');
     }
     if (isAtk && col < 2) {
-      rGlow(12, -5 + swingY, 8, 3, '#e6d7a5'); // Destello de corte
+      rGlow(12, -5 + swingY, 8, 3, '#e6d7a5');
     }
   }
 }
 
 // ============================================================================
 // DIBUJO DEL JUGADOR EN 8 DIRECCIONES (Filas 0..7) x 7 ESTADOS (Cols 0..27)
-// Estados: 0:IDLE, 1:WALK, 2:JUMP, 3:ATTACK, 4:HURT, 5:ATTACK_WALK, 6:DASH
 // ============================================================================
 function drawPlayer8DirCell(ctx, gCtx, dir, stateIdx, col, ox, oy, skills = { slash: 1 }, activeHand = 'slash') {
   ctx.save(); gCtx.save();
   ctx.translate(ox, oy); gCtx.translate(ox, oy);
 
-  // Opción de espejo horizontal en CONFIG.DIRECTIONAL.USE_MIRRORING para vistas 5, 6 y 7
   let effectiveDir = dir;
   if (CONFIG.DIRECTIONAL.USE_MIRRORING && (dir === 5 || dir === 6 || dir === 7)) {
     ctx.translate(64, 0); ctx.scale(-1, 1);
@@ -241,9 +227,9 @@ function drawPlayer8DirCell(ctx, gCtx, dir, stateIdx, col, ox, oy, skills = { sl
 
   const phase = (col / 4) * Math.PI * 2;
   const isIdle = stateIdx === 0;
-  const isWalk = stateIdx === 1 || stateIdx === 5; // Camina tanto en WALK como en ATTACK_WALK
+  const isWalk = stateIdx === 1 || stateIdx === 5;
   const isJump = stateIdx === 2;
-  const isAtk  = stateIdx === 3 || stateIdx === 5; // Ataca tanto en ATTACK como en ATTACK_WALK
+  const isAtk  = stateIdx === 3 || stateIdx === 5;
   const isHurt = stateIdx === 4;
   const isDash = stateIdx === 6;
 
@@ -251,7 +237,6 @@ function drawPlayer8DirCell(ctx, gCtx, dir, stateIdx, col, ox, oy, skills = { sl
   const isSideProfile = (effectiveDir === 2 || effectiveDir === 6);
   const facingSign = (effectiveDir === 5 || effectiveDir === 6 || effectiveDir === 7) ? -1 : 1;
 
-  // Desplazamiento vertical y de impulso (dash)
   const bobY = isDash
     ? -2
     : isWalk
@@ -276,7 +261,6 @@ function drawPlayer8DirCell(ctx, gCtx, dir, stateIdx, col, ox, oy, skills = { sl
     gCtx.fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h));
   };
 
-  // Líneas cinéticas de velocidad durante el DASH
   if (isDash) {
     const trailDir = isSideProfile ? -facingSign : 1;
     glow(14 - col * 2 * trailDir, 16 + (col % 2) * 4, 7, 1, '#b89c46');
@@ -284,13 +268,11 @@ function drawPlayer8DirCell(ctx, gCtx, dir, stateIdx, col, ox, oy, skills = { sl
     glow(15 - col * 2 * trailDir, 42 + (col % 2) * 2, 6, 1, '#b89c46');
   }
 
-  // 1. En vistas traseras, el arma se dibuja ANTES del torso para que quede parcialmente detrás del cuerpo
   if (isBackView) {
     const anchorX = effectiveDir === 0 ? 38 : (effectiveDir === 1 ? 37 : 22);
     renderWeaponByDirection(px, glow, activeHand, effectiveDir, stateIdx, col, anchorX, 26, facingSign);
   }
 
-  // 2. Equipamiento dorsal cuando se ve de frente o de perfil (queda detrás del torso)
   if (!isBackView) {
     const packX = effectiveDir === 2 ? 17 : effectiveDir === 6 ? 37 : (effectiveDir === 3 ? 17 : 37);
     if (skills.flamethrower && effectiveDir !== 4) {
@@ -303,7 +285,6 @@ function drawPlayer8DirCell(ctx, gCtx, dir, stateIdx, col, ox, oy, skills = { sl
     }
   }
 
-  // 3. PIERNAS Y BOTAS (Activas en WALK, ATTACK_WALK, JUMP y DASH)
   const stride = isDash
     ? 5
     : isWalk
@@ -311,30 +292,24 @@ function drawPlayer8DirCell(ctx, gCtx, dir, stateIdx, col, ox, oy, skills = { sl
       : (isJump ? (col === 1 || col === 2 ? -3 : 1) : 0);
 
   if (isSideProfile) {
-    // En perfil (E / W), las piernas se cruzan horizontalmente al caminar o impulsarse
     const legBackX = 27 - stride * facingSign;
     const legFrontX = 27 + stride * facingSign;
     const dashLift = isDash ? -3 : 0;
-    // Pierna trasera (más oscura)
     px(legBackX, 44 + dashLift, 5, 9, '#0d120d');
     px(legBackX, 53 + dashLift, 6, 6, '#050605');
-    // Pierna delantera (iluminada)
     px(legFrontX, 44 + dashLift, 5, 9, '#182018');
     px(legFrontX + 1, 44 + dashLift, 2, 9, '#243022');
     px(legFrontX, 53 + dashLift, 6, 6, '#050605');
     px(legFrontX + 1, 53 + dashLift, 4, 2, '#4a2518');
     px(legFrontX, 58 + dashLift, 6, 1, '#364832');
   } else {
-    // En frente, espalda y diagonales, las dos piernas se alternan verticalmente
     const stepL = isJump ? stride : (isDash ? -3 : stride);
     const stepR = isJump ? stride : (isDash ? 2 : -stride);
-    // Pierna izquierda
     px(22, 44 + stepL, 5, 9, '#121812');
     px(23, 44 + stepL, 2, 9, '#243022');
     px(21, 53 + stepL, 6, 6, '#050605');
     px(22, 53 + stepL, 4, 2, '#4a2518');
     px(21, 58 + stepL, 6, 1, '#364832');
-    // Pierna derecha
     px(31, 44 + stepR, 5, 9, '#121812');
     px(32, 44 + stepR, 2, 9, '#243022');
     px(31, 53 + stepR, 6, 6, '#050605');
@@ -342,69 +317,59 @@ function drawPlayer8DirCell(ctx, gCtx, dir, stateIdx, col, ox, oy, skills = { sl
     px(31, 58 + stepR, 6, 1, '#364832');
   }
 
-  // 4. TORSO Y GABARDINA SEGÚN LA DIRECCIÓN (Ondea con fuerza en el DASH)
   const coatFlare = isDash ? 4 : (isJump && (col === 1 || col === 2) ? 2 : (isWalk && col % 2 === 0 ? 1 : 0));
 
   if (isSideProfile) {
-    // Torso de perfil (más estrecho: 11px)
     px(24 - coatFlare, 35, 11 + coatFlare * 2, 10, '#121812');
     px(25, 35, 8, 9, '#243022');
     px(24, 21, 11, 14, '#182018');
     px(26, 21, 7, 13, '#243022');
-    px(27 + facingSign, 22, 4, 11, '#364832'); // Solapa lateral iluminada
-    px(24, 34, 11, 2, '#4a2518');              // Cinturón lateral
+    px(27 + facingSign, 22, 4, 11, '#364832');
+    px(24, 34, 11, 2, '#4a2518');
     px(29 + facingSign * 3, 34, 2, 2, '#b89c46');
   } else {
-    // Faldones inferiores de la gabardina (se abren al saltar, caminar o hacer dash)
     px(20 - coatFlare, 36, 7, 10, '#121812');
     px(21 - coatFlare, 36, 4, 9, '#243022');
     px(31 + coatFlare, 36, 7, 10, '#121812');
     px(32 + coatFlare, 36, 4, 9, '#243022');
 
-    // Hombros y pecho
     px(20, 21, 18, 9, '#121812');
     px(22, 21, 14, 9, '#243022');
     px(22, 30, 14, 6, '#182018');
-    px(22, 34, 14, 2, '#4a2518'); // Cinturón
+    px(22, 34, 14, 2, '#4a2518');
 
     if (isBackView) {
-      // DETALLES TRASEROS: Costura dorsal de la gabardina, correas y mochila/tanque en primer plano
-      px(23, 22, 12, 3, '#364832'); // Canesú de los hombros
-      px(28, 22, 2, 12, '#050605'); // Costura vertical de la columna
-      px(21, 22, 2, 12, '#4a2518'); // Correas de los hombros
+      px(23, 22, 12, 3, '#364832');
+      px(28, 22, 2, 12, '#050605');
+      px(21, 22, 2, 12, '#4a2518');
       px(35, 22, 2, 12, '#4a2518');
 
       const backShift = effectiveDir === 1 ? -3 : effectiveDir === 7 ? 3 : 0;
       if (skills.flamethrower) {
-        // Bombona dorsal completa con manómetro brillante vista desde atrás
         px(24 + backShift, 20, 9, 14, '#4a2518');
         px(26 + backShift, 21, 5, 12, '#6e1414');
         px(24 + backShift, 23, 9, 1, '#b89c46');
         px(24 + backShift, 30, 9, 1, '#b89c46');
-        glow(27 + backShift, 18, 3, 2, '#e6d7a5'); // Manómetro
+        glow(27 + backShift, 18, 3, 2, '#e6d7a5');
       } else {
-        // Mochila médica oxidada vista desde atrás
         px(25 + backShift, 22, 8, 10, '#4a2518');
         px(26 + backShift, 23, 6, 8, '#743718');
-        px(28 + backShift, 25, 2, 4, '#b89c46'); // Cierre metálico
+        px(28 + backShift, 25, 2, 4, '#b89c46');
       }
       if (skills.shotgun && activeHand !== 'shotgun') {
-        // Escopeta cruzada a la espalda
         for (let b = 0; b < 5; b++) {
           px(23 + b * 2, 18 + b * 3, 3, 2, '#877a5c');
         }
       }
     } else {
-      // DETALLES FRONTALES (SE, S, SW): Solapas abiertas, peto cosido, canana y hebilla frontal
       const frontShift = effectiveDir === 3 ? 1 : effectiveDir === 5 ? -1 : 0;
       px(23, 22, 4, 12, '#364832');
       px(31, 22, 4, 12, '#364832');
-      px(27 + frontShift, 22, 4, 12, '#4a2518'); // Peto interior de cuero
-      for (let s = 0; s < 3; s++) px(28 + frontShift, 23 + s * 3, 2, 1, '#877a5c'); // Grapas
-      px(28 + frontShift, 34, 3, 2, '#b89c46'); // Hebilla de latón
+      px(27 + frontShift, 22, 4, 12, '#4a2518');
+      for (let s = 0; s < 3; s++) px(28 + frontShift, 23 + s * 3, 2, 1, '#877a5c');
+      px(28 + frontShift, 34, 3, 2, '#b89c46');
 
       if (skills.shotgun) {
-        // Canana de cartuchos rojos en el pecho
         px(24, 24, 2, 2, '#a52020');
         px(27, 26, 2, 2, '#a52020');
         px(30, 28, 2, 2, '#a52020');
@@ -412,7 +377,6 @@ function drawPlayer8DirCell(ctx, gCtx, dir, stateIdx, col, ox, oy, skills = { sl
     }
   }
 
-  // Accesorios de cinturón/hombros para Aura, Minas y Orbitales
   if (skills.aura) glow(23, 35, 2, 3, '#68863a');
   if (skills.mines) glow(34, 35, 2, 2, col % 2 === 0 ? '#a52020' : '#e6d7a5');
   if (skills.orbital) {
@@ -420,49 +384,41 @@ function drawPlayer8DirCell(ctx, gCtx, dir, stateIdx, col, ox, oy, skills = { sl
     px(35, 20, 4, 2, '#877a5c');
   }
 
-  // 5. CABEZA, CAPUCHA Y MÁSCARA ANTIGÁS EN LAS 8 DIRECCIONES
   const headLean = isDash && isSideProfile ? facingSign * 2 : 0;
-  px(24 + headLean, 19, 10, 3, '#050605'); // Cuello
+  px(24 + headLean, 19, 10, 3, '#050605');
   px(25 + headLean, 19, 8, 2, '#4a2518');
-  px(25 + headLean, 7, 8, 2, '#243022');   // Cima redondeada de la capucha
-  px(23 + headLean, 9, 12, 10, '#182018'); // Volumen de la capucha
+  px(25 + headLean, 7, 8, 2, '#243022');
+  px(23 + headLean, 9, 12, 10, '#182018');
 
   if (effectiveDir === 0) {
-    // Dir 0 (ESPALDA PURA): Parte trasera de la capucha con costura vertical y correa occipital
     px(24, 8, 10, 10, '#243022');
-    px(28, 8, 2, 10, '#050605'); // Costura trasera de la capucha
-    px(24, 14, 10, 2, '#4a2518'); // Correa trasera de la máscara
+    px(28, 8, 2, 10, '#050605');
+    px(24, 14, 10, 2, '#4a2518');
   } else if (effectiveDir === 1 || effectiveDir === 7) {
-    // Dir 1 / Dir 7 (ATRÁS-DIAGONAL): Capucha trasera + asoma la correa y 1 lente lateral
     const sideX = effectiveDir === 1 ? 33 : 23;
     px(24, 8, 10, 10, '#243022');
     px(28 - facingSign * 2, 8, 2, 10, '#050605');
-    glow(sideX, 13, 2, 2, '#e6d7a5'); // Lente lateral asomando
-    px(sideX + facingSign, 16, 2, 3, '#4a2518'); // Borde del filtro
+    glow(sideX, 13, 2, 2, '#e6d7a5');
+    px(sideX + facingSign, 16, 2, 3, '#4a2518');
   } else if (effectiveDir === 2 || effectiveDir === 6) {
-    // Dir 2 / Dir 6 (PERFIL PURO E / W): Capucha de perfil, 1 lente y hocico del respirador sobresaliendo
     const maskX = (effectiveDir === 2 ? 30 : 23) + headLean;
     const snoutX = (effectiveDir === 2 ? 34 : 20) + headLean;
-    px((effectiveDir === 2 ? 24 : 28) + headLean, 8, 6, 10, '#364832'); // Lateral de la capucha
+    px((effectiveDir === 2 ? 24 : 28) + headLean, 8, 6, 10, '#364832');
     px(maskX, 10, 5, 8, '#050605');
-    px(maskX, 10, 4, 2, '#877a5c'); // Venda lateral
-    glow((effectiveDir === 2 ? 32 : 24) + headLean, 13, 3, 3, '#e6d7a5'); // Lente ocular de perfil
-    px(snoutX, 15, 4, 4, '#243022'); // Hocico respirador sobresaliendo en perfil
+    px(maskX, 10, 4, 2, '#877a5c');
+    glow((effectiveDir === 2 ? 32 : 24) + headLean, 13, 3, 3, '#e6d7a5');
+    px(snoutX, 15, 4, 4, '#243022');
     px(snoutX + (effectiveDir === 2 ? 2 : 0), 16, 2, 3, '#4a2518');
   } else if (effectiveDir === 4) {
-    // Dir 4 (FRENTE PURO S): Cara simétrica mirando directamente a la cámara
     px(24, 8, 10, 3, '#364832');
     px(24, 10, 10, 9, '#050605');
-    px(25, 10, 8, 2, '#877a5c'); // Venda frontal
-    px(26, 10, 3, 2, '#6e1414'); // Mancha de sangre en la frente
-    // Dos lentes simétricos brillantes
+    px(25, 10, 8, 2, '#877a5c');
+    px(26, 10, 3, 2, '#6e1414');
     glow(25, 13, 3, 3, '#e6d7a5');
     glow(30, 13, 3, 3, '#e6d7a5');
-    // Filtro central frontal
     px(27, 16, 4, 4, '#243022');
     px(28, 17, 2, 2, '#b89c46');
   } else {
-    // Dir 3 / Dir 5 (FRENTE-DIAGONAL SE / SW)
     const lookShift = effectiveDir === 3 ? 1 : -1;
     px(24, 8, 5, 9, '#364832');
     px(25, 10, 9, 9, '#050605');
@@ -474,7 +430,6 @@ function drawPlayer8DirCell(ctx, gCtx, dir, stateIdx, col, ox, oy, skills = { sl
     px(29 + lookShift, 17, 3, 3, '#4a2518');
   }
 
-  // 6. BRAZOS Y ARMA EN PRIMER PLANO (Cuando no es vista trasera)
   const armSwing = isWalk ? Math.round(Math.sin(phase) * 2) : 0;
   if (!isSideProfile) {
     px(18, 22, 3, 10 + armSwing, '#182018');
@@ -487,7 +442,6 @@ function drawPlayer8DirCell(ctx, gCtx, dir, stateIdx, col, ox, oy, skills = { sl
   }
 
   if (!isBackView) {
-    // En vista frontal pura (Dir 4), la mano derecha del personaje está a la izquierda (x = 19)
     const anchorX = effectiveDir === 4 ? 19 : (facingSign > 0 ? 37 : 22);
     renderWeaponByDirection(px, glow, activeHand, effectiveDir, stateIdx, col, anchorX, 27, facingSign);
   }
@@ -507,7 +461,7 @@ function drawEnemyFrame(ctx, gCtx, type, dirRow, stateCol, ox, oy, numDirs = 1) 
   ctx.save(); gCtx.save();
   ctx.translate(ox, oy); gCtx.translate(ox, oy);
 
-  const row = Math.min(3, Math.floor(stateCol / 4)); // 0:Idle, 1:Walk, 2:Atk, 3:Hurt
+  const row = Math.min(3, Math.floor(stateCol / 4));
   const col = stateCol % 4;
   const phase = (col / 4) * Math.PI * 2;
   const isIdle = row === 0, isWalk = row === 1, isAtk = row === 2, isHurt = row === 3;
@@ -515,7 +469,6 @@ function drawEnemyFrame(ctx, gCtx, type, dirRow, stateCol, ox, oy, numDirs = 1) 
   const twitchX = (isIdle && col === 3) ? (type === 'weeper' ? 3 : 1) : (isHurt ? (col % 2 === 0 ? -3 : 3) : 0);
   const collapseY = (isHurt && col >= 2) ? (col - 1) * 6 : 0;
 
-  // Si la entidad tiene múltiples direcciones y se ve desde el lado izquierdo, reflejamos su silueta
   const isLeftView = (numDirs === 4 && dirRow === 3) || (numDirs === 8 && dirRow >= 5);
   if (isLeftView) {
     ctx.translate(64, 0); ctx.scale(-1, 1);
@@ -543,7 +496,7 @@ function drawEnemyFrame(ctx, gCtx, type, dirRow, stateCol, ox, oy, numDirs = 1) 
       px(22, 24, 16, 16, '#6e1414');
       for (let r = 0; r < 4; r++) px(23, 25 + r * 4, 14, 2, '#b89c46');
     } else {
-      for (let r = 0; r < 5; r++) px(29, 22 + r * 4, 3, 3, '#b89c46'); // Vértebras dorsales expuestas
+      for (let r = 0; r < 5; r++) px(29, 22 + r * 4, 3, 3, '#b89c46');
     }
     px(12, 23, 6, 18, '#364832');
     const clawY = isAtk ? 10 : 23;
@@ -693,7 +646,7 @@ function drawEnemyFrame(ctx, gCtx, type, dirRow, stateCol, ox, oy, numDirs = 1) 
 
 function buildEnemyDirectionalSheet(type) {
   const numDirs = CONFIG.DIRECTIONAL.ENTITY_DIRS[type] || 1;
-  const cols = 16; // 4 estados x 4 frames
+  const cols = 16;
   const rows = numDirs;
   const w = cols * CONFIG.FRAME_SIZE;
   const h = rows * CONFIG.FRAME_SIZE;
@@ -737,9 +690,9 @@ export function getPlayerLoadoutSheet(skills = { slash: 1 }, activeHand = 'slash
     return playerLoadoutCache.get(signature);
   }
 
-  const numStates = Object.keys(CONFIG.DIRECTIONAL.STATES).length; // 7 estados
-  const cols = numStates * 4; // 28 columnas
-  const rows = 8;             // 8 direcciones
+  const numStates = Object.keys(CONFIG.DIRECTIONAL.STATES).length;
+  const cols = numStates * 4;
+  const rows = 8;
   const w = cols * CONFIG.FRAME_SIZE;
   const h = rows * CONFIG.FRAME_SIZE;
 
@@ -913,8 +866,749 @@ function buildEnvironmentTextures() {
   };
 }
 
+// ============================================================================
+// GENERADOR DEL ATLAS MAESTRO DE INTERFAZ PIXEL-ART (512x512) - BUCKSHOT STYLE
+// ============================================================================
+
+const MINI_FONT_3X5 = {
+  '+': [0b000, 0b010, 0b111, 0b010, 0b000],
+  '-': [0b000, 0b000, 0b111, 0b000, 0b000],
+  '0': [0b111, 0b101, 0b101, 0b101, 0b111],
+  '1': [0b010, 0b110, 0b010, 0b010, 0b111],
+  '2': [0b111, 0b001, 0b111, 0b100, 0b111],
+  '3': [0b111, 0b001, 0b011, 0b001, 0b111],
+  '4': [0b101, 0b101, 0b111, 0b001, 0b001],
+  '5': [0b111, 0b100, 0b111, 0b001, 0b111],
+  '6': [0b111, 0b100, 0b111, 0b101, 0b111],
+  '7': [0b111, 0b001, 0b010, 0b010, 0b010],
+  '8': [0b111, 0b101, 0b111, 0b101, 0b111],
+  '9': [0b111, 0b101, 0b111, 0b001, 0b111],
+  'M': [0b101, 0b111, 0b101, 0b101, 0b101],
+  'A': [0b010, 0b101, 0b111, 0b101, 0b101],
+  'X': [0b101, 0b101, 0b010, 0b101, 0b101]
+};
+
+function drawBitmapString(ctx, text, x, y, color, shadowColor = '#050605') {
+  let curX = x;
+  for (let i = 0; i < text.length; i++) {
+    const rows = MINI_FONT_3X5[text[i]];
+    if (rows) {
+      for (let r = 0; r < 5; r++) {
+        for (let c = 0; c < 3; c++) {
+          if ((rows[r] >> (2 - c)) & 1) {
+            if (shadowColor) {
+              ctx.fillStyle = shadowColor;
+              ctx.fillRect(curX + c + 1, y + r + 1, 1, 1);
+            }
+            ctx.fillStyle = color;
+            ctx.fillRect(curX + c, y + r, 1, 1);
+          }
+        }
+      }
+    }
+    curX += 4;
+  }
+}
+
+// Dibuja una caja 9-slice SIN artefactos de estiramiento:
+// • El centro (slice..w-slice, slice..h-slice) es uniforme y oscuro para que al estirarse nunca genere bandas ni rayas sobre el texto.
+// • Todo el desgaste irregular, muescas y remaches están confinados en las 4 esquinas fijas (0..slice).
+function drawNineSliceBox(ctx, cfg, opts) {
+  const { x, y, w, h, slice = 7 } = cfg;
+  ctx.save();
+  ctx.translate(x, y);
+
+  const px = (rx, ry, rw, rh, col) => {
+    ctx.fillStyle = col;
+    ctx.fillRect(rx, ry, rw, rh);
+  };
+
+  // 1. Contorno negro abisal exterior (#050605)
+  px(0, 0, w, h, '#050605');
+
+  // 2. Fondo principal limpio de alto contraste para legibilidad > 4.5:1
+  const inset = opts.borderThick || 2;
+  px(inset, inset, w - inset * 2, h - inset * 2, opts.bg || '#0d110d');
+
+  // Textura de óxido/desgaste SOLO en las 4 esquinas (nunca en la cruz central que se estira)
+  if (opts.speckle) {
+    const cornerZone = Math.max(4, slice - 1);
+    for (let py = inset + 1; py < h - inset - 1; py++) {
+      for (let pxX = inset + 1; pxX < w - inset - 1; pxX++) {
+        const inCornerX = pxX < cornerZone || pxX >= w - cornerZone;
+        const inCornerY = py < cornerZone || py >= h - cornerZone;
+        if (inCornerX && inCornerY && ((pxX * 19 + py * 37) & 7) === 0) {
+          px(pxX, py, 1, 1, opts.speckle);
+        }
+      }
+    }
+  }
+
+  // 3. Bisel físico continuo (sin agujeros en la zona central para no crear bandas negras al estirar)
+  const bTop = opts.pressed ? opts.borderDark : opts.borderLight;
+  const bBot = opts.pressed ? opts.borderLight : opts.borderDark;
+
+  px(1, 1, w - 2, 1, bTop);
+  px(1, 1, 1, h - 2, bTop);
+  px(1, h - 2, w - 2, 1, bBot);
+  px(w - 2, 1, 1, h - 2, bBot);
+
+  if (opts.doubleRim) {
+    px(2, 2, w - 4, 1, opts.rimInner || '#4a2518');
+    px(2, h - 3, w - 4, 1, '#050605');
+    px(2, 2, 1, h - 4, opts.rimInner || '#4a2518');
+    px(w - 3, 2, 1, h - 4, '#050605');
+  }
+
+  // Lomo izquierdo para notas clínicas (`panel_paper`)
+  if (opts.leftStripe) {
+    px(2, 2, 3, h - 4, opts.leftStripe);
+  }
+
+  // Muescas de desgaste SOLO dentro de las esquinas fijas (nunca en el tramo central)
+  if (!opts.cleanCorners) {
+    px(3, 1, 1, 1, '#050605');
+    px(w - 4, h - 2, 1, 1, '#050605');
+  }
+
+  // Remaches / tornillos en las 4 esquinas fijas
+  if (opts.cornerRivets) {
+    const rCol = opts.rivetColor || '#877a5c';
+    const positions = [[3, 3], [w - 5, 3], [3, h - 5], [w - 5, h - 5]];
+    positions.forEach(([rx, ry]) => {
+      px(rx, ry, 2, 2, '#050605');
+      px(rx, ry, 1, 1, rCol);
+    });
+  }
+
+  // Bordes laterales dentados para la cinta adhesiva (`panel_tape`)
+  if (opts.tornEdges) {
+    for (let ty = 2; ty < h - 2; ty += 3) {
+      px(0, ty, 2, 1, '#050605');
+      px(w - 2, ty + 1, 2, 1, '#050605');
+    }
+  }
+
+  ctx.restore();
+}
+
+// Dibuja cada uno de los 39 iconos y decoraciones de 16x16 píxeles
+function drawUIIcon16(ctx, key, ox, oy) {
+  ctx.save();
+  ctx.translate(ox, oy);
+
+  const px = (x, y, w, h, col) => {
+    ctx.fillStyle = col;
+    ctx.fillRect(x, y, w, h);
+  };
+
+  switch (key) {
+    case 'slash':
+      px(2, 11, 4, 3, '#4a2518');
+      px(5, 9, 2, 4, '#b89c46');
+      for (let i = 0; i < 8; i++) {
+        px(6 + i, 9 - i, 3, 2, '#877a5c');
+        px(6 + i, 8 - i, 1, 1, '#e6d7a5');
+        if (i % 2 === 0) px(8 + i, 10 - i, 1, 2, '#a52020');
+      }
+      break;
+
+    case 'shotgun':
+      px(1, 9, 4, 3, '#4a2518');
+      px(5, 8, 4, 3, '#243022');
+      px(9, 7, 6, 2, '#c8c2ac');
+      px(9, 9, 5, 1, '#877a5c');
+      px(10, 10, 3, 2, '#4a2518');
+      px(3, 3, 3, 4, '#a52020');
+      px(3, 6, 3, 1, '#b89c46');
+      break;
+
+    case 'flamethrower':
+      px(1, 9, 6, 4, '#4a2518');
+      px(4, 8, 5, 2, '#877a5c');
+      px(9, 6, 5, 6, '#a52020');
+      px(10, 7, 4, 4, '#b89c46');
+      px(11, 8, 3, 2, '#e6d7a5');
+      px(12, 4, 2, 2, '#b89c46');
+      break;
+
+    case 'aura':
+      px(4, 3, 8, 10, '#243022');
+      px(3, 5, 10, 6, '#243022');
+      px(5, 4, 6, 8, '#44563a');
+      px(6, 5, 2, 2, '#e6d7a5');
+      px(9, 5, 2, 2, '#e6d7a5');
+      px(7, 9, 3, 2, '#b89c46');
+      px(2, 2, 2, 2, '#44563a');
+      px(12, 11, 2, 2, '#44563a');
+      break;
+
+    case 'mines':
+      px(3, 9, 10, 4, '#243022');
+      px(4, 7, 8, 2, '#364832');
+      px(2, 12, 12, 2, '#050605');
+      px(6, 4, 4, 3, '#a52020');
+      px(7, 5, 2, 1, '#e6d7a5');
+      px(4, 3, 1, 2, '#b89c46');
+      px(11, 3, 1, 2, '#b89c46');
+      break;
+
+    case 'harpoon':
+      for (let i = 0; i < 11; i++) px(2 + i, 13 - i, 2, 2, '#877a5c');
+      px(10, 2, 4, 4, '#e6d7a5');
+      px(8, 3, 3, 1, '#b89c46');
+      px(12, 5, 1, 3, '#b89c46');
+      px(2, 12, 3, 3, '#4a2518');
+      break;
+
+    case 'orbital':
+      px(7, 1, 2, 3, '#b89c46');
+      px(3, 4, 10, 9, '#243022');
+      px(5, 5, 6, 6, '#c8c2ac');
+      px(6, 7, 1, 2, '#050605');
+      px(9, 7, 1, 2, '#050605');
+      px(4, 4, 1, 9, '#4a2518');
+      px(8, 4, 1, 9, '#4a2518');
+      px(11, 4, 1, 9, '#4a2518');
+      px(6, 13, 4, 2, '#a52020');
+      break;
+
+    case 'bolt':
+      px(9, 1, 4, 3, '#e6d7a5');
+      px(7, 4, 4, 3, '#b89c46');
+      px(5, 7, 6, 2, '#e6d7a5');
+      px(7, 9, 4, 3, '#b89c46');
+      px(5, 12, 3, 3, '#e6d7a5');
+      break;
+
+    case 'multishot':
+      [2, 6, 10].forEach((cx, idx) => {
+        const cy = idx === 1 ? 2 : 4;
+        px(cx, cy, 3, 3, '#e6d7a5');
+        px(cx, cy + 3, 3, 6, '#a52020');
+        px(cx, cy + 9, 3, 2, '#b89c46');
+      });
+      break;
+
+    case 'dmg':
+      px(3, 3, 10, 10, '#6e1414');
+      px(5, 2, 6, 12, '#a52020');
+      px(2, 5, 12, 6, '#a52020');
+      px(5, 5, 6, 6, '#b89c46');
+      px(6, 6, 4, 4, '#e6d7a5');
+      break;
+
+    case 'atkSpd':
+      px(4, 4, 8, 8, '#877a5c');
+      px(6, 2, 4, 12, '#877a5c');
+      px(2, 6, 12, 4, '#877a5c');
+      px(5, 5, 6, 6, '#4a2518');
+      px(6, 6, 4, 4, '#050605');
+      px(4, 4, 2, 2, '#b89c46');
+      break;
+
+    case 'maxHp':
+      px(3, 4, 4, 5, '#a52020');
+      px(9, 4, 4, 5, '#6e1414');
+      px(4, 8, 8, 4, '#a52020');
+      px(6, 12, 4, 2, '#6e1414');
+      px(7, 2, 2, 3, '#877a5c');
+      px(5, 7, 6, 2, '#b89c46');
+      break;
+
+    case 'regen':
+      px(4, 2, 8, 10, '#877a5c');
+      px(5, 4, 6, 7, '#a52020');
+      px(7, 5, 2, 4, '#e6d7a5');
+      px(6, 6, 4, 2, '#e6d7a5');
+      px(7, 12, 2, 3, '#a52020');
+      break;
+
+    case 'moveSpd':
+      px(2, 11, 3, 3, '#877a5c');
+      px(4, 6, 6, 6, '#c8c2ac');
+      px(5, 7, 4, 4, '#44563a');
+      px(10, 4, 2, 2, '#877a5c');
+      px(12, 2, 2, 2, '#e6d7a5');
+      break;
+
+    case 'area':
+      px(2, 2, 12, 12, '#182018');
+      px(3, 3, 10, 1, '#b89c46');
+      px(3, 12, 10, 1, '#b89c46');
+      px(3, 3, 1, 10, '#b89c46');
+      px(12, 3, 1, 10, '#b89c46');
+      px(5, 5, 6, 6, '#6e1414');
+      px(7, 7, 2, 2, '#e6d7a5');
+      break;
+
+    case 'crit':
+      px(2, 6, 12, 4, '#c8c2ac');
+      px(4, 4, 8, 8, '#e6d7a5');
+      px(6, 5, 4, 6, '#a52020');
+      px(7, 7, 2, 2, '#050605');
+      px(8, 6, 1, 1, '#e6d7a5');
+      break;
+
+    case 'magnet':
+      px(3, 3, 3, 9, '#a52020');
+      px(10, 3, 3, 9, '#a52020');
+      px(3, 10, 10, 3, '#6e1414');
+      px(3, 2, 3, 3, '#c8c2ac');
+      px(10, 2, 3, 3, '#c8c2ac');
+      px(6, 4, 4, 1, '#e6d7a5');
+      break;
+
+    case 'heal_pack':
+      px(2, 4, 12, 10, '#877a5c');
+      px(3, 5, 10, 8, '#182018');
+      px(7, 6, 2, 6, '#a52020');
+      px(5, 8, 6, 2, '#a52020');
+      px(6, 2, 4, 2, '#4a2518');
+      break;
+
+    case 'teeth_bag':
+      px(4, 5, 8, 9, '#4a2518');
+      px(5, 3, 6, 2, '#b89c46');
+      px(6, 7, 2, 3, '#e6d7a5');
+      px(9, 8, 2, 3, '#e6d7a5');
+      break;
+
+    case 'tooth':
+      px(4, 2, 3, 3, '#e6d7a5');
+      px(9, 2, 3, 3, '#e6d7a5');
+      px(4, 4, 8, 5, '#e6d7a5');
+      px(5, 5, 6, 3, '#c8c2ac');
+      px(4, 9, 3, 4, '#b89c46');
+      px(9, 9, 3, 4, '#b89c46');
+      px(4, 12, 2, 2, '#a52020');
+      px(10, 12, 2, 2, '#a52020');
+      break;
+
+    case 'skull':
+      px(4, 2, 8, 7, '#c8c2ac');
+      px(3, 4, 10, 5, '#e6d7a5');
+      px(5, 5, 2, 2, '#050605');
+      px(9, 5, 2, 2, '#050605');
+      px(7, 8, 2, 2, '#050605');
+      px(5, 10, 6, 4, '#877a5c');
+      px(6, 11, 1, 3, '#050605');
+      px(9, 11, 1, 3, '#050605');
+      break;
+
+    case 'clock':
+      px(3, 3, 10, 10, '#b89c46');
+      px(4, 4, 8, 8, '#121812');
+      px(7, 5, 2, 4, '#e6d7a5');
+      px(7, 8, 4, 1, '#a52020');
+      px(6, 1, 4, 2, '#877a5c');
+      break;
+
+    case 'level':
+      px(5, 2, 6, 2, '#4a2518');
+      px(4, 4, 8, 10, '#877a5c');
+      px(5, 6, 6, 7, '#b89c46');
+      px(6, 7, 2, 4, '#e6d7a5');
+      break;
+
+    case 'reroll':
+      px(2, 3, 7, 7, '#e6d7a5');
+      px(5, 4, 1, 1, '#050605');
+      px(7, 7, 7, 7, '#c8c2ac');
+      px(9, 9, 1, 1, '#a52020');
+      px(11, 11, 1, 1, '#a52020');
+      break;
+
+    case 'warning':
+      for (let r = 0; r < 11; r++) {
+        const w = 2 + Math.floor(r * 1.1);
+        px(8 - Math.floor(w / 2), 2 + r, w, 1, r > 8 ? '#a52020' : '#b89c46');
+      }
+      px(7, 5, 2, 4, '#050605');
+      px(7, 10, 2, 2, '#050605');
+      break;
+
+    case 'suit':
+      px(4, 3, 8, 9, '#364832');
+      px(5, 6, 2, 2, '#e6d7a5');
+      px(9, 6, 2, 2, '#e6d7a5');
+      px(6, 9, 4, 4, '#4a2518');
+      break;
+
+    case 'boss_skull':
+      px(1, 3, 3, 4, '#4a2518');
+      px(12, 3, 3, 4, '#4a2518');
+      px(4, 2, 8, 10, '#a52020');
+      px(5, 3, 6, 7, '#c8c2ac');
+      px(5, 6, 2, 2, '#e6d7a5');
+      px(9, 6, 2, 2, '#e6d7a5');
+      px(5, 11, 6, 3, '#b89c46');
+      break;
+
+    case 'screw_0':
+    case 'screw_1':
+    case 'screw_2':
+    case 'screw_3': {
+      px(3, 3, 10, 10, '#050605');
+      px(4, 4, 8, 8, '#4a2518');
+      px(5, 4, 6, 2, '#877a5c');
+      if (key === 'screw_0') px(4, 7, 8, 2, '#050605');
+      else if (key === 'screw_1') px(7, 4, 2, 8, '#050605');
+      else if (key === 'screw_2') {
+        for (let i = 0; i < 6; i++) px(5 + i, 5 + i, 2, 2, '#050605');
+      } else {
+        for (let i = 0; i < 6; i++) px(10 - i, 5 + i, 2, 2, '#050605');
+      }
+      break;
+    }
+
+    case 'crack_1':
+      px(2, 2, 2, 4, '#050605');
+      px(4, 5, 3, 2, '#050605');
+      px(6, 7, 2, 5, '#050605');
+      px(8, 11, 4, 2, '#050605');
+      px(8, 6, 4, 1, '#4a2518');
+      break;
+
+    case 'crack_2':
+      px(6, 1, 3, 5, '#050605');
+      px(3, 6, 6, 2, '#050605');
+      px(8, 7, 2, 6, '#050605');
+      px(4, 8, 3, 4, '#4a2518');
+      break;
+
+    case 'stain_blood':
+      px(4, 4, 7, 6, '#6e1414');
+      px(6, 3, 4, 8, '#a52020');
+      px(3, 11, 2, 3, '#6e1414');
+      px(11, 9, 2, 4, '#a52020');
+      break;
+
+    case 'stain_rust':
+      px(3, 5, 9, 6, '#4a2518');
+      px(5, 3, 6, 9, '#4a2518');
+      px(6, 6, 4, 3, '#182018');
+      break;
+
+    case 'wire_clamp':
+      px(0, 6, 16, 3, '#050605');
+      px(0, 7, 16, 1, '#6e1414');
+      px(6, 4, 4, 7, '#877a5c');
+      px(7, 5, 2, 5, '#4a2518');
+      break;
+
+    case 'charge_on':
+      px(3, 2, 10, 11, '#050605');
+      px(4, 3, 8, 8, '#b89c46');
+      px(5, 4, 6, 6, '#e6d7a5');
+      px(5, 11, 6, 3, '#4a2518');
+      break;
+
+    case 'charge_off':
+      px(3, 2, 10, 11, '#050605');
+      px(4, 3, 8, 8, '#182018');
+      px(5, 4, 6, 6, '#0d110d');
+      px(6, 5, 3, 2, '#364832');
+      px(5, 11, 6, 3, '#4a2518');
+      break;
+  }
+
+  ctx.restore();
+}
+
+function buildMasterUIAtlas() {
+  const UI = CONFIG.UI_SPRITES;
+  const canvas = document.createElement('canvas');
+  canvas.width = UI.ATLAS_W;
+  canvas.height = UI.ATLAS_H;
+  const ctx = canvas.getContext('2d');
+
+  const NS = UI.NINE_SLICE;
+
+  // 1. PANELES Y CONTENEDORES 9-SLICE (Centro oscuro limpio para contraste > 7:1 y cero rayas estiradas)
+  drawNineSliceBox(ctx, NS.panel_metal, {
+    bg: '#0c100c', speckle: '#243022',
+    borderLight: '#877a5c', borderDark: '#4a2518',
+    doubleRim: true, rimInner: '#364832', cornerRivets: true
+  });
+
+  drawNineSliceBox(ctx, NS.panel_boss, {
+    bg: '#140707', speckle: '#6e1414',
+    borderLight: '#a52020', borderDark: '#4a2518',
+    doubleRim: true, rimInner: '#6e1414', cornerRivets: true, rivetColor: '#b89c46'
+  });
+
+  drawNineSliceBox(ctx, NS.panel_paper, {
+    bg: '#101510', speckle: '#364832',
+    borderLight: '#877a5c', borderDark: '#364832',
+    leftStripe: '#a52020'
+  });
+
+  drawNineSliceBox(ctx, NS.panel_inset, {
+    bg: '#050605',
+    borderLight: '#4a2518', borderDark: '#877a5c', pressed: true, cleanCorners: true
+  });
+
+  drawNineSliceBox(ctx, NS.panel_tape, {
+    bg: '#c2a64f',
+    borderLight: '#e6d7a5', borderDark: '#4a2518', tornEdges: true, cleanCorners: true
+  });
+
+  drawNineSliceBox(ctx, NS.panel_teeth, {
+    bg: '#0e120d', speckle: '#4a2518',
+    borderLight: '#b89c46', borderDark: '#4a2518', doubleRim: true, rimInner: '#4a2518'
+  });
+
+  // 2. CASILLAS DE INVENTARIO Y TARJETAS DE SUBIDA DE NIVEL
+  drawNineSliceBox(ctx, NS.slot_weapon, {
+    bg: '#0e130e', speckle: '#364832',
+    borderLight: '#877a5c', borderDark: '#4a2518', cornerRivets: true
+  });
+
+  drawNineSliceBox(ctx, NS.slot_passive, {
+    bg: '#12100b', speckle: '#4a2518',
+    borderLight: '#b89c46', borderDark: '#4a2518', cornerRivets: true
+  });
+
+  drawNineSliceBox(ctx, NS.slot_empty, {
+    bg: '#070907',
+    borderLight: '#364832', borderDark: '#182018', cleanCorners: true
+  });
+
+  drawNineSliceBox(ctx, NS.card_normal, {
+    bg: '#0d120d', speckle: '#243022',
+    borderLight: '#877a5c', borderDark: '#4a2518',
+    doubleRim: true, rimInner: '#364832', cornerRivets: true
+  });
+
+  drawNineSliceBox(ctx, NS.card_hover, {
+    bg: '#1b2619', speckle: '#b89c46',
+    borderLight: '#e6d7a5', borderDark: '#b89c46',
+    doubleRim: true, rimInner: '#b89c46', cornerRivets: true, rivetColor: '#e6d7a5'
+  });
+
+  drawNineSliceBox(ctx, NS.bar_frame, {
+    bg: '#050605',
+    borderLight: '#877a5c', borderDark: '#364832', pressed: true, cleanCorners: true
+  });
+
+  // 3. BOTONES INDUSTRIALES (4 ESTADOS NÍTIDOS SIN MANCHAS EN EL CENTRO)
+  drawNineSliceBox(ctx, NS.btn_normal, {
+    bg: '#161d15',
+    borderLight: '#877a5c', borderDark: '#050605', doubleRim: true, rimInner: '#4a2518', cornerRivets: true
+  });
+  drawNineSliceBox(ctx, NS.btn_hover, {
+    bg: '#c8ab50',
+    borderLight: '#e6d7a5', borderDark: '#4a2518', doubleRim: true, rimInner: '#e6d7a5', cornerRivets: true, rivetColor: '#050605'
+  });
+  drawNineSliceBox(ctx, NS.btn_active, {
+    bg: '#0b0f0b',
+    borderLight: '#b89c46', borderDark: '#050605', pressed: true, cornerRivets: true
+  });
+  drawNineSliceBox(ctx, NS.btn_disabled, {
+    bg: '#070807',
+    borderLight: '#243022', borderDark: '#121812', cleanCorners: true
+  });
+
+  // 4. BOTONES PRIMARIOS DE SANGRE (4 ESTADOS NÍTIDOS Y SIN RAYAS BLANCAS)
+  drawNineSliceBox(ctx, NS.btn_pri_normal, {
+    bg: '#4e1212',
+    borderLight: '#d43b3b', borderDark: '#050605', doubleRim: true, rimInner: '#8a2020', cornerRivets: true, rivetColor: '#e6d7a5'
+  });
+  drawNineSliceBox(ctx, NS.btn_pri_hover, {
+    bg: '#d4af37',
+    borderLight: '#e6d7a5', borderDark: '#4a2518', doubleRim: true, rimInner: '#e6d7a5', cornerRivets: true, rivetColor: '#050605'
+  });
+  drawNineSliceBox(ctx, NS.btn_pri_active, {
+    bg: '#2c0909',
+    borderLight: '#a52020', borderDark: '#050605', pressed: true, cornerRivets: true
+  });
+  drawNineSliceBox(ctx, NS.btn_pri_disabled, {
+    bg: '#0e0707',
+    borderLight: '#381818', borderDark: '#050605', cleanCorners: true
+  });
+
+  // 5. RELLENOS DE BARRAS EN SPRITE CON SEGMENTOS Y TEXTURA (Y = 152)
+  const drawBarFill = (cfg, colTop, colMid, colBot, segEvery = 8) => {
+    ctx.save();
+    ctx.translate(cfg.x, cfg.y);
+    for (let bx = 0; bx < cfg.w; bx++) {
+      const isSegLine = (bx % segEvery === segEvery - 1);
+      for (let by = 0; by < cfg.h; by++) {
+        if (isSegLine) {
+          ctx.fillStyle = '#050605';
+        } else if (by < 2) {
+          ctx.fillStyle = (bx + by) % 2 === 0 ? colTop : colMid;
+        } else if (by > cfg.h - 3) {
+          ctx.fillStyle = colBot;
+        } else {
+          ctx.fillStyle = ((bx * 7 + by * 13) & 3) === 0 ? colTop : colMid;
+        }
+        ctx.fillRect(bx, by, 1, 1);
+      }
+    }
+    ctx.restore();
+  };
+
+  drawBarFill(UI.BAR_FILLS.hp,   '#e6d7a5', '#c42b2b', '#6e1414', 8);
+  drawBarFill(UI.BAR_FILLS.exp,  '#e6d7a5', '#c8a846', '#4a2518', 8);
+  drawBarFill(UI.BAR_FILLS.stam, '#a6bf8e', '#527848', '#243022', 6);
+  drawBarFill(UI.BAR_FILLS.boss, '#e6d7a5', '#b82525', '#4a2518', 10);
+
+  // 6. ICONOS Y DECORACIÓN 16x16 (Y = 176)
+  Object.entries(UI.ICONS).forEach(([key, pos]) => {
+    const ix = pos.col * UI.ICON_SIZE;
+    const iy = UI.ICONS_ORIGIN_Y + pos.row * UI.ICON_SIZE;
+    drawUIIcon16(ctx, key, ix, iy);
+  });
+
+  // 7. PLACAS DE NIVEL EN SPRITE (+1 a +8 y --) en Y = 256 (20x12 px cada una)
+  for (let lvl = 0; lvl <= 8; lvl++) {
+    const bx = lvl * UI.BADGE_W;
+    const by = UI.BADGES_ORIGIN_Y;
+    ctx.save();
+    ctx.translate(bx, by);
+    ctx.fillStyle = '#050605';
+    ctx.fillRect(0, 0, UI.BADGE_W, UI.BADGE_H);
+    ctx.fillStyle = lvl === 8 ? '#6e1414' : (lvl === 0 ? '#121812' : '#1b2619');
+    ctx.fillRect(1, 1, UI.BADGE_W - 2, UI.BADGE_H - 2);
+    ctx.fillStyle = lvl === 8 ? '#e6d7a5' : (lvl === 0 ? '#364832' : '#b89c46');
+    ctx.fillRect(1, 1, UI.BADGE_W - 2, 1);
+    ctx.fillRect(1, UI.BADGE_H - 2, UI.BADGE_W - 2, 1);
+
+    const label = lvl === 0 ? '--' : `+${lvl}`;
+    const textCol = lvl === 0 ? '#877a5c' : '#e6d7a5';
+    drawBitmapString(ctx, label, 6, 3, textCol, '#050605');
+    ctx.restore();
+  }
+
+  // 8. CURSORES PIXEL-ART PERSONALIZADOS (Y = 280)
+  ctx.save();
+  ctx.translate(UI.CURSORS.default.x, UI.CURSORS.default.y);
+  for (let i = 0; i < 11; i++) {
+    ctx.fillStyle = '#050605';
+    ctx.fillRect(1, 1 + i, 2 + Math.floor(i * 0.7), 2);
+    ctx.fillStyle = i < 4 ? '#e6d7a5' : '#b89c46';
+    ctx.fillRect(2, 2 + i, 1 + Math.floor(i * 0.5), 1);
+  }
+  ctx.fillStyle = '#a52020';
+  ctx.fillRect(2, 2, 2, 2);
+  ctx.restore();
+
+  ctx.save();
+  ctx.translate(UI.CURSORS.pointer.x, UI.CURSORS.pointer.y);
+  ctx.fillStyle = '#050605';
+  ctx.fillRect(3, 1, 5, 13);
+  ctx.fillRect(2, 5, 11, 8);
+  ctx.fillStyle = '#e6d7a5';
+  ctx.fillRect(4, 2, 3, 10);
+  ctx.fillStyle = '#b89c46';
+  ctx.fillRect(3, 6, 9, 6);
+  ctx.fillStyle = '#a52020';
+  ctx.fillRect(4, 2, 3, 2);
+  ctx.restore();
+
+  ctx.save();
+  ctx.translate(UI.CURSORS.crosshair.x, UI.CURSORS.crosshair.y);
+  const ch = (x, y, w, h, c) => { ctx.fillStyle = c; ctx.fillRect(x, y, w, h); };
+  ch(2, 2, 4, 1, '#b89c46'); ch(2, 2, 1, 4, '#b89c46');
+  ch(10, 2, 4, 1, '#b89c46'); ch(13, 2, 1, 4, '#b89c46');
+  ch(2, 13, 4, 1, '#b89c46'); ch(2, 10, 1, 4, '#b89c46');
+  ch(10, 13, 4, 1, '#b89c46'); ch(13, 10, 1, 4, '#b89c46');
+  ch(7, 7, 2, 2, '#e6d7a5');
+  ctx.restore();
+
+  return {
+    name: 'ui_master_atlas',
+    canvas
+  };
+}
+
+function cropAtlasToDataURL(atlasCanvas, rect, scale = 1) {
+  const c = document.createElement('canvas');
+  c.width = rect.w * scale;
+  c.height = rect.h * scale;
+  const ctx = c.getContext('2d');
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(
+    atlasCanvas,
+    rect.x, rect.y, rect.w, rect.h,
+    0, 0, rect.w * scale, rect.h * scale
+  );
+  return c.toDataURL('image/png');
+}
+
+// Sincroniza cualquier etiqueta estática del DOM con atributo [data-ui-icon] a la escala entera actual
+export function refreshStaticDOMIcons() {
+  if (typeof document === 'undefined') return;
+  const UI = CONFIG.UI_SPRITES;
+  const scale = UI.SCALE;
+  document.querySelectorAll('[data-ui-icon]').forEach(el => {
+    const key = el.getAttribute('data-ui-icon');
+    const pos = UI.ICONS[key] || UI.ICONS.warning;
+    const bgX = -(pos.col * UI.ICON_SIZE * scale);
+    const bgY = -((UI.ICONS_ORIGIN_Y + pos.row * UI.ICON_SIZE) * scale);
+    el.style.backgroundPosition = `${bgX}px ${bgY}px`;
+  });
+}
+
+// Inyecta todas las coordenadas, escalas enteras, recortes 9-slice, barras y cursores en CSS (:root)
+export function initUISpritesCSS(customScale = CONFIG.UI_SPRITES.SCALE) {
+  const scale = Math.max(1, Math.round(customScale));
+  CONFIG.UI_SPRITES.SCALE = scale;
+
+  const UI = CONFIG.UI_SPRITES;
+  const atlasCanvas = SpriteSheets.ui_atlas.canvas;
+  const root = document.documentElement.style;
+
+  root.setProperty('--ui-scale', String(scale));
+  root.setProperty('--ui-atlas', `url("${atlasCanvas.toDataURL('image/png')}")`);
+  root.setProperty('--ui-atlas-w', `${UI.ATLAS_W * scale}px`);
+  root.setProperty('--ui-atlas-h', `${UI.ATLAS_H * scale}px`);
+  root.setProperty('--ui-icon-size', `${UI.ICON_SIZE * scale}px`);
+  root.setProperty('--ui-badge-w', `${UI.BADGE_W * scale}px`);
+  root.setProperty('--ui-badge-h', `${UI.BADGE_H * scale}px`);
+
+  Object.entries(UI.NINE_SLICE).forEach(([key, cfg]) => {
+    const url = cropAtlasToDataURL(atlasCanvas, cfg, 1);
+    root.setProperty(`--slice-${key}`, `url("${url}")`);
+    root.setProperty(`--slice-${key}-cut`, String(cfg.slice));
+    root.setProperty(`--slice-${key}-bw`, `${cfg.slice * scale}px`);
+  });
+
+  Object.entries(UI.BAR_FILLS).forEach(([key, cfg]) => {
+    const url = cropAtlasToDataURL(atlasCanvas, cfg, scale);
+    root.setProperty(`--bar-fill-${key}`, `url("${url}")`);
+  });
+
+  Object.entries(UI.CURSORS).forEach(([key, cfg]) => {
+    const url = cropAtlasToDataURL(atlasCanvas, cfg, scale);
+    root.setProperty(`--cursor-${key}`, `url("${url}") ${cfg.hotX * scale} ${cfg.hotY * scale}`);
+  });
+
+  refreshStaticDOMIcons();
+}
+
+export function renderSpriteIconHTML(iconKey, extraClass = '') {
+  const UI = CONFIG.UI_SPRITES;
+  const scale = UI.SCALE;
+  const pos = UI.ICONS[iconKey] || UI.ICONS.warning;
+  const bgX = -(pos.col * UI.ICON_SIZE * scale);
+  const bgY = -((UI.ICONS_ORIGIN_Y + pos.row * UI.ICON_SIZE) * scale);
+  return `<span class="ui-icon ${extraClass}" data-ui-icon="${iconKey}" style="background-position: ${bgX}px ${bgY}px;" aria-hidden="true"></span>`;
+}
+
+export function renderSpriteBadgeHTML(level = 0, extraClass = '') {
+  const UI = CONFIG.UI_SPRITES;
+  const scale = UI.SCALE;
+  const clamped = Math.max(0, Math.min(8, level));
+  const bgX = -(clamped * UI.BADGE_W * scale);
+  const bgY = -(UI.BADGES_ORIGIN_Y * scale);
+  return `<span class="ui-lvl-badge ${extraClass}" style="background-position: ${bgX}px ${bgY}px;" aria-label="+${clamped}"></span>`;
+}
+
 export const SpriteSheets = {
-  player:       null, // Inicializado abajo con el atlas 8-dir
+  player:       null,
   zombie:       buildEnemyDirectionalSheet('zombie'),
   weeper:       buildEnemyDirectionalSheet('weeper'),
   worm:         buildEnemyDirectionalSheet('worm'),
@@ -923,7 +1617,9 @@ export const SpriteSheets = {
   boss_furnace: buildEnemyDirectionalSheet('boss_furnace'),
   boss_apostle: buildEnemyDirectionalSheet('boss_apostle'),
   boss_warden:  buildEnemyDirectionalSheet('boss_warden'),
-  env:          buildEnvironmentTextures()
+  env:          buildEnvironmentTextures(),
+  ui_atlas:     buildMasterUIAtlas()
 };
 
 SpriteSheets.player = getPlayerLoadoutSheet({ slash: 1 }, 'slash');
+initUISpritesCSS(CONFIG.UI_SPRITES.SCALE);

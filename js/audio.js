@@ -47,13 +47,28 @@ export const AudioSys = {
     osc.stop(now + dur);
   },
 
+  // Clic metálico seco al pasar por encima de botones o tarjetas
   playUIClick() {
-    this.play(680, 0.035, 'square', 0.035);
+    this.play(720, 0.028, 'square', 0.03);
+    setTimeout(() => this.play(310, 0.02, 'triangle', 0.025), 12);
   },
 
+  // Interruptor pesado al confirmar o pulsar un botón
   playUISelect() {
-    this.play(220, 0.09, 'sawtooth', 0.06);
-    setTimeout(() => this.play(440, 0.08, 'square', 0.04), 35);
+    this.play(190, 0.08, 'sawtooth', 0.065);
+    setTimeout(() => this.play(420, 0.07, 'square', 0.045), 35);
+  },
+
+  // Zumbido grave cuando un botón está desactivado o sin dientes suficientes
+  playUIError() {
+    this.play(95, 0.14, 'sawtooth', 0.06);
+    setTimeout(() => this.play(72, 0.16, 'square', 0.05), 55);
+  },
+
+  // Relé mecánico al pausar o reanudar partida
+  playPause() {
+    this.play(260, 0.06, 'square', 0.045);
+    setTimeout(() => this.play(140, 0.09, 'sawtooth', 0.04), 40);
   },
 
   playReroll() {

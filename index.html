@@ -24,20 +24,35 @@
   <div id="damage-flash"></div>
   <div id="scare-flash"></div>
 
-  <!-- Barra superior para exportar spritesheets -->
+  <!-- Barra superior para exportar spritesheets y selector de escala entera de UI -->
   <div id="top-bar">
-    <button class="rust-btn sm" id="btn-open-sheets">📼 ARCHIVO DE SPRITES (.PNG) [TAB]</button>
+    <div class="scale-picker-box" title="Escala entera de píxeles de la interfaz">
+      <span>ESCALA UI</span>
+      <select id="ui-scale-select" aria-label="Escala de la interfaz">
+        <option value="1">x1</option>
+        <option value="2" selected>x2</option>
+        <option value="3">x3</option>
+      </select>
+    </div>
+    <button class="rust-btn sm" id="btn-open-sheets">
+      <span class="ui-icon sm" data-ui-icon="atkSpd"></span>
+      <span>ARCHIVO DE SPRITES (.PNG) [TAB]</span>
+    </button>
   </div>
 
   <!-- Modal Inspector / Descargador de Spritesheets -->
   <div id="sheets-modal" class="overlay hidden">
     <div class="metal-plate wide-plate">
-      <div class="screw tl"></div><div class="screw tr"></div><div class="screw bl"></div><div class="screw br"></div>
+      <div class="ui-decor crack-tl" data-ui-icon="crack_1"></div>
+      <div class="ui-decor stain-rust" data-ui-icon="stain_rust"></div>
       <div class="plate-header">
-        <span class="tape-label">// ARCHIVO DE SPRITESHEETS PIXEL-ART (NEAREST)</span>
-        <button class="rust-btn sm" id="btn-close-sheets">[X] CERRAR</button>
+        <span class="tape-label">
+          <span class="ui-icon sm" data-ui-icon="atkSpd"></span>
+          <span>ATLAS MAESTRO DE UI &amp; SPRITESHEETS (.PNG)</span>
+        </span>
+        <button class="rust-btn sm" id="btn-close-sheets"><span>[X] CERRAR</span></button>
       </div>
-      <p class="plate-sub">Hojas 4x4 (Personajes y 5 Bosses) + Hojas de Ataque Básico, Orbital y Texturas. Haz clic para descargar PNG.</p>
+      <p class="plate-sub">Atlas 512x512 con paneles 9-slice, botones, barras, 39 iconos detallados, placas +1..+8 y cursores. Haz clic para descargar PNG.</p>
       <div id="sheets-grid"></div>
     </div>
   </div>
@@ -47,9 +62,11 @@
     <!-- Barra de Vida del Boss (Centro Superior) -->
     <div id="boss-hud" class="hidden">
       <div class="boss-plate">
-        <div class="screw tl"></div><div class="screw tr"></div>
         <div class="boss-header">
-          <span id="boss-name">// EL AMPUTADOR DE PLANTA</span>
+          <span class="boss-title-wrap">
+            <span class="ui-icon sm" data-ui-icon="boss_skull"></span>
+            <span id="boss-name">// EL AMPUTADOR DE PLANTA</span>
+          </span>
           <span id="boss-phase" class="phase-tag">FASE I</span>
         </div>
         <div class="boss-bar-frame">
@@ -61,16 +78,25 @@
 
     <!-- Banner de Fase Final (Minuto 15+) -->
     <div id="endgame-banner" class="hidden">
-      ⚠️ FALLO DE CONTENCIÓN TOTAL // PROTOCOLO DE EXTERMINIO ACTIVO ⚠️
+      <span class="ui-icon sm" data-ui-icon="warning"></span>
+      <span>FALLO DE CONTENCIÓN TOTAL // PROTOCOLO DE EXTERMINIO ACTIVO</span>
+      <span class="ui-icon sm" data-ui-icon="warning"></span>
     </div>
 
-    <!-- Panel Izquierdo: Constantes e Inventario 4/4 -->
+    <!-- Panel Izquierdo: Monitor Biométrico e Inventario 4/4 -->
     <div class="metal-plate hud-left">
-      <div class="screw tl"></div><div class="screw tr"></div><div class="screw bl"></div><div class="screw br"></div>
-      <div class="tape-strip">MONITOR BIOMÉTRICO // UNIDAD 04</div>
+      <div class="ui-decor wire-top" data-ui-icon="wire_clamp"></div>
+      <div class="ui-decor stain-blood" data-ui-icon="stain_blood"></div>
+      <div class="tape-strip">
+        <span class="ui-icon sm" data-ui-icon="suit"></span>
+        <span>MONITOR BIOMÉTRICO // UNIDAD 04</span>
+      </div>
 
       <div class="stat-label-row">
-        <span>PULSO CARDÍACO</span>
+        <span class="stat-label-left">
+          <span class="ui-icon sm" data-ui-icon="maxHp"></span>
+          <span>PULSO CARDÍACO</span>
+        </span>
         <span id="hp-text" class="led-val">100 / 100</span>
       </div>
       <div class="segmented-bar hp-frame">
@@ -79,7 +105,10 @@
       </div>
 
       <div class="stat-label-row">
-        <span>DOSIS DE SUERO</span>
+        <span class="stat-label-left">
+          <span class="ui-icon sm" data-ui-icon="level"></span>
+          <span>DOSIS DE SUERO</span>
+        </span>
         <span id="level-text" class="led-val amber">CICLO 01</span>
       </div>
       <div class="segmented-bar exp-frame">
@@ -88,60 +117,119 @@
       </div>
 
       <div class="stat-label-row">
-        <span>VÁLVULA DE ESCAPE [SHIFT]</span>
-        <span id="elev-text" class="led-dim">COTA: 0.0m</span>
+        <span class="stat-label-left">
+          <span class="ui-icon sm" data-ui-icon="moveSpd"></span>
+          <span>VÁLVULA ESCAPE [SHIFT]</span>
+        </span>
+        <span id="elev-text" class="led-dim">COTA: 0.0M</span>
       </div>
       <div class="segmented-bar stam-frame">
         <div id="stam-bar"></div>
       </div>
 
       <div class="counters-strip">
-        <div>BAJAS: <b id="kills-text">0</b></div>
-        <div>DIENTES: <b id="souls-hud">0 🦷</b></div>
-        <div>BOSSES: <b id="bosses-killed-hud">0/5</b></div>
+        <div class="counter-item" title="Enemigos eliminados">
+          <span class="ui-icon sm" data-ui-icon="skull"></span>
+          <span>BAJAS: <b id="kills-text">0</b></span>
+        </div>
+        <div class="counter-item" title="Dientes extraídos en esta partida">
+          <span class="ui-icon sm" data-ui-icon="tooth"></span>
+          <span>DIENTES: <b id="souls-hud">0</b></span>
+        </div>
+        <div class="counter-item" title="Bosses derrotados">
+          <span class="ui-icon sm" data-ui-icon="boss_skull"></span>
+          <span>BOSSES: <b id="bosses-killed-hud">0/5</b></span>
+        </div>
       </div>
 
-      <div class="slot-section-title">RANURAS DE ARMAS [<span id="weapons-count">1/4</span>] · MÁX +8</div>
+      <div class="slot-section-title">
+        <span>RANURAS DE ARMAS</span>
+        <span>[<span id="weapons-count">1/4</span>] · MÁX +8</span>
+      </div>
       <div id="skills-bar" class="slots-grid"></div>
 
-      <div class="slot-section-title">IMPLANTES PASIVOS [<span id="passives-count">0/4</span>] · MÁX +8</div>
+      <div class="slot-section-title">
+        <span>IMPLANTES PASIVOS</span>
+        <span>[<span id="passives-count">0/4</span>] · MÁX +8</span>
+      </div>
       <div id="passives-bar" class="passives-list"></div>
     </div>
 
     <!-- Panel Derecho: Cronómetro Industrial -->
     <div class="metal-plate hud-right">
-      <div class="screw tl"></div><div class="screw br"></div>
-      <div class="clock-label">TIEMPO EN PLANTA</div>
+      <div class="ui-decor crack-br" data-ui-icon="crack_2"></div>
+      <div class="clock-label">
+        <span class="ui-icon sm" data-ui-icon="clock"></span>
+        <span>TIEMPO EN PLANTA</span>
+      </div>
       <div id="timer-text">00:00</div>
       <div id="wave-text">AMENAZA: NIVEL 1</div>
       <div id="next-boss-text">PRÓX. BOSS: 03:00</div>
     </div>
 
     <div id="crosshair"></div>
-    <div id="boss-alert" class="hidden">⚠️ ALERTA SÍSMICA: PRESENCIA HOSTIL DETECTADA ⚠️</div>
+    <div id="boss-alert" class="hidden">
+      <span class="ui-icon sm" data-ui-icon="warning"></span>
+      <span>ALERTA SÍSMICA: PRESENCIA HOSTIL DETECTADA</span>
+      <span class="ui-icon sm" data-ui-icon="warning"></span>
+    </div>
   </div>
 
   <!-- Pantalla de Inicio -->
   <div id="start-screen" class="overlay">
     <div class="metal-plate main-menu-plate">
-      <div class="screw tl"></div><div class="screw tr"></div><div class="screw bl"></div><div class="screw br"></div>
-      <div class="tape-strip">DOCUMENTO DE EXENCIÓN DE RESPONSABILIDAD // REV. 06</div>
+      <div class="ui-decor crack-tl" data-ui-icon="crack_1"></div>
+      <div class="ui-decor stain-rust" data-ui-icon="stain_rust"></div>
+      <div class="ui-decor wire-top" data-ui-icon="wire_clamp"></div>
+
+      <div class="tape-strip">
+        <span class="ui-icon sm" data-ui-icon="warning"></span>
+        <span>EXENCIÓN DE RESPONSABILIDAD // REV. 06</span>
+      </div>
+
       <h1 class="buckshot-title">Traces of Rust</h1>
       <p class="plate-sub">SUPERVIVENCIA INDUSTRIAL 3D · BILLBOARDS LO-FI · 5 BOSSES · FASE FINAL</p>
 
-      <div class="teeth-banner">🦷 DIENTES EN RESERVA: <span id="start-souls">0</span></div>
+      <div class="teeth-banner">
+        <span class="ui-icon sm" data-ui-icon="tooth"></span>
+        <span>DIENTES EN RESERVA: <span id="start-souls">0</span></span>
+      </div>
 
       <div class="paper-note">
         <b>INSTRUCCIONES OPERATIVAS:</b><br>
-        • <b>WASD</b> Moverse por rampas y plataformas · <b>ESPACIO</b> Saltar · <b>SHIFT</b> Esquiva Brusca<br>
+        • <b>WASD</b> Moverse por rampas y plataformas · <b>ESPACIO</b> Saltar · <b>SHIFT</b> Esquiva Brusca · <b>P</b> Pausa<br>
         • <b>RATÓN</b> Apuntar linterna (Alumbra de frente a <i>El Observador</i> para paralizarlo)<br>
         • <b>SUBIDA DE NIVEL:</b> Equipa hasta <b>4 Armas</b> y <b>4 Pasivas</b> (Nivel máx. <b>+8</b>). Usa <b>Actualizar</b> para cambiar opciones.<br>
-        • <b>MEJORAS PERMANENTES:</b> Recoge <b>Dientes (🦷)</b> durante la partida y gástalos al morir en la <b>Mesa del Cirujano</b>.
+        • <b>MEJORAS PERMANENTES:</b> Recoge <b>Dientes</b> durante la partida y gástalos al morir en la <b>Mesa del Cirujano</b>.
       </div>
 
       <div class="btn-group">
-        <button class="rust-btn primary" id="btn-start">[ FIRMAR CONTRATO Y ENTRAR ]</button>
-        <button class="rust-btn" id="btn-open-shop">[ 🦷 MESA DEL CIRUJANO ]</button>
+        <button class="rust-btn primary" id="btn-start">
+          <span class="ui-icon sm" data-ui-icon="slash"></span>
+          <span>[ FIRMAR CONTRATO Y ENTRAR ]</span>
+        </button>
+        <button class="rust-btn" id="btn-open-shop">
+          <span class="ui-icon sm" data-ui-icon="tooth"></span>
+          <span>[ MESA DEL CIRUJANO ]</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Menú de Pausa ([P]) -->
+  <div id="pause-screen" class="overlay hidden">
+    <div class="metal-plate main-menu-plate" style="max-width:520px;">
+      <div class="ui-decor crack-tl" data-ui-icon="crack_1"></div>
+      <div class="tape-strip">
+        <span class="ui-icon sm" data-ui-icon="clock"></span>
+        <span>PROTOCOLO DE PAUSA // PLANTA INDUSTRIAL</span>
+      </div>
+      <h1 class="buckshot-title" style="font-size:22px;">JUEGO EN PAUSA</h1>
+      <p class="plate-sub">Sistemas de soporte vital congelados temporalmente.</p>
+
+      <div class="btn-group" style="flex-direction:column; gap:12px; margin-top:16px;">
+        <button class="rust-btn primary" id="btn-resume"><span>[ CONTINUAR MISIÓN ]</span></button>
+        <button class="rust-btn" id="btn-pause-to-menu"><span>[ ABANDONAR A MENÚ PRINCIPAL ]</span></button>
       </div>
     </div>
   </div>
@@ -149,18 +237,25 @@
   <!-- Tienda Permanente Fuera de Partida (Mesa del Cirujano) -->
   <div id="shop-screen" class="overlay hidden">
     <div class="metal-plate main-menu-plate">
-      <div class="screw tl"></div><div class="screw tr"></div><div class="screw bl"></div><div class="screw br"></div>
+      <div class="ui-decor stain-blood" data-ui-icon="stain_blood"></div>
+      <div class="ui-decor crack-br" data-ui-icon="crack_2"></div>
       <div class="plate-header">
-        <span class="tape-label">// MESA DEL CIRUJANO (MEJORAS PERMANENTES)</span>
-        <span class="led-val amber">RESERVA: <span id="shop-souls">0</span> 🦷</span>
+        <span class="tape-label">
+          <span class="ui-icon sm" data-ui-icon="tooth"></span>
+          <span>MESA DEL CIRUJANO (MEJORAS PERMANENTES)</span>
+        </span>
+        <span class="led-val amber">
+          <span class="ui-icon sm" data-ui-icon="tooth"></span>
+          <span>RESERVA: <span id="shop-souls">0</span></span>
+        </span>
       </div>
       <p class="plate-sub">Intercambia los dientes extraídos en tus partidas por implantes permanentes:</p>
 
       <div id="shop-list" class="shop-container"></div>
 
       <div class="btn-group" style="margin-top:14px;">
-        <button class="rust-btn primary" id="btn-shop-play">[ ENTRAR DIRECTO A PLANTA ]</button>
-        <button class="rust-btn" id="btn-close-shop">[ VOLVER ]</button>
+        <button class="rust-btn primary" id="btn-shop-play"><span>[ ENTRAR DIRECTO A PLANTA ]</span></button>
+        <button class="rust-btn" id="btn-close-shop"><span>[ VOLVER ]</span></button>
       </div>
     </div>
   </div>
@@ -168,9 +263,13 @@
   <!-- Subida de Nivel (Armas + Pasivas + Botón Actualizar) -->
   <div id="level-up-screen" class="overlay hidden">
     <div class="metal-plate levelup-plate">
-      <div class="screw tl"></div><div class="screw tr"></div><div class="screw bl"></div><div class="screw br"></div>
+      <div class="ui-decor wire-top" data-ui-icon="wire_clamp"></div>
+      <div class="ui-decor stain-rust" data-ui-icon="stain_rust"></div>
       <div class="plate-header">
-        <span class="tape-label">// SELECCIONA MUTACIÓN, ARMA O IMPLANTE PASIVO</span>
+        <span class="tape-label">
+          <span class="ui-icon sm" data-ui-icon="level"></span>
+          <span>SELECCIONA MUTACIÓN, ARMA O IMPLANTE PASIVO</span>
+        </span>
         <span id="lvlup-slots-info" class="led-val amber">ARMAS: 1/4 | PASIVAS: 0/4</span>
       </div>
       <p class="plate-sub">Elige 1 de las siguientes opciones (Tope máximo por pieza: +8):</p>
@@ -178,8 +277,13 @@
       <div id="upgrade-container"></div>
 
       <div class="reroll-bar">
+        <div class="reroll-charges-box" title="Fusibles de actualización restantes en esta partida">
+          <span>CARGAS:</span>
+          <div id="reroll-charges" class="reroll-charges"></div>
+        </div>
         <button class="rust-btn reroll-btn" id="btn-reroll">
-          🔄 ACTUALIZAR OPCIONES (<span id="reroll-count">3</span> RESTANTES)
+          <span class="ui-icon sm" data-ui-icon="reroll"></span>
+          <span>ACTUALIZAR OPCIONES (<span id="reroll-count">3</span> RESTANTES)</span>
         </button>
       </div>
     </div>
@@ -188,25 +292,29 @@
   <!-- Pantalla de Muerte / Informe de Autopsia -->
   <div id="game-over-screen" class="overlay hidden">
     <div class="metal-plate gameover-plate">
-      <div class="screw tl"></div><div class="screw tr"></div><div class="screw bl"></div><div class="screw br"></div>
-      <div class="tape-strip">CERTIFICADO DE DEFUNCIÓN // EXPEDIENTE CERRADO</div>
+      <div class="ui-decor crack-tl" data-ui-icon="crack_1"></div>
+      <div class="ui-decor stain-blood" data-ui-icon="stain_blood"></div>
+      <div class="tape-strip">
+        <span class="ui-icon sm" data-ui-icon="skull"></span>
+        <span>CERTIFICADO DE DEFUNCIÓN // EXPEDIENTE CERRADO</span>
+      </div>
       <h1 class="buckshot-title dead-title">PACIENTE EXPIRADO</h1>
       <p id="go-cause" class="plate-sub">CAUSA: DESMEMBRAMIENTO EN PLANTA INDUSTRIAL</p>
 
       <div class="paper-note stats-report">
         <div class="report-row"><span>TIEMPO SOBREVIVIDO:</span><b id="go-time">00:00</b></div>
-        <div class="report-row"><span>BOSSES DERROTADOS:</span><b id="go-bosses" style="color:#d4af37">0 / 5</b></div>
-        <div class="report-row"><span>ENEMIGOS ELIMINADOS:</span><b id="go-kills" style="color:#b83232">0</b></div>
-        <div class="report-row"><span>DIENTES EXTRAÍDOS EN PARTIDA:</span><b id="go-souls" style="color:#d4af37">+0 🦷</b></div>
-        <div class="report-row"><span>RESERVA TOTAL DE DIENTES:</span><b id="go-total-souls" style="color:#d4af37">0 🦷</b></div>
+        <div class="report-row"><span>BOSSES DERROTADOS:</span><b id="go-bosses" style="color:#f0c954">0 / 5</b></div>
+        <div class="report-row"><span>ENEMIGOS ELIMINADOS:</span><b id="go-kills" style="color:#ff6b6b">0</b></div>
+        <div class="report-row"><span>DIENTES EXTRAÍDOS EN PARTIDA:</span><b id="go-souls" style="color:#f0c954">+0</b></div>
+        <div class="report-row"><span>RESERVA TOTAL DE DIENTES:</span><b id="go-total-souls" style="color:#f0c954">0</b></div>
         <div class="report-row"><span>CICLO ALCANZADO:</span><b id="go-level">CICLO 1</b></div>
         <div class="report-row"><span>ESTADO DE FASE FINAL:</span><b id="go-endgame">NO ALCANZADA</b></div>
         <div class="report-loadout" id="go-loadout"></div>
       </div>
 
       <div class="btn-group">
-        <button class="rust-btn primary" id="btn-restart">[ NUEVA PARTIDA ]</button>
-        <button class="rust-btn" id="btn-go-shop">[ 🦷 COMPRAR MEJORAS PERMANENTES ]</button>
+        <button class="rust-btn primary" id="btn-restart"><span>[ NUEVA PARTIDA ]</span></button>
+        <button class="rust-btn" id="btn-go-shop"><span>[ COMPRAR MEJORAS PERMANENTES ]</span></button>
       </div>
     </div>
   </div>

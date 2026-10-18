@@ -1,7 +1,13 @@
 import * as THREE from 'three';
 import { CONFIG } from './config.js';
 import { AudioSys } from './audio.js';
-import { SpriteSheets, getPlayerLoadoutSheet } from './spritesheets.js';
+import {
+  SpriteSheets,
+  getPlayerLoadoutSheet,
+  initUISpritesCSS,
+  renderSpriteIconHTML,
+  renderSpriteBadgeHTML
+} from './spritesheets.js';
 import { createWorld } from './world.js';
 import { createBillboardSprite, EnemyPool } from './entities.js';
 import {
@@ -61,6 +67,7 @@ const playerLanternLight = new THREE.PointLight(0xffe0a3, 28, 8.5, 1.4);
 scene.add(playerLanternLight);
 
 let currentHandWeapon = 'slash';
+let lastUpgradedKey = null;
 const HAND_WEAPONS = ['slash', 'shotgun', 'flamethrower', 'harpoon', 'bolt', 'mines'];
 
 // Pre-genera las hojas de todas las armas equipadas al subir de nivel para evitar tirones en combate
@@ -122,7 +129,7 @@ const enemyPool = new EnemyPool(scene, CONFIG.DIFFICULTY.MAX_ACTIVE_ENEMIES);
 let state = 'START', lastMenuScreen = 'start-screen';
 let yaw = 0, pitch = -0.22, playerFacingYaw = 0, aimLockTimer = 0;
 let gameTime = 0, runSouls = 0, kills = 0;
-let stats = {}, skills = {}, passives = {}, rerollsLeft = CONFIG.LIMITS.REROLLS_PER_RUN;
+let stats = {}, skills = {}, passives = {}, rerollsLeft = CONFIG.LIMITS.REROLLS_PER_RUN, maxRerollsRun = CONFIG.LIMITS.REROLLS_PER_RUN;
 let playerYVel = 0, isGrounded = true, dashCd = 0, invuln = 0, atkAnimTimer = 0;
 let dashTimer = 0, dashGhostTimer = 0;
 const dashDirVec = new THREE.Vector3();
@@ -160,13 +167,13 @@ function getActiveModifiers() {
   };
 }
 
-// Genera el bloque HTML con las armas equipadas a las que afecta una pasiva
+// Genera el bloque HTML con los iconos en sprite de las armas equipadas a las que afecta una pasiva
 function getPassiveAffectedWeaponsHTML(passiveId) {
   const pCfg = CONFIG.PASSIVES[passiveId];
   if (!pCfg) return '';
 
   if (pCfg.targetType === 'player_stat') {
-    return `<div class="passive-affected-weapons"><span>Afecta a:</span> <span class="passive-weapon-pill">👤 Traje / Jugador</span></div>`;
+    return `<div class="passive-affected-weapons"><span>AFECTA:</span> <span class="passive-weapon-pill">${renderSpriteIconHTML('suit', 'sm')} TRAJE</span></div>`;
   }
 
   const equippedIds = Object.keys(skills).filter(k => skills[k] > 0);
@@ -178,14 +185,14 @@ function getPassiveAffectedWeaponsHTML(passiveId) {
   });
 
   if (matching.length === 0) {
-    return `<div class="passive-affected-weapons"><span>Armas:</span> <span class="passive-weapon-none">Ninguna equipada compatible</span></div>`;
+    return `<div class="passive-affected-weapons"><span>ARMAS:</span> <span class="passive-weapon-none">NINGUNA EQUIPADA COMPATIBLE</span></div>`;
   }
 
   const pills = matching
-    .map(wId => `<span class="passive-weapon-pill">${CONFIG.SKILLS[wId].icon} ${CONFIG.SKILLS[wId].name.split(' ')[0]}</span>`)
+    .map(wId => `<span class="passive-weapon-pill">${renderSpriteIconHTML(CONFIG.SKILLS[wId].icon, 'sm')} ${CONFIG.SKILLS[wId].name.split(' ')[0]}</span>`)
     .join('');
 
-  return `<div class="passive-affected-weapons"><span>Armas:</span> ${pills}</div>`;
+  return `<div class="passive-affected-weapons"><span>ARMAS:</span> ${pills}</div>`;
 }
 
 function syncOrbitalsCount() {
@@ -250,6 +257,21 @@ function triggerScare(intensity = 0.42) {
   }, 180);
 }
 
+// Pausa y Reanudación de Partida
+function togglePauseGame() {
+  if (state === 'PLAYING') {
+    state = 'PAUSED';
+    AudioSys.playPause();
+    if (document.pointerLockElement) document.exitPointerLock();
+    document.getElementById('pause-screen').classList.remove('hidden');
+  } else if (state === 'PAUSED') {
+    state = 'PLAYING';
+    AudioSys.playPause();
+    document.getElementById('pause-screen').classList.add('hidden');
+    document.body.requestPointerLock();
+  }
+}
+
 // Controles
 const keys = {};
 window.addEventListener('keydown', e => {
@@ -262,6 +284,12 @@ window.addEventListener('keydown', e => {
   }
 
   const k = e.key.toLowerCase();
+  if (k === 'p' && (state === 'PLAYING' || state === 'PAUSED')) {
+    e.preventDefault();
+    togglePauseGame();
+    return;
+  }
+
   keys[k] = true;
   if (state !== 'PLAYING') return;
 
@@ -307,7 +335,7 @@ document.addEventListener('mousemove', e => {
   }
 });
 
-// Daño a enemigos, caída de Dientes (🦷) y recompensas de Boss
+// Daño a enemigos, caída de Dientes y recompensas de Boss
 function damageEnemy(en, amount, knockback, isDoT = false) {
   if (!en.active || en.state === 'dead') return;
   const mods = getActiveModifiers();
@@ -367,6 +395,8 @@ function damageEnemy(en, amount, knockback, isDoT = false) {
 // Gestión de Armas y Pasivas en Subida de Nivel
 function applyUpgradeOption(opt) {
   AudioSys.playUISelect();
+  lastUpgradedKey = opt.id;
+
   if (opt.category === 'weapon') {
     const current = skills[opt.id] || 0;
     if (current >= CONFIG.LIMITS.MAX_LEVEL) return;
@@ -440,6 +470,17 @@ function buildAvailableUpgradePool() {
   return pool;
 }
 
+function renderRerollChargesUI() {
+  const chargesEl = document.getElementById('reroll-charges');
+  if (!chargesEl) return;
+  let html = '';
+  for (let i = 0; i < maxRerollsRun; i++) {
+    const iconKey = i < rerollsLeft ? 'charge_on' : 'charge_off';
+    html += renderSpriteIconHTML(iconKey);
+  }
+  chargesEl.innerHTML = html;
+}
+
 function rollLevelUpCards() {
   const box = document.getElementById('upgrade-container');
   box.innerHTML = '';
@@ -466,17 +507,20 @@ function rollLevelUpCards() {
   choices.forEach(opt => {
     const card = document.createElement('div');
     card.className = 'upg-card';
-    const lvlLabel = opt.category === 'fallback'
-      ? 'EXTRA'
-      : (opt.currentLvl === 0 ? 'NUEVO (+1)' : `+${opt.currentLvl} ➔ +${opt.nextLvl}`);
+
+    const badgeContent = opt.category === 'fallback'
+      ? `<span>SUMINISTRO</span>`
+      : (opt.currentLvl === 0
+          ? `<span>NUEVO</span> ${renderSpriteBadgeHTML(1)}`
+          : `${renderSpriteBadgeHTML(opt.currentLvl)} <span>➔</span> ${renderSpriteBadgeHTML(opt.nextLvl)}`);
 
     card.innerHTML = `
       <span class="upg-type-badge ${opt.badgeClass}">${opt.badge}</span>
       <div class="upg-title-row">
-        <span>${opt.icon} ${opt.name}</span>
-        <span class="upg-lvl-pill">${lvlLabel}</span>
+        <span class="upg-title-left">${renderSpriteIconHTML(opt.icon)} <span>${opt.name}</span></span>
+        <span class="upg-lvl-pill">${badgeContent}</span>
       </div>
-      <p style="font-size:0.74rem;color:#a89f88;margin:6px 0 4px">${opt.desc}</p>
+      <p style="font-size:0.9rem;color:#c8c2ac;margin:6px 0 4px">${opt.desc}</p>
       ${opt.affectedHtml || ''}
     `;
     card.onmouseenter = () => AudioSys.playUIClick();
@@ -489,8 +533,9 @@ function rollLevelUpCards() {
     box.appendChild(card);
   });
 
+  renderRerollChargesUI();
   const rerollBtn = document.getElementById('btn-reroll');
-  document.getElementById('reroll-count').textContent = rerollsLeft;
+  rerollBtn.innerHTML = `${renderSpriteIconHTML('reroll', 'sm')} ACTUALIZAR OPCIONES (<span id="reroll-count">${rerollsLeft}</span> RESTANTES)`;
   rerollBtn.disabled = rerollsLeft <= 0 || pool.length <= 1;
 }
 
@@ -502,7 +547,10 @@ function showLevelUp() {
 }
 
 document.getElementById('btn-reroll').onclick = () => {
-  if (rerollsLeft <= 0) return;
+  if (rerollsLeft <= 0) {
+    AudioSys.playUIError();
+    return;
+  }
   rerollsLeft--;
   AudioSys.playReroll();
   rollLevelUpCards();
@@ -517,7 +565,7 @@ function spawnScheduledBoss(bossCfg, fwd) {
   activeBoss = boss;
 
   const alertEl = document.getElementById('boss-alert');
-  alertEl.textContent = `⚠️ ALERTA: ${bossCfg.name} EN PLANTA ⚠️`;
+  alertEl.innerHTML = `${renderSpriteIconHTML('warning')} ALERTA: ${bossCfg.name} EN PLANTA ${renderSpriteIconHTML('warning')}`;
   alertEl.classList.remove('hidden');
   setTimeout(() => alertEl.classList.add('hidden'), 3800);
 
@@ -556,7 +604,7 @@ function updateHUD() {
   document.getElementById('stam-bar').style.width = stats.stamina + '%';
   document.getElementById('level-text').textContent = `CICLO ${String(stats.level).padStart(2, '0')}`;
   document.getElementById('kills-text').textContent = kills;
-  document.getElementById('souls-hud').textContent = `${runSouls} 🦷`;
+  document.getElementById('souls-hud').textContent = `${runSouls}`;
   document.getElementById('bosses-killed-hud').textContent = `${bossesDefeated}/5`;
 
   const wEntries = Object.entries(skills);
@@ -566,9 +614,18 @@ function updateHUD() {
     if (wEntries[i]) {
       const [k, v] = wEntries[i];
       const sk = CONFIG.SKILLS[k];
-      wHtml += `<div class="weapon-slot"><span>${sk.icon} ${sk.name.split(' ')[0]}</span><span class="lvl-badge">+${v}</span></div>`;
+      const vibClass = lastUpgradedKey === k ? 'vibrate-up' : '';
+      wHtml += `
+        <div class="weapon-slot ${vibClass}">
+          <span class="weapon-slot-name">${renderSpriteIconHTML(sk.icon, 'sm')} <span>${sk.name.split(' ')[0]}</span></span>
+          ${renderSpriteBadgeHTML(v)}
+        </div>`;
     } else {
-      wHtml += `<div class="weapon-slot empty"><span>[ RANURA VACÍA ]</span><span>--</span></div>`;
+      wHtml += `
+        <div class="weapon-slot empty">
+          <span class="weapon-slot-name">[ VACÍA ]</span>
+          ${renderSpriteBadgeHTML(0)}
+        </div>`;
     }
   }
   document.getElementById('skills-bar').innerHTML = wHtml;
@@ -580,19 +637,27 @@ function updateHUD() {
     if (pEntries[i]) {
       const [k, v] = pEntries[i];
       const p = CONFIG.PASSIVES[k];
+      const vibClass = lastUpgradedKey === k ? 'vibrate-up' : '';
       pHtml += `
-        <div class="passive-slot">
+        <div class="passive-slot ${vibClass}">
           <div class="passive-slot-top">
-            <span>${p.icon} ${p.name} <b>+${v}</b></span>
-            <span>${p.format(v)}</span>
+            <span class="passive-slot-title">${renderSpriteIconHTML(p.icon, 'sm')} <span>${p.name}</span> ${renderSpriteBadgeHTML(v)}</span>
+            <span class="passive-stat-text">${p.format(v)}</span>
           </div>
           ${getPassiveAffectedWeaponsHTML(k)}
         </div>`;
     } else {
-      pHtml += `<div class="passive-slot empty"><div class="passive-slot-top"><span>[ RANURA DE IMPLANTE VACÍA ]</span><span>--</span></div></div>`;
+      pHtml += `
+        <div class="passive-slot empty">
+          <div class="passive-slot-top">
+            <span>[ RANURA DE IMPLANTE VACÍA ]</span>
+            ${renderSpriteBadgeHTML(0)}
+          </div>
+        </div>`;
     }
   }
   document.getElementById('passives-bar').innerHTML = pHtml;
+  lastUpgradedKey = null;
 }
 
 function startGame() {
@@ -617,7 +682,8 @@ function startGame() {
   stats = { maxHp: baseHp, hp: baseHp, stamina: 100, level: 1, exp: 0, maxExp: 5 };
   skills = {};
   passives = {};
-  rerollsLeft = CONFIG.LIMITS.REROLLS_PER_RUN + Math.min(3, save.reroll || 0);
+  maxRerollsRun = CONFIG.LIMITS.REROLLS_PER_RUN + Math.min(3, save.reroll || 0);
+  rerollsLeft = maxRerollsRun;
   nextBossIdx = 0;
   activeBoss = null;
   bossesDefeated = 0;
@@ -656,17 +722,21 @@ function gameOver() {
   document.getElementById('go-time').textContent = document.getElementById('timer-text').textContent;
   document.getElementById('go-bosses').textContent = `${bossesDefeated} / ${CONFIG.BOSS_SCHEDULE.length}`;
   document.getElementById('go-kills').textContent = kills;
-  document.getElementById('go-souls').textContent = `+${runSouls} 🦷`;
-  document.getElementById('go-total-souls').textContent = `${save.souls} 🦷`;
+  document.getElementById('go-souls').innerHTML = `+${runSouls} ${renderSpriteIconHTML('tooth', 'sm')}`;
+  document.getElementById('go-total-souls').innerHTML = `${save.souls} ${renderSpriteIconHTML('tooth', 'sm')}`;
   document.getElementById('go-level').textContent = `CICLO ${stats.level}`;
   document.getElementById('go-endgame').textContent = isEndgame
     ? 'ALCANZADA (PROTOCOLO 15:00 SUPERADO)'
     : 'CAÍDO ANTES DEL MINUTO 15:00';
 
-  const wSummary = Object.entries(skills).map(([k, v]) => `${CONFIG.SKILLS[k].icon} ${CONFIG.SKILLS[k].name} +${v}`).join(' · ');
-  const pSummary = Object.entries(passives).map(([k, v]) => `${CONFIG.PASSIVES[k].icon} ${CONFIG.PASSIVES[k].name} +${v}`).join(' · ');
+  const wSummary = Object.entries(skills)
+    .map(([k, v]) => `<span style="display:inline-flex;align-items:center;gap:4px;margin-right:8px;">${renderSpriteIconHTML(CONFIG.SKILLS[k].icon, 'sm')} ${CONFIG.SKILLS[k].name} ${renderSpriteBadgeHTML(v)}</span>`)
+    .join('');
+  const pSummary = Object.entries(passives)
+    .map(([k, v]) => `<span style="display:inline-flex;align-items:center;gap:4px;margin-right:8px;">${renderSpriteIconHTML(CONFIG.PASSIVES[k].icon, 'sm')} ${CONFIG.PASSIVES[k].name} ${renderSpriteBadgeHTML(v)}</span>`)
+    .join('');
   document.getElementById('go-loadout').innerHTML =
-    `<b>ARMAS:</b> ${wSummary || 'Ninguna'}<br><b>PASIVAS:</b> ${pSummary || 'Ninguna'}`;
+    `<div style="margin-bottom:4px;"><b>ARMAS:</b> ${wSummary || 'Ninguna'}</div><div><b>PASIVAS:</b> ${pSummary || 'Ninguna'}</div>`;
 
   document.getElementById('hud').classList.add('hidden');
   document.getElementById('game-over-screen').classList.remove('hidden');
@@ -677,6 +747,14 @@ function dealDamageToPlayer(dmgAmount) {
   stats.hp -= dmgAmount;
   invuln = 0.72;
   triggerScare(0.48);
+
+  // Temblor en steps() de la barra de vida en sprite al recibir daño
+  const hpFrame = document.querySelector('.hp-frame');
+  if (hpFrame) {
+    hpFrame.classList.add('bar-shake');
+    setTimeout(() => hpFrame.classList.remove('bar-shake'), 320);
+  }
+
   document.getElementById('damage-flash').style.opacity = 1;
   setTimeout(() => (document.getElementById('damage-flash').style.opacity = 0), 150);
   updateHUD();
@@ -687,7 +765,7 @@ function renderShop() {
   document.getElementById('start-souls').textContent = save.souls || 0;
   document.getElementById('shop-souls').textContent = save.souls || 0;
   const goTotal = document.getElementById('go-total-souls');
-  if (goTotal) goTotal.textContent = `${save.souls || 0} 🦷`;
+  if (goTotal) goTotal.innerHTML = `${save.souls || 0} ${renderSpriteIconHTML('tooth', 'sm')}`;
 
   const list = document.getElementById('shop-list');
   list.innerHTML = '';
@@ -696,26 +774,33 @@ function renderShop() {
     const lvl = save[item.id] || 0;
     const isMaxed = item.max && lvl >= item.max;
     const cost = Math.floor(item.cost * Math.pow(1.45, lvl));
+    const canAfford = (save.souls || 0) >= cost && !isMaxed;
+
     const row = document.createElement('div');
     row.className = 'shop-row';
     row.innerHTML = `
-      <div class="shop-row-info">
-        <b>${item.name} [NV. ${lvl}${item.max ? '/' + item.max : ''}]</b>
-        <div class="shop-row-sub">${item.desc}</div>
+      <div class="shop-row-left">
+        ${renderSpriteIconHTML(item.icon || 'dmg')}
+        <div class="shop-row-info">
+          <b>${item.name} [NV. ${lvl}${item.max ? '/' + item.max : ''}]</b>
+          <div class="shop-row-sub">${item.desc}</div>
+        </div>
       </div>
-      <button class="rust-btn sm" ${(save.souls || 0) < cost || isMaxed ? 'disabled' : ''}>
-        ${isMaxed ? 'MÁXIMO' : `COMPRAR (${cost} 🦷)`}
+      <button class="rust-btn sm" ${!canAfford ? 'disabled' : ''}>
+        ${isMaxed ? 'MÁXIMO' : `COMPRAR (${cost})`} ${!isMaxed ? renderSpriteIconHTML('tooth', 'sm') : ''}
       </button>
     `;
     const btn = row.querySelector('button');
     btn.onmouseenter = () => AudioSys.playUIClick();
     btn.onclick = () => {
-      if (!isMaxed && (save.souls || 0) >= cost) {
+      if (canAfford) {
         AudioSys.playUISelect();
         save.souls -= cost;
         save[item.id] = lvl + 1;
         saveGame();
         renderShop();
+      } else {
+        AudioSys.playUIError();
       }
     };
     list.appendChild(row);
@@ -811,7 +896,7 @@ function animate() {
       playerGroup.position.y = groundY;
       isGrounded = true;
     }
-    document.getElementById('elev-text').textContent = `COTA: ${playerGroup.position.y.toFixed(1)}m`;
+    document.getElementById('elev-text').textContent = `COTA: ${playerGroup.position.y.toFixed(1)}M`;
 
     // Cámara 3ª persona
     camera.position.copy(playerGroup.position)
@@ -824,7 +909,6 @@ function animate() {
     }
     camera.lookAt(playerGroup.position.clone().add(new THREE.Vector3(0, 1.3, 0)));
 
-    // Selección de vista entre las 8 direcciones
     playerBillboard.faceCamera(camera.position);
 
     // Selección de estado de animación incluyendo DASH y ATTACK_WALK (atacar + mover piernas)
@@ -857,13 +941,11 @@ function animate() {
     const camAngle = Math.atan2(camera.position.x - playerGroup.position.x, camera.position.z - playerGroup.position.z);
     propBillboards.forEach(p => { p.rotation.y = camAngle; });
 
-    // Luz personal entre cámara y jugador
     const toCam = new THREE.Vector3().subVectors(camera.position, playerGroup.position).setY(0).normalize();
     playerLanternLight.position.copy(playerGroup.position)
       .addScaledVector(toCam, 1.1)
       .add(new THREE.Vector3(0, 1.35, 0));
 
-    // Linterna apunta hacia donde mira la cámara
     flashlight.position.copy(playerGroup.position)
       .addScaledVector(camFwd, 0.55)
       .add(new THREE.Vector3(0, 1.5, 0));
@@ -1220,7 +1302,7 @@ function animate() {
       }
     }
 
-    // Recolección de Experiencia, Dientes (🦷) y Cofres de Boss
+    // Recolección de Experiencia, Dientes y Cofres de Boss
     for (let i = drops.length - 1; i >= 0; i--) {
       const d = drops[i];
       d.mesh.rotation.y = camAngle;
@@ -1262,7 +1344,7 @@ function animate() {
     const s = String(Math.floor(gameTime % 60)).padStart(2, '0');
     document.getElementById('timer-text').textContent = `${m}:${s}`;
     document.getElementById('wave-text').textContent = isEndgame
-      ? '⚠️ EXTERMINIO ACTIVO'
+      ? 'EXTERMINIO ACTIVO'
       : `AMENAZA: NIVEL ${1 + Math.floor(gameTime / 90)}`;
   } else if (state === 'START') {
     const t = performance.now() * 0.00045;
@@ -1282,10 +1364,11 @@ function animate() {
   renderer.render(scene, camera);
 }
 
-// Inspector de Spritesheets PNG [TAB]
+// Inspector de Spritesheets PNG [TAB] (Incluye el nuevo Atlas Maestro de UI 512x512)
 function initSpritesheetInspector() {
   const grid = document.getElementById('sheets-grid');
   const list = [
+    SpriteSheets.ui_atlas,
     SpriteSheets.player, SpriteSheets.zombie, SpriteSheets.weeper, SpriteSheets.worm,
     SpriteSheets.boss_butcher, SpriteSheets.boss_siren, SpriteSheets.boss_furnace,
     SpriteSheets.boss_apostle, SpriteSheets.boss_warden,
@@ -1302,9 +1385,10 @@ function initSpritesheetInspector() {
     const btn = document.createElement('button');
     btn.className = 'rust-btn sm';
     btn.style.marginTop = '6px';
-    btn.textContent = '⬇ Descargar PNG';
+    btn.textContent = '⬇ DESCARGAR PNG';
+    btn.onmouseenter = () => AudioSys.playUIClick();
     btn.onclick = () => {
-      AudioSys.playUIClick();
+      AudioSys.playUISelect();
       const a = document.createElement('a');
       a.download = `${item.name}.png`;
       a.href = item.canvas.toDataURL('image/png');
@@ -1315,13 +1399,43 @@ function initSpritesheetInspector() {
   });
 }
 
+// Sonido de hover para todos los botones principales del DOM
+document.querySelectorAll('.rust-btn').forEach(btn => {
+  btn.addEventListener('mouseenter', () => {
+    if (!btn.disabled) AudioSys.playUIClick();
+  });
+});
+
+// Selector de escala entera (x1, x2, x3) en tiempo real
+const scaleSelect = document.getElementById('ui-scale-select');
+if (scaleSelect) {
+  scaleSelect.onchange = e => {
+    AudioSys.playUISelect();
+    const newScale = parseInt(e.target.value, 10) || 2;
+    initUISpritesCSS(newScale);
+    if (state === 'PLAYING' || state === 'PAUSED' || state === 'LEVEL_UP') updateHUD();
+    if (state === 'LEVEL_UP') rollLevelUpCards();
+    renderShop();
+  };
+}
+
 document.getElementById('btn-start').onclick = () => { AudioSys.playUISelect(); startGame(); };
 document.getElementById('btn-shop-play').onclick = () => { AudioSys.playUISelect(); startGame(); };
 document.getElementById('btn-restart').onclick = () => { AudioSys.playUISelect(); startGame(); };
 
+document.getElementById('btn-resume').onclick = () => { togglePauseGame(); };
+document.getElementById('btn-pause-to-menu').onclick = () => {
+  AudioSys.playUISelect();
+  state = 'START';
+  document.getElementById('pause-screen').classList.add('hidden');
+  document.getElementById('hud').classList.add('hidden');
+  document.getElementById('start-screen').classList.remove('hidden');
+  renderShop();
+};
+
 document.getElementById('btn-open-shop').onclick = () => {
   AudioSys.init();
-  AudioSys.playUIClick();
+  AudioSys.playUISelect();
   lastMenuScreen = 'start-screen';
   renderShop();
   document.getElementById('start-screen').classList.add('hidden');
@@ -1329,7 +1443,7 @@ document.getElementById('btn-open-shop').onclick = () => {
 };
 
 document.getElementById('btn-go-shop').onclick = () => {
-  AudioSys.playUIClick();
+  AudioSys.playUISelect();
   lastMenuScreen = 'game-over-screen';
   renderShop();
   document.getElementById('game-over-screen').classList.add('hidden');
@@ -1337,19 +1451,19 @@ document.getElementById('btn-go-shop').onclick = () => {
 };
 
 document.getElementById('btn-close-shop').onclick = () => {
-  AudioSys.playUIClick();
+  AudioSys.playUISelect();
   renderShop();
   document.getElementById('shop-screen').classList.add('hidden');
   document.getElementById(lastMenuScreen).classList.remove('hidden');
 };
 
 document.getElementById('btn-open-sheets').onclick = () => {
-  AudioSys.playUIClick();
+  AudioSys.playUISelect();
   if (document.pointerLockElement) document.exitPointerLock();
   document.getElementById('sheets-modal').classList.remove('hidden');
 };
 document.getElementById('btn-close-sheets').onclick = () => {
-  AudioSys.playUIClick();
+  AudioSys.playUISelect();
   document.getElementById('sheets-modal').classList.add('hidden');
 };
 
