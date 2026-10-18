@@ -1254,7 +1254,7 @@ function updateStatsHUD() {
       objDesc.textContent = `Amputa: ${activeBoss.bossData.name.replace('EL ', '').replace('LA ', '')}`;
       if (chkBox) chkBox.textContent = '[!]';
     } else {
-      objDesc.textContent = 'Encuentra y Amputa al Jefe';
+      objDesc.textContent = 'Encuentra y purga a los jefes de planta';
       if (chkBox) chkBox.textContent = '[ ]';
     }
   }
@@ -1744,7 +1744,7 @@ function animate() {
       const rem = Math.max(0, nextCfg.time - gameTime);
       const bm = String(Math.floor(rem / 60)).padStart(2, '0');
       const bs = String(Math.floor(rem % 60)).padStart(2, '0');
-      document.getElementById('next-boss-text').textContent = `PRÓX. BOSS: ${bm}:${bs}`;
+      document.getElementById('next-boss-text').textContent = `PRÓX. JEFE: ${bm}:${bs}`;
 
       if (gameTime >= nextCfg.time) {
         spawnScheduledBoss(nextCfg, camFwd);
