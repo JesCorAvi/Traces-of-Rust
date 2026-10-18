@@ -73,63 +73,7 @@ function injectUIFixesAndNormalizeDOM() {
     const style = document.createElement('style');
     style.id = 'main-js-ui-fixes';
     style.textContent = `
-      .hud-left {
-        width: min(412px, 46vw) !important;
-        border-width: 16px !important;
-        border-image-width: 16px !important;
-        padding: 6px 8px !important;
-      }
-      .stat-label-row {
-        display: flex !important;
-        justify-content: space-between !important;
-        align-items: center !important;
-        gap: 6px !important;
-        width: 100% !important;
-        font-family: 'Press Start 2P', monospace !important;
-        font-size: 9px !important;
-        letter-spacing: 0px !important;
-        line-height: 1.3 !important;
-        margin-bottom: 4px !important;
-        white-space: nowrap !important;
-      }
-      .stat-label-left {
-        display: inline-flex !important;
-        align-items: center !important;
-        gap: 5px !important;
-        min-width: 0 !important;
-        overflow: hidden !important;
-        text-overflow: ellipsis !important;
-        white-space: nowrap !important;
-      }
-      .led-val {
-        font-size: 10px !important;
-        letter-spacing: 0px !important;
-        flex-shrink: 0 !important;
-      }
-      .led-dim {
-        font-size: 9px !important;
-        letter-spacing: 0px !important;
-        flex-shrink: 0 !important;
-      }
-      .segmented-bar {
-        position: relative !important;
-        width: 100% !important;
-        height: 22px !important;
-        background-color: #050605 !important;
-        border-style: solid !important;
-        border-width: 4px !important;
-        border-image: var(--slice-bar_frame) 5 fill / 4px stretch !important;
-        padding: 0 !important;
-        margin-bottom: 8px !important;
-        overflow: hidden !important;
-      }
-      .segmented-bar.exp-frame {
-        height: 18px !important;
-      }
-      .segmented-bar.stam-frame {
-        height: 16px !important;
-        margin-bottom: 10px !important;
-      }
+      /* Ajustes para el HUD estilo Megabonk manteniendo estética industrial */
       #hp-bar, #exp-bar, #stam-bar {
         display: block !important;
         height: 100% !important;
@@ -159,53 +103,63 @@ function injectUIFixesAndNormalizeDOM() {
         background-color: #b82525 !important;
         background-image: var(--bar-fill-boss) !important;
       }
-      .passive-slot-top {
+
+      /* Casillas compactas de armas (Arriba-Izquierda estilo Megabonk) */
+      .slots-grid-compact .weapon-slot {
+        width: 58px !important;
+        height: 58px !important;
+        padding: 2px !important;
         display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
         justify-content: space-between !important;
-        align-items: center !important;
-        gap: 8px !important;
-        width: 100% !important;
       }
-      .passive-slot-title {
-        display: inline-flex !important;
-        align-items: center !important;
-        gap: 6px !important;
-        min-width: 0 !important;
-        flex: 1 1 auto !important;
-        color: #f5ecd3 !important;
-        font-family: 'Press Start 2P', monospace !important;
-        font-size: 9px !important;
-        line-height: 1.35 !important;
-      }
-      .passive-slot-title-text {
-        overflow: hidden !important;
-        text-overflow: ellipsis !important;
-        white-space: nowrap !important;
-      }
-      .passive-slot-bonus-row {
-        display: flex !important;
-        justify-content: space-between !important;
-        align-items: center !important;
-        gap: 6px !important;
-        padding-top: 3px !important;
-        border-top: 1px dashed #364832 !important;
-      }
-      .passive-stat-label {
+      .slots-grid-compact .weapon-slot-lvl-text {
         font-family: 'Press Start 2P', monospace !important;
         font-size: 8px !important;
-        color: #a8c499 !important;
-        white-space: nowrap !important;
-      }
-      .passive-stat-text {
-        font-family: 'Press Start 2P', monospace !important;
-        font-size: 9px !important;
-        line-height: 1.2 !important;
         color: #f0c954 !important;
-        background: #050605 !important;
+        text-shadow: 2px 2px 0 #050605, -1px -1px 0 #050605 !important;
+        line-height: 1 !important;
+        margin-top: 2px !important;
+      }
+
+      /* Dock inferior de Implantes Pasivos (Iconos en fila estilo Megabonk) */
+      #passives-bar.slots-horizontal-row {
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 10px !important;
+      }
+      #passives-bar .passive-slot {
+        min-width: 58px !important;
+        width: 58px !important;
+        height: 58px !important;
+        padding: 3px !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        position: relative !important;
+      }
+      #passives-bar .passive-dock-icon-wrap {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        flex: 1 !important;
+      }
+      #passives-bar .passive-dock-lvl {
+        font-family: 'Press Start 2P', monospace !important;
+        font-size: 8px !important;
+        color: #f0c954 !important;
+        background: rgba(5, 6, 5, 0.9) !important;
         border: 1px solid #63533b !important;
-        padding: 2px 6px !important;
+        padding: 1px 4px !important;
+        line-height: 1.1 !important;
         white-space: nowrap !important;
       }
+
+      /* Tarjetas de subida de nivel */
       .passive-affected-weapons {
         padding-top: 3px !important;
         border-top: 1px dotted #2c3a28 !important;
@@ -237,11 +191,6 @@ function injectUIFixesAndNormalizeDOM() {
         white-space: nowrap !important;
         overflow: hidden !important;
         text-overflow: ellipsis !important;
-      }
-      .weapon-slot-name {
-        font-family: 'Press Start 2P', monospace !important;
-        font-size: 9px !important;
-        line-height: 1.35 !important;
       }
       .upg-title-left span {
         line-height: 1.4 !important;
@@ -286,7 +235,7 @@ function injectUIFixesAndNormalizeDOM() {
         border-color: #243022;
       }
 
-      /* Estilos para el nuevo Menú de Escritorio y Ajustes */
+      /* Estilos para el Menú de Escritorio y Ajustes */
       .desktop-start-overlay {
         background: rgba(4, 5, 4, 0.94) !important;
         padding: 24px !important;
@@ -405,18 +354,6 @@ function injectUIFixesAndNormalizeDOM() {
       }
     `;
     document.head.appendChild(style);
-  }
-
-  const sectionTitles = document.querySelectorAll('.slot-section-title');
-  if (sectionTitles.length >= 2) {
-    if (!sectionTitles[0].querySelector('span + span')) {
-      const wVal = document.getElementById('weapons-count')?.textContent || '1/4';
-      sectionTitles[0].innerHTML = `<span>RANURAS DE ARMAS</span><span>[<span id="weapons-count">${wVal}</span>] · MÁX +8</span>`;
-    }
-    if (!sectionTitles[1].querySelector('span + span')) {
-      const pVal = document.getElementById('passives-count')?.textContent || '0/4';
-      sectionTitles[1].innerHTML = `<span>IMPLANTES PASIVOS</span><span>[<span id="passives-count">${pVal}</span>] · MÁX +8</span>`;
-    }
   }
 
   refreshStaticDOMIcons();
@@ -1172,6 +1109,7 @@ document.getElementById('btn-reroll').onclick = () => {
   rerollsLeft--;
   AudioSys.playReroll();
   rollLevelUpCards();
+  updateStatsHUD();
 };
 
 function spawnScheduledBoss(bossCfg, fwd) {
@@ -1198,6 +1136,7 @@ function spawnScheduledBoss(bossCfg, fwd) {
   setTimeout(() => alertEl.classList.add('hidden'), 3800);
 
   updateBossHUD(false);
+  updateStatsHUD();
   document.getElementById('boss-hud').classList.remove('hidden');
 }
 
@@ -1241,6 +1180,7 @@ function activateEndgamePhase() {
   ambientLight.color.setHex(0x3a0808);
   AudioSys.setEndgameDrone(true);
   AudioSys.playBossHorn();
+  updateStatsHUD();
 }
 
 function updateStatsHUD() {
@@ -1255,7 +1195,36 @@ function updateStatsHUD() {
   document.getElementById('level-text').textContent = `CICLO ${String(stats.level).padStart(2, '0')}`;
   document.getElementById('kills-text').textContent = kills;
   document.getElementById('souls-hud').textContent = `${runSouls}`;
-  document.getElementById('bosses-killed-hud').textContent = `${bossesDefeated}/5`;
+
+  // Actualizar el tercer contador compacto superior izquierdo (Fusibles de Reroll restantes)
+  const compactItems = document.querySelectorAll('.counters-row-compact .compact-indicator-item');
+  if (compactItems.length >= 3) {
+    const valSpan = compactItems[2].querySelector('span:last-child');
+    if (valSpan) valSpan.textContent = `${rerollsLeft}`;
+  }
+
+  const bossAlertBox = document.getElementById('boss-killed-alert');
+  const bossesKilledEl = document.getElementById('bosses-killed-hud');
+  if (bossesKilledEl) bossesKilledEl.textContent = `${bossesDefeated}/5`;
+  if (bossAlertBox) {
+    bossAlertBox.classList.toggle('hidden', bossesDefeated === 0 && !activeBoss);
+  }
+
+  // Actualizar nota de objetivo estilo Megabonk en el lateral izquierdo
+  const objDesc = document.getElementById('objective-task-desc');
+  const chkBox = document.querySelector('#hud-objective-tracker .checkbox-box');
+  if (objDesc) {
+    if (isEndgame) {
+      objDesc.textContent = 'Sobrevive al Exterminio';
+      if (chkBox) chkBox.textContent = '[X]';
+    } else if (activeBoss && activeBoss.active) {
+      objDesc.textContent = `Amputa: ${activeBoss.bossData.name.replace('EL ', '').replace('LA ', '')}`;
+      if (chkBox) chkBox.textContent = '[!]';
+    } else {
+      objDesc.textContent = 'Encuentra y Amputa al Jefe';
+      if (chkBox) chkBox.textContent = '[ ]';
+    }
+  }
 }
 
 function updateInventoryHUD() {
@@ -1263,6 +1232,7 @@ function updateInventoryHUD() {
   const wCountEl = document.getElementById('weapons-count');
   if (wCountEl) wCountEl.textContent = `${wEntries.length}/${CONFIG.LIMITS.MAX_WEAPONS}`;
 
+  // Cuadrícula 2x2 de armas arriba a la izquierda (Icono + Nivel debajo como en Megabonk)
   let wHtml = '';
   for (let i = 0; i < CONFIG.LIMITS.MAX_WEAPONS; i++) {
     if (wEntries[i]) {
@@ -1273,21 +1243,22 @@ function updateInventoryHUD() {
       wHtml += `
         <div class="weapon-slot ${vibClass}" tabindex="0" title="${sk.name} (Nivel +${v}) — ${sk.desc}">
           <span class="weapon-slot-name">${renderSpriteIconHTML(sk.icon, 'sm')} <span>${shortName}</span></span>
-          ${renderSpriteBadgeHTML(v)}
+          <span class="weapon-slot-lvl-text">NV.${v}</span>
         </div>`;
     } else {
       wHtml += `
         <div class="weapon-slot empty" title="Ranura de arma disponible">
-          <span class="weapon-slot-name">[ VACÍA ]</span>
-          ${renderSpriteBadgeHTML(0)}
+          <span class="weapon-slot-name"><span>VACÍA</span></span>
+          <span class="weapon-slot-lvl-text">--</span>
         </div>`;
     }
   }
   document.getElementById('skills-bar').innerHTML = wHtml;
 
+  // Fila horizontal de implantes pasivos en la bandeja inferior central (Estilo Megabonk)
   const pEntries = Object.entries(passives);
   const pCountEl = document.getElementById('passives-count');
-  if (pCountEl) pCountEl.textContent = `${pEntries.length}/${CONFIG.LIMITS.MAX_PASSIVES}`;
+  if (pCountEl) pCountEl.textContent = `${pEntries.length}`;
 
   let pHtml = '';
   for (let i = 0; i < CONFIG.LIMITS.MAX_PASSIVES; i++) {
@@ -1296,27 +1267,19 @@ function updateInventoryHUD() {
       const p = CONFIG.PASSIVES[k];
       const vibClass = lastUpgradedKey === k ? 'vibrate-up' : '';
       pHtml += `
-        <div class="passive-slot ${vibClass}" tabindex="0" title="${p.name} (Nivel +${v}): ${p.desc}">
-          <div class="passive-slot-top">
-            <span class="passive-slot-title">
-              ${renderSpriteIconHTML(p.icon, 'sm')}
-              <span class="passive-slot-title-text">${p.name}</span>
-            </span>
-            ${renderSpriteBadgeHTML(v)}
+        <div class="passive-slot ${vibClass}" tabindex="0" title="${p.name} (Nivel +${v}): ${p.format(v)} — ${p.desc}">
+          <div class="passive-dock-icon-wrap">
+            ${renderSpriteIconHTML(p.icon)}
           </div>
-          <div class="passive-slot-bonus-row">
-            <span class="passive-stat-label">EFECTO ACTIVO:</span>
-            <span class="passive-stat-text">${p.format(v)}</span>
-          </div>
-          ${getPassiveAffectedWeaponsHTML(k)}
+          <span class="passive-dock-lvl">x${v}</span>
         </div>`;
     } else {
       pHtml += `
         <div class="passive-slot empty" title="Ranura de implante pasivo disponible">
-          <div class="passive-slot-top">
-            <span class="passive-slot-title"><span class="passive-slot-title-text">[ RANURA VACÍA ]</span></span>
-            ${renderSpriteBadgeHTML(0)}
+          <div class="passive-dock-icon-wrap">
+            <span style="font-family:'Press Start 2P',monospace;font-size:8px;color:#6c7a65;">[ ]</span>
           </div>
+          <span class="passive-dock-lvl">--</span>
         </div>`;
     }
   }
@@ -1327,6 +1290,77 @@ function updateInventoryHUD() {
 function updateHUD() {
   updateStatsHUD();
   updateInventoryHUD();
+}
+
+// Actualiza los puntos del Radar Circular (Arriba-Derecha) en tiempo real
+function updateRadarHUD() {
+  const enemyDot = document.querySelector('.radar-dot.enemy-approx');
+  const bossDot = document.querySelector('.radar-dot.boss-approx');
+  const threatLabel = document.getElementById('radar-threat-label');
+  if (!enemyDot || !bossDot) return;
+
+  const activeEnemies = enemyPool.active;
+  const maxRadarDist = 32;
+
+  // 1. Posición del Boss activo en el radar
+  if (activeBoss && activeBoss.active && activeBoss.state !== 'dead') {
+    bossDot.style.display = 'block';
+    const dx = activeBoss.group.position.x - playerGroup.position.x;
+    const dz = activeBoss.group.position.z - playerGroup.position.z;
+    const cosY = Math.cos(-yaw);
+    const sinY = Math.sin(-yaw);
+    const rx = dx * cosY - dz * sinY;
+    const rz = dx * sinY + dz * cosY;
+    const normX = Math.max(-0.82, Math.min(0.82, rx / maxRadarDist));
+    const normZ = Math.max(-0.82, Math.min(0.82, rz / maxRadarDist));
+    bossDot.style.left = `${50 + normX * 42}%`;
+    bossDot.style.top = `${50 + normZ * 42}%`;
+    bossDot.style.right = 'auto';
+  } else {
+    bossDot.style.display = 'none';
+  }
+
+  // 2. Enemigo vivo más cercano en el radar
+  let closest = null;
+  let minDist = Infinity;
+  for (let i = 0; i < activeEnemies.length; i++) {
+    const e = activeEnemies[i];
+    if (e.state === 'dead' || e.isBoss) continue;
+    const d = e.group.position.distanceTo(playerGroup.position);
+    if (d < minDist) {
+      minDist = d;
+      closest = e;
+    }
+  }
+
+  if (closest) {
+    enemyDot.style.display = 'block';
+    const dx = closest.group.position.x - playerGroup.position.x;
+    const dz = closest.group.position.z - playerGroup.position.z;
+    const cosY = Math.cos(-yaw);
+    const sinY = Math.sin(-yaw);
+    const rx = dx * cosY - dz * sinY;
+    const rz = dx * sinY + dz * cosY;
+    const normX = Math.max(-0.8, Math.min(0.8, rx / maxRadarDist));
+    const normZ = Math.max(-0.8, Math.min(0.8, rz / maxRadarDist));
+    enemyDot.style.left = `${50 + normX * 40}%`;
+    enemyDot.style.top = `${50 + normZ * 40}%`;
+  } else {
+    enemyDot.style.display = 'none';
+  }
+
+  if (threatLabel) {
+    if (activeBoss && activeBoss.active) {
+      threatLabel.textContent = 'ALERTA: JEFE';
+      threatLabel.style.color = '#ff6b6b';
+    } else if (minDist < 8) {
+      threatLabel.textContent = 'PROXIMIDAD CRÍTICA';
+      threatLabel.style.color = '#f0c954';
+    } else {
+      threatLabel.textContent = `HOSTILES: ${activeEnemies.length}`;
+      threatLabel.style.color = '#a8c499';
+    }
+  }
 }
 
 function updateCareerScreen() {
@@ -1444,7 +1478,7 @@ function dealDamageToPlayer(dmgAmount) {
   invuln = 0.72;
   triggerScare(0.48);
 
-  const hpFrame = document.querySelector('.hp-frame');
+  const hpFrame = document.querySelector('.hp-frame, .hp-frame-compact, .biometrics-plate-compact');
   if (hpFrame) {
     hpFrame.classList.add('bar-shake');
     setTimeout(() => hpFrame.classList.remove('bar-shake'), 320);
@@ -2044,10 +2078,16 @@ function animate() {
     dust.position.set(playerGroup.position.x, playerGroup.position.y, playerGroup.position.z);
     const m = String(Math.floor(gameTime / 60)).padStart(2, '0');
     const s = String(Math.floor(gameTime % 60)).padStart(2, '0');
-    document.getElementById('timer-text').textContent = `${m}:${s}`;
+    const timeFormatted = `${m}:${s}`;
+    document.getElementById('timer-text').textContent = timeFormatted;
+    const compactTimeEl = document.getElementById('compact-time-indicator');
+    if (compactTimeEl) compactTimeEl.textContent = timeFormatted;
+
     document.getElementById('wave-text').textContent = isEndgame
       ? 'EXTERMINIO ACTIVO'
       : `AMENAZA: NIVEL ${1 + Math.floor(gameTime / 90)}`;
+
+    updateRadarHUD();
   } else if (state === 'START') {
     const t = performance.now() * 0.00045;
     camera.position.set(Math.sin(t) * 11, 3.6, Math.cos(t) * 11);

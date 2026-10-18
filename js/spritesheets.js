@@ -64,7 +64,7 @@ function applyCleanSpriteOutlineRect(ctx, w, h) {
 
       if (
         (s32[idx - 1] >>> 24) > 128 ||
-        (s32[idx + 1] >>> 24) > 128 ||
+        (s32[idx + 1] >>> 24) > 28 ||
         (s32[idx - w] >>> 24) > 128 ||
         (s32[idx + w] >>> 24) > 128
       ) {
@@ -73,6 +73,45 @@ function applyCleanSpriteOutlineRect(ctx, w, h) {
     }
   }
   ctx.putImageData(out, 0, 0);
+}
+
+// Contorno negro nítido de 1px para cada icono de 16x16 del HUD (armas, pasivas y contadores)
+function applyIcon16Outline(ctx, ox, oy) {
+  const img = ctx.getImageData(ox, oy, 16, 16);
+  const out = ctx.createImageData(16, 16);
+  const s = img.data;
+  const d = out.data;
+  d.set(s);
+
+  for (let y = 0; y < 16; y++) {
+    for (let x = 0; x < 16; x++) {
+      const idx = (y * 16 + x) * 4;
+      if (s[idx + 3] > 128) continue;
+
+      let hasNeighbor = false;
+      const neighbors = [
+        [x - 1, y], [x + 1, y],
+        [x, y - 1], [x, y + 1]
+      ];
+      for (let n = 0; n < neighbors.length; n++) {
+        const nx = neighbors[n][0];
+        const ny = neighbors[n][1];
+        if (nx >= 0 && nx < 16 && ny >= 0 && ny < 16) {
+          if (s[(ny * 16 + nx) * 4 + 3] > 128) {
+            hasNeighbor = true;
+            break;
+          }
+        }
+      }
+      if (hasNeighbor) {
+        d[idx] = 5;
+        d[idx + 1] = 6;
+        d[idx + 2] = 5;
+        d[idx + 3] = 255;
+      }
+    }
+  }
+  ctx.putImageData(out, ox, oy);
 }
 
 function makeTexture(canvas, repeat = 1) {
@@ -798,12 +837,8 @@ function buildWeaponSheets() {
 
 // ============================================================================
 // GENERADOR DE SPRITES ANIMADOS (4 FRAMES, 256x64) PARA LOS PICKUPS DEL LORE
-// 1. pickup_serum: Vial clínico con aguja y suero mutagénico burbujeante (XP)
-// 2. pickup_tooth: Molar extraído con empaste de oro y raíz ensangrentada (Moneda)
-// 3. pickup_chest: Maletín quirúrgico encadenado con cruz médica (Boss Drop)
 // ============================================================================
 function buildPickupSheets() {
-  // 1. VIAL DE SUERO MUTAGÉNICO (4 frames de burbujeo y pulso luminoso)
   const serumCan = document.createElement('canvas');
   serumCan.width = 256; serumCan.height = 64;
   const sCtx = serumCan.getContext('2d');
@@ -813,36 +848,30 @@ function buildPickupSheets() {
     sCtx.translate(f * 64, 0);
     const px = (x, y, w, h, c) => { sCtx.fillStyle = c; sCtx.fillRect(x, y, w, h); };
 
-    // Aguja hipodérmica superior y émbolo metálico
     px(31, 6, 2, 8, '#c8c2ac');
     px(31, 4, 2, 3, '#e6d7a5');
     px(26, 13, 12, 4, '#877a5c');
     px(24, 17, 16, 4, '#4a2518');
-    px(25, 18, 14, 2, '#b89c46'); // Anillo de latón
+    px(25, 18, 14, 2, '#b89c46');
 
-    // Cuerpo de cristal del vial clínico
     px(21, 21, 22, 30, '#182018');
     px(22, 22, 20, 28, '#243022');
 
-    // Líquido mutagénico carmesí/ámbar con menisco animado
     const wave = (f % 2 === 0) ? 1 : -1;
     px(23, 27 + wave, 18, 22 - wave, '#6e1414');
     px(24, 28 + wave, 16, 20 - wave, '#a52020');
-    px(24, 27 + wave, 16, 3, '#b89c46'); // Espuma superficial de suero
+    px(24, 27 + wave, 16, 3, '#b89c46');
 
-    // Burbujas ascendentes según el frame
     const b1Y = 44 - f * 4;
     const b2Y = 40 - ((f + 2) % 4) * 4;
     px(27, b1Y, 3, 3, '#e6d7a5');
     px(34, b2Y, 2, 2, '#b89c46');
 
-    // Reflejo vertical del cristal y marcas de graduación milimétrica
     px(24, 23, 2, 24, '#e6d7a5');
     for (let m = 0; m < 4; m++) {
       px(37, 25 + m * 6, 3, 1, '#c8c2ac');
     }
 
-    // Base metálica inferior con goteo
     px(24, 51, 16, 4, '#4a2518');
     px(26, 52, 12, 2, '#877a5c');
     if (f === 1 || f === 2) {
@@ -852,7 +881,6 @@ function buildPickupSheets() {
   }
   applyCleanSpriteOutlineRect(sCtx, 256, 64);
 
-  // 2. DIENTE EXTRAÍDO CON RAÍZ ENSANGRENTADA (4 frames con destello en empaste de oro)
   const toothCan = document.createElement('canvas');
   toothCan.width = 256; toothCan.height = 64;
   const tCtx = toothCan.getContext('2d');
@@ -862,30 +890,25 @@ function buildPickupSheets() {
     tCtx.translate(f * 64, 0);
     const px = (x, y, w, h, c) => { tCtx.fillStyle = c; tCtx.fillRect(x, y, w, h); };
 
-    // Corona del molar (doble cúspide de marfil sucio)
     px(19, 13, 11, 6, '#e6d7a5');
     px(34, 13, 11, 6, '#e6d7a5');
     px(18, 17, 28, 16, '#c8c2ac');
     px(20, 15, 24, 14, '#e6d7a5');
 
-    // Grieta del esmalte y empaste de oro del cirujano
     px(29, 16, 2, 8, '#4a2518');
     px(33, 16, 9, 7, '#b89c46');
     if (f % 2 === 0) {
-      px(35, 17, 5, 4, '#e6d7a5'); // Destello metálico del oro
+      px(35, 17, 5, 4, '#e6d7a5');
     }
 
-    // Cuello dental con sarro oxidado
     px(20, 31, 24, 5, '#b89c46');
     px(21, 34, 22, 3, '#743718');
 
-    // Dos raíces largas bifurcadas con restos de encía y sangre
     px(20, 36, 9, 16, '#c8c2ac');
     px(22, 36, 6, 14, '#877a5c');
     px(35, 36, 9, 16, '#c8c2ac');
     px(36, 36, 6, 14, '#877a5c');
 
-    // Puntas de la raíz teñidas de sangre fresca + gota cayendo
     px(21, 46, 7, 8, '#a52020');
     px(22, 52, 4, 4, '#6e1414');
     px(36, 45, 7, 9, '#a52020');
@@ -897,7 +920,6 @@ function buildPickupSheets() {
   }
   applyCleanSpriteOutlineRect(tCtx, 256, 64);
 
-  // 3. MALETÍN QUIRÚRGICO DE BOSS (4 frames con cerradura y cruz médica pulsante)
   const chestCan = document.createElement('canvas');
   chestCan.width = 256; chestCan.height = 64;
   const cCtx = chestCan.getContext('2d');
@@ -907,33 +929,27 @@ function buildPickupSheets() {
     cCtx.translate(f * 64, 0);
     const px = (x, y, w, h, c) => { cCtx.fillStyle = c; cCtx.fillRect(x, y, w, h); };
 
-    // Asa superior de hierro forjado
     px(25, 11, 14, 6, '#4a2518');
     px(27, 13, 10, 4, '#050605');
 
-    // Cuerpo del maletín de acero oxidado
     px(10, 17, 44, 36, '#243022');
     px(12, 19, 40, 32, '#364832');
 
-    // cantoneras de latón y remaches en las esquinas
     px(10, 17, 7, 7, '#b89c46');
     px(47, 17, 7, 7, '#b89c46');
     px(10, 46, 7, 7, '#b89c46');
     px(47, 46, 7, 7, '#b89c46');
 
-    // Correas de cuero verticales con hebillas
     px(18, 17, 5, 36, '#4a2518');
     px(41, 17, 5, 36, '#4a2518');
     px(17, 31, 7, 6, '#b89c46');
     px(40, 31, 7, 6, '#b89c46');
 
-    // Placa central con Cruz Quirúrgica ensangrentada y pulso luminoso
     px(25, 25, 14, 18, '#121812');
     const crossCol = f % 2 === 0 ? '#a52020' : '#e6d7a5';
     px(30, 27, 4, 14, crossCol);
     px(27, 32, 10, 4, crossCol);
 
-    // Manchas de sangre que rezuman de la junta del maletín
     px(12, 34, 40, 2, '#050605');
     px(26, 36, 12, 3, '#6e1414');
     px(29, 38, 4, 6, '#a52020');
@@ -1023,7 +1039,7 @@ function buildEnvironmentTextures() {
 }
 
 // ============================================================================
-// GENERADOR DEL ATLAS MAESTRO DE INTERFAZ PIXEL-ART (512x512) - BUCKSHOT STYLE
+// GENERADOR DEL ATLAS MAESTRO DE INTERFAZ PIXEL-ART (512x512)
 // ============================================================================
 
 const MINI_FONT_3X5 = {
@@ -1080,6 +1096,11 @@ function drawNineSliceBox(ctx, cfg, opts) {
 
   const inset = opts.borderThick || 2;
   px(inset, inset, w - inset * 2, h - inset * 2, opts.bg || '#0d110d');
+
+  // Resplandor central sutil para que las casillas cuadradas de Armas y Pasivas destaquen al estilo Megabonk
+  if (opts.innerGlow) {
+    px(inset + 2, inset + 2, w - (inset + 2) * 2, h - (inset + 2) * 2, opts.innerGlow);
+  }
 
   if (opts.speckle) {
     const cornerZone = Math.max(4, slice - 1);
@@ -1458,6 +1479,12 @@ function drawUIIcon16(ctx, key, ox, oy) {
   }
 
   ctx.restore();
+
+  // Aplicamos silueteado negro nítido de 1px a todos los iconos de juego (excepto grietas y manchas)
+  const skipOutline = ['crack_1', 'crack_2', 'stain_blood', 'stain_rust', 'wire_clamp'];
+  if (!skipOutline.includes(key)) {
+    applyIcon16Outline(ctx, ox, oy);
+  }
 }
 
 function buildMasterUIAtlas() {
@@ -1503,19 +1530,21 @@ function buildMasterUIAtlas() {
     borderLight: '#b89c46', borderDark: '#4a2518', doubleRim: true, rimInner: '#4a2518'
   });
 
-  // 2. CASILLAS DE INVENTARIO Y TARJETAS DE SUBIDA DE NIVEL
+  // 2. CASILLAS DE INVENTARIO CUADRADAS (Con bisel interior marcado estilo Megabonk pero estetica Rust)
   drawNineSliceBox(ctx, NS.slot_weapon, {
-    bg: '#0e130e', speckle: '#364832',
-    borderLight: '#877a5c', borderDark: '#4a2518', cornerRivets: true
+    bg: '#0c120d', innerGlow: '#172318', speckle: '#364832',
+    borderLight: '#b89c46', borderDark: '#4a2518',
+    doubleRim: true, rimInner: '#364832', cornerRivets: true, rivetColor: '#e6d7a5'
   });
 
   drawNineSliceBox(ctx, NS.slot_passive, {
-    bg: '#12100b', speckle: '#4a2518',
-    borderLight: '#b89c46', borderDark: '#4a2518', cornerRivets: true
+    bg: '#120e09', innerGlow: '#21180e', speckle: '#4a2518',
+    borderLight: '#e6d7a5', borderDark: '#4a2518',
+    doubleRim: true, rimInner: '#63533b', cornerRivets: true, rivetColor: '#b89c46'
   });
 
   drawNineSliceBox(ctx, NS.slot_empty, {
-    bg: '#070907',
+    bg: '#060806', innerGlow: '#0a0d0a',
     borderLight: '#364832', borderDark: '#182018', cleanCorners: true
   });
 
@@ -1572,7 +1601,7 @@ function buildMasterUIAtlas() {
     borderLight: '#381818', borderDark: '#050605', cleanCorners: true
   });
 
-  // 5. RELLENOS DE BARRAS EN SPRITE CON SEGMENTOS Y TEXTURA (Y = 152)
+  // 5. RELLENOS DE BARRAS EN SPRITE CON ALTO CONTRASTE (Y = 152)
   const drawBarFill = (cfg, colTop, colMid, colBot, segEvery = 8) => {
     ctx.save();
     ctx.translate(cfg.x, cfg.y);
@@ -1581,7 +1610,9 @@ function buildMasterUIAtlas() {
       for (let by = 0; by < cfg.h; by++) {
         if (isSegLine) {
           ctx.fillStyle = '#050605';
-        } else if (by < 2) {
+        } else if (by === 0) {
+          ctx.fillStyle = colTop;
+        } else if (by === 1) {
           ctx.fillStyle = (bx + by) % 2 === 0 ? colTop : colMid;
         } else if (by > cfg.h - 3) {
           ctx.fillStyle = colBot;
@@ -1594,12 +1625,12 @@ function buildMasterUIAtlas() {
     ctx.restore();
   };
 
-  drawBarFill(UI.BAR_FILLS.hp,   '#e6d7a5', '#c42b2b', '#6e1414', 8);
-  drawBarFill(UI.BAR_FILLS.exp,  '#e6d7a5', '#c8a846', '#4a2518', 8);
-  drawBarFill(UI.BAR_FILLS.stam, '#a6bf8e', '#527848', '#243022', 6);
-  drawBarFill(UI.BAR_FILLS.boss, '#e6d7a5', '#b82525', '#4a2518', 10);
+  drawBarFill(UI.BAR_FILLS.hp,   '#ff9e9e', '#d62828', '#6e1414', 12);
+  drawBarFill(UI.BAR_FILLS.exp,  '#fff6e0', '#e0b646', '#5c3818', 16);
+  drawBarFill(UI.BAR_FILLS.stam, '#b8d8a0', '#5c8a4e', '#243022', 8);
+  drawBarFill(UI.BAR_FILLS.boss, '#ffb3b3', '#b82525', '#4a2518', 10);
 
-  // 6. ICONOS Y DECORACIÓN 16x16 (Y = 176)
+  // 6. ICONOS Y DECORACIÓN 16x16 CON CONTORNO NEGRO (Y = 176)
   Object.entries(UI.ICONS).forEach(([key, pos]) => {
     const ix = pos.col * UI.ICON_SIZE;
     const iy = UI.ICONS_ORIGIN_Y + pos.row * UI.ICON_SIZE;
@@ -1715,7 +1746,6 @@ export function initUISpritesCSS(customScale = CONFIG.UI_SPRITES.SCALE) {
     const url = cropAtlasToDataURL(atlasCanvas, cfg, 1);
     root.setProperty(`--slice-${key}`, `url("${url}")`);
     root.setProperty(`--slice-${key}-cut`, String(cfg.slice));
-    // Para el marco de las barras usamos un grosor compacto (4px) para no aplastar el relleno interior
     const bw = key === 'bar_frame' ? Math.max(3, scale * 2) : cfg.slice * scale;
     root.setProperty(`--slice-${key}-bw`, `${bw}px`);
   });
