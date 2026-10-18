@@ -1249,12 +1249,6 @@ select:focus-visible {
   width: 96%;
   padding: 12px 16px;
 }
-.wide-plate {
-  max-width: 960px;
-  width: 96%;
-  max-height: 88vh;
-  overflow-y: auto;
-}
 
 .plate-header {
   display: flex;
@@ -1512,4 +1506,78 @@ select:focus-visible {
     width: 118px;
     height: 118px;
   }
+}
+/* ==========================================================================
+   AJUSTES: LAYOUT + SCROLLBAR (pegar al final del CSS)
+   ========================================================================== */
+
+/* Panel principal: ancho contenido, scroll vertical solo si no cabe */
+.wide-plate {
+  box-sizing: border-box !important;
+  width: min(820px, 94vw) !important;
+  max-width: none !important;
+  max-height: 96vh !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+}
+
+/* Rejilla de dos columnas (audio / vídeo) que pueden encogerse */
+.wide-plate .settings-grid {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 10px !important;
+}
+.wide-plate .settings-grid > * {
+  min-width: 0 !important;
+  width: auto !important;
+  max-width: 100% !important;
+}
+
+/* Etiqueta arriba, control debajo a todo el ancho */
+.wide-plate .setting-row {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  gap: 4px !important;
+  margin-bottom: 8px !important;
+  font-size: 16px !important;
+}
+.wide-plate .setting-row input[type="range"],
+.wide-plate .setting-row select,
+.wide-plate .setting-row .rust-btn {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+}
+.wide-plate .setting-row .rust-btn {
+  white-space: normal !important;
+}
+
+/* Pantallas estrechas: una sola columna */
+@media (max-width: 900px) {
+  .wide-plate .settings-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ==========================================================================
+   SCROLLBAR PIXEL-ART (solo en el panel de ajustes)
+   ========================================================================== */
+.wide-plate::-webkit-scrollbar {
+  width: 12px;
+}
+.wide-plate::-webkit-scrollbar-track {
+  background: #050605;
+  border-left: 2px solid #4a2518;
+}
+.wide-plate::-webkit-scrollbar-thumb {
+  background-color: #b89c46;
+  border: 2px solid #050605;
+  box-shadow: inset 2px 2px 0 #f0c954, inset -2px -2px 0 #63533b;
+}
+.wide-plate::-webkit-scrollbar-thumb:hover {
+  background-color: #f0c954;
+}
+.wide-plate::-webkit-scrollbar-button {
+  display: none;
 }
