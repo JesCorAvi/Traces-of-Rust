@@ -4,6 +4,7 @@ import { AudioSys } from './audio.js';
 import {
   SpriteSheets,
   getPlayerLoadoutSheet,
+  peekPlayerLoadoutSheet,
   initUISpritesCSS,
   renderSpriteIconHTML,
   renderSpriteBadgeHTML,
@@ -402,23 +403,37 @@ let lastUpgradedKey = null;
 let currentLevelChoices = [];
 const HAND_WEAPONS = ['slash', 'shotgun', 'flamethrower', 'harpoon', 'bolt', 'mines'];
 
+// Construye los sheets del jugador de uno en uno, repartidos entre frames,
+// para no bloquear el hilo principal con 6 canvases de golpe.
+let prewarmGeneration = 0;
 function prewarmLoadoutSheets() {
-  HAND_WEAPONS.forEach(w => {
-    if (skills[w]) {
-      const s = getPlayerLoadoutSheet(skills, w);
-      s.tex.repeat.set(1, 1);
-      s.tex.offset.set(0, 0);
-      s.glowTex.repeat.set(1, 1);
-      s.glowTex.offset.set(0, 0);
-      renderer.initTexture(s.tex);
-      renderer.initTexture(s.glowTex);
-    }
-  });
+  const snapshot = { ...skills };
+  const gen = ++prewarmGeneration;
+  const queue = HAND_WEAPONS
+    .filter(w => snapshot[w] && !peekPlayerLoadoutSheet(snapshot, w))
+    .sort((a, b) => (b === currentHandWeapon) - (a === currentHandWeapon)); // el arma en mano primero
+  const next = () => {
+    if (gen !== prewarmGeneration) return; // llegó un prewarm más reciente
+    const w = queue.shift();
+    if (!w) return;
+    const s = getPlayerLoadoutSheet(snapshot, w);
+    s.tex.repeat.set(1, 1);
+    s.tex.offset.set(0, 0);
+    s.glowTex.repeat.set(1, 1);
+    s.glowTex.offset.set(0, 0);
+    renderer.initTexture(s.tex);
+    renderer.initTexture(s.glowTex);
+    if (w === currentHandWeapon) syncPlayerVisualLoadout(currentHandWeapon);
+    setTimeout(next, 0);
+  };
+  setTimeout(next, 0);
 }
 
 function syncPlayerVisualLoadout(activeHand = currentHandWeapon) {
   currentHandWeapon = activeHand;
-  const sheet = getPlayerLoadoutSheet(skills, currentHandWeapon);
+  // Si el sheet aún no está listo, se conserva el sprite actual unos frames
+  const sheet = peekPlayerLoadoutSheet(skills, currentHandWeapon);
+  if (!sheet) return;
 
   sheet.tex.repeat.set(1, 1);
   sheet.tex.offset.set(0, 0);
@@ -555,15 +570,8 @@ function prewarmAllGPUAssets() {
     if (envItem && envItem.tex) renderer.initTexture(envItem.tex);
   });
 
-  HAND_WEAPONS.forEach(w => {
-    const s = getPlayerLoadoutSheet({ [w]: 1 }, w);
-    s.tex.repeat.set(1, 1);
-    s.tex.offset.set(0, 0);
-    s.glowTex.repeat.set(1, 1);
-    s.glowTex.offset.set(0, 0);
-    renderer.initTexture(s.tex);
-    renderer.initTexture(s.glowTex);
-  });
+  // (Eliminado: generar un sheet por arma aquí gastaba segundos de carga y memoria
+  //  en firmas de caché que casi nunca se reutilizan en una partida real.)
 
   const dummyGroup = new THREE.Group();
   dummyGroup.position.copy(camera.position).add(new THREE.Vector3(0, 0, -3));
@@ -575,13 +583,39 @@ function prewarmAllGPUAssets() {
     new THREE.Mesh(SHARED_GEO.orbitalPlane, SHARED_MAT.orbitalMat),
     new THREE.Mesh(SHARED_GEO.mineBody, SHARED_MAT.mineBody)
   );
+  // Variantes de material que se crean en caliente durante el combate
+  const lineGeo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3(0, 0, 1)]);
+  const flatGeo = new THREE.PlaneGeometry(1, 1);
+  const warmMats = [
+    new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.85 }),
+    new THREE.LineBasicMaterial({ color: 0xffffff }),
+    new THREE.MeshBasicMaterial({ color: 0xffe699, transparent: true, opacity: 0.9, side: THREE.DoubleSide }),
+    new THREE.MeshBasicMaterial({ color: 0xff6611 })
+  ];
+  dummyGroup.add(new THREE.Line(lineGeo, warmMats[0]));
+  dummyGroup.add(new THREE.Line(lineGeo, warmMats[1]));
+  dummyGroup.add(new THREE.Mesh(flatGeo, warmMats[2]));
+  dummyGroup.add(new THREE.Mesh(SHARED_GEO.bossProj, warmMats[3]));
+  dummyGroup.add(new THREE.Mesh(SHARED_GEO.spark, SHARED_MAT.sparkBlood));
+  dummyGroup.add(new THREE.Mesh(SHARED_GEO.spark, SHARED_MAT.sparkGold));
+  dummyGroup.add(new THREE.Mesh(SHARED_GEO.shell, SHARED_MAT.shellRed));
+  dummyGroup.add(new THREE.Mesh(SHARED_GEO.mineLed, SHARED_MAT.mineLed));
+  dummyGroup.traverse(o => { o.frustumCulled = false; });
+
   scene.add(dummyGroup);
   if (enemyPool.pool[0]) enemyPool.pool[0].group.visible = true;
+  const auraWasVisible = auraMesh.visible;
+  auraMesh.visible = true;
 
-  renderer.compile(scene, camera);
+  // Un frame real (no solo compile) para que también se suban texturas y se enlacen los programas
+  renderer.render(scene, camera);
 
+  auraMesh.visible = auraWasVisible;
   if (enemyPool.pool[0]) enemyPool.pool[0].group.visible = false;
   scene.remove(dummyGroup);
+  lineGeo.dispose();
+  flatGeo.dispose();
+  warmMats.forEach(m => m.dispose());
 }
 
 function spawnLorePickup(originPos, type = 'serum') {
@@ -744,12 +778,11 @@ function triggerScare(intensity = 0.42) {
   camera.updateProjectionMatrix();
   AudioSys.playScare();
 
-  document.body.classList.add('chromatic');
+  // Sin filtro CSS sobre el canvas WebGL (provocaba un tirón al crear la capa la primera vez)
   const flash = document.getElementById('scare-flash');
   flash.style.opacity = 1;
   setTimeout(() => {
     flash.style.opacity = 0;
-    document.body.classList.remove('chromatic');
   }, 180);
 }
 

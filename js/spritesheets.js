@@ -721,9 +721,18 @@ function buildEnemyDirectionalSheet(type) {
 // ============================================================================
 const playerLoadoutCache = new Map();
 
-export function getPlayerLoadoutSheet(skills = { slash: 1 }, activeHand = 'slash') {
+function loadoutSignature(skills, activeHand) {
   const equippedKeys = Object.keys(skills).filter(k => skills[k] > 0).sort().join(',');
-  const signature = `${equippedKeys}::${activeHand}::${CONFIG.DIRECTIONAL.USE_MIRRORING}`;
+  return `${equippedKeys}::${activeHand}::${CONFIG.DIRECTIONAL.USE_MIRRORING}`;
+}
+
+// Devuelve el sheet si ya está construido, sin generarlo (null si aún no existe)
+export function peekPlayerLoadoutSheet(skills = { slash: 1 }, activeHand = 'slash') {
+  return playerLoadoutCache.get(loadoutSignature(skills, activeHand)) || null;
+}
+
+export function getPlayerLoadoutSheet(skills = { slash: 1 }, activeHand = 'slash') {
+  const signature = loadoutSignature(skills, activeHand);
 
   if (playerLoadoutCache.has(signature)) {
     return playerLoadoutCache.get(signature);
