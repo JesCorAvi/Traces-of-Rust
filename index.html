@@ -24,8 +24,11 @@
   <div id="damage-flash"></div>
   <div id="scare-flash"></div>
 
-  <!-- Barra superior para exportar spritesheets y selector de escala entera de UI -->
+  <!-- Barra superior de diagnóstico, FPS, escala de UI y exportador PNG -->
   <div id="top-bar">
+    <div id="fps-counter" class="scale-picker-box hidden" title="Fotogramas por segundo en tiempo real">
+      <span>FPS: <b id="fps-val" style="color:#a8c499">60</b></span>
+    </div>
     <div class="scale-picker-box" title="Escala entera de píxeles de la interfaz">
       <span>ESCALA UI</span>
       <select id="ui-scale-select" aria-label="Escala de la interfaz">
@@ -175,43 +178,228 @@
     </div>
   </div>
 
-  <!-- Pantalla de Inicio -->
-  <div id="start-screen" class="overlay">
-    <div class="metal-plate main-menu-plate">
+  <!-- ========================================================================
+       PANTALLA DE INICIO ESTILO JUEGO DE ESCRITORIO (PC LAUNCHER / DESKTOP UI)
+       ======================================================================== -->
+  <div id="start-screen" class="overlay desktop-start-overlay">
+    <div class="desktop-launcher-layout">
+      <!-- Columna Izquierda: Identidad y Menú Vertical de Escritorio -->
+      <div class="metal-plate desktop-nav-plate">
+        <div class="screw tl"></div><div class="screw tr"></div><div class="screw bl"></div><div class="screw br"></div>
+        <div class="ui-decor crack-tl" data-ui-icon="crack_1"></div>
+        <div class="ui-decor stain-blood" data-ui-icon="stain_blood"></div>
+        <div class="ui-decor wire-top" data-ui-icon="wire_clamp"></div>
+
+        <div class="tape-strip">
+          <span class="ui-icon sm" data-ui-icon="warning"></span>
+          <span>TERMINAL QUIRÚRGICA // UNIDAD 04</span>
+        </div>
+
+        <h1 class="buckshot-title desktop-main-title">Traces of Rust</h1>
+        <p class="plate-sub" style="margin-bottom:8px;">SUPERVIVENCIA INDUSTRIAL 3D · EDICIÓN DE ESCRITORIO</p>
+
+        <div class="teeth-banner" style="width:100%; margin-bottom:12px;">
+          <span class="ui-icon sm" data-ui-icon="tooth"></span>
+          <span>DIENTES EN RESERVA: <span id="start-souls">0</span></span>
+        </div>
+
+        <div class="desktop-menu-list">
+          <button class="rust-btn primary desktop-menu-btn" id="btn-start">
+            <span class="ui-icon sm" data-ui-icon="slash"></span>
+            <span>[ FIRMAR CONTRATO Y ENTRAR ]</span>
+          </button>
+          <button class="rust-btn desktop-menu-btn" id="btn-open-shop">
+            <span class="ui-icon sm" data-ui-icon="tooth"></span>
+            <span>[ MESA DEL CIRUJANO · MEJORAS ]</span>
+          </button>
+          <button class="rust-btn desktop-menu-btn" id="btn-open-settings">
+            <span class="ui-icon sm" data-ui-icon="atkSpd"></span>
+            <span>[ AJUSTES DEL SISTEMA ]</span>
+          </button>
+          <button class="rust-btn desktop-menu-btn" id="btn-open-manual">
+            <span class="ui-icon sm" data-ui-icon="level"></span>
+            <span>[ MANUAL OPERATIVO Y CONTROLES ]</span>
+          </button>
+          <button class="rust-btn desktop-menu-btn" id="btn-toggle-fullscreen">
+            <span class="ui-icon sm" data-ui-icon="area"></span>
+            <span id="fullscreen-btn-text">[ PANTALLA COMPLETA: DESACTIVADA ]</span>
+          </button>
+        </div>
+
+        <div class="desktop-version-footer">
+          <span>BUILD DESKTOP-64 · REV 1.0.4</span>
+          <span id="gpu-status-badge" style="color:#a8c499;">● GPU ACTIVA</span>
+        </div>
+      </div>
+
+      <!-- Columna Derecha Inferior: Expediente de Carrera y Telemetría del Paciente -->
+      <div class="metal-plate desktop-dossier-plate">
+        <div class="screw tl"></div><div class="screw tr"></div><div class="screw bl"></div><div class="screw br"></div>
+        <div class="ui-decor stain-rust" data-ui-icon="stain_rust"></div>
+
+        <div class="tape-strip">
+          <span class="ui-icon sm" data-ui-icon="skull"></span>
+          <span>EXPEDIENTE CLÍNICO // HISTORIAL REGISTRADO</span>
+        </div>
+
+        <div class="paper-note stats-report" style="margin:6px 0 10px;">
+          <div class="report-row"><span>CONTRATOS FIRMADOS (PARTIDAS):</span><b id="career-runs" style="color:#f5ecd3">0</b></div>
+          <div class="report-row"><span>MEJOR TIEMPO EN PLANTA:</span><b id="career-best-time" style="color:#f0c954">00:00</b></div>
+          <div class="report-row"><span>BAJAS INDUSTRIALES TOTALES:</span><b id="career-total-kills" style="color:#ff6b6b">0</b></div>
+          <div class="report-row"><span>BOSSES AMPUTADOS TOTALES:</span><b id="career-total-bosses" style="color:#f0c954">0</b></div>
+          <div class="report-row"><span>IMPLANTES ADQUIRIDOS:</span><b id="career-upgrades-count" style="color:#a8c499">0</b></div>
+        </div>
+
+        <div class="desktop-quick-controls">
+          <span><b>WASD</b> MOVER</span>
+          <span><b>ESPACIO</b> SALTAR</span>
+          <span><b>SHIFT</b> DASH</span>
+          <span><b>RATÓN</b> LINTERNA</span>
+          <span><b>P</b> PAUSA</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       MENÚ DE AJUSTES DEL SISTEMA (VÍDEO, AUDIO, CONTROLES Y DATOS)
+       ======================================================================== -->
+  <div id="settings-screen" class="overlay hidden">
+    <div class="metal-plate wide-plate" style="max-width:780px;">
+      <div class="screw tl"></div><div class="screw tr"></div><div class="screw bl"></div><div class="screw br"></div>
       <div class="ui-decor crack-tl" data-ui-icon="crack_1"></div>
       <div class="ui-decor stain-rust" data-ui-icon="stain_rust"></div>
-      <div class="ui-decor wire-top" data-ui-icon="wire_clamp"></div>
 
-      <div class="tape-strip">
-        <span class="ui-icon sm" data-ui-icon="warning"></span>
-        <span>EXENCIÓN DE RESPONSABILIDAD // REV. 06</span>
+      <div class="plate-header">
+        <span class="tape-label">
+          <span class="ui-icon sm" data-ui-icon="atkSpd"></span>
+          <span>CONFIGURACIÓN Y AJUSTES DEL SISTEMA</span>
+        </span>
+        <button class="rust-btn sm" id="btn-close-settings"><span>[ GUARDAR Y VOLVER ]</span></button>
       </div>
 
-      <h1 class="buckshot-title">Traces of Rust</h1>
-      <p class="plate-sub">SUPERVIVENCIA INDUSTRIAL 3D · BILLBOARDS LO-FI · 5 BOSSES · FASE FINAL</p>
+      <div class="settings-grid">
+        <!-- Bloque 1: Audio -->
+        <div class="paper-note settings-section">
+          <div class="settings-section-title">
+            <span class="ui-icon sm" data-ui-icon="area"></span>
+            <span>SUBSISTEMA DE AUDIO</span>
+          </div>
 
-      <div class="teeth-banner">
-        <span class="ui-icon sm" data-ui-icon="tooth"></span>
-        <span>DIENTES EN RESERVA: <span id="start-souls">0</span></span>
+          <div class="setting-row">
+            <label for="set-master-vol">VOLUMEN MAESTRO: <b id="val-master-vol">85%</b></label>
+            <input type="range" id="set-master-vol" min="0" max="100" value="85">
+          </div>
+
+          <div class="setting-row">
+            <label for="set-sfx-vol">EFECTOS Y ARMAS (SFX): <b id="val-sfx-vol">90%</b></label>
+            <input type="range" id="set-sfx-vol" min="0" max="100" value="90">
+          </div>
+
+          <div class="setting-row">
+            <label for="set-amb-vol">DRON INDUSTRIAL (AMBIENTE): <b id="val-amb-vol">80%</b></label>
+            <input type="range" id="set-amb-vol" min="0" max="100" value="80">
+          </div>
+
+          <div class="setting-row">
+            <span>SILENCIAR AUDIO GLOBAL:</span>
+            <button class="rust-btn sm" id="btn-toggle-mute"><span>DESACTIVADO</span></button>
+          </div>
+        </div>
+
+        <!-- Bloque 2: Vídeo y Renderizado 3D -->
+        <div class="paper-note settings-section">
+          <div class="settings-section-title">
+            <span class="ui-icon sm" data-ui-icon="crit"></span>
+            <span>VÍDEO Y RENDERIZADO 3D</span>
+          </div>
+
+          <div class="setting-row">
+            <label for="set-res-scale">RESOLUCIÓN PIXEL-ART 3D:</label>
+            <select id="set-res-scale" class="setting-select">
+              <option value="0.3">0.30x (ULTRA LO-FI / MÁX FPS)</option>
+              <option value="0.44" selected>0.44x (ESTÁNDAR BUCKSHOT)</option>
+              <option value="0.65">0.65x (ALTA DEFINICIÓN RETRO)</option>
+              <option value="1.0">1.00x (NATIVA DE MONITOR)</option>
+            </select>
+          </div>
+
+          <div class="setting-row">
+            <label for="set-fov">CAMPO DE VISIÓN (FOV): <b id="val-fov">70°</b></label>
+            <input type="range" id="set-fov" min="60" max="95" value="70">
+          </div>
+
+          <div class="setting-row">
+            <span>SOMBRAS DINÁMICAS DE LINTERNA:</span>
+            <button class="rust-btn sm" id="btn-toggle-shadows"><span>ACTIVADAS</span></button>
+          </div>
+
+          <div class="setting-row">
+            <span>FILTRO CRT Y GRANO DE PELÍCULA:</span>
+            <button class="rust-btn sm" id="btn-toggle-crt"><span>ACTIVADOS</span></button>
+          </div>
+
+          <div class="setting-row">
+            <span>MOSTRAR CONTADOR DE FPS:</span>
+            <button class="rust-btn sm" id="btn-toggle-fps"><span>OCULTO</span></button>
+          </div>
+        </div>
+
+        <!-- Bloque 3: Controles y Datos -->
+        <div class="paper-note settings-section settings-span-full">
+          <div class="settings-section-title">
+            <span class="ui-icon sm" data-ui-icon="suit"></span>
+            <span>CONTROLES, CÁMARA Y DATOS DE GUARDADO</span>
+          </div>
+
+          <div class="settings-two-cols">
+            <div class="setting-row">
+              <label for="set-sens">SENSIBILIDAD DEL RATÓN: <b id="val-sens">1.0x</b></label>
+              <input type="range" id="set-sens" min="20" max="250" value="100">
+            </div>
+
+            <div class="setting-row">
+              <label for="set-shake">INTENSIDAD DE TEMBLOR DE CÁMARA: <b id="val-shake">100%</b></label>
+              <input type="range" id="set-shake" min="0" max="100" value="100">
+            </div>
+          </div>
+
+          <div class="setting-row" style="margin-top:8px; padding-top:8px; border-top:1px dashed #364832;">
+            <span>RESTABLECER AJUSTES O BORRAR PARTIDA GUARDADA:</span>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+              <button class="rust-btn sm" id="btn-reset-defaults"><span>[ AJUSTES POR DEFECTO ]</span></button>
+              <button class="rust-btn primary sm" id="btn-wipe-save"><span>[ BORRAR PROGRESO Y DIENTES ]</span></button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       MODAL DE MANUAL OPERATIVO Y CONTROLES
+       ======================================================================== -->
+  <div id="manual-modal" class="overlay hidden">
+    <div class="metal-plate main-menu-plate" style="max-width:740px;">
+      <div class="screw tl"></div><div class="screw tr"></div><div class="screw bl"></div><div class="screw br"></div>
+      <div class="ui-decor crack-tl" data-ui-icon="crack_1"></div>
+      <div class="plate-header">
+        <span class="tape-label">
+          <span class="ui-icon sm" data-ui-icon="level"></span>
+          <span>MANUAL OPERATIVO // PROTOCOLO DE SUPERVIVENCIA</span>
+        </span>
+        <button class="rust-btn sm" id="btn-close-manual"><span>[X] CERRAR</span></button>
       </div>
 
-      <div class="paper-note">
-        <b>INSTRUCCIONES OPERATIVAS:</b><br>
-        • <b>WASD</b> Moverse por rampas y plataformas · <b>ESPACIO</b> Saltar · <b>SHIFT</b> Esquiva Brusca · <b>P</b> Pausa<br>
-        • <b>RATÓN</b> Apuntar linterna (Alumbra de frente a <i>El Observador</i> para paralizarlo)<br>
-        • <b>SUBIDA DE NIVEL:</b> Equipa hasta <b>4 Armas</b> y <b>4 Pasivas</b> (Nivel máx. <b>+8</b>). Usa <b>Actualizar</b> para cambiar opciones.<br>
-        • <b>MEJORAS PERMANENTES:</b> Recoge <b>Dientes</b> durante la partida y gástalos al morir en la <b>Mesa del Cirujano</b>.
-      </div>
-
-      <div class="btn-group">
-        <button class="rust-btn primary" id="btn-start">
-          <span class="ui-icon sm" data-ui-icon="slash"></span>
-          <span>[ FIRMAR CONTRATO Y ENTRAR ]</span>
-        </button>
-        <button class="rust-btn" id="btn-open-shop">
-          <span class="ui-icon sm" data-ui-icon="tooth"></span>
-          <span>[ MESA DEL CIRUJANO ]</span>
-        </button>
+      <div class="paper-note" style="font-size:20px; line-height:1.5;">
+        <b>1. MOVIMIENTO Y EXPLORACIÓN INDUSTRIAL:</b><br>
+        • Usa <b>WASD</b> para desplazarte por las plataformas y rampas elevadas.<br>
+        • Pulsa <b>ESPACIO</b> para saltar obstáculos y <b>SHIFT</b> para ejecutar una <b>Esquiva Brusca (Dash)</b> con invulnerabilidad momentánea.<br><br>
+        <b>2. LA LINTERNA Y EL OBSERVADOR:</b><br>
+        • Apunta con el <b>RATÓN</b>. La entidad <i>El Observador (Weeper)</i> se mueve a gran velocidad en la oscuridad, pero <b>queda completamente paralizada mientras la alumbres de frente</b>.<br><br>
+        <b>3. ARMAMENTO, PASIVAS Y BOSSES:</b><br>
+        • Recoge <b>Viales de Suero</b> para subir de Ciclo. Puedes equipar hasta <b>4 Armas</b> y <b>4 Implantes Pasivos</b> (nivel máximo <b>+8</b>).<br>
+        • Cada <b>3 minutos</b> (03:00, 06:00, 09:00, 12:00, 15:00) aparecerá una aberración principal en planta. Al derrotarla soltará un <b>Maletín Quirúrgico</b> y <b>Dientes de Oro</b> para la Mesa del Cirujano.
       </div>
     </div>
   </div>
@@ -229,6 +417,10 @@
 
       <div class="btn-group" style="flex-direction:column; gap:12px; margin-top:16px;">
         <button class="rust-btn primary" id="btn-resume"><span>[ CONTINUAR MISIÓN ]</span></button>
+        <button class="rust-btn" id="btn-pause-settings">
+          <span class="ui-icon sm" data-ui-icon="atkSpd"></span>
+          <span>[ AJUSTES DEL SISTEMA ]</span>
+        </button>
         <button class="rust-btn" id="btn-pause-to-menu"><span>[ ABANDONAR A MENÚ PRINCIPAL ]</span></button>
       </div>
     </div>

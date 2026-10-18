@@ -796,6 +796,158 @@ function buildWeaponSheets() {
   };
 }
 
+// ============================================================================
+// GENERADOR DE SPRITES ANIMADOS (4 FRAMES, 256x64) PARA LOS PICKUPS DEL LORE
+// 1. pickup_serum: Vial clínico con aguja y suero mutagénico burbujeante (XP)
+// 2. pickup_tooth: Molar extraído con empaste de oro y raíz ensangrentada (Moneda)
+// 3. pickup_chest: Maletín quirúrgico encadenado con cruz médica (Boss Drop)
+// ============================================================================
+function buildPickupSheets() {
+  // 1. VIAL DE SUERO MUTAGÉNICO (4 frames de burbujeo y pulso luminoso)
+  const serumCan = document.createElement('canvas');
+  serumCan.width = 256; serumCan.height = 64;
+  const sCtx = serumCan.getContext('2d');
+
+  for (let f = 0; f < 4; f++) {
+    sCtx.save();
+    sCtx.translate(f * 64, 0);
+    const px = (x, y, w, h, c) => { sCtx.fillStyle = c; sCtx.fillRect(x, y, w, h); };
+
+    // Aguja hipodérmica superior y émbolo metálico
+    px(31, 6, 2, 8, '#c8c2ac');
+    px(31, 4, 2, 3, '#e6d7a5');
+    px(26, 13, 12, 4, '#877a5c');
+    px(24, 17, 16, 4, '#4a2518');
+    px(25, 18, 14, 2, '#b89c46'); // Anillo de latón
+
+    // Cuerpo de cristal del vial clínico
+    px(21, 21, 22, 30, '#182018');
+    px(22, 22, 20, 28, '#243022');
+
+    // Líquido mutagénico carmesí/ámbar con menisco animado
+    const wave = (f % 2 === 0) ? 1 : -1;
+    px(23, 27 + wave, 18, 22 - wave, '#6e1414');
+    px(24, 28 + wave, 16, 20 - wave, '#a52020');
+    px(24, 27 + wave, 16, 3, '#b89c46'); // Espuma superficial de suero
+
+    // Burbujas ascendentes según el frame
+    const b1Y = 44 - f * 4;
+    const b2Y = 40 - ((f + 2) % 4) * 4;
+    px(27, b1Y, 3, 3, '#e6d7a5');
+    px(34, b2Y, 2, 2, '#b89c46');
+
+    // Reflejo vertical del cristal y marcas de graduación milimétrica
+    px(24, 23, 2, 24, '#e6d7a5');
+    for (let m = 0; m < 4; m++) {
+      px(37, 25 + m * 6, 3, 1, '#c8c2ac');
+    }
+
+    // Base metálica inferior con goteo
+    px(24, 51, 16, 4, '#4a2518');
+    px(26, 52, 12, 2, '#877a5c');
+    if (f === 1 || f === 2) {
+      px(31, 56 + f, 2, 3, '#a52020');
+    }
+    sCtx.restore();
+  }
+  applyCleanSpriteOutlineRect(sCtx, 256, 64);
+
+  // 2. DIENTE EXTRAÍDO CON RAÍZ ENSANGRENTADA (4 frames con destello en empaste de oro)
+  const toothCan = document.createElement('canvas');
+  toothCan.width = 256; toothCan.height = 64;
+  const tCtx = toothCan.getContext('2d');
+
+  for (let f = 0; f < 4; f++) {
+    tCtx.save();
+    tCtx.translate(f * 64, 0);
+    const px = (x, y, w, h, c) => { tCtx.fillStyle = c; tCtx.fillRect(x, y, w, h); };
+
+    // Corona del molar (doble cúspide de marfil sucio)
+    px(19, 13, 11, 6, '#e6d7a5');
+    px(34, 13, 11, 6, '#e6d7a5');
+    px(18, 17, 28, 16, '#c8c2ac');
+    px(20, 15, 24, 14, '#e6d7a5');
+
+    // Grieta del esmalte y empaste de oro del cirujano
+    px(29, 16, 2, 8, '#4a2518');
+    px(33, 16, 9, 7, '#b89c46');
+    if (f % 2 === 0) {
+      px(35, 17, 5, 4, '#e6d7a5'); // Destello metálico del oro
+    }
+
+    // Cuello dental con sarro oxidado
+    px(20, 31, 24, 5, '#b89c46');
+    px(21, 34, 22, 3, '#743718');
+
+    // Dos raíces largas bifurcadas con restos de encía y sangre
+    px(20, 36, 9, 16, '#c8c2ac');
+    px(22, 36, 6, 14, '#877a5c');
+    px(35, 36, 9, 16, '#c8c2ac');
+    px(36, 36, 6, 14, '#877a5c');
+
+    // Puntas de la raíz teñidas de sangre fresca + gota cayendo
+    px(21, 46, 7, 8, '#a52020');
+    px(22, 52, 4, 4, '#6e1414');
+    px(36, 45, 7, 9, '#a52020');
+    px(38, 52, 4, 4, '#6e1414');
+
+    const dropY = 54 + f * 2;
+    px(24, dropY, 3, 3, '#a52020');
+    tCtx.restore();
+  }
+  applyCleanSpriteOutlineRect(tCtx, 256, 64);
+
+  // 3. MALETÍN QUIRÚRGICO DE BOSS (4 frames con cerradura y cruz médica pulsante)
+  const chestCan = document.createElement('canvas');
+  chestCan.width = 256; chestCan.height = 64;
+  const cCtx = chestCan.getContext('2d');
+
+  for (let f = 0; f < 4; f++) {
+    cCtx.save();
+    cCtx.translate(f * 64, 0);
+    const px = (x, y, w, h, c) => { cCtx.fillStyle = c; cCtx.fillRect(x, y, w, h); };
+
+    // Asa superior de hierro forjado
+    px(25, 11, 14, 6, '#4a2518');
+    px(27, 13, 10, 4, '#050605');
+
+    // Cuerpo del maletín de acero oxidado
+    px(10, 17, 44, 36, '#243022');
+    px(12, 19, 40, 32, '#364832');
+
+    // cantoneras de latón y remaches en las esquinas
+    px(10, 17, 7, 7, '#b89c46');
+    px(47, 17, 7, 7, '#b89c46');
+    px(10, 46, 7, 7, '#b89c46');
+    px(47, 46, 7, 7, '#b89c46');
+
+    // Correas de cuero verticales con hebillas
+    px(18, 17, 5, 36, '#4a2518');
+    px(41, 17, 5, 36, '#4a2518');
+    px(17, 31, 7, 6, '#b89c46');
+    px(40, 31, 7, 6, '#b89c46');
+
+    // Placa central con Cruz Quirúrgica ensangrentada y pulso luminoso
+    px(25, 25, 14, 18, '#121812');
+    const crossCol = f % 2 === 0 ? '#a52020' : '#e6d7a5';
+    px(30, 27, 4, 14, crossCol);
+    px(27, 32, 10, 4, crossCol);
+
+    // Manchas de sangre que rezuman de la junta del maletín
+    px(12, 34, 40, 2, '#050605');
+    px(26, 36, 12, 3, '#6e1414');
+    px(29, 38, 4, 6, '#a52020');
+    cCtx.restore();
+  }
+  applyCleanSpriteOutlineRect(cCtx, 256, 64);
+
+  return {
+    serum: { name: 'pickup_serum_4f', canvas: serumCan, tex: makeTexture(serumCan) },
+    tooth: { name: 'pickup_tooth_4f', canvas: toothCan, tex: makeTexture(toothCan) },
+    chest: { name: 'pickup_chest_4f', canvas: chestCan, tex: makeTexture(chestCan) }
+  };
+}
+
 function buildEnvironmentTextures() {
   const gCan = document.createElement('canvas');
   gCan.width = gCan.height = 128;
@@ -854,15 +1006,19 @@ function buildEnvironmentTextures() {
   applyEnvironmentDither(pCtx, 64, 64);
 
   const weapons = buildWeaponSheets();
+  const pickups = buildPickupSheets();
 
   return {
-    ground:  { name: 'ground_tile', canvas: gCan, tex: makeTexture(gCan, 75) },
-    crate:   { name: 'rust_crate',  canvas: cCan, tex: makeTexture(cCan) },
-    metal:   { name: 'catwalk_tex', canvas: mCan, tex: makeTexture(mCan, 4) },
-    aura:    { name: 'bile_aura',   canvas: aCan, tex: makeTexture(aCan) },
-    pillar:  { name: 'rust_pillar', canvas: pCan, tex: makeTexture(pCan) },
-    slash:   weapons.slashSheet,
-    orbital: weapons.orbitalSheet
+    ground:       { name: 'ground_tile', canvas: gCan, tex: makeTexture(gCan, 75) },
+    crate:        { name: 'rust_crate',  canvas: cCan, tex: makeTexture(cCan) },
+    metal:        { name: 'catwalk_tex', canvas: mCan, tex: makeTexture(mCan, 4) },
+    aura:         { name: 'bile_aura',   canvas: aCan, tex: makeTexture(aCan) },
+    pillar:       { name: 'rust_pillar', canvas: pCan, tex: makeTexture(pCan) },
+    slash:        weapons.slashSheet,
+    orbital:      weapons.orbitalSheet,
+    pickup_serum: pickups.serum,
+    pickup_tooth: pickups.tooth,
+    pickup_chest: pickups.chest
   };
 }
 
@@ -910,9 +1066,6 @@ function drawBitmapString(ctx, text, x, y, color, shadowColor = '#050605') {
   }
 }
 
-// Dibuja una caja 9-slice SIN artefactos de estiramiento:
-// • El centro (slice..w-slice, slice..h-slice) es uniforme y oscuro para que al estirarse nunca genere bandas ni rayas sobre el texto.
-// • Todo el desgaste irregular, muescas y remaches están confinados en las 4 esquinas fijas (0..slice).
 function drawNineSliceBox(ctx, cfg, opts) {
   const { x, y, w, h, slice = 7 } = cfg;
   ctx.save();
@@ -923,14 +1076,11 @@ function drawNineSliceBox(ctx, cfg, opts) {
     ctx.fillRect(rx, ry, rw, rh);
   };
 
-  // 1. Contorno negro abisal exterior (#050605)
   px(0, 0, w, h, '#050605');
 
-  // 2. Fondo principal limpio de alto contraste para legibilidad > 4.5:1
   const inset = opts.borderThick || 2;
   px(inset, inset, w - inset * 2, h - inset * 2, opts.bg || '#0d110d');
 
-  // Textura de óxido/desgaste SOLO en las 4 esquinas (nunca en la cruz central que se estira)
   if (opts.speckle) {
     const cornerZone = Math.max(4, slice - 1);
     for (let py = inset + 1; py < h - inset - 1; py++) {
@@ -944,7 +1094,6 @@ function drawNineSliceBox(ctx, cfg, opts) {
     }
   }
 
-  // 3. Bisel físico continuo (sin agujeros en la zona central para no crear bandas negras al estirar)
   const bTop = opts.pressed ? opts.borderDark : opts.borderLight;
   const bBot = opts.pressed ? opts.borderLight : opts.borderDark;
 
@@ -960,18 +1109,15 @@ function drawNineSliceBox(ctx, cfg, opts) {
     px(w - 3, 2, 1, h - 4, '#050605');
   }
 
-  // Lomo izquierdo para notas clínicas (`panel_paper`)
   if (opts.leftStripe) {
     px(2, 2, 3, h - 4, opts.leftStripe);
   }
 
-  // Muescas de desgaste SOLO dentro de las esquinas fijas (nunca en el tramo central)
   if (!opts.cleanCorners) {
     px(3, 1, 1, 1, '#050605');
     px(w - 4, h - 2, 1, 1, '#050605');
   }
 
-  // Remaches / tornillos en las 4 esquinas fijas
   if (opts.cornerRivets) {
     const rCol = opts.rivetColor || '#877a5c';
     const positions = [[3, 3], [w - 5, 3], [3, h - 5], [w - 5, h - 5]];
@@ -981,7 +1127,6 @@ function drawNineSliceBox(ctx, cfg, opts) {
     });
   }
 
-  // Bordes laterales dentados para la cinta adhesiva (`panel_tape`)
   if (opts.tornEdges) {
     for (let ty = 2; ty < h - 2; ty += 3) {
       px(0, ty, 2, 1, '#050605');
@@ -992,7 +1137,6 @@ function drawNineSliceBox(ctx, cfg, opts) {
   ctx.restore();
 }
 
-// Dibuja cada uno de los 39 iconos y decoraciones de 16x16 píxeles
 function drawUIIcon16(ctx, key, ox, oy) {
   ctx.save();
   ctx.translate(ox, oy);
@@ -1325,7 +1469,7 @@ function buildMasterUIAtlas() {
 
   const NS = UI.NINE_SLICE;
 
-  // 1. PANELES Y CONTENEDORES 9-SLICE (Centro oscuro limpio para contraste > 7:1 y cero rayas estiradas)
+  // 1. PANELES Y CONTENEDORES 9-SLICE
   drawNineSliceBox(ctx, NS.panel_metal, {
     bg: '#0c100c', speckle: '#243022',
     borderLight: '#877a5c', borderDark: '#4a2518',
@@ -1392,7 +1536,7 @@ function buildMasterUIAtlas() {
     borderLight: '#877a5c', borderDark: '#364832', pressed: true, cleanCorners: true
   });
 
-  // 3. BOTONES INDUSTRIALES (4 ESTADOS NÍTIDOS SIN MANCHAS EN EL CENTRO)
+  // 3. BOTONES INDUSTRIALES (4 ESTADOS)
   drawNineSliceBox(ctx, NS.btn_normal, {
     bg: '#161d15',
     borderLight: '#877a5c', borderDark: '#050605', doubleRim: true, rimInner: '#4a2518', cornerRivets: true
@@ -1410,7 +1554,7 @@ function buildMasterUIAtlas() {
     borderLight: '#243022', borderDark: '#121812', cleanCorners: true
   });
 
-  // 4. BOTONES PRIMARIOS DE SANGRE (4 ESTADOS NÍTIDOS Y SIN RAYAS BLANCAS)
+  // 4. BOTONES PRIMARIOS DE SANGRE (4 ESTADOS)
   drawNineSliceBox(ctx, NS.btn_pri_normal, {
     bg: '#4e1212',
     borderLight: '#d43b3b', borderDark: '#050605', doubleRim: true, rimInner: '#8a2020', cornerRivets: true, rivetColor: '#e6d7a5'
@@ -1538,7 +1682,6 @@ function cropAtlasToDataURL(atlasCanvas, rect, scale = 1) {
   return c.toDataURL('image/png');
 }
 
-// Sincroniza cualquier etiqueta estática del DOM con atributo [data-ui-icon] a la escala entera actual
 export function refreshStaticDOMIcons() {
   if (typeof document === 'undefined') return;
   const UI = CONFIG.UI_SPRITES;
@@ -1552,7 +1695,6 @@ export function refreshStaticDOMIcons() {
   });
 }
 
-// Inyecta todas las coordenadas, escalas enteras, recortes 9-slice, barras y cursores en CSS (:root)
 export function initUISpritesCSS(customScale = CONFIG.UI_SPRITES.SCALE) {
   const scale = Math.max(1, Math.round(customScale));
   CONFIG.UI_SPRITES.SCALE = scale;
@@ -1573,7 +1715,9 @@ export function initUISpritesCSS(customScale = CONFIG.UI_SPRITES.SCALE) {
     const url = cropAtlasToDataURL(atlasCanvas, cfg, 1);
     root.setProperty(`--slice-${key}`, `url("${url}")`);
     root.setProperty(`--slice-${key}-cut`, String(cfg.slice));
-    root.setProperty(`--slice-${key}-bw`, `${cfg.slice * scale}px`);
+    // Para el marco de las barras usamos un grosor compacto (4px) para no aplastar el relleno interior
+    const bw = key === 'bar_frame' ? Math.max(3, scale * 2) : cfg.slice * scale;
+    root.setProperty(`--slice-${key}-bw`, `${bw}px`);
   });
 
   Object.entries(UI.BAR_FILLS).forEach(([key, cfg]) => {

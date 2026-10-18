@@ -2,8 +2,9 @@ import * as THREE from 'three';
 import { CONFIG } from './config.js';
 import { SpriteSheets } from './spritesheets.js';
 import { AudioSys } from './audio.js';
+import { setPlaneFrameUV } from './entities.js';
 
-// Geometrías compartidas en VRAM para evitar tirones del Garbage Collector
+// Geometrías y materiales compartidos en VRAM para evitar crear objetos o clonar texturas en combate
 export const SHARED_GEO = {
   spark: new THREE.BoxGeometry(0.18, 0.18, 0.18),
   shell: new THREE.BoxGeometry(0.1, 0.22, 0.1),
@@ -15,7 +16,16 @@ export const SHARED_GEO = {
   bossProj: new THREE.BoxGeometry(0.42, 0.42, 0.42)
 };
 
-// Luz de fogonazo única y persistente (evita recompilar shaders WebGL al disparar)
+export const SHARED_MAT = {
+  sparkBlood: new THREE.MeshBasicMaterial({ color: 0xa52020 }),
+  sparkGold:  new THREE.MeshBasicMaterial({ color: 0xffe699 }),
+  shellRed:   new THREE.MeshBasicMaterial({ color: 0xa52020 }),
+  mineBody:   new THREE.MeshStandardMaterial({ color: 0x3b2316, roughness: 0.85 }),
+  mineLed:    new THREE.MeshBasicMaterial({ color: 0xff2222 }),
+  slashMat:   null,
+  orbitalMat: null
+};
+
 let combatFlashLight = null;
 let combatFlashTimer = 0;
 
@@ -23,6 +33,22 @@ export function initCombatLight(scene) {
   if (!combatFlashLight) {
     combatFlashLight = new THREE.PointLight(0xffaa33, 0, 12, 1.5);
     scene.add(combatFlashLight);
+  }
+  if (!SHARED_MAT.slashMat && SpriteSheets.env && SpriteSheets.env.slash) {
+    SHARED_MAT.slashMat = new THREE.MeshBasicMaterial({
+      map: SpriteSheets.env.slash.tex,
+      transparent: true,
+      alphaTest: 0.15,
+      side: THREE.DoubleSide
+    });
+  }
+  if (!SHARED_MAT.orbitalMat && SpriteSheets.env && SpriteSheets.env.orbital) {
+    SHARED_MAT.orbitalMat = new THREE.MeshBasicMaterial({
+      map: SpriteSheets.env.orbital.tex,
+      transparent: true,
+      alphaTest: 0.2,
+      side: THREE.DoubleSide
+    });
   }
 }
 
@@ -48,7 +74,6 @@ function getWeaponScaling(id, level) {
   return { cfg, mult };
 }
 
-// Calcula la posición exacta de la mano derecha / boca del cañón en el mundo 3D según la dirección a la que mira el jugador
 export function getDirectionalHandPos(playerPos, facingYaw, forwardDist = 0.85, rightOffset = 0.36, heightOffset = 1.08) {
   const fwd = new THREE.Vector3(-Math.sin(facingYaw), 0, -Math.cos(facingYaw));
   const right = new THREE.Vector3(Math.cos(facingYaw), 0, -Math.sin(facingYaw));
@@ -58,7 +83,7 @@ export function getDirectionalHandPos(playerPos, facingYaw, forwardDist = 0.85, 
     .add(new THREE.Vector3(0, heightOffset, 0));
 }
 
-// 1. SIERRA DE AMPUTACIÓN (No afectada por multishot: siempre 1 tajo letal)
+// 1. SIERRA DE AMPUTACIÓN (Usa UVs directas en vez de clonar la textura en cada tajo)
 export function executeSawSlash(scene, playerPos, facingYaw, level, mods, enemies, vfx, onDamage, onMicroShake, bodyYaw = facingYaw) {
   const { cfg, mult } = getWeaponScaling('slash', level);
   const size = (3.1 + level * 0.3) * mods.areaMult;
@@ -72,35 +97,23 @@ export function executeSawSlash(scene, playerPos, facingYaw, level, mods, enemie
   const handOrigin = getDirectionalHandPos(playerPos, bodyYaw, 0.5, 0.32, 1.05);
   const fwd = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), facingYaw);
 
-  const slashTex = SpriteSheets.env.slash.tex.clone();
-  slashTex.needsUpdate = true;
-  slashTex.repeat.set(0.25, 1);
-  slashTex.offset.set(0, 0);
-
   const slashPos = handOrigin.clone().add(fwd.clone().multiplyScalar(1.35 * mods.areaMult));
   triggerCombatFlash(slashPos, 0xd95326, 85, 0.12);
 
   const geo = new THREE.PlaneGeometry(size, size * 0.75);
-  const mat = new THREE.MeshBasicMaterial({
-    map: slashTex,
-    transparent: true,
-    alphaTest: 0.15,
-    side: THREE.DoubleSide
-  });
-  const mesh = new THREE.Mesh(geo, mat);
+  setPlaneFrameUV(geo, 4, 1, 0, 0);
+
+  const mesh = new THREE.Mesh(geo, SHARED_MAT.slashMat);
   mesh.position.copy(slashPos);
   scene.add(mesh);
 
   vfx.push({
     mesh,
     disposeGeo: true,
-    disposeMat: true,
-    disposeTex: slashTex,
     life: 0.2,
     maxLife: 0.2,
     billboard: true,
-    sheetTex: slashTex,
-    totalFrames: 4
+    uvTotalFrames: 4
   });
 
   enemies.forEach(e => {
@@ -112,13 +125,12 @@ export function executeSawSlash(scene, playerPos, facingYaw, level, mods, enemie
       for (let p = 0; p < 3; p++) {
         const spark = new THREE.Mesh(
           SHARED_GEO.spark,
-          new THREE.MeshBasicMaterial({ color: p % 2 === 0 ? 0xa52020 : 0xffe699 })
+          p % 2 === 0 ? SHARED_MAT.sparkBlood : SHARED_MAT.sparkGold
         );
         spark.position.copy(e.group.position).add(new THREE.Vector3(0, 1.0, 0));
         scene.add(spark);
         vfx.push({
           mesh: spark,
-          disposeMat: true,
           life: 0.24,
           vel: new THREE.Vector3((Math.random() - 0.5) * 6, 2.5 + Math.random() * 3, (Math.random() - 0.5) * 6),
           gravity: 16,
@@ -133,26 +145,17 @@ export function executeSawSlash(scene, playerPos, facingYaw, level, mods, enemie
 
 export function createOrbitalUnit(scene, angle) {
   const group = new THREE.Group();
-  const orbTex = SpriteSheets.env.orbital.tex.clone();
-  orbTex.needsUpdate = true;
-  orbTex.repeat.set(0.25, 1);
+  const geo = new THREE.PlaneGeometry(1.35, 1.35);
+  setPlaneFrameUV(geo, 4, 1, 0, 0);
 
-  const sprite = new THREE.Mesh(
-    SHARED_GEO.orbitalPlane,
-    new THREE.MeshBasicMaterial({
-      map: orbTex,
-      transparent: true,
-      alphaTest: 0.2,
-      side: THREE.DoubleSide
-    })
-  );
+  const sprite = new THREE.Mesh(geo, SHARED_MAT.orbitalMat);
   group.add(sprite);
   scene.add(group);
 
-  return { group, sprite, orbTex, angle, animTimer: Math.random(), trailTimer: 0, hitCd: 0 };
+  return { group, sprite, geo, angle, animTimer: Math.random(), trailTimer: 0, hitCd: 0 };
 }
 
-// 2. ESCOPETA CALIBRE 12 (Sí afectada por multishot)
+// 2. ESCOPETA CALIBRE 12
 export function fireBuckshot(scene, playerPos, aimYaw, bodyYaw, level, mods, enemies, vfx, onDamage, triggerFlash) {
   const alive = enemies.filter(e => e.state !== 'dead');
   if (!alive.length) return null;
@@ -182,15 +185,11 @@ export function fireBuckshot(scene, playerPos, aimYaw, bodyYaw, level, mods, ene
   scene.add(flashSprite);
   vfx.push({ mesh: flashSprite, disposeMat: true, life: 0.08, maxLife: 0.08, billboard: true, scaleSpeed: 6 });
 
-  const shell = new THREE.Mesh(
-    SHARED_GEO.shell,
-    new THREE.MeshBasicMaterial({ color: 0xa52020 })
-  );
+  const shell = new THREE.Mesh(SHARED_GEO.shell, SHARED_MAT.shellRed);
   shell.position.copy(muzzlePos);
   scene.add(shell);
   vfx.push({
     mesh: shell,
-    disposeMat: true,
     life: 1.0,
     vel: rightDir.clone().multiplyScalar(3.5 + Math.random()).add(new THREE.Vector3(0, 4.0, 0)),
     gravity: 16,
@@ -240,7 +239,7 @@ export function fireBuckshot(scene, playerPos, aimYaw, bodyYaw, level, mods, ene
   return aimYaw;
 }
 
-// 3. SOPLETE INCINERADOR (No afectado por multishot)
+// 3. SOPLETE INCINERADOR
 export function fireFlamethrower(scene, playerPos, facingYaw, level, mods, enemies, vfx, onDamage, bodyYaw = facingYaw) {
   const { cfg, mult } = getWeaponScaling('flamethrower', level);
   const fwd = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), facingYaw);
@@ -290,7 +289,7 @@ export function fireFlamethrower(scene, playerPos, facingYaw, level, mods, enemi
   });
 }
 
-// 4. MINAS DE METRALLA (Sí afectadas por multishot)
+// 4. MINAS DE METRALLA
 export function spawnShrapnelMine(scene, playerPos, level, mods, worldPhysics, minesList) {
   const cfg = CONFIG.SKILLS.mines;
   const count = 1 + (cfg.usesMultishot ? (mods.bonusProjectiles || 0) : 0);
@@ -298,15 +297,9 @@ export function spawnShrapnelMine(scene, playerPos, level, mods, worldPhysics, m
 
   for (let i = 0; i < count; i++) {
     const group = new THREE.Group();
-    const body = new THREE.Mesh(
-      SHARED_GEO.mineBody,
-      new THREE.MeshStandardMaterial({ color: 0x3b2316, roughness: 0.85 })
-    );
+    const body = new THREE.Mesh(SHARED_GEO.mineBody, SHARED_MAT.mineBody);
     body.position.y = 0.09;
-    const led = new THREE.Mesh(
-      SHARED_GEO.mineLed,
-      new THREE.MeshBasicMaterial({ color: 0xff2222 })
-    );
+    const led = new THREE.Mesh(SHARED_GEO.mineLed, SHARED_MAT.mineLed);
     led.position.y = 0.2;
     group.add(body, led);
 
@@ -322,7 +315,7 @@ export function spawnShrapnelMine(scene, playerPos, level, mods, worldPhysics, m
   }
 }
 
-// 5. ARPÓN NEUMÁTICO (Sí afectado por multishot)
+// 5. ARPÓN NEUMÁTICO
 export function fireHarpoon(scene, playerPos, facingYaw, level, mods, enemies, vfx, onDamage, bodyYaw = facingYaw) {
   const alive = enemies.filter(e => e.state !== 'dead');
   const { cfg, mult } = getWeaponScaling('harpoon', level);
@@ -367,7 +360,7 @@ export function fireHarpoon(scene, playerPos, facingYaw, level, mods, enemies, v
   return facingYaw;
 }
 
-// 6. DESFIBRILADOR ROTO (No afectado por multishot)
+// 6. DESFIBRILADOR ROTO
 export function fireDefibrillator(scene, playerPos, facingYaw, level, mods, enemies, vfx, onDamage) {
   const { cfg, mult } = getWeaponScaling('bolt', level);
   const range = cfg.baseRange * mods.areaMult;

@@ -3,18 +3,32 @@ import { CONFIG } from './config.js';
 import { SpriteSheets } from './spritesheets.js';
 import { AudioSys } from './audio.js';
 
+// Actualiza las coordenadas UV de los 4 vértices de un PlaneGeometry para mostrar la celda (col, row)
+// sin necesidad de clonar texturas (tex.clone()) ni saturar la VRAM
+export function setPlaneFrameUV(geometry, totalCols, totalRows, col, row) {
+  const uv = geometry.attributes.uv;
+  const u0 = col / totalCols;
+  const u1 = (col + 1) / totalCols;
+  const v1 = 1 - row / totalRows;
+  const v0 = 1 - (row + 1) / totalRows;
+
+  // Orden de vértices en THREE.PlaneGeometry: 0:TL, 1:TR, 2:BL, 3:BR
+  uv.setXY(0, u0, v1);
+  uv.setXY(1, u1, v1);
+  uv.setXY(2, u0, v0);
+  uv.setXY(3, u1, v0);
+  uv.needsUpdate = true;
+}
+
 // Calcula qué sector direccional (0 .. numDirs-1) debe mostrarse según hacia dónde mira la entidad
-// (entityFacingYaw) y dónde está la cámara (camPos), aplicando histéresis para evitar parpadeos
 export function selectDirectionIndex(entityPos, entityFacingYaw, camPos, currentDir, numDirs = 8) {
   if (numDirs <= 1) return 0;
 
   const dx = camPos.x - entityPos.x;
   const dz = camPos.z - entityPos.z;
 
-  // Vector trasero de la entidad (cuando la cámara está justo detrás de la entidad, ángulo = 0° -> Vista 0: ESPALDA)
   const backX = Math.sin(entityFacingYaw);
   const backZ = Math.cos(entityFacingYaw);
-  // Vector derecho de la entidad (cuando la cámara está a la derecha, ángulo = 90° -> Vista E: PERFIL DERECHO)
   const rightX = Math.cos(entityFacingYaw);
   const rightZ = -Math.sin(entityFacingYaw);
 
@@ -28,7 +42,6 @@ export function selectDirectionIndex(entityPos, entityFacingYaw, camPos, current
   const halfSector = sectorSize * 0.5;
   const hysteresis = CONFIG.DIRECTIONAL.HYSTERESIS_DEG;
 
-  // Comprobar si seguimos dentro del sector actual + margen de histéresis
   if (currentDir >= 0 && currentDir < numDirs) {
     const centerDeg = currentDir * sectorSize;
     let diff = Math.abs(deg - centerDeg);
@@ -41,33 +54,35 @@ export function selectDirectionIndex(entityPos, entityFacingYaw, camPos, current
   return Math.floor(((deg + halfSector) % 360) / sectorSize);
 }
 
-// Componente Billboard Direccional Reutilizable (soporta 1, 4 u 8 direcciones sin recrear materiales)
+const SHARED_SHADOW_GEO = new THREE.CircleGeometry(0.64, 10);
+const SHARED_SHADOW_MAT = new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.58 });
+
+// Componente Billboard Direccional Optimizado: Comparte la textura original del Atlas sin clonarla
 export function createBillboardSprite(sheetKey, size = 2.0) {
   const group = new THREE.Group();
-  const texCache = {};
-  const glowCache = {};
 
-  function getOrCloneSheet(key) {
-    if (!texCache[key]) {
-      const s = SpriteSheets[key] || SpriteSheets.zombie;
-      const cols = s.cols || 16;
-      const rows = s.rows || 1;
-
-      const t = s.tex.clone();
-      t.repeat.set(1 / cols, 1 / rows);
-      t.needsUpdate = true;
-      texCache[key] = { tex: t, cols, rows, numDirs: s.numDirs || 1 };
-
-      const g = s.glowTex.clone();
-      g.repeat.set(1 / cols, 1 / rows);
-      g.needsUpdate = true;
-      glowCache[key] = g;
+  function getSheetInfo(key) {
+    const s = SpriteSheets[key] || SpriteSheets.zombie;
+    if (s.tex) {
+      s.tex.repeat.set(1, 1);
+      s.tex.offset.set(0, 0);
     }
-    return { ...texCache[key], glowTex: glowCache[key] };
+    if (s.glowTex) {
+      s.glowTex.repeat.set(1, 1);
+      s.glowTex.offset.set(0, 0);
+    }
+    return {
+      tex: s.tex,
+      glowTex: s.glowTex,
+      cols: s.cols || 16,
+      rows: s.rows || 1,
+      numDirs: s.numDirs || 1
+    };
   }
 
-  const initial = getOrCloneSheet(sheetKey);
+  const initial = getSheetInfo(sheetKey);
   const geo = new THREE.PlaneGeometry(size, size);
+  setPlaneFrameUV(geo, initial.cols, initial.rows, 0, 0);
 
   const mat = new THREE.MeshStandardMaterial({
     map: initial.tex,
@@ -90,17 +105,17 @@ export function createBillboardSprite(sheetKey, size = 2.0) {
   const glowMesh = new THREE.Mesh(geo, glowMat);
   glowMesh.position.y = size * 0.5;
 
-  const shadowDisc = new THREE.Mesh(
-    new THREE.CircleGeometry(size * 0.32, 10),
-    new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.58 })
-  );
+  const shadowDisc = new THREE.Mesh(SHARED_SHADOW_GEO, SHARED_SHADOW_MAT);
   shadowDisc.rotation.x = -Math.PI / 2;
   shadowDisc.position.y = 0.02;
+  const initScale = size / 2.0;
+  shadowDisc.scale.set(initScale, initScale, 1);
 
   group.add(mesh, glowMesh, shadowDisc);
 
   return {
     group,
+    geo,
     mesh,
     glowMesh,
     shadowDisc,
@@ -113,25 +128,25 @@ export function createBillboardSprite(sheetKey, size = 2.0) {
     dirRow: 0,
     stateIdx: 0,
     col: 0,
+    lastTotalCol: -1,
+    lastDirRow: -1,
     facingYaw: 0,
     animTimer: Math.random(),
 
     changeSheet(newKey, newSize = 2.0) {
-      const info = getOrCloneSheet(newKey);
-      this.currentKey = newKey;
-      this.tex = info.tex;
-      this.glowTex = info.glowTex;
-      this.cols = info.cols;
-      this.rows = info.rows;
-      this.numDirs = info.numDirs;
+      if (this.currentKey !== newKey) {
+        const info = getSheetInfo(newKey);
+        this.currentKey = newKey;
+        this.tex = info.tex;
+        this.glowTex = info.glowTex;
+        this.cols = info.cols;
+        this.rows = info.rows;
+        this.numDirs = info.numDirs;
+        this.lastTotalCol = -1;
+        this.lastDirRow = -1;
 
-      if (this.mesh.material.map !== this.tex) {
         this.mesh.material.map = this.tex;
-        this.mesh.material.needsUpdate = true;
-      }
-      if (this.glowMesh.material.map !== this.glowTex) {
         this.glowMesh.material.map = this.glowTex;
-        this.glowMesh.material.needsUpdate = true;
       }
 
       const scaleRatio = newSize / 2.0;
@@ -142,20 +157,19 @@ export function createBillboardSprite(sheetKey, size = 2.0) {
       this.shadowDisc.scale.set(scaleRatio, scaleRatio, 1);
     },
 
-    // Actualiza la celda UV combinando la fila de dirección (0..numDirs-1) y el estado/frame sin reiniciar animTimer
     setDirectionalFrame(dirRow, stateIdx, frameInState) {
       this.dirRow = Math.max(0, Math.min(this.rows - 1, dirRow));
       this.stateIdx = stateIdx;
       this.col = frameInState % 4;
 
       const totalCol = this.stateIdx * 4 + this.col;
-      const u = totalCol / this.cols;
-      const v = 1 - (this.dirRow + 1) / this.rows;
-      this.tex.offset.set(u, v);
-      this.glowTex.offset.set(u, v);
+      if (totalCol === this.lastTotalCol && this.dirRow === this.lastDirRow) return;
+      this.lastTotalCol = totalCol;
+      this.lastDirRow = this.dirRow;
+
+      setPlaneFrameUV(this.geo, this.cols, this.rows, totalCol, this.dirRow);
     },
 
-    // Orientación Billboard (siempre perpendicular a la cámara) + selección de vista por ángulo relativo
     faceCamera(camPos) {
       const angle = Math.atan2(camPos.x - this.group.position.x, camPos.z - this.group.position.z);
       this.mesh.rotation.y = angle;
@@ -198,7 +212,8 @@ export class Enemy {
     }
 
     if (this.isBoss) {
-      this.hp = bossCfg.hp;
+      // Escalado de vida para que los Bosses aguanten el DPS de las armas mejoradas y se aprecie su barra
+      this.hp = Math.round(bossCfg.hp * (1.35 + mins * 0.18));
       this.maxHp = this.hp;
       this.dmg = bossCfg.dmg;
       this.speed = bossCfg.speed;
