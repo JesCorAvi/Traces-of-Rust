@@ -1,3 +1,5 @@
+// Modo Supervivencia: bosses programados, spawns continuos y fase final.
+// Exports: SurvivalMode.
 import * as THREE from 'three';
 import { CONFIG, MODES_CONFIG } from '../config.js';
 import { AudioSys } from '../audio.js';

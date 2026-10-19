@@ -1,3 +1,5 @@
+// Base de estructuras defensivas: HP, escudo, reducción de daño, colisión y destrucción.
+// Exports: DefensiveStructure.
 import * as THREE from 'three';
 import { GameEvents } from '../core/eventBus.js';
 

@@ -1,3 +1,5 @@
+// Rutas de oleadas, waypoints y marcadores visuales del suelo.
+// Exports: PathSystem.
 import * as THREE from 'three';
 import { CORE_DEFENSE_CONFIG } from '../config/coreDefenseConfig.js';
 import { SpriteSheets } from '../spritesheets.js';

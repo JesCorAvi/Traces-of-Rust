@@ -1,3 +1,5 @@
+// Pantalla de resultados de partida (victoria/derrota y recompensas).
+// Exports: presentRunResultsScreen.
 import { CONFIG } from '../config.js';
 import { renderSpriteIconHTML, renderSpriteBadgeHTML } from '../spritesheets.js';
 

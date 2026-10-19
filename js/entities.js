@@ -1,3 +1,5 @@
+// Billboards 2D, enemigos y pool de enemigos.
+// Exports: setPlaneFrameUV, selectDirectionIndex, createBillboardSprite, Enemy, EnemyPool.
 import * as THREE from 'three';
 import { CONFIG } from './config.js';
 import { SpriteSheets } from './spritesheets.js';

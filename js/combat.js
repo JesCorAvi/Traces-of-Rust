@@ -1,3 +1,5 @@
+// Armas, proyectiles, VFX y recursos compartidos de combate.
+// Exports: SHARED_GEO, SHARED_MAT, initCombatLight, triggerCombatFlash, updateCombatLight, armas del jugador y triggerBossSpecialAttack.
 import * as THREE from 'three';
 import { CONFIG } from './config.js';
 import { SpriteSheets } from './spritesheets.js';

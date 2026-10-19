@@ -1,3 +1,5 @@
+// Registro y delegación de los modos de juego activos.
+// Exports: ModeManager.
 import { MODES_CONFIG } from '../config.js';
 import { GameEvents } from '../core/eventBus.js';
 import { SurvivalMode } from './survivalMode.js';

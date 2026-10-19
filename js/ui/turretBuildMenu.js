@@ -1,3 +1,5 @@
+// Panel DOM de construcción, mejora y venta de torretas.
+// Exports: TurretBuildMenu.
 import { CORE_DEFENSE_CONFIG } from '../config/coreDefenseConfig.js';
 import { AudioSys } from '../audio.js';
 import { renderSpriteIconHTML } from '../spritesheets.js';

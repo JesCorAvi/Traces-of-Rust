@@ -1,3 +1,5 @@
+// LEGACY MUERTO: no importado por el juego; carga assets/ y models/ antiguos. No leer ni usar.
+// Exports: Textures, ModelFactory.
 import * as THREE from 'three';
 
 const loader = new THREE.TextureLoader();

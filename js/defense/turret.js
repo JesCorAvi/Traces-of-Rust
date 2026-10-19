@@ -1,3 +1,5 @@
+// Torreta: modelo 3D, sprite procedural, estadísticas, mejoras y disparo.
+// Exports: Turret.
 import * as THREE from 'three';
 import { CORE_DEFENSE_CONFIG } from '../config/coreDefenseConfig.js';
 import { DefensiveStructure } from './defensiveStructure.js';

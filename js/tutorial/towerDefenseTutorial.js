@@ -1,3 +1,5 @@
+// Tutorial interactivo opcional del modo Defensa (construcción, mejoras, sinergias y oleada de práctica).
+// Exports: TowerDefenseTutorial.
 import * as THREE from 'three';
 import { CORE_DEFENSE_CONFIG } from '../config/coreDefenseConfig.js';
 import { AudioSys } from '../audio.js';

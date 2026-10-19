@@ -1,3 +1,5 @@
+// Actualización de armas, minas, orbitales, hazards y VFX del jugador.
+// Exports: updatePlayerWeaponsAndCombat.
 import * as THREE from 'three';
 import { CONFIG } from '../config.js';
 import { AudioSys } from '../audio.js';

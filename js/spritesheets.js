@@ -1,3 +1,5 @@
+// Registro de SpriteSheets y utilidades CSS/HTML para iconos y UI.
+// Exports: SpriteSheets, initUISpritesCSS, refreshStaticDOMIcons, renderSpriteIconHTML, renderSpriteBadgeHTML, getPlayerLoadoutSheet, peekPlayerLoadoutSheet.
 import { CONFIG } from './config.js';
 import { getPlayerLoadoutSheet, peekPlayerLoadoutSheet } from './sprites/playerSprites.js';
 import { buildEnemyDirectionalSheet, buildEnvironmentTextures } from './sprites/entitySprites.js';

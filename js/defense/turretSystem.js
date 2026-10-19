@@ -1,3 +1,5 @@
+// Colocación libre de torretas, validación de terreno, combate, aliados y VFX.
+// Exports: TurretSystem.
 import * as THREE from 'three';
 import { CORE_DEFENSE_CONFIG } from '../config/coreDefenseConfig.js';
 import { Turret } from './turret.js';

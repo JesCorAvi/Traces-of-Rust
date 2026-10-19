@@ -1,3 +1,5 @@
+// Escena, luces, geometría industrial y física del mundo (suelo, rampas, colisión).
+// Exports: createWorld.
 import * as THREE from 'three';
 import { SpriteSheets } from './spritesheets.js';
 import { CORE_DEFENSE_CONFIG } from './config/coreDefenseConfig.js';

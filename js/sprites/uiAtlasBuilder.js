@@ -1,3 +1,5 @@
+// Atlas maestro 512x512 de UI: paneles, slots, iconos, barras, badges y cursores.
+// Exports: buildMasterUIAtlas.
 import { CONFIG } from '../config.js';
 import { applyIcon16Outline } from './spritePalette.js';
 

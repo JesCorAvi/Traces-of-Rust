@@ -1,3 +1,5 @@
+// Tropa aliada del Cuartel (guardia/élite/dron) con HP, targeting y ataque.
+// Exports: AllyUnit.
 import * as THREE from 'three';
 import { createBillboardSprite } from '../entities.js';
 import { AudioSys } from '../audio.js';

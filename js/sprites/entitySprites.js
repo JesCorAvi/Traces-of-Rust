@@ -1,3 +1,5 @@
+// Sprites procedurales de enemigos, entorno, armas y pickups.
+// Exports: buildEnemyDirectionalSheet, buildEnvironmentTextures.
 import { CONFIG } from '../config.js';
 import {
   applyEnvironmentDither,

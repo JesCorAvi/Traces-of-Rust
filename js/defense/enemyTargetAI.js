@@ -1,3 +1,5 @@
+// IA de objetivo enemigo (núcleo, jugador, torretas/aliados) y navegación por waypoints.
+// Exports: TARGET_KIND, getEnemyTargetingProfile, initEnemyDefenseState, evaluateEnemyTarget, resolveEnemyNavigationGoal.
 import * as THREE from 'three';
 import { CORE_DEFENSE_CONFIG } from '../config/coreDefenseConfig.js';
 import { AudioSys } from '../audio.js';

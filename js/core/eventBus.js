@@ -1,3 +1,5 @@
+// Bus de eventos con suscripción, emisión y limpieza centralizada.
+// Exports: EventBus, GameEvents.
 // ============================================================================
 // BUS DE EVENTOS CENTRALIZADO (Desacopla Núcleo, Oleadas, IA, Modos y HUD)
 // ============================================================================

@@ -1,3 +1,5 @@
+// Punto de entrada: escena, renderer, bucle, cámara, input, jugador, drops y wiring de UI.
+// No exporta módulos; inicializa el juego al cargar.
 import * as THREE from 'three';
 import { CONFIG } from './config.js';
 import { AudioSys } from './audio.js';

@@ -1,0 +1,32 @@
+# Dependencias y artefactos de build
+node_modules/
+dist/
+build/
+.cache/
+.vite/
+coverage/
+
+# Logs y entorno
+*.log
+.env
+.env.*
+!.env.example
+
+# Lockfiles (el proyecto no usa npm actualmente)
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+*.lock
+
+# Sistema operativo / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Configuración local de Claude Code
+.claude/settings.local.json
+
+# Assets legacy sin uso (siguen trackeados hasta la Fase 3)
+assets/
+models/

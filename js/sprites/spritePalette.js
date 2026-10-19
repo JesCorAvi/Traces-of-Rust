@@ -1,3 +1,5 @@
+// Paleta, dithering, contornos y helper de texturas pixel-art.
+// Exports: BAYER4, PAL, applyEnvironmentDither, applyCleanSpriteOutlineRect, applyIcon16Outline, makeTexture.
 import * as THREE from 'three';
 
 export const BAYER4 = [

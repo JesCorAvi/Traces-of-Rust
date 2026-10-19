@@ -1,3 +1,5 @@
+// Menú principal, selector de modo, tienda permanente y cartas de subida de nivel.
+// Exports: loadCareerStatsByMode, saveCareerStatsByMode, renderModeSelectorUI, updateCareerDossierForSelectedMode, renderShopUI, buildAvailableUpgradePool, renderLevelUpCardsUI.
 import { CONFIG, MODES_CONFIG } from '../config.js';
 import { AudioSys } from '../audio.js';
 import { renderSpriteIconHTML, renderSpriteBadgeHTML } from '../spritesheets.js';

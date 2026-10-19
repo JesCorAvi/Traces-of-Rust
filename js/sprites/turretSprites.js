@@ -1,3 +1,5 @@
+// Sprites procedurales de torretas y tropas aliadas.
+// Exports: buildTurretSheets, buildAllyDirectionalSheets.
 import { CONFIG } from '../config.js';
 import { applyCleanSpriteOutlineRect, makeTexture } from './spritePalette.js';
 

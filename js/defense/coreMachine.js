@@ -1,3 +1,5 @@
+// Reactor central: modelo industrial, estados de daño, luces y eventos del núcleo.
+// Exports: CoreMachine.
 import * as THREE from 'three';
 import { CORE_DEFENSE_CONFIG } from '../config/coreDefenseConfig.js';
 import { SpriteSheets } from '../spritesheets.js';

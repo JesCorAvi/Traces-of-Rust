@@ -1,3 +1,5 @@
+// Modo Defender el Núcleo: sistemas de defensa, oleadas, economía y torretas.
+// Exports: CoreDefenseMode.
 import * as THREE from 'three';
 import { MODES_CONFIG, CORE_DEFENSE_CONFIG } from '../config.js';
 import { AudioSys } from '../audio.js';

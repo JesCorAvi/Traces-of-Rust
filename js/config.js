@@ -1,3 +1,5 @@
+// Configuración global CONFIG y reexport de las configuraciones de cada modo.
+// Exports: CONFIG, MODES_CONFIG, CORE_DEFENSE_CONFIG.
 import { MODES_CONFIG } from './config/modesConfig.js';
 import { CORE_DEFENSE_CONFIG } from './config/coreDefenseConfig.js';
 

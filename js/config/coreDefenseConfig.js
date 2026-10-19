@@ -1,3 +1,5 @@
+// Configuración del modo Defensa: núcleo, rutas, oleadas, torretas, mejoras, colocación y tutorial.
+// Exports: CORE_DEFENSE_CONFIG.
 // ============================================================================
 // CONFIGURACIÓN CENTRALIZADA DEL MODO "DEFENDER EL NÚCLEO"
 // ============================================================================

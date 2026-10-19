@@ -1,3 +1,5 @@
+// Compuertas de aparición, efectos de emergencia y luces de portal.
+// Exports: SpawnPointSystem.
 import * as THREE from 'three';
 import { CORE_DEFENSE_CONFIG } from '../config/coreDefenseConfig.js';
 import { SpriteSheets } from '../spritesheets.js';

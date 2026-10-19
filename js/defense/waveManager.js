@@ -1,3 +1,5 @@
+// Máquina de estados de oleadas, cola de spawns y escalado de dificultad.
+// Exports: WaveManager.
 import * as THREE from 'three';
 import { CONFIG } from '../config.js';
 import { CORE_DEFENSE_CONFIG } from '../config/coreDefenseConfig.js';

@@ -1,3 +1,5 @@
+// Catálogo de modos y configuración del modo Supervivencia.
+// Exports: MODES_CONFIG.
 // ============================================================================
 // CONFIGURACIÓN DE MODOS DE JUEGO Y PARÁMETROS DEL MODO SUPERVIVENCIA
 // ============================================================================

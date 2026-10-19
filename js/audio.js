@@ -1,3 +1,5 @@
+// Audio sintetizado con WebAudio (osciladores, ruido y helpers de UI).
+// Exports: AudioSys.
 export const AudioSys = {
   ctx: null,
   humOsc: null,

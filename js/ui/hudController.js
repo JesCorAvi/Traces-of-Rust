@@ -1,3 +1,5 @@
+// HUD: stats, núcleo, radar, inventario, avisos y prompts de torretas.
+// Exports: HUDController, SHORT_WEAPON_NAMES.
 import * as THREE from 'three';
 import { CONFIG } from '../config.js';
 import { renderSpriteIconHTML } from '../spritesheets.js';

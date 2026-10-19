@@ -1,3 +1,5 @@
+// Visualización 3D de rutas, waypoints, objetivos y radios de IA.
+// Exports: DebugOverlay.
 import * as THREE from 'three';
 import { CORE_DEFENSE_CONFIG } from '../config.js';
 import { AudioSys } from '../audio.js';
