@@ -8,26 +8,28 @@ Juego web 3D de terror/supervivencia + tower defense con Three.js. Sin bundler n
 ## Estructura
 - `index.html`: canvas, HUD, menús, overlays y paneles de torretas/tutorial.
 - `css/style.css`: base visual, HUD global, botones y barras. `css/hud_modes.css`: HUD por modo, tienda, torretas y tutorial.
-- `js/main.js`: arranque, bucle, cámara, input, jugador, drops, estado de run y wiring de UI.
-- `js/config.js`: CONFIG global + reexport de configs. `js/config/modesConfig.js`: catálogo y Supervivencia. `js/config/coreDefenseConfig.js`: Defensa, torretas, mejoras, colocación y tutorial.
+- `js/main.js`: bootstrap, runtime compartido, cámara, bucle de render y wiring de módulos.
+- `js/core/`: `saveState` (save/settings/carrera), `input` (teclado/ratón/pointer lock), `gameFlow` (inicio/fin/pausa/menú/botones).
+- `js/gameplay/`: `modifiers`, `pickups`, `combatRuntime`, `playerVisuals`, `levelUp`.
+- `js/config.js`: CONFIG global + reexport. `js/config/modesConfig.js`: catálogo y Supervivencia. `js/config/coreDefense/`: `core`, `routes`, `waves`, `economy`, `placement`, `tutorial`, `turrets` (barrel en `coreDefenseConfig.js`).
 - `js/core/eventBus.js`: bus de eventos (`GameEvents`).
-- `js/world.js`: escena, luces, geometría y `worldPhysics` (suelo, rampas, colisión).
-- `js/entities.js`: billboards, `Enemy`, `EnemyPool`.
-- `js/combat.js`: armas, proyectiles, VFX y recursos compartidos.
+- `js/world.js`: orquesta `world/` (`scene`, `materials`, `geometry`, `physics`, `lights`, `props`, `dust`, `routeClearance`).
+- `js/entities.js`: barrel de `entities/` (`billboard`, `enemy`, `enemyPool`).
+- `js/combat.js`: barrel de `combat/` (`shared`, `weapons/*`, `bossAttacks`).
 - `js/player/playerController.js`: actualización de armas del jugador.
-- `js/modes/`: `gameModeManager` (registro), `survivalMode`, `coreDefenseMode`.
-- `js/defense/`: `defensiveStructure` (base), `coreMachine` (reactor), `turret`, `turretSystem` (colocación/combate), `allyUnit`, `enemyTargetAI`, `pathSystem`, `spawnPointSystem`, `waveManager`.
-- `js/sprites/`: `spritePalette` (paleta/outline), `playerSprites`, `entitySprites`, `turretSprites`, `uiAtlasBuilder`. `js/spritesheets.js`: registro de hojas/iconos.
-- `js/ui/`: `hudController` (HUD), `menusAndShop` (menú/tienda/level-up), `resultsScreen`, `turretBuildMenu`.
+- `js/modes/`: `gameModeManager`, `survivalMode`, `coreDefenseMode`, `enemyLoop`.
+- `js/defense/`: `defensiveStructure` (base), `coreMachine`, `turret`, `turretSystem`, `allyUnit`, `enemyTargetAI`, `pathSystem`, `spawnPointSystem`, `waveManager`; subcarpetas `turrets/` y `turretSystem/`.
+- `js/sprites/`: `spritePalette` y subcarpetas `entity/`, `player/`, `turret/`, `ui/`; barrels `entitySprites.js`, `playerSprites.js`, `turretSprites.js`, `uiAtlasBuilder.js`; registro en `spritesheets.js`.
+- `js/ui/`: `hudController` + `hud/` (`stats`, `radar`), `menusAndShop`, `resultsScreen`, `turretBuildMenu`.
 - `js/tutorial/towerDefenseTutorial.js`: tutorial interactivo de Defensa.
-- `js/debug/debugOverlay.js`: debug de rutas/IA.
-- `js/audio.js`: audio WebAudio sintetizado (`AudioSys`).
+- `js/debug/debugOverlay.js`: debug de rutas/IA. `js/audio.js`: audio WebAudio sintetizado.
+- `js/utils/`: `routeMath` (proyección punto-segmento) y `dispose` (liberar Object3D).
 
 ## Sistemas
-- Render: `world.js` + `main.js` (renderer/cámara). Input: listeners de `main.js` y variable `state`.
-- Física: `worldPhysics` en `world.js` (`getGroundHeight`, `resolveCollision`, `isRampAt`).
-- UI: `index.html`, `css/*`, `js/ui/*`. Audio: `js/audio.js` (sin ficheros).
-- Estado/modos: `ModeManager`; run/stats en `main.js`; configuración en `js/config*`.
+- Render: `world.js` + `main.js` (renderer/cámara). Input: `core/input.js`.
+- Física: `worldPhysics` en `world/physics.js` (`getGroundHeight`, `resolveCollision`, `isRampAt`).
+- UI: `index.html`, `css/*`, `js/ui/*`. Audio: `js/audio.js`.
+- Estado/modos: `ModeManager`; flujo en `core/gameFlow.js`; run/stats en `main.js`; config en `js/config*`.
 - Arte: procedural en `js/sprites/*`; no hay texturas externas.
 
 ## Convenciones
