@@ -22,8 +22,6 @@ import { DebugOverlay } from './debug/debugOverlay.js';
 import { HUDController } from './ui/hudController.js';
 import { TurretBuildMenu } from './ui/turretBuildMenu.js';
 import {
-  loadCareerStatsByMode,
-  saveCareerStatsByMode,
   renderModeSelectorUI,
   updateCareerDossierForSelectedMode,
   renderShopUI,
@@ -31,21 +29,11 @@ import {
 } from './ui/menusAndShop.js';
 import { presentRunResultsScreen } from './ui/resultsScreen.js';
 import { updatePlayerWeaponsAndCombat } from './player/playerController.js';
-
-let save = JSON.parse(localStorage.getItem(CONFIG.SAVE_KEY)) || {
-  souls: 0, dmg: 0, hp: 0, spd: 0, atkSpd: 0, mag: 0, reroll: 0
-};
-const saveGame = () => localStorage.setItem(CONFIG.SAVE_KEY, JSON.stringify(save));
-
-let gameSettings = JSON.parse(localStorage.getItem('echoes_rust_settings_v1')) || {
-  masterVol: 85, sfxVol: 90, ambVol: 80, muted: false,
-  resScale: 0.44, fov: 70, shadows: true, crt: true, fpsCounter: false,
-  mouseSens: 100, camShake: 100
-};
-const saveSettings = () => localStorage.setItem('echoes_rust_settings_v1', JSON.stringify(gameSettings));
-
-let careerByMode = loadCareerStatsByMode();
-const saveCareer = () => saveCareerStatsByMode(careerByMode);
+import { save, saveGame, gameSettings, saveSettings, careerByMode, saveCareer } from './core/saveState.js';
+import { getActiveModifiers } from './gameplay/modifiers.js';
+import { createPickupSystem } from './gameplay/pickups.js';
+import { keys, setupInput } from './core/input.js';
+import { setupGameFlow } from './core/gameFlow.js';
 
 // Escena 3D Industrial con Relieve y Física
 const { scene, ambientLight, propBillboards, ceilingLights, dust, worldPhysics } = createWorld();
@@ -174,92 +162,13 @@ let fpsFrames = 0, fpsTimer = 0;
 const weaponTimers = { slash: 0, shotgun: 0, flamethrower: 0, aura: 0, mines: 0, harpoon: 0, bolt: 0 };
 const drops = [], orbitals = [], minesList = [], vfx = [], bossHazards = [], bossProjectiles = [];
 
-const PICKUP_ASSETS = {
-  smallGeo:  new THREE.PlaneGeometry(0.9, 0.9),
-  chestGeo:  new THREE.PlaneGeometry(1.45, 1.45),
-  shadowGeo: new THREE.CircleGeometry(0.32, 10),
-  shadowMat: new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.58 }),
-  mats:      {},
-  texs:      {}
-};
-
-[
-  { key: 'serum', sheet: SpriteSheets.env.pickup_serum },
-  { key: 'tooth', sheet: SpriteSheets.env.pickup_tooth },
-  { key: 'chest', sheet: SpriteSheets.env.pickup_chest },
-  { key: 'scrap', sheet: SpriteSheets.env.pickup_scrap }
-].forEach(({ key, sheet }) => {
-  const t = sheet.tex;
-  t.repeat.set(0.25, 1); t.offset.set(0, 0);
-  PICKUP_ASSETS.texs[key] = t;
-  PICKUP_ASSETS.mats[key] = new THREE.MeshBasicMaterial({
-    map: t, transparent: true, alphaTest: 0.15, side: THREE.DoubleSide
-  });
-});
-
-function spawnLorePickup(originPos, type = 'serum', value = 1) {
-  // Limita la chatarra física simultánea para no saturar la escena
-  if (type === 'scrap' && drops.length >= (CONFIG.CORE_DEFENSE.SCRAP.maxActivePickups || 40)) {
-    return;
-  }
-
-  const group = new THREE.Group();
-  const isChest = type === 'chest';
-  const isTooth = type === 'tooth';
-  const isScrap = type === 'scrap';
-  const groundY = worldPhysics ? worldPhysics.getGroundHeight(originPos.x, originPos.z, originPos.y) : originPos.y;
-  group.position.set(originPos.x, groundY, originPos.z);
-
-  const spriteMesh = new THREE.Mesh(
-    isChest ? PICKUP_ASSETS.chestGeo : PICKUP_ASSETS.smallGeo,
-    PICKUP_ASSETS.mats[type] || PICKUP_ASSETS.mats.serum
-  );
-  const baseHeight = isChest ? 0.72 : (isScrap ? 0.42 : 0.48);
-  spriteMesh.position.y = baseHeight;
-
-  const shadowDisc = new THREE.Mesh(PICKUP_ASSETS.shadowGeo, PICKUP_ASSETS.shadowMat);
-  shadowDisc.rotation.x = -Math.PI / 2;
-  shadowDisc.position.y = 0.025;
-  if (isChest) shadowDisc.scale.set(1.6, 1.6, 1);
-  if (isScrap) shadowDisc.scale.set(0.75, 0.75, 1);
-
-  group.add(spriteMesh, shadowDisc);
-  scene.add(group);
-  drops.push({
-    group, spriteMesh, shadowDisc, baseHeight,
-    bobPhase: Math.random() * Math.PI * 2,
-    age: 0,
-    isBossChest: isChest,
-    isTooth,
-    isScrap,
-    value: Math.max(1, value)
-  });
-}
+const pickupSystem = createPickupSystem({ scene, worldPhysics, drops });
+const spawnLorePickup = pickupSystem.spawnLorePickup;
 
 function cleanupVfxItem(v) {
   scene.remove(v.mesh);
   if (v.disposeGeo && v.mesh.geometry) v.mesh.geometry.dispose();
   if (v.disposeMat && v.mesh.material) v.mesh.material.dispose();
-}
-
-function getActiveModifiers() {
-  const permDmg = 1 + (save.dmg || 0) * 0.03;
-  const permAtkSpd = 1 + (save.atkSpd || 0) * 0.025;
-  const permMoveSpd = 1 + (save.spd || 0) * 0.02;
-  const permMag = (save.mag || 0) * 0.35;
-  const shakeMod = (gameSettings.camShake ?? 100) / 100;
-
-  return {
-    dmgMult: permDmg * (1 + (passives.dmg || 0) * CONFIG.PASSIVES.dmg.perLevel),
-    atkSpeedMult: permAtkSpd * (1 + (passives.atkSpd || 0) * CONFIG.PASSIVES.atkSpd.perLevel),
-    moveSpeed: 6.3 * permMoveSpd * (1 + (passives.moveSpd || 0) * CONFIG.PASSIVES.moveSpd.perLevel),
-    areaMult: 1 + (passives.area || 0) * CONFIG.PASSIVES.area.perLevel,
-    critChance: (passives.crit || 0) * CONFIG.PASSIVES.crit.perLevel,
-    magnetRange: 5.8 + permMag + (passives.magnet || 0) * CONFIG.PASSIVES.magnet.perLevel,
-    regenPerSec: (passives.regen || 0) * CONFIG.PASSIVES.regen.perLevel,
-    bonusProjectiles: (passives.multishot || 0) * CONFIG.PASSIVES.multishot.perLevel,
-    shakeMod
-  };
 }
 
 function syncOrbitalsCount() {
@@ -276,7 +185,7 @@ function triggerWeaponVisualAttack(weaponId, _targetYaw = null, animDuration = 0
 }
 
 function triggerScare(intensity = 0.42) {
-  const mods = getActiveModifiers();
+  const mods = getActiveModifiers(save, gameSettings, passives);
   camShake = Math.max(camShake, intensity * mods.shakeMod);
   if (mods.shakeMod <= 0) return;
   camera.fov = 56;
@@ -341,7 +250,7 @@ function buildModeContext(camFwd = new THREE.Vector3(0, 0, -1)) {
       AudioSys.playUISelect();
       refreshHUD();
     },
-    triggerRunEnd: outcome => finishRun(outcome),
+    triggerRunEnd: outcome => flowRuntime.finishRun(outcome),
     tutorialRequested: pendingTutorial
   };
 }
@@ -358,7 +267,7 @@ function refreshHUD(includeInventory = false) {
 
 function damageEnemy(en, amount, knockback, isDoT = false) {
   if (!en.active || en.state === 'dead') return;
-  const mods = getActiveModifiers();
+  const mods = getActiveModifiers(save, gameSettings, passives);
   const isCrit = !isDoT && Math.random() < mods.critChance;
   en.hp -= isCrit ? amount * 2.0 : amount;
 
@@ -463,251 +372,6 @@ document.getElementById('btn-reroll').onclick = () => {
   refreshHUD();
 };
 
-function clearSharedRunState() {
-  ModeManager.cleanupActiveMode(buildModeContext());
-  enemyPool.clearAll();
-  drops.forEach(d => scene.remove(d.group)); drops.length = 0;
-  orbitals.forEach(o => { scene.remove(o.group); o.geo.dispose(); }); orbitals.length = 0;
-  minesList.forEach(m => scene.remove(m.group)); minesList.length = 0;
-  vfx.forEach(v => cleanupVfxItem(v)); vfx.length = 0;
-  bossHazards.forEach(h => { scene.remove(h.mesh); h.mesh.geometry.dispose(); h.mesh.material.dispose(); }); bossHazards.length = 0;
-  bossProjectiles.forEach(p => { scene.remove(p.mesh); p.mesh.material.dispose(); }); bossProjectiles.length = 0;
-  activeBoss = null;
-  auraMesh.visible = false;
-  debugOverlay.clearDynamicMeshes();
-}
-
-function startGame(options = {}) {
-  pendingTutorial = !!options.tutorial;
-  AudioSys.init();
-  clearSharedRunState();
-
-  const modeId = ModeManager.getSelectedModeId();
-  careerByMode[modeId].runs = (careerByMode[modeId].runs || 0) + 1;
-  saveCareer();
-
-  const baseHp = 100 + (save.hp || 0) * 5;
-  stats = { maxHp: baseHp, hp: baseHp, stamina: 100, level: 1, exp: 0, maxExp: 5 };
-  skills = { slash: 1 };
-  passives = {};
-  Object.keys(weaponTimers).forEach(k => { weaponTimers[k] = 0; });
-  maxRerollsRun = CONFIG.LIMITS.REROLLS_PER_RUN + Math.min(3, save.reroll || 0);
-  rerollsLeft = maxRerollsRun;
-  currentHandWeapon = 'slash';
-  yaw = 0; playerFacingYaw = 0; dashTimer = 0; playerYVel = 0;
-  gameTime = 0; runSouls = 0; kills = 0;
-
-  prewarmLoadoutSheets();
-  syncPlayerVisualLoadout('slash');
-
-  ModeManager.startActiveMode(buildModeContext());
-  pendingTutorial = false;
-  hudController.applyModeLayout(ModeManager.getHudConfig());
-  debugOverlay.rebuildStaticPaths(modeId, worldPhysics);
-
-  document.querySelectorAll('.overlay').forEach(el => el.classList.add('hidden'));
-  document.getElementById('hud').classList.remove('hidden');
-  refreshHUD(true);
-  refreshStaticDOMIcons();
-  state = 'PLAYING';
-  document.body.requestPointerLock();
-}
-
-function finishRun(outcome) {
-  if (state === 'GAME_OVER') return;
-  state = 'GAME_OVER';
-  if (document.pointerLockElement) document.exitPointerLock();
-
-  save.souls = (save.souls || 0) + runSouls;
-  saveGame();
-
-  presentRunResultsScreen({
-    outcome, stats, skills, passives, kills, runSouls,
-    totalSouls: save.souls, gameTime, careerByMode, saveCareerFn: saveCareer
-  });
-}
-
-function returnToMainMenu() {
-  AudioSys.playUISelect();
-  clearSharedRunState();
-  state = 'START';
-  playerGroup.position.set(0, 0, 0);
-  document.querySelectorAll('.overlay').forEach(el => el.classList.add('hidden'));
-  document.getElementById('hud').classList.add('hidden');
-  document.getElementById('start-screen').classList.remove('hidden');
-  renderModeSelectorUI(careerByMode);
-  updateCareerDossierForSelectedMode(careerByMode);
-  renderShopUI(save, saveGame);
-}
-
-function togglePauseGame() {
-  if (state === 'PLAYING') {
-    state = 'PAUSED';
-    AudioSys.playPause();
-    if (document.pointerLockElement) document.exitPointerLock();
-    document.getElementById('pause-screen').classList.remove('hidden');
-    document.getElementById('btn-resume')?.focus();
-  } else if (state === 'PAUSED') {
-    state = 'PLAYING';
-    AudioSys.playPause();
-    document.getElementById('pause-screen').classList.add('hidden');
-    document.body.requestPointerLock();
-  }
-}
-
-function openTurretBuildMenu(nearbyTurret = null) {
-  if (state !== 'PLAYING') return;
-  state = 'BUILD';
-  if (document.pointerLockElement) document.exitPointerLock();
-  document.getElementById('turret-interact-prompt')?.classList.add('hidden');
-  turretBuildMenu.open(ModeManager.activeMode, nearbyTurret, () => {
-    state = 'PLAYING';
-    document.body.requestPointerLock();
-  });
-}
-
-const keys = {};
-window.addEventListener('keydown', e => {
-  if (e.key === 'F3' || (e.key.toLowerCase() === 'b' && state === 'PLAYING')) {
-    e.preventDefault();
-    debugOverlay.toggle();
-    return;
-  }
-  if (e.key === 'Tab' && state !== 'LEVEL_UP') {
-    e.preventDefault();
-    const modal = document.getElementById('sheets-modal');
-    const isHidden = modal.classList.toggle('hidden');
-    if (!isHidden && document.pointerLockElement) document.exitPointerLock();
-    return;
-  }
-
-  const k = e.key.toLowerCase();
-
-  if (state === 'BUILD') {
-    if (k === 'e' || k === 'escape') {
-      e.preventDefault();
-      turretBuildMenu.close();
-    }
-    return;
-  }
-
-  if (state === 'PLAYING' && ModeManager.getSelectedModeId() === 'core_defense') {
-    const mode = ModeManager.activeMode;
-    if (mode?.handleTutorialKey?.(k)) {
-      e.preventDefault();
-      return;
-    }
-    if (mode?.isTurretPlacementActive?.()) {
-      if (k === 'e') {
-        e.preventDefault();
-        mode.confirmTurretPlacement();
-        return;
-      }
-      if (k === 'escape') {
-        e.preventDefault();
-        mode.cancelTurretPlacement();
-        document.body.requestPointerLock();
-        return;
-      }
-    }
-  }
-
-  if (state === 'LEVEL_UP') {
-    const cards = Array.from(document.querySelectorAll('#upgrade-container .upg-card'));
-    if (['1', '2', '3', '4'].includes(k)) {
-      const idx = parseInt(k, 10) - 1;
-      if (cards[idx]) { e.preventDefault(); cards[idx].click(); }
-      return;
-    }
-    if (k === 'r') { e.preventDefault(); document.getElementById('btn-reroll')?.click(); return; }
-    return;
-  }
-
-  if (k === 'p' && (state === 'PLAYING' || state === 'PAUSED')) {
-    e.preventDefault();
-    togglePauseGame();
-    return;
-  }
-
-  if (k === 'e' && state === 'PLAYING' && ModeManager.getSelectedModeId() === 'core_defense') {
-    const mode = ModeManager.activeMode;
-    if (mode?.isTurretPlacementActive?.()) {
-      e.preventDefault();
-      mode.confirmTurretPlacement();
-      return;
-    }
-    const nearby = mode?.getNearbyTurret?.(playerGroup.position) || null;
-    e.preventDefault();
-    openTurretBuildMenu(nearby);
-    return;
-  }
-
-  keys[k] = true;
-  if (state !== 'PLAYING') return;
-
-  if (k === 'shift' && dashCd <= 0 && stats.stamina >= 35 && dashTimer <= 0) {
-    stats.stamina -= 35;
-    document.getElementById('stam-bar').style.width = Math.max(0, stats.stamina) + '%';
-    dashCd = 0.85; dashTimer = 0.22; dashGhostTimer = 0; invuln = 0.35;
-    const camFwd = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), yaw);
-    const camRight = new THREE.Vector3(1, 0, 0).applyAxisAngle(new THREE.Vector3(0, 1, 0), yaw);
-    dashDirVec.set(0, 0, 0);
-    if (keys.w) dashDirVec.add(camFwd);
-    if (keys.s) dashDirVec.sub(camFwd);
-    if (keys.d) dashDirVec.add(camRight);
-    if (keys.a) dashDirVec.sub(camRight);
-    if (dashDirVec.lengthSq() > 0) {
-      dashDirVec.normalize();
-      playerFacingYaw = Math.atan2(-dashDirVec.x, -dashDirVec.z);
-    } else {
-      dashDirVec.set(-Math.sin(playerFacingYaw), 0, -Math.cos(playerFacingYaw)).normalize();
-    }
-    camera.fov = 77;
-    camera.updateProjectionMatrix();
-    AudioSys.play(340, 0.11, 'triangle', 0.07);
-  }
-  if (e.code === 'Space' && isGrounded) {
-    playerYVel = 9.2;
-    isGrounded = false;
-    AudioSys.play(220, 0.1, 'sine');
-  }
-});
-window.addEventListener('keyup', e => { keys[e.key.toLowerCase()] = false; });
-document.addEventListener('mousemove', e => {
-  if (document.pointerLockElement === document.body && state === 'PLAYING') {
-    const sens = (gameSettings.mouseSens || 100) / 100;
-    yaw -= e.movementX * 0.0028 * sens;
-    pitch = Math.max(-0.95, Math.min(0.5, pitch - e.movementY * 0.0024 * sens));
-  }
-});
-
-window.addEventListener('mousedown', e => {
-  if (state !== 'PLAYING') return;
-  const mode = ModeManager.activeMode;
-
-  if (mode?.isTurretPlacementActive?.()) {
-    if (e.button === 0) {
-      e.preventDefault();
-      mode.confirmTurretPlacement();
-    } else if (e.button === 2) {
-      e.preventDefault();
-      mode.cancelTurretPlacement();
-    }
-    return;
-  }
-
-  // Recuperar el pointer lock si se perdió (por ejemplo al cancelar una colocación)
-  if (e.button === 0 && !document.pointerLockElement) {
-    document.body.requestPointerLock();
-  }
-});
-
-window.addEventListener('contextmenu', e => {
-  if (state === 'PLAYING' && ModeManager.activeMode?.isTurretPlacementActive?.()) {
-    e.preventDefault();
-  }
-});
-
 const clock = new THREE.Clock();
 let hudTickTimer = 0;
 
@@ -730,17 +394,12 @@ function animate() {
 
   if (state === 'PLAYING') {
     gameTime += dt;
-    const mods = getActiveModifiers();
+    const mods = getActiveModifiers(save, gameSettings, passives);
     if (invuln > 0) invuln -= dt;
     if (dashCd > 0) dashCd -= dt;
     if (atkAnimTimer > 0) atkAnimTimer -= dt;
     stats.stamina = Math.min(100, stats.stamina + dt * 22);
 
-    const pickupFrameOffset = (Math.floor(gameTime * 6.5) % 4) * 0.25;
-    PICKUP_ASSETS.texs.serum.offset.x = pickupFrameOffset;
-    PICKUP_ASSETS.texs.tooth.offset.x = pickupFrameOffset;
-    PICKUP_ASSETS.texs.chest.offset.x = pickupFrameOffset;
-    PICKUP_ASSETS.texs.scrap.offset.x = pickupFrameOffset;
 
     if (mods.regenPerSec > 0 && stats.hp < stats.maxHp) {
       stats.hp = Math.min(stats.maxHp, stats.hp + mods.regenPerSec * dt);
@@ -829,43 +488,17 @@ function animate() {
       triggerWeaponVisualAttack, cleanupVfxItem
     });
 
-    for (let i = drops.length - 1; i >= 0; i--) {
-      const d = drops[i];
-      d.age = (d.age || 0) + dt;
-      d.spriteMesh.rotation.y = camAngle;
-      d.spriteMesh.position.y = d.baseHeight + Math.sin(gameTime * 5.2 + d.bobPhase) * 0.1;
-      const dist = d.group.position.distanceTo(playerGroup.position);
-      if (dist < mods.magnetRange) {
-        const pullDir = new THREE.Vector3().subVectors(playerGroup.position, d.group.position).normalize();
-        d.group.position.addScaledVector(pullDir, 18.5 * dt);
-      } else if (d.isScrap && d.age > 0.5) {
-        // La chatarra siempre acaba llegando al operario: evita abandonar el núcleo
-        // para recogerla cuando las torretas matan lejos.
-        const pullDir = new THREE.Vector3().subVectors(playerGroup.position, d.group.position).normalize();
-        d.group.position.addScaledVector(pullDir, 7.5 * dt);
-      }
-      if (dist < 1.45) {
-        scene.remove(d.group);
-        drops.splice(i, 1);
-        if (d.isBossChest) {
-          stats.hp = Math.min(stats.maxHp, stats.hp + stats.maxHp * 0.5);
-          stats.level++; AudioSys.playUISelect(); showLevelUp();
-        } else if (d.isTooth) {
-          runSouls++; AudioSys.play(640, 0.07, 'sine', 0.05);
-        } else if (d.isScrap) {
-          ModeManager.activeMode?.addScrap?.(d.value || 1);
-          AudioSys.play(520, 0.07, 'square', 0.045);
-        } else {
-          stats.exp++; AudioSys.play(420, 0.06, 'sine', 0.04);
-          if (stats.exp >= stats.maxExp) {
-            stats.level++; stats.exp -= stats.maxExp;
-            stats.maxExp = Math.floor(stats.maxExp * 1.38);
-            showLevelUp();
-          }
-        }
-        refreshHUD();
-      }
-    }
+    pickupSystem.updateDrops(dt, {
+      playerGroup,
+      gameTime,
+      camAngle,
+      stats,
+      magnetRange: mods.magnetRange,
+      onTooth: () => { runSouls++; },
+      onScrap: value => ModeManager.activeMode?.addScrap?.(value),
+      showLevelUp,
+      refreshHUD
+    });
 
     dust.position.copy(playerGroup.position);
     const m = String(Math.floor(gameTime / 60)).padStart(2, '0');
@@ -900,99 +533,63 @@ function animate() {
 }
 
 // Botones de navegación y Ajustes
-function showTutorialPrompt() {
-  document.getElementById('start-screen')?.classList.add('hidden');
-  document.getElementById('shop-screen')?.classList.add('hidden');
-  document.getElementById('tutorial-prompt-screen')?.classList.remove('hidden');
-}
+const flowRuntime = {
+  get state() { return state; }, set state(v) { state = v; },
+  get pendingTutorial() { return pendingTutorial; }, set pendingTutorial(v) { pendingTutorial = v; },
+  get currentHandWeapon() { return currentHandWeapon; }, set currentHandWeapon(v) { currentHandWeapon = v; },
+  get yaw() { return yaw; }, set yaw(v) { yaw = v; },
+  get playerFacingYaw() { return playerFacingYaw; }, set playerFacingYaw(v) { playerFacingYaw = v; },
+  get dashTimer() { return dashTimer; }, set dashTimer(v) { dashTimer = v; },
+  get playerYVel() { return playerYVel; }, set playerYVel(v) { playerYVel = v; },
+  get gameTime() { return gameTime; }, set gameTime(v) { gameTime = v; },
+  get runSouls() { return runSouls; }, set runSouls(v) { runSouls = v; },
+  get kills() { return kills; }, set kills(v) { kills = v; },
+  get stats() { return stats; }, set stats(v) { stats = v; },
+  get skills() { return skills; }, set skills(v) { skills = v; },
+  get passives() { return passives; }, set passives(v) { passives = v; },
+  get maxRerollsRun() { return maxRerollsRun; }, set maxRerollsRun(v) { maxRerollsRun = v; },
+  get rerollsLeft() { return rerollsLeft; }, set rerollsLeft(v) { rerollsLeft = v; },
+  get activeBoss() { return activeBoss; }, set activeBoss(v) { activeBoss = v; },
+  get lastMenuScreen() { return lastMenuScreen; }, set lastMenuScreen(v) { lastMenuScreen = v; },
+  scene, playerGroup, worldPhysics, enemyPool, drops, orbitals, minesList, vfx,
+  bossHazards, bossProjectiles, auraMesh, weaponTimers,
+  hudController, debugOverlay, turretBuildMenu, ModeManager, AudioSys, CONFIG,
+  save, saveGame, careerByMode, saveCareer,
+  buildModeContext, prewarmLoadoutSheets, syncPlayerVisualLoadout,
+  refreshHUD, refreshStaticDOMIcons, presentRunResultsScreen,
+  renderModeSelectorUI, updateCareerDossierForSelectedMode, renderShopUI,
+  cleanupVfxItem, initUISpritesCSS
+};
+setupGameFlow(flowRuntime);
 
-function requestStartGame() {
-  AudioSys.playUISelect();
-  const tutorialKey = CONFIG.CORE_DEFENSE.TUTORIAL.choiceKey;
-  if (ModeManager.getSelectedModeId() === 'core_defense' && !localStorage.getItem(tutorialKey)) {
-    showTutorialPrompt();
-    return;
-  }
-  startGame({ tutorial: false });
-}
-
-function updateTdTutorialButton() {
-  const btn = document.getElementById('btn-td-tutorial');
-  if (!btn) return;
-  btn.classList.toggle('hidden', ModeManager.getSelectedModeId() !== 'core_defense');
-}
-
-document.getElementById('btn-start').onclick = requestStartGame;
-document.getElementById('btn-shop-play').onclick = requestStartGame;
-document.getElementById('btn-restart').onclick = () => { AudioSys.playUISelect(); startGame({ tutorial: false }); };
-document.getElementById('btn-results-menu').onclick = () => returnToMainMenu();
-document.getElementById('btn-pause-to-menu').onclick = () => returnToMainMenu();
-document.getElementById('btn-resume').onclick = () => togglePauseGame();
-
-document.getElementById('btn-open-shop').onclick = () => {
-  AudioSys.init(); AudioSys.playUISelect(); lastMenuScreen = 'start-screen';
-  renderShopUI(save, saveGame);
-  document.getElementById('start-screen').classList.add('hidden');
-  document.getElementById('shop-screen').classList.remove('hidden');
+const inputRuntime = {
+  get state() { return state; }, set state(v) { state = v; },
+  get yaw() { return yaw; }, set yaw(v) { yaw = v; },
+  get pitch() { return pitch; }, set pitch(v) { pitch = v; },
+  get dashCd() { return dashCd; }, set dashCd(v) { dashCd = v; },
+  get dashTimer() { return dashTimer; }, set dashTimer(v) { dashTimer = v; },
+  get dashGhostTimer() { return dashGhostTimer; }, set dashGhostTimer(v) { dashGhostTimer = v; },
+  get invuln() { return invuln; }, set invuln(v) { invuln = v; },
+  get stats() { return stats; }, set stats(v) { stats = v; },
+  get playerFacingYaw() { return playerFacingYaw; }, set playerFacingYaw(v) { playerFacingYaw = v; },
+  get isGrounded() { return isGrounded; }, set isGrounded(v) { isGrounded = v; },
+  get playerYVel() { return playerYVel; }, set playerYVel(v) { playerYVel = v; },
+  playerGroup,
+  camera,
+  gameSettings,
+  ModeManager,
+  turretBuildMenu,
+  debugOverlay,
+  dashDirVec,
+  openTurretBuildMenu: flowRuntime.openTurretBuildMenu,
+  togglePauseGame: flowRuntime.togglePauseGame
 };
-document.getElementById('btn-go-shop').onclick = () => {
-  AudioSys.playUISelect(); lastMenuScreen = 'game-over-screen';
-  renderShopUI(save, saveGame);
-  document.getElementById('game-over-screen').classList.add('hidden');
-  document.getElementById('shop-screen').classList.remove('hidden');
-};
-document.getElementById('btn-close-shop').onclick = () => {
-  AudioSys.playUIClick();
-  document.getElementById('shop-screen').classList.add('hidden');
-  document.getElementById(lastMenuScreen).classList.remove('hidden');
-};
-document.getElementById('btn-open-manual').onclick = () => document.getElementById('manual-modal').classList.remove('hidden');
-document.getElementById('btn-close-manual').onclick = () => document.getElementById('manual-modal').classList.add('hidden');
-document.getElementById('btn-open-settings').onclick = () => {
-  lastMenuScreen = 'start-screen';
-  document.getElementById('start-screen').classList.add('hidden');
-  document.getElementById('settings-screen').classList.remove('hidden');
-};
-document.getElementById('btn-pause-settings').onclick = () => {
-  lastMenuScreen = 'pause-screen';
-  document.getElementById('pause-screen').classList.add('hidden');
-  document.getElementById('settings-screen').classList.remove('hidden');
-};
-document.getElementById('btn-close-settings').onclick = () => {
-  document.getElementById('settings-screen').classList.add('hidden');
-  document.getElementById(lastMenuScreen).classList.remove('hidden');
-};
-document.getElementById('btn-open-sheets').onclick = () => document.getElementById('sheets-modal').classList.remove('hidden');
-document.getElementById('btn-close-sheets').onclick = () => document.getElementById('sheets-modal').classList.add('hidden');
-
-document.getElementById('btn-tutorial-yes').onclick = () => {
-  localStorage.setItem(CONFIG.CORE_DEFENSE.TUTORIAL.choiceKey, 'tutorial');
-  document.getElementById('tutorial-prompt-screen').classList.add('hidden');
-  AudioSys.playUISelect();
-  startGame({ tutorial: true });
-};
-document.getElementById('btn-tutorial-no').onclick = () => {
-  localStorage.setItem(CONFIG.CORE_DEFENSE.TUTORIAL.choiceKey, 'skipped');
-  document.getElementById('tutorial-prompt-screen').classList.add('hidden');
-  AudioSys.playUISelect();
-  startGame({ tutorial: false });
-};
-document.getElementById('btn-td-tutorial').onclick = () => {
-  AudioSys.playUISelect();
-  localStorage.setItem(CONFIG.CORE_DEFENSE.TUTORIAL.choiceKey, 'tutorial');
-  startGame({ tutorial: true });
-};
-
-document.getElementById('ui-scale-select').onchange = e => {
-  initUISpritesCSS(parseInt(e.target.value, 10) || 2);
-  refreshStaticDOMIcons();
-  if (state !== 'START') refreshHUD(true);
-};
+setupInput(inputRuntime);
 
 refreshStaticDOMIcons();
-renderModeSelectorUI(careerByMode, () => updateTdTutorialButton());
+renderModeSelectorUI(careerByMode, () => flowRuntime.updateTdTutorialButton());
 updateCareerDossierForSelectedMode(careerByMode);
-updateTdTutorialButton();
+flowRuntime.updateTdTutorialButton();
 renderShopUI(save, saveGame);
 syncPlayerVisualLoadout('slash');
 animate();
