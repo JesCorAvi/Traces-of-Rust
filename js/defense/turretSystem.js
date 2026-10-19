@@ -5,6 +5,7 @@ import * as THREE from 'three';
 import { CORE_DEFENSE_CONFIG } from '../config/coreDefenseConfig.js';
 import { AudioSys } from '../audio.js';
 import { GameEvents } from '../core/eventBus.js';
+import { disposeObject3D } from '../utils/dispose.js';
 import { buildPlacementGhost } from './turretSystem/placement/ghost.js';
 import {
   beginPlacement,
@@ -226,10 +227,7 @@ this.hazards.length = 0;
 
 if (this.placementGhost) {
   this.scene.remove(this.placementGhost);
-  this.placementGhost.traverse(obj => {
-    if (obj.geometry) obj.geometry.dispose();
-    if (obj.material) obj.material.dispose();
-  });
+  disposeObject3D(this.placementGhost);
   this.placementGhost = null;
 }
 

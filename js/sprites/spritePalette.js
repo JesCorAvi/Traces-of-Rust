@@ -1,15 +1,15 @@
 // Paleta, dithering, contornos y helper de texturas pixel-art.
-// Exports: BAYER4, PAL, applyEnvironmentDither, applyCleanSpriteOutlineRect, applyIcon16Outline, makeTexture.
+// Exports: applyEnvironmentDither, applyCleanSpriteOutlineRect, applyIcon16Outline, makeTexture.
 import * as THREE from 'three';
 
-export const BAYER4 = [
+const BAYER4 = [
   [ 0,  8,  2, 10],
   [12,  4, 14,  6],
   [ 3, 11,  1,  9],
   [15,  7, 13,  5]
 ];
 
-export const PAL = [
+const PAL = [
   [5, 6, 5],       // Negro abisal (Contornos y sombras profundas)
   [18, 24, 18],    // Gris verdoso oscuro
   [36, 48, 34],    // Verde enfermizo oscuro

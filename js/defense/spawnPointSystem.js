@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import { CORE_DEFENSE_CONFIG } from '../config/coreDefenseConfig.js';
 import { SpriteSheets } from '../spritesheets.js';
 import { SHARED_GEO, SHARED_MAT } from '../combat.js';
+import { disposeObject3D } from '../utils/dispose.js';
 
 // ============================================================================
 // PUNTOS DE APARICIÓN INDUSTRIALES (Grietas / Compuertas en Modo Defensa)
@@ -178,13 +179,7 @@ export class SpawnPointSystem {
   destroy() {
     if (!this.rootGroup) return;
     this.scene.remove(this.rootGroup);
-    this.rootGroup.traverse(obj => {
-      if (obj.geometry) obj.geometry.dispose();
-      if (obj.material) {
-        if (Array.isArray(obj.material)) obj.material.forEach(m => m.dispose());
-        else obj.material.dispose();
-      }
-    });
+    disposeObject3D(this.rootGroup);
     this.spawnPoints.clear();
   }
 }

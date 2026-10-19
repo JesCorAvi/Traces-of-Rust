@@ -3,6 +3,8 @@
 import * as THREE from 'three';
 import { CORE_DEFENSE_CONFIG } from '../config/coreDefenseConfig.js';
 import { SpriteSheets } from '../spritesheets.js';
+import { projectPointToSegment } from '../utils/routeMath.js';
+import { disposeObject3D } from '../utils/dispose.js';
 
 // ============================================================================
 // SISTEMA DE CAMINOS Y NAVEGACIÓN POR WAYPOINTS (Solo en Modo Defensa)
@@ -162,15 +164,8 @@ export class PathSystem {
     let minDistSq = Infinity;
 
     for (let i = 0; i < wps.length - 1; i++) {
-      const a = wps[i];
-      const b = wps[i + 1];
-      const abx = b.x - a.x;
-      const abz = b.z - a.z;
-      const lenSq = abx * abx + abz * abz || 1;
-      const t = Math.max(0, Math.min(1, ((currentPos.x - a.x) * abx + (currentPos.z - a.z) * abz) / lenSq));
-      const projX = a.x + t * abx;
-      const projZ = a.z + t * abz;
-      const dSq = (currentPos.x - projX) ** 2 + (currentPos.z - projZ) ** 2;
+      const p = projectPointToSegment(currentPos.x, currentPos.z, wps[i], wps[i + 1]);
+      const dSq = (currentPos.x - p.x) ** 2 + (currentPos.z - p.z) ** 2;
 
       if (dSq < minDistSq) {
         minDistSq = dSq;
@@ -194,13 +189,7 @@ export class PathSystem {
   destroy() {
     if (!this.visualGroup) return;
     this.scene.remove(this.visualGroup);
-    this.visualGroup.traverse(obj => {
-      if (obj.geometry && !obj.userData.sharedGeo) obj.geometry.dispose();
-      if (obj.material && !obj.userData.sharedMat) {
-        if (Array.isArray(obj.material)) obj.material.forEach(m => m.dispose());
-        else obj.material.dispose();
-      }
-    });
+    disposeObject3D(this.visualGroup);
     this.beaconMeshes.length = 0;
     this.routes.clear();
   }

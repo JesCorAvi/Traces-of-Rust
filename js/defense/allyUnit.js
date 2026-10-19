@@ -3,6 +3,7 @@
 import * as THREE from 'three';
 import { createBillboardSprite } from '../entities.js';
 import { AudioSys } from '../audio.js';
+import { disposeObject3D } from '../utils/dispose.js';
 
 // ============================================================================
 // TROPAS ALIADAS DEL CUARTEL
@@ -260,14 +261,7 @@ export class AllyUnit {
     this.destroyed = true;
     if (this.group) {
       this.scene.remove(this.group);
-      this.group.traverse(obj => {
-        if (obj.userData.sharedGeo || obj.userData.sharedMat) return;
-        if (obj.geometry) obj.geometry.dispose();
-        if (obj.material) {
-          if (Array.isArray(obj.material)) obj.material.forEach(m => m.dispose());
-          else obj.material.dispose();
-        }
-      });
+      disposeObject3D(this.group);
     }
   }
 }

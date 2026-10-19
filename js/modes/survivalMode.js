@@ -5,6 +5,7 @@ import { CONFIG, MODES_CONFIG } from '../config.js';
 import { AudioSys } from '../audio.js';
 import { triggerBossSpecialAttack } from '../combat.js';
 import { GameEvents } from '../core/eventBus.js';
+import { updateEnemies } from './enemyLoop.js';
 
 // ============================================================================
 // MODO 1: SUPERVIVENCIA (Comportamiento original 100% intacto)
@@ -101,43 +102,36 @@ export class SurvivalMode {
     }
 
     // 3. Actualización de todos los enemigos activos en la piscina
-    const activeEnemies = enemyPool.active;
-    for (let i = activeEnemies.length - 1; i >= 0; i--) {
-      const e = activeEnemies[i];
-      const finishedDeath = e.update(dt, playerGroup.position, camFwd, camera.position, worldPhysics, {
-        playerAlive: true,
-        onScare: () => ctx.triggerScare(0.35),
-        onDealDamage: attacker => ctx.dealDamageToPlayer(attacker.dmg),
-        onBurnTick: (burningEnemy, burnDmg) => ctx.damageEnemy(burningEnemy, burnDmg, null, true),
-        onBossPhaseChange: () => ctx.onBossPhaseChange(),
-        onBossSpecial: (boss, atkType) => {
-          triggerBossSpecialAttack(
-            ctx.scene,
-            boss,
-            atkType,
-            playerGroup.position,
-            worldPhysics,
-            bossHazards,
-            bossProjectiles,
-            count => {
-              for (let s = 0; s < count; s++) {
-                enemyPool.spawn(
-                  s % 2 === 0 ? 'zombie' : 'worm',
-                  playerGroup.position,
-                  gameTime,
-                  camFwd,
-                  worldPhysics
-                );
-              }
+    const callbacks = {
+      playerAlive: true,
+      onScare: () => ctx.triggerScare(0.35),
+      onDealDamage: attacker => ctx.dealDamageToPlayer(attacker.dmg),
+      onBurnTick: (burningEnemy, burnDmg) => ctx.damageEnemy(burningEnemy, burnDmg, null, true),
+      onBossPhaseChange: () => ctx.onBossPhaseChange(),
+      onBossSpecial: (boss, atkType) => {
+        triggerBossSpecialAttack(
+          ctx.scene,
+          boss,
+          atkType,
+          playerGroup.position,
+          worldPhysics,
+          bossHazards,
+          bossProjectiles,
+          count => {
+            for (let s = 0; s < count; s++) {
+              enemyPool.spawn(
+                s % 2 === 0 ? 'zombie' : 'worm',
+                playerGroup.position,
+                gameTime,
+                camFwd,
+                worldPhysics
+              );
             }
-          );
-        }
-      });
-
-      if (finishedDeath) {
-        enemyPool.release(i);
+          }
+        );
       }
-    }
+    };
+    updateEnemies(enemyPool, dt, playerGroup.position, camFwd, camera.position, worldPhysics, callbacks);
 
     // 4. Sistema de aparición continua alrededor del jugador (Idéntico al original)
     this.spawnTimer -= dt;

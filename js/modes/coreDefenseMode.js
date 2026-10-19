@@ -11,6 +11,7 @@ import { SpawnPointSystem } from '../defense/spawnPointSystem.js';
 import { WaveManager } from '../defense/waveManager.js';
 import { TurretSystem } from '../defense/turretSystem.js';
 import { TowerDefenseTutorial } from '../tutorial/towerDefenseTutorial.js';
+import { updateEnemies } from './enemyLoop.js';
 
 // ============================================================================
 // MODO 2: DEFENDER EL NÚCLEO (Tower Defense con colocación libre de torretas)
@@ -190,48 +191,41 @@ export class CoreDefenseMode {
       });
     }
 
-    const activeEnemies = enemyPool.active;
-    for (let i = activeEnemies.length - 1; i >= 0; i--) {
-      const e = activeEnemies[i];
-      const finishedDeath = e.update(dt, playerGroup.position, camFwd, camera.position, worldPhysics, {
-        playerAlive,
-        coreMachine: this.coreMachine,
-        extraStructures: this.extraStructures,
-        pathSystem: this.pathSystem,
-        vfxList: ctx.vfx,
-        onScare: () => ctx.triggerScare(0.32),
-        onDealDamage: attacker => {
-          if (playerAlive) ctx.dealDamageToPlayer(attacker.dmg);
-        },
-        onBurnTick: (burningEnemy, burnDmg) => ctx.damageEnemy(burningEnemy, burnDmg, null, true),
-        onBossPhaseChange: () => ctx.onBossPhaseChange(),
-        onBossSpecial: (boss, atkType) => {
-          // Si el Boss está atacando al Núcleo, sus ataques de área también dañan al Núcleo
-          const targetPos = boss.defenseAI?.targetKind === 'player'
-            ? playerGroup.position
-            : (this.coreMachine ? this.coreMachine.position : playerGroup.position);
+    const callbacks = {
+      playerAlive,
+      coreMachine: this.coreMachine,
+      extraStructures: this.extraStructures,
+      pathSystem: this.pathSystem,
+      vfxList: ctx.vfx,
+      onScare: () => ctx.triggerScare(0.32),
+      onDealDamage: attacker => {
+        if (playerAlive) ctx.dealDamageToPlayer(attacker.dmg);
+      },
+      onBurnTick: (burningEnemy, burnDmg) => ctx.damageEnemy(burningEnemy, burnDmg, null, true),
+      onBossPhaseChange: () => ctx.onBossPhaseChange(),
+      onBossSpecial: (boss, atkType) => {
+        // Si el Boss está atacando al Núcleo, sus ataques de área también dañan al Núcleo
+        const targetPos = boss.defenseAI?.targetKind === 'player'
+          ? playerGroup.position
+          : (this.coreMachine ? this.coreMachine.position : playerGroup.position);
 
-          triggerBossSpecialAttack(
-            ctx.scene,
-            boss,
-            atkType,
-            targetPos,
-            worldPhysics,
-            bossHazards,
-            bossProjectiles,
-            count => {
-              if (this.waveManager) {
-                this.waveManager.spawnBossMinions(boss, count, playerGroup.position, gameTime, camFwd);
-              }
+        triggerBossSpecialAttack(
+          ctx.scene,
+          boss,
+          atkType,
+          targetPos,
+          worldPhysics,
+          bossHazards,
+          bossProjectiles,
+          count => {
+            if (this.waveManager) {
+              this.waveManager.spawnBossMinions(boss, count, playerGroup.position, gameTime, camFwd);
             }
-          );
-        }
-      });
-
-      if (finishedDeath) {
-        enemyPool.release(i);
+          }
+        );
       }
-    }
+    };
+    updateEnemies(enemyPool, dt, playerGroup.position, camFwd, camera.position, worldPhysics, callbacks);
   }
 
   onEnemyKilled(enemy, ctx) {

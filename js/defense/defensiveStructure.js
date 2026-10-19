@@ -2,6 +2,7 @@
 // Exports: DefensiveStructure.
 import * as THREE from 'three';
 import { GameEvents } from '../core/eventBus.js';
+import { disposeObject3D } from '../utils/dispose.js';
 
 // ============================================================================
 // CLASE BASE ABSTRACTA PARA ESTRUCTURAS DEFENSIVAS (El Núcleo y futuras Torres)
@@ -136,15 +137,7 @@ export class DefensiveStructure {
     }
     if (this.group) {
       this.scene.remove(this.group);
-      this.group.traverse(child => {
-        if (child.geometry && !child.userData.sharedGeo) {
-          child.geometry.dispose();
-        }
-        if (child.material && !child.userData.sharedMat) {
-          if (Array.isArray(child.material)) child.material.forEach(m => m.dispose());
-          else child.material.dispose();
-        }
-      });
+      disposeObject3D(this.group);
     }
   }
 }

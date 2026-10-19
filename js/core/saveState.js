@@ -1,5 +1,5 @@
 // Persistencia de la partida, ajustes y carrera por modo.
-// Exports: save, saveGame, gameSettings, saveSettings, careerByMode, saveCareer.
+// Exports: save, saveGame, gameSettings, careerByMode, saveCareer.
 
 import { CONFIG } from '../config.js';
 import { loadCareerStatsByMode, saveCareerStatsByMode } from '../ui/menusAndShop.js';
@@ -14,7 +14,5 @@ export const gameSettings = JSON.parse(localStorage.getItem('echoes_rust_setting
   resScale: 0.44, fov: 70, shadows: true, crt: true, fpsCounter: false,
   mouseSens: 100, camShake: 100
 };
-export const saveSettings = () => localStorage.setItem('echoes_rust_settings_v1', JSON.stringify(gameSettings));
-
 export const careerByMode = loadCareerStatsByMode();
 export const saveCareer = () => saveCareerStatsByMode(careerByMode);

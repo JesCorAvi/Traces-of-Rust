@@ -1,5 +1,5 @@
 // IA de objetivo enemigo (núcleo, jugador, torretas/aliados) y navegación por waypoints.
-// Exports: TARGET_KIND, getEnemyTargetingProfile, initEnemyDefenseState, evaluateEnemyTarget, resolveEnemyNavigationGoal.
+// Exports: initEnemyDefenseState, evaluateEnemyTarget, resolveEnemyNavigationGoal.
 import * as THREE from 'three';
 import { CORE_DEFENSE_CONFIG } from '../config/coreDefenseConfig.js';
 import { AudioSys } from '../audio.js';
@@ -15,13 +15,13 @@ import { GameEvents } from '../core/eventBus.js';
 // distancia menor o igual a `coreOverrideRadius` (configurable por tipo en CORE_DEFENSE_CONFIG).
 // ============================================================================
 
-export const TARGET_KIND = {
+const TARGET_KIND = {
   CORE: 'core',
   PLAYER: 'player',
   STRUCTURE: 'structure' // Preparado para futuras torres defensivas
 };
 
-export function getEnemyTargetingProfile(enemyType, isBoss = false) {
+function getEnemyTargetingProfile(enemyType, isBoss = false) {
   const table = CORE_DEFENSE_CONFIG.TARGETING.BY_ENEMY_CONFIG || CORE_DEFENSE_CONFIG.TARGETING.BY_ENEMY_TYPE;
   if (isBoss) return table.boss;
   return table[enemyType] || table.zombie;

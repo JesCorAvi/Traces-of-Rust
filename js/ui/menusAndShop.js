@@ -1,5 +1,5 @@
 // Menú principal, selector de modo, tienda permanente y cartas de subida de nivel.
-// Exports: loadCareerStatsByMode, saveCareerStatsByMode, renderModeSelectorUI, updateCareerDossierForSelectedMode, renderShopUI, buildAvailableUpgradePool, renderLevelUpCardsUI.
+// Exports: loadCareerStatsByMode, saveCareerStatsByMode, renderModeSelectorUI, updateCareerDossierForSelectedMode, renderShopUI, renderLevelUpCardsUI.
 import { CONFIG, MODES_CONFIG } from '../config.js';
 import { AudioSys } from '../audio.js';
 import { renderSpriteIconHTML, renderSpriteBadgeHTML } from '../spritesheets.js';
@@ -228,7 +228,7 @@ function getPassiveAffectedWeaponsHTML(passiveId, skills) {
     </div>`;
 }
 
-export function buildAvailableUpgradePool(skills, passives) {
+function buildAvailableUpgradePool(skills, passives) {
   const pool = [];
   const weaponsCount = Object.keys(skills).length;
   const passivesCount = Object.keys(passives).length;

@@ -3,6 +3,7 @@
 
 import * as THREE from 'three';
 import { CORE_DEFENSE_CONFIG } from '../../../config/coreDefenseConfig.js';
+import { closestPointOnRoutes } from '../../../utils/routeMath.js';
 
 export function computePlacementCandidate(system, ctx) {
 const camera = ctx.camera;
@@ -139,50 +140,15 @@ export function distanceToRoutes(system, pos) {
 const pathSystem = system.mode.pathSystem;
 if (!pathSystem) return Infinity;
 
-let best = Infinity;
-for (const route of pathSystem.routes.values()) {
-  const wps = route.waypoints;
-  for (let i = 0; i < wps.length - 1; i++) {
-    const a = wps[i];
-    const b = wps[i + 1];
-    const abx = b.x - a.x;
-    const abz = b.z - a.z;
-    const lenSq = abx * abx + abz * abz || 1;
-    const t = Math.max(0, Math.min(1, ((pos.x - a.x) * abx + (pos.z - a.z) * abz) / lenSq));
-    const px = a.x + t * abx;
-    const pz = a.z + t * abz;
-    const d = Math.hypot(pos.x - px, pos.z - pz);
-    if (d < best) best = d;
-  }
-}
-return best;
+const best = closestPointOnRoutes(pos.x, pos.z, pathSystem.routes.values());
+return best ? best.dist : Infinity;
 }
 
 export function findFacingYaw(system, position) {
 const pathSystem = system.mode.pathSystem;
 if (!pathSystem) return 0;
 
-let bestPoint = null;
-let bestDist = Infinity;
-for (const route of pathSystem.routes.values()) {
-  const wps = route.waypoints;
-  for (let i = 0; i < wps.length - 1; i++) {
-    const a = wps[i];
-    const b = wps[i + 1];
-    const abx = b.x - a.x;
-    const abz = b.z - a.z;
-    const lenSq = abx * abx + abz * abz || 1;
-    const t = Math.max(0, Math.min(1, ((position.x - a.x) * abx + (position.z - a.z) * abz) / lenSq));
-    const px = a.x + t * abx;
-    const pz = a.z + t * abz;
-    const d = Math.hypot(position.x - px, position.z - pz);
-    if (d < bestDist) {
-      bestDist = d;
-      bestPoint = { x: px, z: pz };
-    }
-  }
-}
-
-if (!bestPoint) return 0;
-return Math.atan2(-(bestPoint.x - position.x), -(bestPoint.z - position.z));
+const best = closestPointOnRoutes(position.x, position.z, pathSystem.routes.values());
+if (!best) return 0;
+return Math.atan2(-(best.x - position.x), -(best.z - position.z));
 }

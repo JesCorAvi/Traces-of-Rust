@@ -1,6 +1,5 @@
 // Billboards 2D, enemigos y pool de enemigos.
-// Exports: setPlaneFrameUV, selectDirectionIndex, createBillboardSprite, Enemy, EnemyPool.
+// Exports: setPlaneFrameUV, createBillboardSprite, EnemyPool.
 
-export { setPlaneFrameUV, selectDirectionIndex, createBillboardSprite } from './entities/billboard.js';
-export { Enemy } from './entities/enemy.js';
+export { setPlaneFrameUV, createBillboardSprite } from './entities/billboard.js';
 export { EnemyPool } from './entities/enemyPool.js';
