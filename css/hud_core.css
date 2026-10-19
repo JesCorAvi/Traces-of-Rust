@@ -1,0 +1,433 @@
+/* HUD por modo: objetivos, núcleo, radar, pasivas, boss y mira. */
+
+#hud-objective-tracker {
+  position: absolute;
+  top: 256px;
+  left: 14px;
+  width: 244px;
+  z-index: 17;
+}
+
+.objective-note {
+  margin: 0;
+  padding: 6px 10px;
+  border-width: 10px;
+  border-image: var(--slice-panel_paper) 10 fill / 10px stretch;
+  background-color: rgba(10, 14, 10, 0.9);
+  box-shadow: 3px 3px 0 rgba(5, 6, 5, 0.9);
+}
+
+.objective-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
+  color: #f0c954;
+  border-bottom: 1px dashed #364832;
+  padding-bottom: 4px;
+  margin-bottom: 5px;
+}
+
+.objective-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'VT323', monospace;
+  font-size: 19px;
+  line-height: 1.15;
+  color: #fff6e0;
+  text-shadow: 1px 1px 0 #050605;
+}
+
+.checkbox-box {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 9px;
+  color: #b89c46;
+  flex-shrink: 0;
+}
+
+.objective-sub-task,
+#next-boss-text {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
+  line-height: 1.35;
+  color: #a8c499;
+  text-shadow: 1px 1px 0 #050605;
+  margin-top: 5px;
+  white-space: nowrap;
+}
+
+/* Centro Superior: Cronómetro y Panel de Vida del Núcleo */
+#hud-top-center {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 19;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+#timer-text {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 24px;
+  line-height: 1.15;
+  color: #f5ecd3;
+  text-shadow:
+    3px 3px 0 #050605,
+    -2px -2px 0 #050605,
+    2px -2px 0 #050605,
+    -2px 2px 0 #050605,
+    0 4px 0 #4a2518;
+  padding: 2px 8px;
+  white-space: nowrap;
+}
+
+#timer-text.timer-secondary-mode {
+  font-size: 12px;
+  color: #a8c499;
+  opacity: 0.85;
+}
+
+/* Panel HUD de Integridad del Núcleo y Oleadas (Solo en Modo Defensa) */
+#core-defense-hud {
+  width: min(440px, 46vw);
+  padding: 5px 10px 7px;
+  background-color: rgba(8, 11, 8, 0.92);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.92);
+}
+
+.core-hud-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 9px;
+  color: #f0c954;
+  text-shadow: 2px 2px 0 #050605;
+  margin-bottom: 4px;
+  gap: 8px;
+}
+
+.core-hud-title-left {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+#core-state-tag {
+  background: #1b2619;
+  color: #a8c499;
+  border: 1px solid #68863a;
+  padding: 2px 5px;
+  font-size: 8px;
+}
+#core-state-tag.critical {
+  background: #6e1414;
+  color: #fff6e0;
+  border-color: #ff5252;
+  animation: alertStepPulse 0.4s steps(2) infinite;
+}
+
+.core-bar-frame {
+  position: relative;
+  height: 22px;
+  background-color: #050605;
+  border-style: solid;
+  border-width: 4px;
+  border-image: var(--slice-bar_frame) 5 fill / 4px stretch;
+  overflow: hidden;
+}
+
+#core-hp-bar {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background-color: #d97724;
+  background-image: var(--bar-fill-core);
+  background-repeat: repeat-x;
+  background-size: auto 100%;
+  transition: width 0.14s steps(12);
+}
+
+.core-hud-subrow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 4px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
+  color: #e6dec8;
+}
+
+/* Marcador direccional flotante hacia el Núcleo */
+#core-direction-indicator {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  background: rgba(8, 10, 8, 0.88);
+  border: 2px solid #b89c46;
+  outline: 2px solid #050605;
+  padding: 4px 6px;
+  pointer-events: none;
+  z-index: 21;
+  transition: opacity 0.15s steps(2);
+}
+#core-direction-indicator.dimmed {
+  opacity: 0.22;
+}
+#core-direction-indicator.under-attack {
+  border-color: #ff4444;
+  background: rgba(45, 8, 8, 0.92);
+  animation: barDamageShake 0.25s steps(2) infinite;
+}
+.core-dir-arrow {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 12px;
+  color: #f0c954;
+  text-shadow: 2px 2px 0 #050605;
+  display: inline-block;
+}
+.core-dir-dist {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 7px;
+  color: #f5ecd3;
+  white-space: nowrap;
+}
+
+/* Radar y Telemetría Derecha */
+#hud-top-right {
+  position: absolute;
+  top: 52px; right: 16px;
+  z-index: 18;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.telemetry-compact {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+.ciclo-badge-compact, #level-text {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 16px;
+  color: #f5ecd3;
+  text-shadow: 3px 3px 0 #050605, 0 3px 0 #4a2518;
+  letter-spacing: 1px;
+}
+
+.radar-scanner-plate {
+  position: relative;
+  width: 146px; height: 146px;
+  border-radius: 50%;
+  border: 4px solid #877a5c;
+  outline: 3px solid #050605;
+  border-image: none;
+  padding: 6px;
+  background: radial-gradient(circle at center, #101910 0%, #060906 68%, #040504 100%);
+  box-shadow: inset 0 0 18px rgba(0, 0, 0, 0.95), 4px 5px 0 rgba(5, 6, 5, 0.9);
+  display: flex; align-items: center; justify-content: center;
+}
+.radar-scanner-plate .screw { display: none; }
+
+.radar-display {
+  position: relative;
+  width: 100%; height: 100%;
+  border-radius: 50%;
+  overflow: hidden;
+  background:
+    radial-gradient(circle, transparent 32%, rgba(104, 134, 58, 0.18) 33%, transparent 35%),
+    radial-gradient(circle, transparent 64%, rgba(104, 134, 58, 0.22) 65%, transparent 67%),
+    linear-gradient(0deg, transparent 49%, rgba(104, 134, 58, 0.2) 50%, transparent 51%),
+    linear-gradient(90deg, transparent 49%, rgba(104, 134, 58, 0.2) 50%, transparent 51%);
+}
+.radar-display::after {
+  content: '▲';
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 11px; color: #f0c954;
+  z-index: 4;
+}
+
+.radar-sweeper {
+  position: absolute; inset: 0; border-radius: 50%;
+  background: conic-gradient(from 0deg, rgba(168, 196, 153, 0.32) 0deg, rgba(104, 134, 58, 0.08) 45deg, transparent 90deg);
+  animation: radarSweepSpin 3.6s linear infinite;
+}
+@keyframes radarSweepSpin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+.radar-dot {
+  position: absolute; width: 5px; height: 5px;
+  border-radius: 50%; z-index: 3;
+}
+.radar-dot.enemy-approx {
+  top: 30%; left: 34%;
+  background: #a8c499;
+  box-shadow: 0 0 4px #a8c499;
+}
+.radar-dot.boss-approx {
+  top: 24%; right: 28%;
+  width: 7px; height: 7px;
+  background: #ff5252;
+  box-shadow: 0 0 6px #ff5252;
+}
+.radar-dot.core-approx {
+  top: 50%; left: 50%;
+  width: 7px; height: 7px;
+  background: #f0c954;
+  border: 1px solid #050605;
+  box-shadow: 0 0 6px #f0c954;
+  display: none;
+}
+
+#radar-threat-label {
+  position: absolute; bottom: 12px; left: 50%;
+  transform: translateX(-50%);
+  font-family: 'Press Start 2P', monospace;
+  font-size: 7px; color: #a8c499;
+  white-space: nowrap; z-index: 5;
+}
+
+#elev-container {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: rgba(5, 6, 5, 0.8);
+  border: 1px solid #4a2518; padding: 2px 6px;
+}
+#elev-text {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px; color: #a8c499;
+}
+
+#hud-alert-overlay-right {
+  position: absolute; top: 256px; right: 16px;
+  display: flex; flex-direction: column; align-items: flex-end; gap: 4px;
+  z-index: 17;
+}
+#boss-killed-alert {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: rgba(20, 7, 7, 0.85);
+  border: 1px solid #a52020; padding: 3px 7px;
+  font-family: 'Press Start 2P', monospace; font-size: 8px; color: #f0c954;
+}
+#wave-text {
+  font-family: 'Press Start 2P', monospace; font-size: 9px;
+  color: #ff6b6b; background: rgba(5, 6, 5, 0.78);
+  border: 1px solid #4a2518; padding: 3px 7px; white-space: nowrap;
+}
+
+/* Dock Inferior de Pasivas y Dash */
+#hud-bottom-slots-container {
+  position: absolute; bottom: 12px; left: 50%;
+  transform: translateX(-50%); z-index: 18;
+}
+.implants-tray {
+  border-width: 10px;
+  border-image: var(--slice-panel_metal) 12 fill / 10px stretch;
+  padding: 4px 12px 6px;
+  background-color: rgba(6, 9, 6, 0.85);
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+}
+.implants-tray .screw, .implants-tray .ui-decor { display: none; }
+.slots-horizontal-label {
+  display: flex; justify-content: space-between; width: 100%;
+  font-family: 'Press Start 2P', monospace; font-size: 8px; color: #d8cfb8;
+}
+.slots-horizontal-row {
+  display: flex; flex-direction: row; align-items: center; gap: 10px;
+}
+#passives-bar .passive-slot {
+  width: 58px; height: 58px;
+  border-style: solid; border-width: 8px;
+  border-image: var(--slice-slot_passive) 7 fill / 8px stretch;
+  padding: 3px; display: flex; flex-direction: column;
+  align-items: center; justify-content: space-between; pointer-events: auto;
+}
+#passives-bar .passive-slot.empty {
+  border-image-source: var(--slice-slot_empty); opacity: 0.65;
+}
+.passive-dock-lvl {
+  font-family: 'Press Start 2P', monospace; font-size: 8px;
+  color: #f0c954; background: rgba(5, 6, 5, 0.9);
+  border: 1px solid #63533b; padding: 1px 4px;
+}
+
+#stamina-tracker-overlay {
+  position: absolute; bottom: 14px; left: 14px; width: 176px;
+  background: rgba(6, 8, 6, 0.84); border: 2px solid #4a2518;
+  outline: 2px solid #050605; padding: 5px 8px; z-index: 18;
+}
+.stamina-text-wrapper {
+  display: flex; align-items: center; gap: 5px;
+  font-family: 'Press Start 2P', monospace; font-size: 8px; color: #a8c499; margin-bottom: 4px;
+}
+.stam-frame-compact { height: 12px; margin: 0; border-width: 2px; }
+#stam-bar {
+  display: block !important; width: 100%; height: 100% !important;
+  background-color: #527848 !important; background-image: var(--bar-fill-stam) !important;
+  background-repeat: repeat-x !important; background-size: auto 100% !important;
+}
+
+/* Boss HUD y Alertas Superiores */
+#boss-hud {
+  position: absolute; top: 112px; left: 50%;
+  transform: translateX(-50%); width: min(520px, 50vw); z-index: 20;
+}
+.boss-header {
+  display: flex; justify-content: space-between; align-items: center;
+  font-family: 'Press Start 2P', monospace; font-size: 10px; color: #f5ecd3; margin-bottom: 4px;
+}
+.boss-title-wrap { display: inline-flex; align-items: center; gap: 6px; }
+.phase-tag { background: #6e1414; color: #fff6e0; border: 2px solid #050605; padding: 2px 6px; font-size: 8px; }
+.phase-tag.p2 { background: #f0c954; color: #050605; animation: alertStepPulse 0.4s steps(2) infinite; }
+.boss-bar-frame {
+  position: relative; width: 100%; height: 22px;
+  background-color: #050605; border-style: solid; border-width: 4px;
+  border-image: var(--slice-bar_frame) 5 fill / 4px stretch; overflow: hidden;
+}
+#boss-hp-bar {
+  display: block !important; width: 100%; height: 100% !important;
+  background-color: #b82525 !important; background-image: var(--bar-fill-boss) !important;
+}
+
+#boss-alert, #endgame-banner, #core-attack-banner {
+  position: absolute; top: 182px; left: 50%;
+  transform: translateX(-50%);
+  border-style: solid; border-width: 14px;
+  border-image: var(--slice-panel_boss) 12 fill / 14px stretch;
+  color: #fff6e0; text-shadow: 2px 2px 0 #050605;
+  font-family: 'Press Start 2P', monospace;
+  padding: 4px 12px; font-size: 10px;
+  display: inline-flex; align-items: center; gap: 8px;
+  white-space: nowrap;
+  animation: alertStepPulse 0.38s steps(2) infinite;
+  z-index: 22;
+}
+#core-attack-banner { top: 232px; }
+
+@keyframes alertStepPulse {
+  0%, 100% { opacity: 1; transform: translateX(-50%) translateY(0); }
+  50%      { opacity: 0.8; transform: translateX(-50%) translateY(-2px); }
+}
+
+#crosshair {
+  position: absolute; top: 50%; left: 50%;
+  width: var(--ui-icon-size, 32px); height: var(--ui-icon-size, 32px);
+  background-image: var(--ui-atlas); background-size: var(--ui-atlas-w) var(--ui-atlas-h);
+  background-position: calc(-32px * var(--ui-scale, 2)) calc(-280px * var(--ui-scale, 2));
+  transform: translate(-50%, -50%);
+}

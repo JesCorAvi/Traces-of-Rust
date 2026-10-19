@@ -7,7 +7,7 @@ Juego web 3D de terror/supervivencia + tower defense con Three.js. Sin bundler n
 
 ## Estructura
 - `index.html`: canvas, HUD, menús, overlays y paneles de torretas/tutorial.
-- `css/style.css`: base visual, HUD global, botones y barras. `css/hud_modes.css`: HUD por modo, tienda, torretas y tutorial.
+- `css/style.css`: base visual, HUD global, botones y barras. `css/hud_modes.css` agrega por `@import` las hojas `hud_core` (HUD en juego), `hud_menus` (menús/tienda/level-up), `hud_turrets` (torretas) y `hud_tutorial`.
 - `js/main.js`: bootstrap, runtime compartido, cámara, bucle de render y wiring de módulos.
 - `js/core/`: `saveState` (save/settings/carrera), `input` (teclado/ratón/pointer lock), `gameFlow` (inicio/fin/pausa/menú/botones).
 - `js/gameplay/`: `modifiers`, `pickups`, `combatRuntime`, `playerVisuals`, `levelUp`.
