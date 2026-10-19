@@ -1,7 +1,16 @@
+import { MODES_CONFIG } from './config/modesConfig.js';
+import { CORE_DEFENSE_CONFIG } from './config/coreDefenseConfig.js';
+
+export { MODES_CONFIG, CORE_DEFENSE_CONFIG };
+
 export const CONFIG = {
   SAVE_KEY: 'echoes_rust_buckshot_save_v4',
   PIXEL_SCALE: 0.44,
   FRAME_SIZE: 64,
+
+  // Reexportación directa de las configuraciones de cada modo en el punto de entrada único
+  MODES: MODES_CONFIG,
+  CORE_DEFENSE: CORE_DEFENSE_CONFIG,
 
   // ==========================================================================
   // CONFIGURACIÓN CENTRALIZADA DE INTERFAZ POR SPRITES (9-SLICE, ATLAS Y ESCALA)
@@ -14,17 +23,14 @@ export const CONFIG = {
     BADGE_W: 20,       // Ancho base del sprite de nivel (+1 a +8)
     BADGE_H: 12,       // Alto base del sprite de nivel
 
-    // Definición de paneles y botones 9-slice dentro del Atlas Maestro
-    // (x, y, w, h en el atlas, slice = corte de esquina en píxeles nativos)
     NINE_SLICE: {
-      panel_metal:      { x: 0,   y: 0,  w: 48, h: 48, slice: 12 }, // Ventanas principales de acero oxidado
-      panel_boss:       { x: 48,  y: 0,  w: 48, h: 48, slice: 12 }, // Marco ensangrentado de barra de Boss
-      panel_paper:      { x: 96,  y: 0,  w: 48, h: 48, slice: 10 }, // Papel clínico manchado (notas/autopsia)
-      panel_inset:      { x: 144, y: 0,  w: 32, h: 32, slice: 8  }, // Pantalla CRT hundida (contadores/reloj)
-      panel_tape:       { x: 176, y: 0,  w: 48, h: 24, slice: 6  }, // Cinta adhesiva rasgada para títulos
-      panel_teeth:      { x: 224, y: 0,  w: 48, h: 32, slice: 8  }, // Marco de reserva de dientes
+      panel_metal:      { x: 0,   y: 0,  w: 48, h: 48, slice: 12 },
+      panel_boss:       { x: 48,  y: 0,  w: 48, h: 48, slice: 12 },
+      panel_paper:      { x: 96,  y: 0,  w: 48, h: 48, slice: 10 },
+      panel_inset:      { x: 144, y: 0,  w: 32, h: 32, slice: 8  },
+      panel_tape:       { x: 176, y: 0,  w: 48, h: 24, slice: 6  },
+      panel_teeth:      { x: 224, y: 0,  w: 48, h: 32, slice: 8  },
 
-      // Casillas de inventario (Armas, Pasivas y Tarjetas de Nivel)
       slot_weapon:      { x: 0,   y: 48, w: 32, h: 32, slice: 7  },
       slot_passive:     { x: 32,  y: 48, w: 32, h: 32, slice: 7  },
       slot_empty:       { x: 64,  y: 48, w: 32, h: 32, slice: 7  },
@@ -32,28 +38,25 @@ export const CONFIG = {
       card_hover:       { x: 144, y: 48, w: 48, h: 48, slice: 10 },
       bar_frame:        { x: 192, y: 48, w: 48, h: 16, slice: 5  },
 
-      // Botón Industrial Estándar (4 estados)
       btn_normal:       { x: 0,   y: 96, w: 48, h: 24, slice: 7  },
       btn_hover:        { x: 48,  y: 96, w: 48, h: 24, slice: 7  },
       btn_active:       { x: 96,  y: 96, w: 48, h: 24, slice: 7  },
       btn_disabled:     { x: 144, y: 96, w: 48, h: 24, slice: 7  },
 
-      // Botón Primario de Sangre/Contrato (4 estados)
       btn_pri_normal:   { x: 0,   y: 120, w: 48, h: 24, slice: 7 },
       btn_pri_hover:    { x: 48,  y: 120, w: 48, h: 24, slice: 7 },
       btn_pri_active:   { x: 96,  y: 120, w: 48, h: 24, slice: 7 },
       btn_pri_disabled: { x: 144, y: 120, w: 48, h: 24, slice: 7 }
     },
 
-    // Texturas de relleno repetibles/recortables para las barras
     BAR_FILLS: {
-      hp:   { x: 0,   y: 152, w: 64, h: 12 }, // Tubo de sangre arterial con pulso
-      exp:  { x: 64,  y: 152, w: 64, h: 12 }, // Suero mutagénico ámbar
-      stam: { x: 128, y: 152, w: 64, h: 12 }, // Vapor presurizado verde moho
-      boss: { x: 192, y: 152, w: 64, h: 12 }  // Carne biomecánica de Boss
+      hp:   { x: 0,   y: 152, w: 64, h: 12 },
+      exp:  { x: 64,  y: 152, w: 64, h: 12 },
+      stam: { x: 128, y: 152, w: 64, h: 12 },
+      boss: { x: 192, y: 152, w: 64, h: 12 },
+      core: { x: 256, y: 152, w: 64, h: 12 }
     },
 
-    // Coordenadas (columna, fila) de los Iconos 16x16 en la sección de iconos del Atlas (origen Y = 176)
     ICONS_ORIGIN_Y: 176,
     ICONS: {
       // 8 Armas (Fila 0)
@@ -66,7 +69,7 @@ export const CONFIG = {
       orbital:      { col: 6, row: 0 },
       bolt:         { col: 7, row: 0 },
 
-      // 9 Pasivas (Fila 1 y parte de Fila 2)
+      // 9 Pasivas (Fila 1)
       multishot:    { col: 0, row: 1 },
       dmg:          { col: 1, row: 1 },
       atkSpd:       { col: 2, row: 1 },
@@ -77,7 +80,7 @@ export const CONFIG = {
       crit:         { col: 7, row: 1 },
       magnet:       { col: 8, row: 1 },
 
-      // Suministros, Moneda e Iconos de Sistema (Fila 2)
+      // Suministros, Moneda e Iconos de Sistema + Núcleo (Fila 2)
       heal_pack:    { col: 0, row: 2 },
       teeth_bag:    { col: 1, row: 2 },
       tooth:        { col: 2, row: 2 },
@@ -88,8 +91,9 @@ export const CONFIG = {
       warning:      { col: 7, row: 2 },
       suit:         { col: 8, row: 2 },
       boss_skull:   { col: 9, row: 2 },
+      core:         { col: 10, row: 2 },
 
-      // Decoración física: Tornillos, remaches, grietas, cables y manchas (Fila 3)
+      // Decoración física (Fila 3)
       screw_0:      { col: 0, row: 3 },
       screw_1:      { col: 1, row: 3 },
       screw_2:      { col: 2, row: 3 },
@@ -103,30 +107,27 @@ export const CONFIG = {
       charge_off:   { col: 10, row: 3 }
     },
 
-    // Placas de nivel pixeladas (+1 a +8 y MAX) en Y = 256
     BADGES_ORIGIN_Y: 256,
 
-    // Cursores personalizados 16x16 en Y = 280
     CURSORS: {
-      default: { x: 0,  y: 280, w: 16, h: 16, hotX: 2, hotY: 2 },
-      pointer: { x: 16, y: 280, w: 16, h: 16, hotX: 5, hotY: 2 },
+      default:   { x: 0,  y: 280, w: 16, h: 16, hotX: 2, hotY: 2 },
+      pointer:   { x: 16, y: 280, w: 16, h: 16, hotX: 5, hotY: 2 },
       crosshair: { x: 32, y: 280, w: 16, h: 16, hotX: 8, hotY: 8 }
     }
   },
 
-  // CONFIGURACIÓN DEL SISTEMA DE 8 DIRECCIONES Y ANIMACIONES 3D
   DIRECTIONAL: {
     HYSTERESIS_DEG: 6.0,
     USE_MIRRORING: false,
     FRAMES_PER_STATE: 4,
     STATES: {
-      IDLE: 0,              // Columnas 0..3
-      WALK: 1,              // Columnas 4..7
-      JUMP: 2,              // Columnas 8..11
-      ATTACK: 3,            // Columnas 12..15 (Atacar quieto)
-      HURT: 4,              // Columnas 16..19
-      ATTACK_WALK: 5,       // Columnas 20..23 (Atacar caminando / moviendo las piernas)
-      DASH: 6               // Columnas 24..27 (Animación de esquiva fluida)
+      IDLE: 0,
+      WALK: 1,
+      JUMP: 2,
+      ATTACK: 3,
+      HURT: 4,
+      ATTACK_WALK: 5,
+      DASH: 6
     },
     ANIM_FPS: {
       IDLE: 5,
@@ -150,7 +151,6 @@ export const CONFIG = {
     }
   },
 
-  // 1. LÍMITES DE INVENTARIO, SUBIDA DE NIVEL Y BOTÓN ACTUALIZAR
   LIMITS: {
     MAX_WEAPONS: 4,
     MAX_PASSIVES: 4,
@@ -159,59 +159,10 @@ export const CONFIG = {
     REROLLS_PER_RUN: 3
   },
 
-  // 2. CALENDARIO DE BOSSES (Cada 3 minutos: 180s, 360s, 540s, 720s, 900s)
-  BOSS_SCHEDULE: [
-    {
-      time: 180,
-      id: 'boss_butcher',
-      name: 'EL AMPUTADOR DE PLANTA',
-      hp: 850, dmg: 26, speed: 4.3, size: 3.8, teethReward: 12,
-      attacks: ['cone_saw', 'charge']
-    },
-    {
-      time: 360,
-      id: 'boss_siren',
-      name: 'LA MADRE DE ALAMBRE',
-      hp: 1650, dmg: 32, speed: 4.6, size: 4.1, teethReward: 18,
-      attacks: ['shockwave', 'summon']
-    },
-    {
-      time: 540,
-      id: 'boss_furnace',
-      name: 'AUTÓMATA CREMATORIO N.º 09',
-      hp: 2800, dmg: 38, speed: 4.1, size: 4.3, teethReward: 25,
-      attacks: ['floor_bombs', 'radial_slag']
-    },
-    {
-      time: 720,
-      id: 'boss_apostle',
-      name: 'EL FALSO CIRUJANO',
-      hp: 4200, dmg: 45, speed: 5.0, size: 4.2, teethReward: 35,
-      attacks: ['spiral_blades', 'floor_bombs']
-    },
-    {
-      time: 900,
-      id: 'boss_warden',
-      name: 'EL RECAUDADOR DEL ABISMO',
-      hp: 6500, dmg: 55, speed: 5.4, size: 4.8, teethReward: 50,
-      attacks: ['floor_bombs', 'shockwave', 'spiral_blades', 'cone_saw']
-    }
-  ],
+  // Compatibilidad directa con referencias existentes del modo Supervivencia
+  BOSS_SCHEDULE: MODES_CONFIG.SURVIVAL.BOSS_SCHEDULE,
+  DIFFICULTY: MODES_CONFIG.SURVIVAL.DIFFICULTY,
 
-  // 3. CURVA DE DIFICULTAD Y FASE FINAL (Minuto 15+)
-  DIFFICULTY: {
-    MAX_ACTIVE_ENEMIES: 130,
-    AI_LOD_DIST: 22.0,
-    BASE_SPAWN_INTERVAL: 1.05,
-    MIN_NORMAL_INTERVAL: 0.22,
-    HP_SCALE_PER_MIN: 0.42,
-    DMG_SCALE_PER_MIN: 0.18,
-    ENDGAME_START_TIME: 900,
-    ENDGAME_EXP_BASE: 1.045,
-    ENDGAME_SPAWN_BURST: 4
-  },
-
-  // CATÁLOGO DE 8 ARMAS (icon apunta ahora a la clave del sprite en UI_SPRITES.ICONS)
   SKILLS: {
     slash: {
       name: 'Sierra de Amputación', icon: 'slash',
@@ -263,7 +214,6 @@ export const CONFIG = {
     }
   },
 
-  // CATÁLOGO DE 9 PASIVAS EN PARTIDA (icon apunta al sprite del Atlas UI)
   PASSIVES: {
     multishot: {
       name: 'Recámara Modificada', icon: 'multishot', perLevel: 1,
@@ -326,13 +276,12 @@ export const CONFIG = {
     { id: 'teeth_bag', name: 'Bolsa de Dientes Extraídos', icon: 'teeth_bag', desc: 'Obtienes +15 Dientes adicionales para la Mesa del Cirujano.' }
   ],
 
-  // MEJORAS PERMANENTES SUTILES
   SHOP: [
-    { id: 'dmg',    name: 'Pólvora Refinada',      icon: 'dmg',     perLevel: 0.03,  desc: '+3% Daño Base permanente por nivel',            cost: 6 },
-    { id: 'hp',     name: 'Puntos de Sutura',      icon: 'maxHp',   perLevel: 5,     desc: '+5 Pulso Máximo Base permanente por nivel',     cost: 5 },
-    { id: 'spd',    name: 'Microdosis Efedrina',   icon: 'moveSpd', perLevel: 0.02,  desc: '+2% Velocidad de Movimiento Base por nivel',    cost: 6 },
-    { id: 'atkSpd', name: 'Aceite de Mecanismos',  icon: 'atkSpd',  perLevel: 0.025, desc: '+2.5% Cadencia de Ataque Base por nivel',       cost: 7 },
-    { id: 'mag',    name: 'Pinzas de Extracción',  icon: 'magnet',  perLevel: 0.35,  desc: '+0.35m Rango de Imán Base permanente',          cost: 5 },
-    { id: 'reroll', name: 'Soborno al Crupier',    icon: 'reroll',  perLevel: 1,     desc: '+1 Uso extra del botón Actualizar (Máx +3)',    cost: 18, max: 3 }
+    { id: 'dmg',    name: 'Pólvora Refinada',     icon: 'dmg',     perLevel: 0.03,  desc: '+3% Daño Base permanente por nivel',         cost: 6 },
+    { id: 'hp',     name: 'Puntos de Sutura',     icon: 'maxHp',   perLevel: 5,     desc: '+5 Pulso Máximo Base permanente por nivel',  cost: 5 },
+    { id: 'spd',    name: 'Microdosis Efedrina',  icon: 'moveSpd', perLevel: 0.02,  desc: '+2% Velocidad de Movimiento Base por nivel', cost: 6 },
+    { id: 'atkSpd', name: 'Aceite de Mecanismos', icon: 'atkSpd',  perLevel: 0.025, desc: '+2.5% Cadencia de Ataque Base por nivel',    cost: 7 },
+    { id: 'mag',    name: 'Pinzas de Extracción', icon: 'magnet',  perLevel: 0.35,  desc: '+0.35m Rango de Imán Base permanente',       cost: 5 },
+    { id: 'reroll', name: 'Soborno al Crupier',   icon: 'reroll',  perLevel: 1,     desc: '+1 Uso extra del botón Actualizar (Máx +3)', cost: 18, max: 3 }
   ]
 };

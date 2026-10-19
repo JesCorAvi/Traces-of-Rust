@@ -2,9 +2,12 @@ import * as THREE from 'three';
 import { CONFIG } from './config.js';
 import { SpriteSheets } from './spritesheets.js';
 import { AudioSys } from './audio.js';
+import {
+  initEnemyDefenseState,
+  evaluateEnemyTarget,
+  resolveEnemyNavigationGoal
+} from './defense/enemyTargetAI.js';
 
-// Actualiza las coordenadas UV de los 4 vértices de un PlaneGeometry para mostrar la celda (col, row)
-// sin necesidad de clonar texturas (tex.clone()) ni saturar la VRAM
 export function setPlaneFrameUV(geometry, totalCols, totalRows, col, row) {
   const uv = geometry.attributes.uv;
   const u0 = col / totalCols;
@@ -12,7 +15,6 @@ export function setPlaneFrameUV(geometry, totalCols, totalRows, col, row) {
   const v1 = 1 - row / totalRows;
   const v0 = 1 - (row + 1) / totalRows;
 
-  // Orden de vértices en THREE.PlaneGeometry: 0:TL, 1:TR, 2:BL, 3:BR
   uv.setXY(0, u0, v1);
   uv.setXY(1, u1, v1);
   uv.setXY(2, u0, v0);
@@ -20,7 +22,6 @@ export function setPlaneFrameUV(geometry, totalCols, totalRows, col, row) {
   uv.needsUpdate = true;
 }
 
-// Calcula qué sector direccional (0 .. numDirs-1) debe mostrarse según hacia dónde mira la entidad
 export function selectDirectionIndex(entityPos, entityFacingYaw, camPos, currentDir, numDirs = 8) {
   if (numDirs <= 1) return 0;
 
@@ -57,7 +58,6 @@ export function selectDirectionIndex(entityPos, entityFacingYaw, camPos, current
 const SHARED_SHADOW_GEO = new THREE.CircleGeometry(0.64, 10);
 const SHARED_SHADOW_MAT = new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.58 });
 
-// Componente Billboard Direccional Optimizado: Comparte la textura original del Atlas sin clonarla
 export function createBillboardSprite(sheetKey, size = 2.0) {
   const group = new THREE.Group();
 
@@ -186,24 +186,26 @@ export class Enemy {
     this.group = this.billboard.group;
     this.active = false;
     this.isBoss = false;
+    this.defenseAI = null;
     this.group.visible = false;
     scene.add(this.group);
   }
 
-  init(type, playerPos, gameTime, playerFwd, worldPhysics, bossCfg = null) {
+  init(type, playerPos, gameTime, playerFwd, worldPhysics, bossCfg = null, defenseOpts = null) {
     this.type = type;
     this.active = true;
     this.group.visible = true;
     this.isBoss = !!bossCfg;
     this.bossData = bossCfg;
     this.phase = 1;
+    this.defenseAI = null;
 
     const mins = gameTime / 60;
-    let hpScale = 1 + mins * CONFIG.DIFFICULTY.HP_SCALE_PER_MIN;
-    let dmgScale = 1 + mins * CONFIG.DIFFICULTY.DMG_SCALE_PER_MIN;
-    let spdBoost = 1;
+    let hpScale = defenseOpts?.hpMult ?? (1 + mins * CONFIG.DIFFICULTY.HP_SCALE_PER_MIN);
+    let dmgScale = defenseOpts?.dmgMult ?? (1 + mins * CONFIG.DIFFICULTY.DMG_SCALE_PER_MIN);
+    let spdBoost = defenseOpts?.spdMult ?? 1;
 
-    if (gameTime > CONFIG.DIFFICULTY.ENDGAME_START_TIME) {
+    if (!defenseOpts && gameTime > CONFIG.DIFFICULTY.ENDGAME_START_TIME) {
       const overSec = gameTime - CONFIG.DIFFICULTY.ENDGAME_START_TIME;
       const expMult = Math.pow(CONFIG.DIFFICULTY.ENDGAME_EXP_BASE, overSec);
       hpScale *= expMult;
@@ -212,11 +214,10 @@ export class Enemy {
     }
 
     if (this.isBoss) {
-      // Escalado de vida para que los Bosses aguanten el DPS de las armas mejoradas y se aprecie su barra
-      this.hp = Math.round(bossCfg.hp * (1.35 + mins * 0.18));
+      this.hp = Math.round(bossCfg.hp * (defenseOpts ? hpScale : (1.35 + mins * 0.18)));
       this.maxHp = this.hp;
-      this.dmg = bossCfg.dmg;
-      this.speed = bossCfg.speed;
+      this.dmg = Math.round(bossCfg.dmg * (defenseOpts ? dmgScale : 1));
+      this.speed = bossCfg.speed * spdBoost;
       this.billboard.changeSheet(bossCfg.id, bossCfg.size);
       this.specialTimer = 3.2;
       this.chargeVec = null;
@@ -243,19 +244,23 @@ export class Enemy {
     this.steerDir = Math.random() < 0.5 ? 1 : -1;
     this.billboard.mesh.material.emissive.setHex(0x000000);
 
-    let ang;
-    if (type === 'weeper' || this.isBoss) {
-      const baseAng = Math.atan2(playerFwd.x, playerFwd.z);
-      ang = baseAng + (Math.random() - 0.5) * 1.2;
+    if (defenseOpts && defenseOpts.isDefenseMode) {
+      initEnemyDefenseState(this, defenseOpts.routeId, defenseOpts.pathSystem);
     } else {
-      ang = Math.random() * Math.PI * 2;
+      let ang;
+      if (type === 'weeper' || this.isBoss) {
+        const baseAng = Math.atan2(playerFwd.x, playerFwd.z);
+        ang = baseAng + (Math.random() - 0.5) * 1.2;
+      } else {
+        ang = Math.random() * Math.PI * 2;
+      }
+      const dist = this.isBoss ? 20 : (24 + Math.random() * 12);
+      const sx = playerPos.x + Math.sin(ang) * dist;
+      const sz = playerPos.z + Math.cos(ang) * dist;
+      const sy = worldPhysics ? worldPhysics.getGroundHeight(sx, sz, 2.0) : 0;
+      this.group.position.set(sx, sy, sz);
     }
 
-    const dist = this.isBoss ? 20 : (24 + Math.random() * 12);
-    const sx = playerPos.x + Math.sin(ang) * dist;
-    const sz = playerPos.z + Math.cos(ang) * dist;
-    const sy = worldPhysics ? worldPhysics.getGroundHeight(sx, sz, 2.0) : 0;
-    this.group.position.set(sx, sy, sz);
     this.billboard.setDirectionalFrame(0, 1, 0);
   }
 
@@ -270,11 +275,15 @@ export class Enemy {
       return this.stateTimer > 0.5;
     }
 
+    const isDef = !!(this.defenseAI && this.defenseAI.enabled);
+
     if (this.burnTimer > 0) {
       this.burnTimer -= dt;
       this.billboard.mesh.material.emissive.setHex(0x662200);
       if (callbacks.onBurnTick) callbacks.onBurnTick(this, this.burnDps * dt);
       if (this.state === 'dead') return false;
+    } else if (isDef && this.defenseAI.alertFlashTimer > 0) {
+      this.billboard.mesh.material.emissive.setHex(0x881111);
     } else if (this.isBoss && this.phase === 2) {
       this.billboard.mesh.material.emissive.setHex(0x440808);
     } else {
@@ -289,10 +298,11 @@ export class Enemy {
     }
 
     const toPlayer = new THREE.Vector3().subVectors(playerPos, this.group.position);
-    const horizDist = Math.hypot(toPlayer.x, toPlayer.z);
-    const heightDiff = Math.abs(playerPos.y - this.group.position.y);
+    const horizDistPlayer = Math.hypot(toPlayer.x, toPlayer.z);
+    const heightDiffPlayer = Math.abs(playerPos.y - this.group.position.y);
 
-    if (!this.isBoss && horizDist > 48) {
+    // En modo Supervivencia se mantiene el reposicionamiento si se quedan demasiado atrás
+    if (!isDef && !this.isBoss && horizDistPlayer > 48) {
       const ang = Math.random() * Math.PI * 2;
       this.group.position.x = playerPos.x + Math.sin(ang) * 27;
       this.group.position.z = playerPos.z + Math.cos(ang) * 27;
@@ -308,7 +318,7 @@ export class Enemy {
           worldPhysics.resolveCollision(this.group.position, 0.85, this.group.position.y);
           this.group.position.y = worldPhysics.getGroundHeight(this.group.position.x, this.group.position.z, this.group.position.y);
         }
-        if (horizDist < 2.1 && heightDiff < 1.8 && callbacks.onDealDamage) callbacks.onDealDamage(this);
+        if (horizDistPlayer < 2.1 && heightDiffPlayer < 1.8 && callbacks.onDealDamage) callbacks.onDealDamage(this);
         return false;
       }
 
@@ -321,6 +331,29 @@ export class Enemy {
       }
     }
 
+    let goalPos = playerPos;
+    let attackTargetType = 'player';
+    let targetStructure = null;
+    let stopDist = this.isBoss ? 2.2 : 1.65;
+
+    if (isDef) {
+      evaluateEnemyTarget(
+        this, dt, playerPos, callbacks.playerAlive !== false,
+        callbacks.coreMachine, callbacks.extraStructures,
+        callbacks.pathSystem, this.scene, callbacks.vfxList
+      );
+      const nav = resolveEnemyNavigationGoal(
+        this, dt, playerPos, callbacks.coreMachine, callbacks.pathSystem, worldPhysics
+      );
+      goalPos = nav.goalPos;
+      attackTargetType = nav.attackTarget;
+      targetStructure = nav.structure;
+      stopDist = nav.stopDist;
+    }
+
+    const toGoal = new THREE.Vector3().subVectors(goalPos, this.group.position);
+    const horizDistGoal = Math.hypot(toGoal.x, toGoal.z);
+
     let moveSpd = this.speed;
     if (this.slowTimer > 0) {
       this.slowTimer -= dt;
@@ -329,14 +362,14 @@ export class Enemy {
 
     let targetState = 1; // WALK
 
-    if (this.type === 'weeper') {
+    if (this.type === 'weeper' && (!isDef || attackTargetType === 'player')) {
       const dirToEnemy = toPlayer.clone().negate().normalize();
-      const watched = playerFwd.angleTo(dirToEnemy) < 0.95 && horizDist < 26;
+      const watched = playerFwd.angleTo(dirToEnemy) < 0.95 && horizDistPlayer < 26;
       if (watched) {
         moveSpd = 0;
         targetState = 0; // IDLE
         this.attackCharge = 0;
-      } else if (!this.hasTriggeredScare && horizDist < 13 && horizDist > 8) {
+      } else if (!this.hasTriggeredScare && horizDistPlayer < 13 && horizDistPlayer > 8) {
         this.hasTriggeredScare = true;
         this.group.position.add(toPlayer.clone().setY(0).normalize().multiplyScalar(1.1));
         if (callbacks.onScare) callbacks.onScare();
@@ -350,36 +383,51 @@ export class Enemy {
       if (this.stateTimer <= 0) this.state = 'walk';
     }
 
-    const hitReach = this.isBoss ? 2.2 : 1.65;
-    if (horizDist < hitReach && heightDiff < 1.6 && moveSpd > 0 && this.state !== 'hurt') {
-      targetState = 2; // ATTACK
-      moveSpd *= 0.25;
-      this.attackCharge += dt;
-      if (this.attackCharge >= 0.35) {
-        this.attackCharge = -0.55;
-        if (horizDist < hitReach + 0.15 && heightDiff < 1.7 && callbacks.onDealDamage) {
-          callbacks.onDealDamage(this);
+    // Ataque al objetivo actual (Jugador en cualquier modo, o Núcleo/Estructura en modo Defensa)
+    if (attackTargetType === 'player') {
+      if (horizDistPlayer < stopDist && heightDiffPlayer < 1.6 && moveSpd > 0 && this.state !== 'hurt') {
+        targetState = 2; // ATTACK
+        moveSpd *= 0.25;
+        this.attackCharge += dt;
+        if (this.attackCharge >= 0.35) {
+          this.attackCharge = -0.55;
+          if (horizDistPlayer < stopDist + 0.15 && heightDiffPlayer < 1.7 && callbacks.onDealDamage) {
+            callbacks.onDealDamage(this);
+          }
         }
+      } else {
+        this.attackCharge = Math.max(0, this.attackCharge - dt * 2);
       }
-    } else {
-      this.attackCharge = Math.max(0, this.attackCharge - dt * 2);
+    } else if (isDef && targetStructure && horizDistGoal <= stopDist + 0.25 && this.state !== 'hurt') {
+      targetState = 2; // ATTACK AL NÚCLEO O ESTRUCTURA
+      moveSpd = 0;
+      const dirToStruct = new THREE.Vector3().subVectors(targetStructure.position, this.group.position);
+      this.billboard.facingYaw = Math.atan2(-dirToStruct.x, -dirToStruct.z);
+
+      this.defenseAI.coreAttackTimer += dt;
+      const atkInterval = this.defenseAI.profile.coreAttackInterval || 1.15;
+      if (this.defenseAI.coreAttackTimer >= atkInterval) {
+        this.defenseAI.coreAttackTimer = 0;
+        const coreDmg = this.defenseAI.profile.coreDamage || this.dmg;
+        targetStructure.takeDamage(coreDmg, this);
+      }
     }
 
-    const isFar = !this.isBoss && horizDist > CONFIG.DIFFICULTY.AI_LOD_DIST;
-    const tickRate = isFar ? 0.18 : (this.type === 'weeper' ? 0.06 : 0.085);
+    const isFar = !this.isBoss && horizDistPlayer > CONFIG.DIFFICULTY.AI_LOD_DIST;
+    const tickRate = isFar ? 0.14 : (this.type === 'weeper' ? 0.06 : 0.08);
 
     this.stepAccum += dt;
     if (this.stepAccum >= tickRate) {
       const stepDt = this.stepAccum;
       this.stepAccum = 0;
 
-      if (moveSpd > 0 && horizDist > 1.1) {
-        const dir = new THREE.Vector3(toPlayer.x, 0, toPlayer.z).normalize();
+      if (moveSpd > 0 && horizDistGoal > Math.max(0.25, stopDist * 0.72)) {
+        const dir = new THREE.Vector3(toGoal.x, 0, toGoal.z).normalize();
         this.billboard.facingYaw = Math.atan2(-dir.x, -dir.z);
         const prevX = this.group.position.x, prevZ = this.group.position.z;
         this.group.position.addScaledVector(dir, moveSpd * stepDt);
 
-        if (worldPhysics && !isFar) {
+        if (worldPhysics) {
           worldPhysics.resolveCollision(this.group.position, this.isBoss ? 0.8 : 0.55, this.group.position.y);
           const moved = Math.hypot(this.group.position.x - prevX, this.group.position.z - prevZ);
           if (moved < moveSpd * stepDt * 0.35) {
@@ -411,7 +459,7 @@ export class EnemyPool {
     }
   }
 
-  spawn(type, playerPos, gameTime, playerFwd, worldPhysics, bossCfg = null) {
+  spawn(type, playerPos, gameTime, playerFwd, worldPhysics, bossCfg = null, defenseOpts = null) {
     let enemy = this.pool.pop();
     if (!enemy) {
       if (bossCfg) {
@@ -422,7 +470,7 @@ export class EnemyPool {
       }
       if (!enemy) return null;
     }
-    enemy.init(type, playerPos, gameTime, playerFwd, worldPhysics, bossCfg);
+    enemy.init(type, playerPos, gameTime, playerFwd, worldPhysics, bossCfg, defenseOpts);
     this.active.push(enemy);
     return enemy;
   }
@@ -430,6 +478,7 @@ export class EnemyPool {
   release(index) {
     const enemy = this.active[index];
     enemy.active = false;
+    enemy.defenseAI = null;
     enemy.group.visible = false;
     this.active.splice(index, 1);
     this.pool.push(enemy);

@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap');
+@import url('./hud_modes.css');
 
 * {
   box-sizing: border-box;
@@ -85,7 +86,6 @@ body.endgame-mode #vignette-overlay {
   transition: opacity 0.08s steps(2);
 }
 
-/* Barra superior de herramientas (Desplazada ligeramente bajo la barra superior de XP) */
 #top-bar {
   position: fixed; top: 20px; right: 16px; z-index: 110;
   display: flex; gap: 8px; align-items: center;
@@ -137,7 +137,6 @@ body.endgame-mode #vignette-overlay {
   flex-shrink: 0;
 }
 
-/* Tornillos en las esquinas (Siempre por debajo del texto: z-index 1) */
 .screw {
   position: absolute;
   width: calc(var(--ui-icon-size, 32px) * 0.5);
@@ -153,7 +152,6 @@ body.endgame-mode #vignette-overlay {
 .screw.bl { bottom: 4px; left: 4px; }
 .screw.br { bottom: 4px; right: 4px; }
 
-/* Decoración sobre marcos */
 .ui-decor {
   position: absolute;
   width: var(--ui-icon-size, 32px);
@@ -209,9 +207,7 @@ body.endgame-mode #vignette-overlay {
   text-align: left;
   margin: 12px 0 16px;
 }
-.paper-note b {
-  color: #f5ecd3;
-}
+.paper-note b { color: #f5ecd3; }
 
 .tape-strip, .tape-label {
   display: inline-flex;
@@ -250,7 +246,7 @@ body.endgame-mode #vignette-overlay {
 }
 
 /* ==========================================================================
-   BOTONES EN SPRITE 9-SLICE (NORMAL, HOVER, ACTIVE, DISABLED Y FOCUS)
+   BOTONES EN SPRITE 9-SLICE
    ========================================================================== */
 .btn-group {
   display: flex;
@@ -341,12 +337,8 @@ select:focus-visible {
   outline-offset: 3px;
 }
 
-.upg-card:focus-visible {
-  outline: none;
-}
-
 /* ==========================================================================
-   HUD EN PARTIDA: DISTRIBUCIÓN ESTILO MEGABONK CON ESTÉTICA TRACES OF RUST
+   HUD BASE EN PARTIDA
    ========================================================================== */
 #hud {
   position: fixed;
@@ -355,12 +347,9 @@ select:focus-visible {
   z-index: 15;
 }
 
-/* 1. BARRA SUPERIOR DE EXPERIENCIA (SUERO) A ANCHO COMPLETO */
 #hud-top-progress-container {
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
+  top: 0; left: 0; right: 0;
   width: 100%;
   z-index: 25;
   pointer-events: auto;
@@ -380,9 +369,7 @@ select:focus-visible {
 
 .segmented-bar.exp-frame-top {
   height: 15px;
-  border-top: none;
-  border-left: none;
-  border-right: none;
+  border-top: none; border-left: none; border-right: none;
   border-bottom: 3px solid #4a2518;
   border-image: none;
   background-color: #060806;
@@ -391,23 +378,21 @@ select:focus-visible {
 }
 
 #exp-bar {
-  display: block;
+  display: block !important;
   width: 0%;
-  height: 100%;
+  height: 100% !important;
   min-height: 8px;
-  background-color: #c8a846;
-  background-image: var(--bar-fill-exp);
-  background-repeat: repeat-x;
-  background-size: auto 100%;
+  background-color: #c8a846 !important;
+  background-image: var(--bar-fill-exp) !important;
+  background-repeat: repeat-x !important;
+  background-size: auto 100% !important;
   box-shadow: inset 0 1px 0 #fff6e0, 0 0 8px rgba(240, 201, 84, 0.5);
   transition: width 0.14s steps(12);
 }
 
-/* 2. ESQUINA SUPERIOR IZQUIERDA: CONTADORES, PULSO CARDÍACO Y ARMAS 2x2 */
 #hud-top-left {
   position: absolute;
-  top: 22px;
-  left: 14px;
+  top: 22px; left: 14px;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -415,7 +400,6 @@ select:focus-visible {
   z-index: 18;
 }
 
-/* Fila horizontal de contadores rápidos (Reloj, Dientes, Fusibles, Bajas) */
 .counters-row-compact {
   display: inline-flex;
   align-items: center;
@@ -438,14 +422,9 @@ select:focus-visible {
   white-space: nowrap;
 }
 
-#souls-hud {
-  color: #f0c954;
-}
-#kills-text {
-  color: #ff6b6b;
-}
+#souls-hud { color: #f0c954; }
+#kills-text { color: #ff6b6b; }
 
-/* Placa compacta de Pulso Cardíaco con texto superpuesto en el centro */
 .biometrics-plate-compact {
   position: relative;
   width: 244px;
@@ -454,10 +433,7 @@ select:focus-visible {
   border-image: var(--slice-panel_metal) 12 fill / 8px stretch;
   box-shadow: 3px 3px 0 rgba(5, 6, 5, 0.92);
 }
-
-.biometrics-plate-compact .screw {
-  display: none;
-}
+.biometrics-plate-compact .screw { display: none; }
 
 .hp-frame-compact {
   height: 24px;
@@ -467,14 +443,14 @@ select:focus-visible {
 }
 
 #hp-bar {
-  display: block;
+  display: block !important;
   width: 100%;
-  height: 100%;
+  height: 100% !important;
   min-height: 12px;
-  background-color: #c42b2b;
-  background-image: var(--bar-fill-hp);
-  background-repeat: repeat-x;
-  background-size: auto 100%;
+  background-color: #c42b2b !important;
+  background-image: var(--bar-fill-hp) !important;
+  background-repeat: repeat-x !important;
+  background-size: auto 100% !important;
   transition: width 0.12s steps(10);
 }
 
@@ -496,16 +472,7 @@ select:focus-visible {
   text-shadow: 2px 2px 0 #050605, -1px -1px 0 #050605, 1px -1px 0 #050605, -1px 1px 0 #050605;
   white-space: nowrap;
 }
-.led-val.amber {
-  color: #f0c954;
-}
-.led-dim {
-  color: #a8c499;
-  font-family: 'Press Start 2P', monospace;
-  font-size: 9px;
-  text-shadow: 2px 2px 0 #050605;
-  white-space: nowrap;
-}
+.led-val.amber { color: #f0c954; }
 
 .bar-grid-overlay { display: none; }
 
@@ -520,18 +487,17 @@ select:focus-visible {
   100% { transform: translate(2px, 2px); }
 }
 
-/* Cuadrícula 2x2 de Armas estilo Megabonk (Iconos cuadrados con nivel debajo) */
 .slots-grid-compact {
   display: grid;
-  grid-template-columns: repeat(2, 64px);
+  grid-template-columns: repeat(2, 58px);
   gap: 8px;
   margin-top: 2px;
 }
 
 .weapon-slot {
   position: relative;
-  width: 64px;
-  height: 64px;
+  width: 58px;
+  height: 58px;
   border-style: solid;
   border-width: 8px;
   border-image: var(--slice-slot_weapon) 7 fill / 8px stretch;
@@ -540,12 +506,11 @@ select:focus-visible {
   text-shadow: 2px 2px 0 #050605;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: space-between;
   align-items: center;
   gap: 2px;
   pointer-events: auto;
   box-shadow: 3px 3px 0 rgba(5, 6, 5, 0.9);
-  transition: transform 0.08s steps(2);
 }
 
 .weapon-slot:hover {
@@ -558,26 +523,18 @@ select:focus-visible {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
   width: 100%;
   overflow: hidden;
 }
-
-/* Ocultamos el nombre largo dentro del icono cuadrado (queda en tooltip) para destacar el arte del arma y su nivel */
-.weapon-slot-name > span:not(.ui-icon) {
-  display: none;
+.weapon-slot-name > span:not(.ui-icon) { display: none; }
+.weapon-slot .ui-icon.sm { transform: scale(1.05); margin: 0; }
+.weapon-slot-lvl-text {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
+  color: #f0c954;
+  text-shadow: 2px 2px 0 #050605;
+  line-height: 1;
 }
-
-.weapon-slot .ui-icon.sm {
-  transform: scale(1.05);
-  margin: 0;
-}
-
-.weapon-slot .ui-lvl-badge {
-  transform: scale(0.85);
-  margin-bottom: -4px;
-}
-
 .weapon-slot.empty {
   border-image-source: var(--slice-slot_empty);
   opacity: 0.55;
@@ -587,997 +544,4 @@ select:focus-visible {
   font-family: 'Press Start 2P', monospace;
   font-size: 7px;
   color: #6c7a65;
-}
-
-/* 3. PANEL DE OBJETIVO (LATERAL IZQUIERDO BAJO LAS ARMAS) */
-#hud-objective-tracker {
-  position: absolute;
-  top: 256px;
-  left: 14px;
-  width: 244px;
-  z-index: 17;
-}
-
-.objective-note {
-  margin: 0;
-  padding: 6px 10px;
-  border-width: 10px;
-  border-image: var(--slice-panel_paper) 10 fill / 10px stretch;
-  background-color: rgba(10, 14, 10, 0.9);
-  box-shadow: 3px 3px 0 rgba(5, 6, 5, 0.9);
-}
-
-.objective-header {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-family: 'Press Start 2P', monospace;
-  font-size: 8px;
-  color: #f0c954;
-  border-bottom: 1px dashed #364832;
-  padding-bottom: 4px;
-  margin-bottom: 5px;
-}
-
-.objective-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-family: 'VT323', monospace;
-  font-size: 19px;
-  line-height: 1.15;
-  color: #fff6e0;
-  text-shadow: 1px 1px 0 #050605;
-}
-
-.checkbox-box {
-  font-family: 'Press Start 2P', monospace;
-  font-size: 9px;
-  color: #b89c46;
-  flex-shrink: 0;
-}
-
-.objective-sub-task,
-#next-boss-text {
-  font-family: 'Press Start 2P', monospace;
-  font-size: 8px;
-  line-height: 1.35;
-  color: #a8c499;
-  text-shadow: 1px 1px 0 #050605;
-  margin-top: 5px;
-  white-space: nowrap;
-}
-
-/* 4. CRONÓMETRO CENTRAL SUPERIOR (ESTILO MEGABONK) */
-#hud-top-center {
-  position: absolute;
-  top: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 19;
-  text-align: center;
-}
-
-#timer-text {
-  font-family: 'Press Start 2P', monospace;
-  font-size: 24px;
-  line-height: 1.15;
-  color: #f5ecd3;
-  text-shadow:
-    3px 3px 0 #050605,
-    -2px -2px 0 #050605,
-    2px -2px 0 #050605,
-    -2px 2px 0 #050605,
-    0 4px 0 #4a2518;
-  padding: 2px 8px;
-  display: inline-block;
-  white-space: nowrap;
-}
-
-/* 5. ESQUINA SUPERIOR DERECHA: NIVEL DE CICLO + ESCÁNER CIRCULAR (RADAR) */
-#hud-top-right {
-  position: absolute;
-  top: 52px;
-  right: 16px;
-  z-index: 18;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-}
-
-.telemetry-compact {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 6px;
-}
-
-.ciclo-badge-compact,
-#level-text {
-  font-family: 'Press Start 2P', monospace;
-  font-size: 16px;
-  color: #f5ecd3;
-  text-shadow:
-    3px 3px 0 #050605,
-    -2px -2px 0 #050605,
-    2px -2px 0 #050605,
-    -2px 2px 0 #050605,
-    0 3px 0 #4a2518;
-  letter-spacing: 1px;
-  margin-bottom: 2px;
-}
-
-/* Radar Circular Oxidado */
-.radar-scanner-plate {
-  position: relative;
-  width: 146px;
-  height: 146px;
-  border-radius: 50%;
-  border: 4px solid #877a5c;
-  outline: 3px solid #050605;
-  border-image: none;
-  padding: 6px;
-  background: radial-gradient(circle at center, #101910 0%, #060906 68%, #040504 100%);
-  box-shadow:
-    inset 0 0 18px rgba(0, 0, 0, 0.95),
-    inset 0 0 0 2px #4a2518,
-    4px 5px 0 rgba(5, 6, 5, 0.9);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.radar-scanner-plate .screw {
-  display: none;
-}
-
-/* Puntos cardinales N / S / E / O en el borde del radar */
-.radar-scanner-plate::before {
-  content: 'N';
-  position: absolute;
-  top: -8px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-family: 'Press Start 2P', monospace;
-  font-size: 9px;
-  color: #f5ecd3;
-  text-shadow: 2px 2px 0 #050605, -1px -1px 0 #050605;
-  z-index: 6;
-}
-
-.radar-scanner-plate::after {
-  content: 'S';
-  position: absolute;
-  bottom: -8px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-family: 'Press Start 2P', monospace;
-  font-size: 9px;
-  color: #877a5c;
-  text-shadow: 2px 2px 0 #050605;
-  z-index: 6;
-}
-
-.radar-display {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
-  overflow: hidden;
-  background:
-    radial-gradient(circle, transparent 32%, rgba(104, 134, 58, 0.18) 33%, transparent 35%),
-    radial-gradient(circle, transparent 64%, rgba(104, 134, 58, 0.22) 65%, transparent 67%),
-    linear-gradient(0deg, transparent 49%, rgba(104, 134, 58, 0.2) 50%, transparent 51%),
-    linear-gradient(90deg, transparent 49%, rgba(104, 134, 58, 0.2) 50%, transparent 51%);
-}
-
-/* Puntero central del jugador en el radar */
-.radar-display::after {
-  content: '▲';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  font-size: 11px;
-  color: #f0c954;
-  text-shadow: 0 0 4px #050605;
-  z-index: 4;
-}
-
-.radar-sweeper {
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  background: conic-gradient(from 0deg, rgba(168, 196, 153, 0.32) 0deg, rgba(104, 134, 58, 0.08) 45deg, transparent 90deg);
-  animation: radarSweepSpin 3.6s linear infinite;
-}
-
-@keyframes radarSweepSpin {
-  from { transform: rotate(0deg); }
-  to   { transform: rotate(360deg); }
-}
-
-.radar-dot {
-  position: absolute;
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  z-index: 3;
-}
-
-.radar-dot.enemy-approx {
-  top: 30%;
-  left: 34%;
-  background: #a8c499;
-  box-shadow: 0 0 4px #a8c499, 36px 26px 0 #a8c499, -12px 34px 0 #a8c499;
-  animation: radarBlipPulse 1.2s steps(2) infinite;
-}
-
-.radar-dot.boss-approx {
-  top: 24%;
-  right: 28%;
-  width: 7px;
-  height: 7px;
-  background: #ff5252;
-  box-shadow: 0 0 6px #ff5252;
-  animation: radarBlipPulse 0.6s steps(2) infinite;
-}
-
-@keyframes radarBlipPulse {
-  0%, 100% { opacity: 1; }
-  50%      { opacity: 0.25; }
-}
-
-#radar-threat-label {
-  position: absolute;
-  bottom: 12px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-family: 'Press Start 2P', monospace;
-  font-size: 7px;
-  color: #a8c499;
-  text-shadow: 1px 1px 0 #050605;
-  white-space: nowrap;
-  z-index: 5;
-}
-
-#elev-container {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  background: rgba(5, 6, 5, 0.8);
-  border: 1px solid #4a2518;
-  padding: 2px 6px;
-}
-
-#elev-text {
-  font-family: 'Press Start 2P', monospace;
-  font-size: 8px;
-  color: #a8c499;
-  text-shadow: 1px 1px 0 #050605;
-}
-
-/* Alertas secundarias bajo el radar */
-#hud-alert-overlay-right {
-  position: absolute;
-  top: 256px;
-  right: 16px;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 4px;
-  z-index: 17;
-}
-
-#boss-killed-alert {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  background: rgba(20, 7, 7, 0.85);
-  border: 1px solid #a52020;
-  padding: 3px 7px;
-  font-family: 'Press Start 2P', monospace;
-  font-size: 8px;
-  color: #f0c954;
-}
-
-#wave-text {
-  font-family: 'Press Start 2P', monospace;
-  font-size: 9px;
-  line-height: 1.35;
-  color: #ff6b6b;
-  text-shadow: 2px 2px 0 #050605;
-  background: rgba(5, 6, 5, 0.78);
-  border: 1px solid #4a2518;
-  padding: 3px 7px;
-  white-space: nowrap;
-}
-
-/* 6. SECTOR INFERIOR CENTRAL: BANDEJA HORIZONTAL DE IMPLANTES PASIVOS (MEGABONK DOCK) */
-#hud-bottom-slots-container {
-  position: absolute;
-  bottom: 12px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 18;
-}
-
-.implants-tray {
-  border-width: 10px;
-  border-image: var(--slice-panel_metal) 12 fill / 10px stretch;
-  padding: 4px 12px 6px;
-  background-color: rgba(6, 9, 6, 0.85);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.9);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-}
-
-.implants-tray .screw,
-.implants-tray .ui-decor {
-  display: none;
-}
-
-.slots-horizontal-label {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-  width: 100%;
-  font-family: 'Press Start 2P', monospace;
-  font-size: 8px;
-  color: #d8cfb8;
-  text-shadow: 1px 1px 0 #050605;
-}
-
-.slots-horizontal-row {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-}
-
-/* Casilla compacta horizontal de Pasiva en el Dock inferior */
-.passive-slot {
-  position: relative;
-  min-width: 136px;
-  max-width: 185px;
-  border-style: solid;
-  border-width: 8px;
-  border-image: var(--slice-slot_passive) 7 fill / 8px stretch;
-  padding: 2px 6px;
-  color: #f0c954;
-  text-shadow: 1px 1px 0 #050605;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  pointer-events: auto;
-  box-shadow: 2px 2px 0 #050605;
-  transition: transform 0.08s steps(2);
-}
-
-.passive-slot:hover {
-  border-image-source: var(--slice-card_hover);
-  transform: translateY(-2px);
-}
-
-.passive-slot.empty {
-  min-width: 68px;
-  border-image-source: var(--slice-slot_empty);
-  color: #6c7a65;
-  opacity: 0.65;
-  align-items: center;
-  justify-content: center;
-}
-
-.passive-slot-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 6px;
-  width: 100%;
-}
-
-.passive-slot-title {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  min-width: 0;
-  flex: 1;
-  color: #f5ecd3;
-  font-family: 'Press Start 2P', monospace;
-  font-size: 8px;
-  line-height: 1.25;
-}
-
-.passive-slot-title span,
-.passive-slot-title-text {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.passive-slot-bonus-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 4px;
-}
-
-.passive-stat-label {
-  display: none;
-}
-
-.passive-stat-text {
-  font-family: 'Press Start 2P', monospace;
-  font-size: 8px;
-  line-height: 1.15;
-  color: #f0c954;
-  background: #050605;
-  border: 1px solid #63533b;
-  padding: 2px 4px;
-  white-space: nowrap;
-}
-
-/* Ocultamos el desglose largo en el dock inferior (se mantiene visible en las tarjetas de subida de nivel) */
-#passives-bar .passive-affected-weapons {
-  display: none !important;
-}
-
-/* En las tarjetas de subida de nivel sí mostramos las armas afectadas */
-.passive-affected-weapons {
-  font-size: 16px;
-  line-height: 1.2;
-  color: #d8cfb8;
-  border-top: 1px dashed #364832;
-  padding-top: 4px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-.passive-affected-label {
-  font-family: 'Press Start 2P', monospace;
-  font-size: 8px;
-  color: #a8c499;
-}
-.passive-weapons-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 4px;
-  width: 100%;
-}
-.passive-weapon-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  background: #080b08;
-  border: 1px solid #63533b;
-  color: #f5ecd3;
-  padding: 2px 6px;
-  font-size: 16px;
-  line-height: 1.15;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.passive-weapon-none {
-  color: #a8c499;
-  font-style: italic;
-}
-
-/* 7. INDICADOR COMPACTO DE VÁLVULA DASH [SHIFT] (ABAJO-IZQUIERDA) */
-#stamina-tracker-overlay {
-  position: absolute;
-  bottom: 14px;
-  left: 14px;
-  width: 176px;
-  background: rgba(6, 8, 6, 0.84);
-  border: 2px solid #4a2518;
-  outline: 2px solid #050605;
-  padding: 5px 8px;
-  box-shadow: 3px 3px 0 rgba(5, 6, 5, 0.9);
-  z-index: 18;
-}
-
-.stamina-text-wrapper {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  font-family: 'Press Start 2P', monospace;
-  font-size: 8px;
-  color: #a8c499;
-  text-shadow: 1px 1px 0 #050605;
-  margin-bottom: 4px;
-}
-
-.stam-frame-compact {
-  height: 12px;
-  margin: 0;
-  border-width: 2px;
-}
-
-#stam-bar {
-  display: block;
-  width: 100%;
-  height: 100%;
-  min-height: 6px;
-  background-color: #527848;
-  background-image: var(--bar-fill-stam);
-  background-repeat: repeat-x;
-  background-size: auto 100%;
-}
-
-.vibrate-up {
-  animation: iconLvlVibrate 0.32s steps(2) 2;
-}
-@keyframes iconLvlVibrate {
-  0%   { transform: translateY(0); }
-  50%  { transform: translateY(-3px); }
-  100% { transform: translateY(1px); }
-}
-
-/* 8. BARRA DE VIDA DEL BOSS (CENTRO SUPERIOR BAJO EL RELOJ) */
-#boss-hud {
-  position: absolute;
-  top: 54px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: min(540px, 52vw);
-  z-index: 20;
-}
-.boss-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-family: 'Press Start 2P', monospace;
-  font-size: 10px;
-  line-height: 1.3;
-  color: #f5ecd3;
-  text-shadow: 2px 2px 0 #050605;
-  margin-bottom: 5px;
-}
-.boss-title-wrap {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-.phase-tag {
-  background: #6e1414;
-  color: #fff6e0;
-  border: 2px solid #050605;
-  padding: 2px 6px;
-  font-size: 8px;
-}
-.phase-tag.p2 {
-  background: #f0c954;
-  color: #050605;
-  text-shadow: none;
-  animation: alertStepPulse 0.4s steps(2) infinite;
-}
-.boss-bar-frame {
-  position: relative;
-  width: 100%;
-  height: 22px;
-  background-color: #050605;
-  border-style: solid;
-  border-width: 4px;
-  border-image: var(--slice-bar_frame) 5 fill / 4px stretch;
-  overflow: hidden;
-}
-#boss-hp-bar {
-  display: block;
-  width: 100%;
-  height: 100%;
-  min-height: 12px;
-  background-color: #b82525;
-  background-image: var(--bar-fill-boss);
-  background-repeat: repeat-x;
-  background-size: auto 100%;
-  transition: width 0.12s steps(12);
-}
-#boss-hp-segments { display: none; }
-
-#boss-alert, #endgame-banner {
-  position: absolute;
-  top: 126px;
-  left: 50%;
-  transform: translateX(-50%);
-  border-style: solid;
-  border-width: 14px;
-  border-image: var(--slice-panel_boss) 12 fill / 14px stretch;
-  color: #fff6e0;
-  text-shadow: 2px 2px 0 #050605;
-  font-family: 'Press Start 2P', monospace;
-  padding: 4px 12px;
-  font-size: 10px;
-  line-height: 1.35;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  white-space: nowrap;
-  animation: alertStepPulse 0.38s steps(2) infinite;
-  z-index: 22;
-}
-#endgame-banner { top: 118px; }
-
-@keyframes alertStepPulse {
-  0%   { opacity: 1; transform: translateX(-50%) translateY(0); }
-  50%  { opacity: 0.8; transform: translateX(-50%) translateY(-2px); }
-  100% { opacity: 1; transform: translateX(-50%) translateY(0); }
-}
-
-/* Retícula Central en Sprite */
-#crosshair {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: var(--ui-icon-size, 32px);
-  height: var(--ui-icon-size, 32px);
-  background-image: var(--ui-atlas);
-  background-size: var(--ui-atlas-w) var(--ui-atlas-h);
-  background-position: calc(-32px * var(--ui-scale, 2)) calc(-280px * var(--ui-scale, 2));
-  transform: translate(-50%, -50%);
-}
-
-/* ==========================================================================
-   MENÚS SUPERPUESTOS, TARJETAS DE SUBIDA DE NIVEL Y MESA DEL CIRUJANO
-   ========================================================================== */
-.overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(4, 5, 4, 0.88);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 30;
-  padding: 16px;
-}
-#sheets-modal { z-index: 100; }
-#shop-screen { z-index: 60; }
-#pause-screen { z-index: 55; }
-
-.main-menu-plate, .gameover-plate {
-  max-width: 760px;
-  width: 94%;
-  text-align: center;
-  padding: 14px 18px;
-}
-.levelup-plate {
-  max-width: 920px;
-  width: 96%;
-  padding: 12px 16px;
-}
-
-.plate-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 10px;
-  padding-bottom: 8px;
-  margin-bottom: 8px;
-  border-bottom: 2px dashed #364832;
-}
-.plate-header .tape-label {
-  width: auto;
-  margin-bottom: 0;
-}
-
-.buckshot-title {
-  margin: 8px 0 10px;
-  font-family: 'Press Start 2P', monospace;
-  font-size: 28px;
-  line-height: 1.25;
-  color: #f0c954;
-  text-shadow: 4px 4px 0 #050605, -2px -2px 0 #4a2518;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-}
-.dead-title {
-  color: #ff5252;
-  text-shadow: 4px 4px 0 #050605;
-}
-.plate-sub {
-  font-family: 'Press Start 2P', monospace;
-  color: #e2dac6;
-  text-shadow: 2px 2px 0 #050605;
-  font-size: 11px;
-  line-height: 1.6;
-  margin: 6px 0 12px;
-}
-
-/* Tienda Permanente (Mesa del Cirujano) */
-.shop-container {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin: 10px 0;
-  max-height: 48vh;
-  overflow-y: auto;
-}
-.shop-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-  border-style: solid;
-  border-width: 12px;
-  border-image: var(--slice-slot_weapon) 7 fill / 12px stretch;
-  padding: 4px 10px;
-  text-align: left;
-}
-.shop-row:hover {
-  border-image-source: var(--slice-card_hover);
-}
-.shop-row-left {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-.shop-row-info b {
-  font-family: 'Press Start 2P', monospace;
-  color: #f0c954;
-  text-shadow: 2px 2px 0 #050605;
-  font-size: 11px;
-  line-height: 1.35;
-}
-.shop-row-sub {
-  color: #e6dec8;
-  text-shadow: 1px 1px 0 #050605;
-  font-size: 19px;
-  line-height: 1.3;
-  margin-top: 4px;
-}
-
-/* Tarjetas de Subida de Nivel en Sprite 9-Slice */
-#upgrade-container {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-  margin: 12px 0;
-}
-.upg-card {
-  position: relative;
-  border-style: solid;
-  border-width: 16px;
-  border-image: var(--slice-card_normal) 10 fill / 16px stretch;
-  padding: 6px 8px;
-  cursor: var(--cursor-pointer), pointer;
-  text-align: left;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-}
-.upg-card:hover {
-  border-image-source: var(--slice-card_hover);
-  transform: translateY(-2px);
-}
-.upg-card:active {
-  transform: translateY(2px);
-}
-
-.upg-type-badge {
-  display: inline-block;
-  align-self: flex-start;
-  font-family: 'Press Start 2P', monospace;
-  font-size: 9px;
-  line-height: 1.2;
-  padding: 4px 8px;
-  margin-bottom: 8px;
-  border: 2px solid #050605;
-  text-shadow: 1px 1px 0 #050605;
-}
-.badge-weapon   { background: #7a1818; color: #fff6e0; border-color: #d43b3b; }
-.badge-passive  { background: #263820; color: #e8f5c8; border-color: #68863a; }
-.badge-fallback { background: #5c3818; color: #fff6e0; border-color: #b89c46; }
-
-.upg-title-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 10px;
-  font-family: 'Press Start 2P', monospace;
-  color: #f5ecd3;
-  text-shadow: 2px 2px 0 #050605;
-  font-size: 12px;
-  line-height: 1.35;
-  min-height: 36px;
-}
-.upg-title-left {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
-  flex: 1;
-}
-.upg-title-left span {
-  line-height: 1.35;
-  word-break: break-word;
-}
-.upg-lvl-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  flex-shrink: 0;
-  background: #050605;
-  border: 2px solid #63533b;
-  color: #f0c954;
-  padding: 3px 6px;
-  font-family: 'Press Start 2P', monospace;
-  font-size: 10px;
-  line-height: 1.2;
-}
-
-.upg-desc {
-  font-size: 19px;
-  line-height: 1.35;
-  color: #e6dec8;
-  text-shadow: 1px 1px 0 #050605;
-  margin: 8px 0 6px;
-}
-
-/* Barra del Botón Actualizar (Reroll) */
-.reroll-bar {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 12px;
-  margin-top: 10px;
-  padding-top: 10px;
-  border-top: 2px dashed #364832;
-}
-.reroll-charges-box {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: #050605;
-  border: 2px solid #4a2518;
-  padding: 4px 10px;
-  font-family: 'Press Start 2P', monospace;
-  font-size: 9px;
-  color: #d8cfb8;
-  text-shadow: 1px 1px 0 #050605;
-}
-.reroll-charges {
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-}
-.reroll-btn {
-  min-width: 340px;
-}
-
-/* Reporte de Autopsia */
-.stats-report .report-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-bottom: 2px dashed #243022;
-  padding: 5px 0;
-  font-size: 20px;
-}
-.report-loadout {
-  margin-top: 10px;
-  padding-top: 8px;
-  font-size: 19px;
-  color: #e6dec8;
-}
-
-/* Inspector de Spritesheets */
-#sheets-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(195px, 1fr));
-  gap: 10px;
-  margin-top: 10px;
-}
-.sheet-card {
-  border-style: solid;
-  border-width: 12px;
-  border-image: var(--slice-slot_weapon) 7 fill / 12px stretch;
-  padding: 6px;
-  text-align: center;
-}
-.sheet-card canvas {
-  width: 148px;
-  height: 148px;
-  image-rendering: pixelated;
-  border: 2px solid #050605;
-  background: repeating-conic-gradient(#0c0f0c 0% 25%, #141a14 0% 50%) 50% / 14px 14px;
-}
-.sheet-card-title {
-  font-family: 'Press Start 2P', monospace;
-  font-size: 10px;
-  line-height: 1.35;
-  color: #f0c954;
-  margin: 6px 0;
-}
-
-@media (max-width: 900px) {
-  #upgrade-container {
-    grid-template-columns: 1fr;
-  }
-  .slots-horizontal-row {
-    flex-wrap: wrap;
-  }
-  .radar-scanner-plate {
-    width: 118px;
-    height: 118px;
-  }
-}
-/* ==========================================================================
-   AJUSTES: LAYOUT + SCROLLBAR (pegar al final del CSS)
-   ========================================================================== */
-
-/* Panel principal: ancho contenido, scroll vertical solo si no cabe */
-.wide-plate {
-  box-sizing: border-box !important;
-  width: min(820px, 94vw) !important;
-  max-width: none !important;
-  max-height: 96vh !important;
-  overflow-x: hidden !important;
-  overflow-y: auto !important;
-}
-
-/* Rejilla de dos columnas (audio / vídeo) que pueden encogerse */
-.wide-plate .settings-grid {
-  display: grid !important;
-  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-  gap: 10px !important;
-}
-.wide-plate .settings-grid > * {
-  min-width: 0 !important;
-  width: auto !important;
-  max-width: 100% !important;
-}
-
-/* Etiqueta arriba, control debajo a todo el ancho */
-.wide-plate .setting-row {
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: stretch !important;
-  gap: 4px !important;
-  margin-bottom: 8px !important;
-  font-size: 16px !important;
-}
-.wide-plate .setting-row input[type="range"],
-.wide-plate .setting-row select,
-.wide-plate .setting-row .rust-btn {
-  width: 100% !important;
-  max-width: 100% !important;
-  min-width: 0 !important;
-}
-.wide-plate .setting-row .rust-btn {
-  white-space: normal !important;
-}
-
-/* Pantallas estrechas: una sola columna */
-@media (max-width: 900px) {
-  .wide-plate .settings-grid {
-    grid-template-columns: 1fr !important;
-  }
-}
-
-/* ==========================================================================
-   SCROLLBAR PIXEL-ART (solo en el panel de ajustes)
-   ========================================================================== */
-.wide-plate::-webkit-scrollbar {
-  width: 12px;
-}
-.wide-plate::-webkit-scrollbar-track {
-  background: #050605;
-  border-left: 2px solid #4a2518;
-}
-.wide-plate::-webkit-scrollbar-thumb {
-  background-color: #b89c46;
-  border: 2px solid #050605;
-  box-shadow: inset 2px 2px 0 #f0c954, inset -2px -2px 0 #63533b;
-}
-.wide-plate::-webkit-scrollbar-thumb:hover {
-  background-color: #f0c954;
-}
-.wide-plate::-webkit-scrollbar-button {
-  display: none;
 }

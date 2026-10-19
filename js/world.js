@@ -1,5 +1,32 @@
 import * as THREE from 'three';
 import { SpriteSheets } from './spritesheets.js';
+import { CORE_DEFENSE_CONFIG } from './config/coreDefenseConfig.js';
+
+// Verifica si un punto aleatorio (x, z) invade algún tramo de las rutas de Defensa del Núcleo
+function isNearDefenseRouteOrSpawn(x, z) {
+  const routes = CORE_DEFENSE_CONFIG.PATHS.ROUTES;
+  const clearance = CORE_DEFENSE_CONFIG.PATHS.corridorClearanceRadius || 2.8;
+
+  for (const route of Object.values(routes)) {
+    const wps = route.waypoints;
+    for (let i = 0; i < wps.length - 1; i++) {
+      const ax = wps[i].x, az = wps[i].z;
+      const bx = wps[i + 1].x, bz = wps[i + 1].z;
+      const abx = bx - ax, abz = bz - az;
+      const lenSq = abx * abx + abz * abz || 1;
+      const t = Math.max(0, Math.min(1, ((x - ax) * abx + (z - az) * abz) / lenSq));
+      const px = ax + t * abx;
+      const pz = az + t * abz;
+      if (Math.hypot(x - px, z - pz) < clearance) return true;
+    }
+  }
+
+  for (const sp of CORE_DEFENSE_CONFIG.SPAWN_POINTS) {
+    if (Math.hypot(x - sp.position.x, z - sp.position.z) < 5.5) return true;
+  }
+
+  return false;
+}
 
 export function createWorld() {
   const scene = new THREE.Scene();
@@ -33,7 +60,7 @@ export function createWorld() {
     flatShading: true
   });
 
-  // Suelo base impenetrable en cota y = 0.0m (Ninguna colisión baja de y = 0 para evitar atravesar el suelo)
+  // Suelo base impenetrable en cota y = 0.0m
   const ground = new THREE.Mesh(new THREE.PlaneGeometry(500, 500), groundMat);
   ground.rotation.x = -Math.PI / 2;
   ground.receiveShadow = true;
@@ -42,6 +69,7 @@ export function createWorld() {
   const walkableBoxes = [];
   const ramps = [];
   const cylinders = [];
+  const dynamicCylinders = new Map();
 
   function addBoxMesh(cx, cy, cz, sx, sy, sz, mat, registerPhysics = true) {
     const m = new THREE.Mesh(new THREE.BoxGeometry(sx, sy, sz), mat);
@@ -59,7 +87,6 @@ export function createWorld() {
     return m;
   }
 
-  // Rampas con alineación geométrica exacta entre la cara superior del Mesh y la física
   function addRamp(cx, cz, width, length, axis, startY, endY) {
     const dy = endY - startY;
     const hyp = Math.hypot(length, dy);
@@ -69,8 +96,6 @@ export function createWorld() {
     const sz = axis === 'z' ? hyp : width;
 
     const mesh = new THREE.Mesh(new THREE.BoxGeometry(sx, thickness, sz), metalMat);
-    // Desplazamos el centro de la caja hacia abajo exactamente (thickness / 2) * cos(angle)
-    // para que la cara superior de la rampa coincida al milímetro con la recta startY -> endY
     const centerY = (startY + endY) * 0.5 - (thickness * 0.5) * Math.cos(angle);
     mesh.position.set(cx, centerY, cz);
     if (axis === 'z') mesh.rotation.x = -angle;
@@ -108,22 +133,20 @@ export function createWorld() {
     }
   });
 
-  // 2. Fosos de contención acotados (Suelo del foso en y = 0.0m rodeado por diques de y = 1.1m con rampas)
+  // 2. Fosos de contención acotados
   const basinCoords = [
     { x: -15, z: -8 },
     { x: 16, z: -10 }
   ];
   basinCoords.forEach(b => {
     const rimH = 1.1;
-    // Muros/diques transitables alrededor del foso dejando el patio central hundido en cota 0.0m
-    addBoxMesh(b.x, rimH / 2, b.z - 5.0, 10.0, rimH, 2.0, metalMat, true); // Norte
-    addBoxMesh(b.x - 5.0, rimH / 2, b.z, 2.0, rimH, 8.0, metalMat, true);  // Oeste
-    addBoxMesh(b.x + 5.0, rimH / 2, b.z, 2.0, rimH, 8.0, metalMat, true);  // Este
-    // Rampa de acceso sur para subir al dique y bajar al patio interior sin atravesar nunca el suelo
+    addBoxMesh(b.x, rimH / 2, b.z - 5.0, 10.0, rimH, 2.0, metalMat, true);
+    addBoxMesh(b.x - 5.0, rimH / 2, b.z, 2.0, rimH, 8.0, metalMat, true);
+    addBoxMesh(b.x + 5.0, rimH / 2, b.z, 2.0, rimH, 8.0, metalMat, true);
     addRamp(b.x, b.z + 4.5, 4.5, 3.6, 'z', 0, rimH);
   });
 
-  // 3. Cajas y Contenedores (InstancedMesh)
+  // 3. Cajas y Contenedores (InstancedMesh) respetando la plaza central y los caminos
   const crateGeo = new THREE.BoxGeometry(2.0, 1.4, 2.0);
   const crateInst = new THREE.InstancedMesh(crateGeo, crateMat, 120);
   crateInst.castShadow = true;
@@ -136,16 +159,16 @@ export function createWorld() {
     const dist = 11 + (i * 2.1) % 68;
     const cx = Math.round(Math.cos(angle) * dist);
     const cz = Math.round(Math.sin(angle) * dist);
-    if (Math.hypot(cx, cz) < 8) continue;
-    // Evitar solapar con las zonas de los diques
+    if (Math.hypot(cx, cz) < 9.5) continue;
     if (Math.hypot(cx + 15, cz + 8) < 8 || Math.hypot(cx - 16, cz + 10) < 8) continue;
+    if (isNearDefenseRouteOrSpawn(cx, cz)) continue;
 
     dummy.position.set(cx, 0.7, cz);
     dummy.updateMatrix();
     crateInst.setMatrixAt(cIdx++, dummy.matrix);
     walkableBoxes.push({ minX: cx - 1, maxX: cx + 1, minZ: cz - 1, maxZ: cz + 1, bottomY: 0, topY: 1.4 });
 
-    if (i % 2 === 0 && cIdx < 118) {
+    if (i % 2 === 0 && cIdx < 118 && !isNearDefenseRouteOrSpawn(cx + 1.8, cz)) {
       addBoxMesh(cx + 1.8, 0.35, cz, 1.6, 0.7, 1.8, crateMat, true);
     }
     if (i % 3 === 0 && cIdx < 119) {
@@ -167,8 +190,10 @@ export function createWorld() {
   for (let i = 0; i < 70; i++) {
     const bx = (Math.random() - 0.5) * 140;
     const bz = (Math.random() - 0.5) * 140;
-    if (Math.hypot(bx, bz) < 9) continue;
+    if (Math.hypot(bx, bz) < 9.5) continue;
     if (Math.hypot(bx + 15, bz + 8) < 8 || Math.hypot(bx - 16, bz + 10) < 8) continue;
+    if (isNearDefenseRouteOrSpawn(bx, bz)) continue;
+
     dummy.position.set(bx, 0.675, bz);
     dummy.updateMatrix();
     barrelInst.setMatrixAt(bIdx++, dummy.matrix);
@@ -210,6 +235,7 @@ export function createWorld() {
     const x = (Math.random() - 0.5) * 200;
     const z = (Math.random() - 0.5) * 200;
     if (Math.hypot(x, z) < 16) continue;
+    if (isNearDefenseRouteOrSpawn(x, z)) continue;
     const h = 5.2 + Math.random() * 1.8;
     const mesh = new THREE.Mesh(new THREE.PlaneGeometry(1.7, h), pillarMat);
     mesh.position.set(x, h / 2, z);
@@ -219,10 +245,17 @@ export function createWorld() {
   }
 
   const worldPhysics = {
-    getGroundHeight(x, z, currentY = 0) {
-      let h = 0; // Cota mínima garantizada en 0.0m (nunca atraviesa el suelo principal)
+    registerDynamicCylinder(id, x, z, r, topY = 6.0) {
+      dynamicCylinders.set(id, { x, z, r, topY });
+    },
 
-      // 1. Rampas inclinadas con margen anticolisión (+0.03m)
+    unregisterDynamicCylinder(id) {
+      dynamicCylinders.delete(id);
+    },
+
+    getGroundHeight(x, z, currentY = 0) {
+      let h = 0;
+
       for (const r of ramps) {
         if (x >= r.minX && x <= r.maxX && z >= r.minZ && z <= r.maxZ) {
           const t = r.axis === 'z'
@@ -233,7 +266,6 @@ export function createWorld() {
         }
       }
 
-      // 2. Plataformas, diques, escalones y cajas
       const stepTolerance = 0.82;
       for (const b of walkableBoxes) {
         if (x >= b.minX && x <= b.maxX && z >= b.minZ && z <= b.maxZ) {
@@ -266,6 +298,19 @@ export function createWorld() {
         const dx = pos.x - c.x;
         const dz = pos.z - c.z;
         const minDist = radius + c.r;
+        const distSq = dx * dx + dz * dz;
+        if (distSq < minDist * minDist) {
+          const dist = Math.sqrt(distSq) || 0.001;
+          const overlap = minDist - dist;
+          pos.x += (dx / dist) * overlap;
+          pos.z += (dz / dist) * overlap;
+        }
+      }
+      for (const dc of dynamicCylinders.values()) {
+        if (currentY + stepTolerance >= dc.topY) continue;
+        const dx = pos.x - dc.x;
+        const dz = pos.z - dc.z;
+        const minDist = radius + dc.r;
         const distSq = dx * dx + dz * dz;
         if (distSq < minDist * minDist) {
           const dist = Math.sqrt(distSq) || 0.001;
