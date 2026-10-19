@@ -26,7 +26,3 @@ Thumbs.db
 
 # Configuración local de Claude Code
 .claude/settings.local.json
-
-# Assets legacy sin uso (siguen trackeados hasta la Fase 3)
-assets/
-models/

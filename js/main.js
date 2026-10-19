@@ -13,8 +13,6 @@ import {
 import { createWorld } from './world.js';
 import { createBillboardSprite, EnemyPool } from './entities.js';
 import {
-  SHARED_GEO,
-  SHARED_MAT,
   initCombatLight,
   updateCombatLight,
   createOrbitalUnit

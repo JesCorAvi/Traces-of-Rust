@@ -22,7 +22,6 @@ Juego web 3D de terror/supervivencia + tower defense con Three.js. Sin bundler n
 - `js/tutorial/towerDefenseTutorial.js`: tutorial interactivo de Defensa.
 - `js/debug/debugOverlay.js`: debug de rutas/IA.
 - `js/audio.js`: audio WebAudio sintetizado (`AudioSys`).
-- `js/assets.js`, `assets/`, `models/`: legacy muerto; no leer.
 
 ## Sistemas
 - Render: `world.js` + `main.js` (renderer/cámara). Input: listeners de `main.js` y variable `state`.
@@ -42,7 +41,7 @@ Juego web 3D de terror/supervivencia + tower defense con Three.js. Sin bundler n
 ## Reglas para el asistente
 - Lee este archivo primero; no explores todo el proyecto.
 - Usa Grep antes de Read; lee por rangos (`offset`/`limit`) en archivos >300 líneas.
-- No leas `.git/`, `assets/`, `models/`, `js/assets.js`, `node_modules/`, `dist/`, `build/`, lockfiles ni binarios.
+- No leas `.git/`, `node_modules/`, `dist/`, `build/`, lockfiles ni binarios.
 - No instales dependencias sin preguntar. Verifica el arranque en navegador tras cambios.
 - Abre Claude desde la raíz del repo para que las reglas deny de `.claude/settings.json` apliquen.
 - Mantén las cabeceras y actualiza este mapa si mueves módulos.
