@@ -241,6 +241,8 @@ export class Enemy {
     this.burnTimer = 0;
     this.burnDps = 0;
     this.slowTimer = 0;
+    this.slowFactor = 0.6;
+    this.stunTimer = 0;
     this.steerDir = Math.random() < 0.5 ? 1 : -1;
     this.billboard.mesh.material.emissive.setHex(0x000000);
 
@@ -264,6 +266,21 @@ export class Enemy {
     this.billboard.setDirectionalFrame(0, 1, 0);
   }
 
+  applySlow(factor, duration) {
+    // Se conserva la ralentización más fuerte activa
+    if (this.slowTimer <= 0 || factor < this.slowFactor) this.slowFactor = factor;
+    this.slowTimer = Math.max(this.slowTimer, duration);
+  }
+
+  applyBurn(dps, duration) {
+    this.burnDps = Math.max(this.burnDps, dps);
+    this.burnTimer = Math.max(this.burnTimer, duration);
+  }
+
+  applyStun(duration) {
+    this.stunTimer = Math.max(this.stunTimer, duration);
+  }
+
   update(dt, playerPos, playerFwd, camPos, worldPhysics, callbacks) {
     if (!this.active) return false;
     this.billboard.faceCamera(camPos);
@@ -282,6 +299,10 @@ export class Enemy {
       this.billboard.mesh.material.emissive.setHex(0x662200);
       if (callbacks.onBurnTick) callbacks.onBurnTick(this, this.burnDps * dt);
       if (this.state === 'dead') return false;
+    } else if (this.stunTimer > 0) {
+      this.billboard.mesh.material.emissive.setHex(0x2c4148);
+    } else if (this.slowTimer > 0) {
+      this.billboard.mesh.material.emissive.setHex(0x18282c);
     } else if (isDef && this.defenseAI.alertFlashTimer > 0) {
       this.billboard.mesh.material.emissive.setHex(0x881111);
     } else if (this.isBoss && this.phase === 2) {
@@ -357,7 +378,12 @@ export class Enemy {
     let moveSpd = this.speed;
     if (this.slowTimer > 0) {
       this.slowTimer -= dt;
-      moveSpd *= 0.6;
+      moveSpd *= this.slowFactor;
+      if (this.slowTimer <= 0) this.slowFactor = 0.6;
+    }
+    if (this.stunTimer > 0) {
+      this.stunTimer -= dt;
+      moveSpd = 0;
     }
 
     let targetState = 1; // WALK
@@ -398,7 +424,7 @@ export class Enemy {
       } else {
         this.attackCharge = Math.max(0, this.attackCharge - dt * 2);
       }
-    } else if (isDef && targetStructure && horizDistGoal <= stopDist + 0.25 && this.state !== 'hurt') {
+    } else if (isDef && targetStructure && horizDistGoal <= stopDist + 0.25 && this.state !== 'hurt' && this.stunTimer <= 0) {
       targetState = 2; // ATTACK AL NÚCLEO O ESTRUCTURA
       moveSpd = 0;
       const dirToStruct = new THREE.Vector3().subVectors(targetStructure.position, this.group.position);

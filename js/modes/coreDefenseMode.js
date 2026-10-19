@@ -7,9 +7,11 @@ import { CoreMachine } from '../defense/coreMachine.js';
 import { PathSystem } from '../defense/pathSystem.js';
 import { SpawnPointSystem } from '../defense/spawnPointSystem.js';
 import { WaveManager } from '../defense/waveManager.js';
+import { TurretSystem } from '../defense/turretSystem.js';
+import { TowerDefenseTutorial } from '../tutorial/towerDefenseTutorial.js';
 
 // ============================================================================
-// MODO 2: DEFENDER EL NÚCLEO (Base de Tower Defense sin torres por ahora)
+// MODO 2: DEFENDER EL NÚCLEO (Tower Defense con colocación libre de torretas)
 // ============================================================================
 
 export class CoreDefenseMode {
@@ -20,7 +22,11 @@ export class CoreDefenseMode {
     this.pathSystem = null;
     this.spawnPointSystem = null;
     this.waveManager = null;
-    this.extraStructures = []; // Lista preparada para futuras torres defensivas
+    this.turretSystem = null;
+    this.tutorial = null;
+    this.tutorialActive = false;
+    this.extraStructures = []; // Torretas y tropas aliadas (contrato de la IA enemiga)
+    this.scrap = 0;
     this.activeBoss = null;
     this.bossesDefeated = 0;
     this.playerDownTimer = 0;
@@ -40,6 +46,13 @@ export class CoreDefenseMode {
       ctx.worldPhysics
     );
     this.extraStructures = [];
+    this.scrap = CORE_DEFENSE_CONFIG.SCRAP.startingScrap;
+    this.turretSystem = new TurretSystem(
+      ctx.scene,
+      ctx.worldPhysics,
+      this.extraStructures,
+      this
+    );
     this.activeBoss = null;
     this.bossesDefeated = 0;
     this.playerDownTimer = 0;
@@ -74,12 +87,18 @@ export class CoreDefenseMode {
         if (healAmt > 0 && this.coreMachine && !this.coreMachine.destroyed) {
           this.coreMachine.heal(healAmt);
         }
+        this.addScrap(CORE_DEFENSE_CONFIG.SCRAP.waveCompletionBonus || 0);
         ctx.onWaveCompleted(payload);
       }),
       GameEvents.on('defense:victory', payload => {
         this.handleVictory(ctx, payload);
       })
     );
+
+    if (ctx.tutorialRequested) {
+      this.tutorial = new TowerDefenseTutorial(this, ctx);
+      this.tutorialActive = true;
+    }
   }
 
   getHudConfig() {
@@ -154,8 +173,13 @@ export class CoreDefenseMode {
     if (this.coreMachine) this.coreMachine.update(dt, camera.position);
     if (this.pathSystem) this.pathSystem.update(dt);
     if (this.spawnPointSystem) this.spawnPointSystem.update(dt);
+    if (this.turretSystem) this.turretSystem.update(dt, ctx);
 
-    if (this.waveManager) {
+    if (this.tutorialActive && this.tutorial) {
+      this.tutorial.update(dt, ctx);
+    }
+
+    if (this.waveManager && !this.tutorialActive) {
       this.waveManager.update(dt, playerGroup.position, gameTime, camFwd, (boss, bossCfg) => {
         this.activeBoss = boss;
         AudioSys.playBossHorn();
@@ -209,15 +233,102 @@ export class CoreDefenseMode {
   }
 
   onEnemyKilled(enemy, ctx) {
+    const scrapCfg = CORE_DEFENSE_CONFIG.SCRAP;
+
     if (enemy.isBoss) {
       this.bossesDefeated++;
       this.activeBoss = null;
       ctx.addRunSouls(enemy.bossData.teethReward || 15);
       ctx.spawnLorePickup(enemy.group.position, 'chest');
+
+      // Los bosses sueltan un caché de chatarra repartido alrededor
+      const chunks = 5;
+      const valueEach = Math.max(1, Math.round((scrapCfg.bossDropValue || 15) / chunks));
+      for (let i = 0; i < chunks; i++) {
+        const ang = (i / chunks) * Math.PI * 2;
+        const r = 1.2 + Math.random() * 1.2;
+        const pos = enemy.group.position.clone().add(
+          new THREE.Vector3(Math.cos(ang) * r, 0, Math.sin(ang) * r)
+        );
+        ctx.spawnLorePickup(pos, 'scrap', valueEach);
+      }
     } else {
       const isTooth = Math.random() < 0.28;
       ctx.spawnLorePickup(enemy.group.position, isTooth ? 'tooth' : 'serum');
+
+      if (Math.random() < (scrapCfg.normalDropChance || 0)) {
+        ctx.spawnLorePickup(enemy.group.position, 'scrap', scrapCfg.normalDropValue || 1);
+      }
     }
+  }
+
+  // --------------------------------------------------------------------------
+  // ECONOMÍA Y TORRETAS (CHATARRA)
+  // --------------------------------------------------------------------------
+
+  addScrap(amount) {
+    if (!amount || amount <= 0) return;
+    this.scrap += amount;
+  }
+
+  spendScrap(amount) {
+    if (!amount || amount <= 0) return true;
+    if (this.scrap < amount) return false;
+    this.scrap -= amount;
+    return true;
+  }
+
+  getScrap() {
+    return this.scrap;
+  }
+
+  getNearbyTurret(playerPos) {
+    if (!this.turretSystem) return null;
+    return this.turretSystem.findNearbyTurret(playerPos);
+  }
+
+  getTurretById(turretId) {
+    if (!this.turretSystem) return null;
+    return this.turretSystem.getTurretById(turretId);
+  }
+
+  beginTurretPlacement(typeId) {
+    if (!this.turretSystem) return false;
+    return this.turretSystem.beginPlacement(typeId);
+  }
+
+  isTurretPlacementActive() {
+    return !!(this.turretSystem && this.turretSystem.isPlacing());
+  }
+
+  confirmTurretPlacement() {
+    if (!this.turretSystem) return false;
+    return this.turretSystem.confirmPlacement();
+  }
+
+  cancelTurretPlacement() {
+    if (!this.turretSystem) return;
+    this.turretSystem.cancelPlacement();
+  }
+
+  getPlacementState() {
+    if (!this.turretSystem) return null;
+    return this.turretSystem.getPlacementState();
+  }
+
+  upgradeTurret(turretId, pathIndex) {
+    if (!this.turretSystem) return false;
+    return this.turretSystem.upgradeTurret(turretId, pathIndex);
+  }
+
+  sellTurret(turretId) {
+    if (!this.turretSystem) return 0;
+    return this.turretSystem.sellTurret(turretId);
+  }
+
+  handleTutorialKey(key) {
+    if (!this.tutorial || !this.tutorialActive) return false;
+    return this.tutorial.handleKey(key);
   }
 
   onPlayerLethalDamage(ctx) {
@@ -248,14 +359,16 @@ export class CoreDefenseMode {
     return false;
   }
 
-  getHudTelemetry() {
+  getHudTelemetry(ctx = null) {
     const wm = this.waveManager;
     const remaining = wm ? wm.getRemainingHostilesCount() : 0;
     const waveNum = wm ? wm.currentWaveNumber : 1;
     const totalW = wm ? wm.totalWaves : 12;
 
     let subTaskText = `HOSTILES RESTANTES: ${remaining}`;
-    if (wm && wm.state === 'PREP') {
+    if (this.tutorialActive) {
+      subTaskText = 'TUTORIAL INTERACTIVO EN CURSO';
+    } else if (wm && wm.state === 'PREP') {
       subTaskText = `PRÓXIMA OLEADA EN: ${wm.prepTimer.toFixed(1)}S`;
     } else if (this.playerDownTimer > 0) {
       subTaskText = `RECONSTRUYENDO OPERARIO: ${this.playerDownTimer.toFixed(1)}S`;
@@ -264,6 +377,10 @@ export class CoreDefenseMode {
     const coreHp = this.coreMachine ? Math.ceil(this.coreMachine.hp) : 0;
     const coreMax = this.coreMachine ? this.coreMachine.maxHp : 1500;
     const stateLabel = this.coreMachine ? this.coreMachine.currentDamageState.label : 'ESTABLE';
+    const nearbyTurret = ctx && ctx.playerGroup && this.turretSystem
+      ? this.turretSystem.findNearbyTurret(ctx.playerGroup.position)
+      : null;
+    const placement = this.getPlacementState();
 
     return {
       objectiveText: `Protege el Núcleo (${stateLabel})`,
@@ -280,13 +397,34 @@ export class CoreDefenseMode {
       corePosition: this.coreMachine ? this.coreMachine.position : null,
       spawnPoints: this.spawnPointSystem ? this.spawnPointSystem.getAllSpawnPoints() : [],
       bossesDefeated: this.bossesDefeated,
-      totalBosses: 5
+      totalBosses: 5,
+      scrap: this.scrap,
+      turretCount: this.turretSystem ? this.turretSystem.getTurretCount() : 0,
+      turretMax: this.turretSystem ? this.turretSystem.getMaxTurretCount() : 0,
+      nearbyTurret: nearbyTurret ? {
+        id: nearbyTurret.id,
+        name: nearbyTurret.cfg.name
+      } : null,
+      placement: placement ? {
+        active: placement.active,
+        typeId: placement.typeId,
+        typeName: placement.typeName,
+        cost: placement.cost,
+        valid: placement.valid,
+        reason: placement.reason
+      } : null
     };
   }
 
   cleanup() {
     this.unsubscribers.forEach(unsub => unsub());
     this.unsubscribers.length = 0;
+
+    if (this.tutorial) {
+      this.tutorial.destroy();
+      this.tutorial = null;
+    }
+    this.tutorialActive = false;
 
     if (this.coreMachine) {
       this.coreMachine.destroy();
@@ -300,8 +438,13 @@ export class CoreDefenseMode {
       this.spawnPointSystem.destroy();
       this.spawnPointSystem = null;
     }
+    if (this.turretSystem) {
+      this.turretSystem.destroy();
+      this.turretSystem = null;
+    }
     this.extraStructures.forEach(st => st.destroy());
     this.extraStructures.length = 0;
+    this.scrap = 0;
     this.waveManager = null;
     this.activeBoss = null;
     this.playerDownTimer = 0;

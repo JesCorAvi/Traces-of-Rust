@@ -140,18 +140,24 @@ export function evaluateEnemyTarget(enemy, dt, playerPos, playerAlive, coreMachi
       return;
     }
 
-    // Soporte extensible para futuras estructuras defensivas (torres) en el camino
+    // Estructuras defensivas (torretas y tropas aliadas): se elige la más cercana
     if (Array.isArray(extraStructures) && extraStructures.length > 0 && !ai.isAttackingCore) {
+      let closest = null;
+      let closestDist = Infinity;
       for (let i = 0; i < extraStructures.length; i++) {
         const st = extraStructures[i];
         if (!st || !st.active || st.destroyed) continue;
         const dStruct = Math.hypot(st.position.x - pos.x, st.position.z - pos.z);
-        if (dStruct <= prof.detectRadius * 0.75) {
-          ai.targetKind = TARGET_KIND.STRUCTURE;
-          ai.targetStructure = st;
-          ai.reactionTimer = 0;
-          return;
+        if (dStruct <= prof.detectRadius && dStruct < closestDist) {
+          closest = st;
+          closestDist = dStruct;
         }
+      }
+      if (closest) {
+        ai.targetKind = TARGET_KIND.STRUCTURE;
+        ai.targetStructure = closest;
+        ai.reactionTimer = 0;
+        return;
       }
     }
 

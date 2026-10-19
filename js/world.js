@@ -98,7 +98,9 @@ export function createWorld() {
     const mesh = new THREE.Mesh(new THREE.BoxGeometry(sx, thickness, sz), metalMat);
     const centerY = (startY + endY) * 0.5 - (thickness * 0.5) * Math.cos(angle);
     mesh.position.set(cx, centerY, cz);
-    if (axis === 'z') mesh.rotation.x = -angle;
+    // El extremo alto debe quedar en minZ (lado plataforma), igual que getGroundHeight.
+    // Con -angle la rampa visual quedaba espejada y el jugador la atravesaba.
+    if (axis === 'z') mesh.rotation.x = angle;
     else mesh.rotation.z = angle;
     mesh.castShadow = true;
     mesh.receiveShadow = true;
@@ -111,6 +113,14 @@ export function createWorld() {
       maxZ: cz + (axis === 'z' ? length / 2 : width / 2),
       axis, startY, endY
     });
+  }
+
+  // Altura de la superficie de una rampa en un punto (x,z) de su huella
+  function getRampSurfaceHeight(r, x, z) {
+    const t = r.axis === 'z'
+      ? 1 - (z - r.minZ) / (r.maxZ - r.minZ)
+      : (x - r.minX) / (r.maxX - r.minX);
+    return r.startY + Math.max(0, Math.min(1, t)) * (r.endY - r.startY);
   }
 
   // 1. Plataformas industriales principales con rampas y escalones
@@ -166,7 +176,8 @@ export function createWorld() {
     dummy.position.set(cx, 0.7, cz);
     dummy.updateMatrix();
     crateInst.setMatrixAt(cIdx++, dummy.matrix);
-    walkableBoxes.push({ minX: cx - 1, maxX: cx + 1, minZ: cz - 1, maxZ: cz + 1, bottomY: 0, topY: 1.4 });
+    const crateBox = { minX: cx - 1, maxX: cx + 1, minZ: cz - 1, maxZ: cz + 1, bottomY: 0, topY: 1.4 };
+    walkableBoxes.push(crateBox);
 
     if (i % 2 === 0 && cIdx < 118 && !isNearDefenseRouteOrSpawn(cx + 1.8, cz)) {
       addBoxMesh(cx + 1.8, 0.35, cz, 1.6, 0.7, 1.8, crateMat, true);
@@ -175,7 +186,7 @@ export function createWorld() {
       dummy.position.set(cx, 2.1, cz);
       dummy.updateMatrix();
       crateInst.setMatrixAt(cIdx++, dummy.matrix);
-      walkableBoxes[walkableBoxes.length - 1].topY = 2.8;
+      crateBox.topY = 2.8;
     }
   }
   crateInst.count = cIdx;
@@ -253,20 +264,25 @@ export function createWorld() {
       dynamicCylinders.delete(id);
     },
 
+    isRampAt(x, z) {
+      for (const r of ramps) {
+        if (x >= r.minX && x <= r.maxX && z >= r.minZ && z <= r.maxZ) return true;
+      }
+      return false;
+    },
+
     getGroundHeight(x, z, currentY = 0) {
       let h = 0;
+      const stepTolerance = 0.82;
 
       for (const r of ramps) {
         if (x >= r.minX && x <= r.maxX && z >= r.minZ && z <= r.maxZ) {
-          const t = r.axis === 'z'
-            ? 1 - (z - r.minZ) / (r.maxZ - r.minZ)
-            : (x - r.minX) / (r.maxX - r.minX);
-          const rampY = r.startY + Math.max(0, Math.min(1, t)) * (r.endY - r.startY) + 0.03;
-          if (rampY > h) h = rampY;
+          const rampY = getRampSurfaceHeight(r, x, z) + 0.03;
+          // No teletransportar al jugador sobre la rampa si entra por el lateral o por debajo
+          if (currentY + stepTolerance >= rampY && rampY > h) h = rampY;
         }
       }
 
-      const stepTolerance = 0.82;
       for (const b of walkableBoxes) {
         if (x >= b.minX && x <= b.maxX && z >= b.minZ && z <= b.maxZ) {
           if (currentY + stepTolerance >= b.topY && b.topY + 0.02 > h) {
@@ -287,6 +303,40 @@ export function createWorld() {
         const dz = pos.z - closestZ;
         const distSq = dx * dx + dz * dz;
         if (distSq < radius * radius) {
+          const dist = Math.sqrt(distSq) || 0.001;
+          const overlap = radius - dist;
+          pos.x += (dx / dist) * overlap;
+          pos.z += (dz / dist) * overlap;
+        }
+      }
+      // Rampas: impiden entrar por el lateral o por debajo cuando la superficie local
+      // está más alta que el paso permitido. Sin esto se atravesaba la losa visible.
+      for (const r of ramps) {
+        const insideX = pos.x >= r.minX && pos.x <= r.maxX;
+        const insideZ = pos.z >= r.minZ && pos.z <= r.maxZ;
+
+        if (insideX && insideZ) {
+          const rampTop = getRampSurfaceHeight(r, pos.x, pos.z);
+          if (currentY + stepTolerance >= rampTop) continue;
+          const dl = pos.x - r.minX;
+          const dr = r.maxX - pos.x;
+          const db = pos.z - r.minZ;
+          const df = r.maxZ - pos.z;
+          const m = Math.min(dl, dr, db, df);
+          const push = radius + 0.01;
+          if (m === dl) pos.x = r.minX - push;
+          else if (m === dr) pos.x = r.maxX + push;
+          else if (m === db) pos.z = r.minZ - push;
+          else pos.z = r.maxZ + push;
+        } else {
+          const closestX = Math.max(r.minX, Math.min(pos.x, r.maxX));
+          const closestZ = Math.max(r.minZ, Math.min(pos.z, r.maxZ));
+          const dx = pos.x - closestX;
+          const dz = pos.z - closestZ;
+          const distSq = dx * dx + dz * dz;
+          if (distSq >= radius * radius) continue;
+          const rampTop = getRampSurfaceHeight(r, closestX, closestZ);
+          if (currentY + stepTolerance >= rampTop) continue;
           const dist = Math.sqrt(distSq) || 0.001;
           const overlap = radius - dist;
           pos.x += (dx / dist) * overlap;

@@ -411,10 +411,58 @@ function buildPickupSheets() {
   }
   applyCleanSpriteOutlineRect(cCtx, 256, 64);
 
+  // Chatarra: engranaje roto que gira y suelta chispas
+  const scrapCan = document.createElement('canvas');
+  scrapCan.width = 256; scrapCan.height = 64;
+  const scCtx = scrapCan.getContext('2d');
+
+  for (let f = 0; f < 4; f++) {
+    scCtx.save();
+    scCtx.translate(f * 64, 0);
+    const px = (x, y, w, h, c) => { scCtx.fillStyle = c; scCtx.fillRect(x, y, w, h); };
+
+    const cx = 32, cy = 30;
+    const angle = (f / 4) * Math.PI * 2;
+    const teeth = 8;
+    for (let t = 0; t < teeth; t++) {
+      const a = angle + (t / teeth) * Math.PI * 2;
+      const tx = Math.round(cx + Math.cos(a) * 19);
+      const ty = Math.round(cy + Math.sin(a) * 19);
+      px(tx - 3, ty - 3, 7, 7, '#050605');
+      px(tx - 2, ty - 2, 5, 5, '#877a5c');
+      px(tx - 1, ty - 1, 3, 3, '#b89c46');
+    }
+
+    px(cx - 15, cy - 15, 31, 31, '#050605');
+    px(cx - 13, cy - 13, 27, 27, '#364832');
+    px(cx - 11, cy - 11, 23, 23, '#243022');
+    px(cx - 8, cy - 8, 17, 17, '#4a2518');
+    px(cx - 5, cy - 5, 11, 11, '#875a30');
+    px(cx - 2, cy - 2, 5, 5, '#b89c46');
+
+    // Grietas y desgaste
+    px(cx - 12, cy + 8, 6, 2, '#050605');
+    px(cx + 7, cy - 11, 2, 5, '#050605');
+    px(cx + 9, cy + 9, 3, 3, '#a52020');
+
+    // Chispas según frame
+    if (f % 2 === 0) {
+      px(48, 12, 2, 2, '#e6d7a5');
+      px(53, 18, 2, 2, '#b89c46');
+    } else {
+      px(12, 17, 2, 2, '#b89c46');
+      px(9, 24, 2, 2, '#e6d7a5');
+    }
+
+    scCtx.restore();
+  }
+  applyCleanSpriteOutlineRect(scCtx, 256, 64);
+
   return {
     serum: { name: 'pickup_serum_4f', canvas: serumCan, tex: makeTexture(serumCan) },
     tooth: { name: 'pickup_tooth_4f', canvas: toothCan, tex: makeTexture(toothCan) },
-    chest: { name: 'pickup_chest_4f', canvas: chestCan, tex: makeTexture(chestCan) }
+    chest: { name: 'pickup_chest_4f', canvas: chestCan, tex: makeTexture(chestCan) },
+    scrap:  { name: 'pickup_scrap_4f', canvas: scrapCan, tex: makeTexture(scrapCan) }
   };
 }
 
@@ -488,6 +536,7 @@ export function buildEnvironmentTextures() {
     orbital:      weapons.orbitalSheet,
     pickup_serum: pickups.serum,
     pickup_tooth: pickups.tooth,
-    pickup_chest: pickups.chest
+    pickup_chest: pickups.chest,
+    pickup_scrap: pickups.scrap
   };
 }

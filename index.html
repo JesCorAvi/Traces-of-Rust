@@ -93,6 +93,13 @@
           <span id="core-wave-counter">OLEADA 1/12</span>
           <span id="core-enemies-left">HOSTILES: 0</span>
         </div>
+        <div class="core-hud-subrow core-hud-economy">
+          <span class="core-scrap-line">
+            <span class="ui-icon sm" data-ui-icon="scrap"></span>
+            <span id="core-scrap-counter">CHATARRA: 0</span>
+          </span>
+          <span id="core-turret-counter">TORRETAS: 0/12</span>
+        </div>
       </div>
     </div>
 
@@ -237,10 +244,30 @@
     </div>
 
     <div id="crosshair"></div>
+
+    <!-- Aviso contextual para construir/mejorar torretas -->
+    <div id="turret-interact-prompt" class="hidden">
+      <span class="key-cap" id="turret-key-cap">E</span>
+      <span id="turret-interact-text">CONSTRUIR TORRETA</span>
+    </div>
+
     <div id="boss-alert" class="hidden">
       <span class="ui-icon sm" data-ui-icon="warning"></span>
       <span>ALERTA SÍSMICA: PRESENCIA HOSTIL DETECTADA</span>
       <span class="ui-icon sm" data-ui-icon="warning"></span>
+    </div>
+
+    <!-- Panel del tutorial interactivo de Defensa -->
+    <div id="td-tutorial-panel" class="hidden">
+      <div class="paper-note td-tutorial-note">
+        <div class="td-tutorial-header">
+          <span id="td-tutorial-step">TUTORIAL</span>
+          <span class="td-tutorial-skip">[F] SALTAR</span>
+        </div>
+        <div id="td-tutorial-title" class="td-tutorial-title">ADIESTRAMIENTO</div>
+        <div id="td-tutorial-text" class="td-tutorial-text"></div>
+        <div id="td-tutorial-hint" class="td-tutorial-hint"></div>
+      </div>
     </div>
   </div>
 
@@ -273,6 +300,10 @@
         </div>
 
         <div class="desktop-menu-list">
+          <button class="rust-btn desktop-menu-btn hidden" id="btn-td-tutorial">
+            <span class="ui-icon sm" data-ui-icon="level"></span>
+            <span>[ TUTORIAL INTERACTIVO DE DEFENSA ]</span>
+          </button>
           <button class="rust-btn primary desktop-menu-btn" id="btn-start">
             <span class="ui-icon sm" data-ui-icon="slash"></span>
             <span id="btn-start-label">[ FIRMAR CONTRATO Y ENTRAR ]</span>
@@ -441,7 +472,8 @@
         <b>2. MODO SUPERVIVENCIA:</b><br>
         • Resiste todo el tiempo posible. Cada 3 minutos emerge un Jefe de Planta.<br><br>
         <b>3. MODO DEFENDER EL NÚCLEO:</b><br>
-        • Protege el Reactor Biomecánico Central durante 12 oleadas. Los enemigos avanzan por las vías industriales hacia el Núcleo, pero te perseguirán si te acercas demasiado.
+        • Protege el Reactor Biomecánico Central durante 12 oleadas. Los enemigos avanzan por las vías industriales hacia el Núcleo, pero te perseguirán si te acercas demasiado.<br>
+        • Recoge <b>CHATARRA</b> de los hostiles abatidos. Pulsa <b>E</b> para abrir el terminal, elige una torreta y colócala libremente apuntando al suelo con la cámara (anillo verde = válido). Acércate a una torreta y pulsa <b>E</b> para mejorarla o venderla. Cada torreta tiene 3 rutas de mejora y solo una puede superar el nivel 2. El tutorial interactivo opcional enseña todo esto y las sinergias principales.
       </div>
     </div>
   </div>
@@ -463,6 +495,44 @@
         </button>
         <button class="rust-btn" id="btn-pause-to-menu"><span>[ ABANDONAR A MENÚ PRINCIPAL ]</span></button>
       </div>
+    </div>
+  </div>
+
+  <!-- Pregunta inicial del tutorial de Defensa -->
+  <div id="tutorial-prompt-screen" class="overlay hidden">
+    <div class="metal-plate main-menu-plate" style="max-width:640px;">
+      <div class="tape-strip">
+        <span class="ui-icon sm" data-ui-icon="warning"></span>
+        <span>PROTOCOLO DE ADIESTRAMIENTO</span>
+      </div>
+      <h1 class="buckshot-title" style="font-size:22px;">¿EJECUTAR TUTORIAL?</h1>
+      <p class="plate-sub">
+        Es tu primer contrato de defensa. Puedes realizar un tutorial interactivo:
+        aprenderás a colocar torretas libremente, mejorarlas con rutas estilo BTD6,
+        recoger CHATARRA y combinar sinergias como Escarcha + Bombarda.
+      </p>
+      <p class="plate-sub" style="color:#877a5c;">
+        Esta elección solo se pregunta la primera vez. Después podrás repetirlo desde el menú principal.
+      </p>
+      <div class="btn-group" style="flex-direction:column; gap:12px; margin-top:16px;">
+        <button class="rust-btn primary" id="btn-tutorial-yes"><span>[ SÍ, INICIAR TUTORIAL INTERACTIVO ]</span></button>
+        <button class="rust-btn" id="btn-tutorial-no"><span>[ NO, JUGAR DIRECTO ]</span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Panel de Construcción / Mejora de Torretas -->
+  <div id="turret-build-screen" class="overlay hidden">
+    <div class="metal-plate turret-build-plate">
+      <div class="plate-header">
+        <span class="tape-label">
+          <span class="ui-icon sm" data-ui-icon="turret_gunner"></span>
+          <span>TERMINAL DE EMPLAZAMIENTO // TORRETAS</span>
+        </span>
+        <button class="rust-btn sm" id="btn-close-turret-build"><span>[ CERRAR (E) ]</span></button>
+      </div>
+      <div id="turret-build-content"></div>
+      <div class="turret-build-footer">CONSTRUYE Y MEJORA CON LA CHATARRA RECOGIDA DE LOS HOSTILES. SOLO UNA RUTA DE MEJORA PUEDE SUPERAR EL NIVEL 2.</div>
     </div>
   </div>
 

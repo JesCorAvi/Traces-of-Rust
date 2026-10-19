@@ -69,6 +69,13 @@ export const CONFIG = {
       orbital:      { col: 6, row: 0 },
       bolt:         { col: 7, row: 0 },
 
+      // Torretas del modo Defensa (Fila 0, columnas libres)
+      turret_gunner:   { col: 8,  row: 0 },
+      turret_mortar:   { col: 9,  row: 0 },
+      turret_cryo:     { col: 10, row: 0 },
+      turret_barracks: { col: 11, row: 0 },
+      turret_support:  { col: 12, row: 0 },
+
       // 9 Pasivas (Fila 1)
       multishot:    { col: 0, row: 1 },
       dmg:          { col: 1, row: 1 },
@@ -104,7 +111,10 @@ export const CONFIG = {
       stain_rust:   { col: 7, row: 3 },
       wire_clamp:   { col: 8, row: 3 },
       charge_on:    { col: 9, row: 3 },
-      charge_off:   { col: 10, row: 3 }
+      charge_off:   { col: 10, row: 3 },
+
+      // Moneda de partida del modo Defensa
+      scrap:        { col: 11, row: 3 }
     },
 
     BADGES_ORIGIN_Y: 256,

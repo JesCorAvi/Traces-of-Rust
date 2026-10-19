@@ -20,6 +20,7 @@ import {
 import { ModeManager } from './modes/gameModeManager.js';
 import { DebugOverlay } from './debug/debugOverlay.js';
 import { HUDController } from './ui/hudController.js';
+import { TurretBuildMenu } from './ui/turretBuildMenu.js';
 import {
   loadCareerStatsByMode,
   saveCareerStatsByMode,
@@ -70,6 +71,7 @@ updateResolution();
 
 const debugOverlay = new DebugOverlay(scene);
 const hudController = new HUDController();
+const turretBuildMenu = new TurretBuildMenu();
 
 // Jugador: Billboard 2D de 8 Direcciones
 const playerBillboard = createBillboardSprite('player', 2.0);
@@ -158,6 +160,7 @@ scene.add(flashlight, flashlight.target);
 const enemyPool = new EnemyPool(scene, CONFIG.DIFFICULTY.MAX_ACTIVE_ENEMIES);
 
 let state = 'START', lastMenuScreen = 'start-screen';
+let pendingTutorial = false;
 let yaw = 0, pitch = -0.22, playerFacingYaw = 0;
 let gameTime = 0, runSouls = 0, kills = 0;
 let stats = {}, skills = {}, passives = {}, rerollsLeft = CONFIG.LIMITS.REROLLS_PER_RUN, maxRerollsRun = CONFIG.LIMITS.REROLLS_PER_RUN;
@@ -183,7 +186,8 @@ const PICKUP_ASSETS = {
 [
   { key: 'serum', sheet: SpriteSheets.env.pickup_serum },
   { key: 'tooth', sheet: SpriteSheets.env.pickup_tooth },
-  { key: 'chest', sheet: SpriteSheets.env.pickup_chest }
+  { key: 'chest', sheet: SpriteSheets.env.pickup_chest },
+  { key: 'scrap', sheet: SpriteSheets.env.pickup_scrap }
 ].forEach(({ key, sheet }) => {
   const t = sheet.tex;
   t.repeat.set(0.25, 1); t.offset.set(0, 0);
@@ -193,10 +197,16 @@ const PICKUP_ASSETS = {
   });
 });
 
-function spawnLorePickup(originPos, type = 'serum') {
+function spawnLorePickup(originPos, type = 'serum', value = 1) {
+  // Limita la chatarra física simultánea para no saturar la escena
+  if (type === 'scrap' && drops.length >= (CONFIG.CORE_DEFENSE.SCRAP.maxActivePickups || 40)) {
+    return;
+  }
+
   const group = new THREE.Group();
   const isChest = type === 'chest';
   const isTooth = type === 'tooth';
+  const isScrap = type === 'scrap';
   const groundY = worldPhysics ? worldPhysics.getGroundHeight(originPos.x, originPos.z, originPos.y) : originPos.y;
   group.position.set(originPos.x, groundY, originPos.z);
 
@@ -204,17 +214,26 @@ function spawnLorePickup(originPos, type = 'serum') {
     isChest ? PICKUP_ASSETS.chestGeo : PICKUP_ASSETS.smallGeo,
     PICKUP_ASSETS.mats[type] || PICKUP_ASSETS.mats.serum
   );
-  const baseHeight = isChest ? 0.72 : 0.48;
+  const baseHeight = isChest ? 0.72 : (isScrap ? 0.42 : 0.48);
   spriteMesh.position.y = baseHeight;
 
   const shadowDisc = new THREE.Mesh(PICKUP_ASSETS.shadowGeo, PICKUP_ASSETS.shadowMat);
   shadowDisc.rotation.x = -Math.PI / 2;
   shadowDisc.position.y = 0.025;
   if (isChest) shadowDisc.scale.set(1.6, 1.6, 1);
+  if (isScrap) shadowDisc.scale.set(0.75, 0.75, 1);
 
   group.add(spriteMesh, shadowDisc);
   scene.add(group);
-  drops.push({ group, spriteMesh, shadowDisc, baseHeight, bobPhase: Math.random() * Math.PI * 2, isBossChest: isChest, isTooth });
+  drops.push({
+    group, spriteMesh, shadowDisc, baseHeight,
+    bobPhase: Math.random() * Math.PI * 2,
+    age: 0,
+    isBossChest: isChest,
+    isTooth,
+    isScrap,
+    value: Math.max(1, value)
+  });
 }
 
 function cleanupVfxItem(v) {
@@ -322,7 +341,8 @@ function buildModeContext(camFwd = new THREE.Vector3(0, 0, -1)) {
       AudioSys.playUISelect();
       refreshHUD();
     },
-    triggerRunEnd: outcome => finishRun(outcome)
+    triggerRunEnd: outcome => finishRun(outcome),
+    tutorialRequested: pendingTutorial
   };
 }
 
@@ -457,7 +477,8 @@ function clearSharedRunState() {
   debugOverlay.clearDynamicMeshes();
 }
 
-function startGame() {
+function startGame(options = {}) {
+  pendingTutorial = !!options.tutorial;
   AudioSys.init();
   clearSharedRunState();
 
@@ -480,6 +501,7 @@ function startGame() {
   syncPlayerVisualLoadout('slash');
 
   ModeManager.startActiveMode(buildModeContext());
+  pendingTutorial = false;
   hudController.applyModeLayout(ModeManager.getHudConfig());
   debugOverlay.rebuildStaticPaths(modeId, worldPhysics);
 
@@ -533,6 +555,17 @@ function togglePauseGame() {
   }
 }
 
+function openTurretBuildMenu(nearbyTurret = null) {
+  if (state !== 'PLAYING') return;
+  state = 'BUILD';
+  if (document.pointerLockElement) document.exitPointerLock();
+  document.getElementById('turret-interact-prompt')?.classList.add('hidden');
+  turretBuildMenu.open(ModeManager.activeMode, nearbyTurret, () => {
+    state = 'PLAYING';
+    document.body.requestPointerLock();
+  });
+}
+
 const keys = {};
 window.addEventListener('keydown', e => {
   if (e.key === 'F3' || (e.key.toLowerCase() === 'b' && state === 'PLAYING')) {
@@ -549,6 +582,36 @@ window.addEventListener('keydown', e => {
   }
 
   const k = e.key.toLowerCase();
+
+  if (state === 'BUILD') {
+    if (k === 'e' || k === 'escape') {
+      e.preventDefault();
+      turretBuildMenu.close();
+    }
+    return;
+  }
+
+  if (state === 'PLAYING' && ModeManager.getSelectedModeId() === 'core_defense') {
+    const mode = ModeManager.activeMode;
+    if (mode?.handleTutorialKey?.(k)) {
+      e.preventDefault();
+      return;
+    }
+    if (mode?.isTurretPlacementActive?.()) {
+      if (k === 'e') {
+        e.preventDefault();
+        mode.confirmTurretPlacement();
+        return;
+      }
+      if (k === 'escape') {
+        e.preventDefault();
+        mode.cancelTurretPlacement();
+        document.body.requestPointerLock();
+        return;
+      }
+    }
+  }
+
   if (state === 'LEVEL_UP') {
     const cards = Array.from(document.querySelectorAll('#upgrade-container .upg-card'));
     if (['1', '2', '3', '4'].includes(k)) {
@@ -563,6 +626,19 @@ window.addEventListener('keydown', e => {
   if (k === 'p' && (state === 'PLAYING' || state === 'PAUSED')) {
     e.preventDefault();
     togglePauseGame();
+    return;
+  }
+
+  if (k === 'e' && state === 'PLAYING' && ModeManager.getSelectedModeId() === 'core_defense') {
+    const mode = ModeManager.activeMode;
+    if (mode?.isTurretPlacementActive?.()) {
+      e.preventDefault();
+      mode.confirmTurretPlacement();
+      return;
+    }
+    const nearby = mode?.getNearbyTurret?.(playerGroup.position) || null;
+    e.preventDefault();
+    openTurretBuildMenu(nearby);
     return;
   }
 
@@ -605,6 +681,33 @@ document.addEventListener('mousemove', e => {
   }
 });
 
+window.addEventListener('mousedown', e => {
+  if (state !== 'PLAYING') return;
+  const mode = ModeManager.activeMode;
+
+  if (mode?.isTurretPlacementActive?.()) {
+    if (e.button === 0) {
+      e.preventDefault();
+      mode.confirmTurretPlacement();
+    } else if (e.button === 2) {
+      e.preventDefault();
+      mode.cancelTurretPlacement();
+    }
+    return;
+  }
+
+  // Recuperar el pointer lock si se perdió (por ejemplo al cancelar una colocación)
+  if (e.button === 0 && !document.pointerLockElement) {
+    document.body.requestPointerLock();
+  }
+});
+
+window.addEventListener('contextmenu', e => {
+  if (state === 'PLAYING' && ModeManager.activeMode?.isTurretPlacementActive?.()) {
+    e.preventDefault();
+  }
+});
+
 const clock = new THREE.Clock();
 let hudTickTimer = 0;
 
@@ -637,6 +740,7 @@ function animate() {
     PICKUP_ASSETS.texs.serum.offset.x = pickupFrameOffset;
     PICKUP_ASSETS.texs.tooth.offset.x = pickupFrameOffset;
     PICKUP_ASSETS.texs.chest.offset.x = pickupFrameOffset;
+    PICKUP_ASSETS.texs.scrap.offset.x = pickupFrameOffset;
 
     if (mods.regenPerSec > 0 && stats.hp < stats.maxHp) {
       stats.hp = Math.min(stats.maxHp, stats.hp + mods.regenPerSec * dt);
@@ -668,7 +772,8 @@ function animate() {
 
     playerBillboard.facingYaw = playerFacingYaw;
     const groundY = worldPhysics.getGroundHeight(playerGroup.position.x, playerGroup.position.z, playerGroup.position.y);
-    if (playerGroup.position.y > groundY || playerYVel !== 0) {
+    if (playerGroup.position.y > groundY + 0.02 || playerYVel !== 0) {
+      isGrounded = false;
       playerGroup.position.y += playerYVel * dt;
       playerYVel -= 23 * dt;
       if (playerGroup.position.y <= groundY) {
@@ -726,12 +831,18 @@ function animate() {
 
     for (let i = drops.length - 1; i >= 0; i--) {
       const d = drops[i];
+      d.age = (d.age || 0) + dt;
       d.spriteMesh.rotation.y = camAngle;
       d.spriteMesh.position.y = d.baseHeight + Math.sin(gameTime * 5.2 + d.bobPhase) * 0.1;
       const dist = d.group.position.distanceTo(playerGroup.position);
       if (dist < mods.magnetRange) {
         const pullDir = new THREE.Vector3().subVectors(playerGroup.position, d.group.position).normalize();
         d.group.position.addScaledVector(pullDir, 18.5 * dt);
+      } else if (d.isScrap && d.age > 0.5) {
+        // La chatarra siempre acaba llegando al operario: evita abandonar el núcleo
+        // para recogerla cuando las torretas matan lejos.
+        const pullDir = new THREE.Vector3().subVectors(playerGroup.position, d.group.position).normalize();
+        d.group.position.addScaledVector(pullDir, 7.5 * dt);
       }
       if (dist < 1.45) {
         scene.remove(d.group);
@@ -741,6 +852,9 @@ function animate() {
           stats.level++; AudioSys.playUISelect(); showLevelUp();
         } else if (d.isTooth) {
           runSouls++; AudioSys.play(640, 0.07, 'sine', 0.05);
+        } else if (d.isScrap) {
+          ModeManager.activeMode?.addScrap?.(d.value || 1);
+          AudioSys.play(520, 0.07, 'square', 0.045);
         } else {
           stats.exp++; AudioSys.play(420, 0.06, 'sine', 0.04);
           if (stats.exp >= stats.maxExp) {
@@ -786,9 +900,31 @@ function animate() {
 }
 
 // Botones de navegación y Ajustes
-document.getElementById('btn-start').onclick = () => { AudioSys.playUISelect(); startGame(); };
-document.getElementById('btn-shop-play').onclick = () => { AudioSys.playUISelect(); startGame(); };
-document.getElementById('btn-restart').onclick = () => { AudioSys.playUISelect(); startGame(); };
+function showTutorialPrompt() {
+  document.getElementById('start-screen')?.classList.add('hidden');
+  document.getElementById('shop-screen')?.classList.add('hidden');
+  document.getElementById('tutorial-prompt-screen')?.classList.remove('hidden');
+}
+
+function requestStartGame() {
+  AudioSys.playUISelect();
+  const tutorialKey = CONFIG.CORE_DEFENSE.TUTORIAL.choiceKey;
+  if (ModeManager.getSelectedModeId() === 'core_defense' && !localStorage.getItem(tutorialKey)) {
+    showTutorialPrompt();
+    return;
+  }
+  startGame({ tutorial: false });
+}
+
+function updateTdTutorialButton() {
+  const btn = document.getElementById('btn-td-tutorial');
+  if (!btn) return;
+  btn.classList.toggle('hidden', ModeManager.getSelectedModeId() !== 'core_defense');
+}
+
+document.getElementById('btn-start').onclick = requestStartGame;
+document.getElementById('btn-shop-play').onclick = requestStartGame;
+document.getElementById('btn-restart').onclick = () => { AudioSys.playUISelect(); startGame({ tutorial: false }); };
 document.getElementById('btn-results-menu').onclick = () => returnToMainMenu();
 document.getElementById('btn-pause-to-menu').onclick = () => returnToMainMenu();
 document.getElementById('btn-resume').onclick = () => togglePauseGame();
@@ -829,6 +965,24 @@ document.getElementById('btn-close-settings').onclick = () => {
 document.getElementById('btn-open-sheets').onclick = () => document.getElementById('sheets-modal').classList.remove('hidden');
 document.getElementById('btn-close-sheets').onclick = () => document.getElementById('sheets-modal').classList.add('hidden');
 
+document.getElementById('btn-tutorial-yes').onclick = () => {
+  localStorage.setItem(CONFIG.CORE_DEFENSE.TUTORIAL.choiceKey, 'tutorial');
+  document.getElementById('tutorial-prompt-screen').classList.add('hidden');
+  AudioSys.playUISelect();
+  startGame({ tutorial: true });
+};
+document.getElementById('btn-tutorial-no').onclick = () => {
+  localStorage.setItem(CONFIG.CORE_DEFENSE.TUTORIAL.choiceKey, 'skipped');
+  document.getElementById('tutorial-prompt-screen').classList.add('hidden');
+  AudioSys.playUISelect();
+  startGame({ tutorial: false });
+};
+document.getElementById('btn-td-tutorial').onclick = () => {
+  AudioSys.playUISelect();
+  localStorage.setItem(CONFIG.CORE_DEFENSE.TUTORIAL.choiceKey, 'tutorial');
+  startGame({ tutorial: true });
+};
+
 document.getElementById('ui-scale-select').onchange = e => {
   initUISpritesCSS(parseInt(e.target.value, 10) || 2);
   refreshStaticDOMIcons();
@@ -836,8 +990,9 @@ document.getElementById('ui-scale-select').onchange = e => {
 };
 
 refreshStaticDOMIcons();
-renderModeSelectorUI(careerByMode);
+renderModeSelectorUI(careerByMode, () => updateTdTutorialButton());
 updateCareerDossierForSelectedMode(careerByMode);
+updateTdTutorialButton();
 renderShopUI(save, saveGame);
 syncPlayerVisualLoadout('slash');
 animate();

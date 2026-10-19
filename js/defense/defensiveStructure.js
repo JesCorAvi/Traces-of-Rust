@@ -29,6 +29,10 @@ export class DefensiveStructure {
     this.targetPriority = opts.targetPriority ?? 2;
     this.active = true;
     this.destroyed = false;
+    // Escudo temporal y reducción de daño (usados por el Taller y las mejoras de Barrera)
+    this.shieldHp = 0;
+    this.maxShieldHp = 0;
+    this.damageReduction = 0;
 
     this.group = new THREE.Group();
     const pos = opts.position || { x: 0, y: 0, z: 0 };
@@ -60,11 +64,23 @@ export class DefensiveStructure {
 
   /**
    * Aplica daño proveniente exclusivamente de entidades hostiles (nunca del jugador).
+   * El escudo absorbe primero; después se aplica la reducción de daño.
    */
   takeDamage(amount, attacker = null) {
     if (!this.active || this.destroyed || amount <= 0) return 0;
 
-    const finalDmg = Math.max(1, Math.round(amount));
+    let incoming = amount;
+    let absorbed = 0;
+    if (this.shieldHp > 0) {
+      absorbed = Math.min(this.shieldHp, incoming);
+      this.shieldHp -= absorbed;
+      incoming -= absorbed;
+      if (this.onShieldDamaged) this.onShieldDamaged(absorbed);
+      if (incoming <= 0) return absorbed;
+    }
+
+    incoming *= Math.max(0, 1 - this.damageReduction);
+    const finalDmg = Math.max(1, Math.round(incoming));
     this.hp = Math.max(0, this.hp - finalDmg);
 
     this.onDamaged(finalDmg, attacker);
@@ -91,8 +107,15 @@ export class DefensiveStructure {
 
   heal(amount) {
     if (!this.active || this.destroyed || amount <= 0) return;
+    const before = this.hp;
     this.hp = Math.min(this.maxHp, this.hp + amount);
-    this.onHealed(amount);
+    if (this.hp > before) this.onHealed(this.hp - before);
+  }
+
+  applyShield(amount) {
+    if (!this.active || this.destroyed || amount <= 0) return;
+    this.maxShieldHp = Math.max(this.maxShieldHp, amount);
+    this.shieldHp = Math.min(this.maxShieldHp, this.shieldHp + amount);
   }
 
   // Hooks para subclases (como CoreMachine o futuras torres)

@@ -1,6 +1,7 @@
 import { CONFIG } from './config.js';
 import { getPlayerLoadoutSheet, peekPlayerLoadoutSheet } from './sprites/playerSprites.js';
 import { buildEnemyDirectionalSheet, buildEnvironmentTextures } from './sprites/entitySprites.js';
+import { buildTurretSheets, buildAllyDirectionalSheets } from './sprites/turretSprites.js';
 import { buildMasterUIAtlas } from './sprites/uiAtlasBuilder.js';
 
 export { getPlayerLoadoutSheet, peekPlayerLoadoutSheet };
@@ -97,6 +98,8 @@ export const SpriteSheets = {
   boss_furnace: buildEnemyDirectionalSheet('boss_furnace'),
   boss_apostle: buildEnemyDirectionalSheet('boss_apostle'),
   boss_warden:  buildEnemyDirectionalSheet('boss_warden'),
+  ...buildTurretSheets(),
+  ...buildAllyDirectionalSheets(),
   env:          buildEnvironmentTextures(),
   ui_atlas:     buildMasterUIAtlas()
 };

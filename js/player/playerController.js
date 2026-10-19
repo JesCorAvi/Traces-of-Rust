@@ -104,7 +104,7 @@ export function updatePlayerWeaponsAndCombat({
       const dmg = CONFIG.SKILLS.aura.baseDmg * (1 + (skills.aura - 1) * 0.22) * mods.dmgMult;
       activeEnemies.forEach(e => {
         if (e.state !== 'dead' && e.group.position.distanceTo(playerGroup.position) < auraRadius) {
-          e.slowTimer = 0.6;
+          e.applySlow(0.6, 0.6);
           damageEnemy(e, dmg, null, true);
         }
       });

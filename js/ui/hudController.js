@@ -48,6 +48,10 @@ export class HUDController {
     document.getElementById('endgame-banner')?.classList.add('hidden');
     document.getElementById('boss-hud')?.classList.add('hidden');
     document.getElementById('core-attack-banner')?.classList.add('hidden');
+
+    if (!isDefense) {
+      document.getElementById('turret-interact-prompt')?.classList.add('hidden');
+    }
   }
 
   updateStatsAndModeHUD(stats, kills, runSouls, rerollsLeft, activeBoss, modeTelemetry) {
@@ -106,6 +110,40 @@ export class HUDController {
       if (coreStatus) {
         coreStatus.textContent = modeTelemetry.coreStateLabel || 'ESTABLE';
         coreStatus.classList.toggle('critical', corePct < 45);
+      }
+
+      const scrapEl = document.getElementById('core-scrap-counter');
+      if (scrapEl) scrapEl.textContent = `CHATARRA: ${modeTelemetry.scrap || 0}`;
+
+      const turretEl = document.getElementById('core-turret-counter');
+      if (turretEl) {
+        turretEl.textContent = `TORRETAS: ${modeTelemetry.turretCount || 0}/${modeTelemetry.turretMax || 0}`;
+      }
+
+      const prompt = document.getElementById('turret-interact-prompt');
+      const promptText = document.getElementById('turret-interact-text');
+      const keyCap = document.getElementById('turret-key-cap');
+      const placement = modeTelemetry.placement;
+      const nearby = modeTelemetry.nearbyTurret;
+
+      if (prompt) {
+        prompt.classList.remove('hidden');
+        prompt.classList.toggle('is-invalid', !!(placement && placement.active && !placement.valid));
+
+        if (placement && placement.active) {
+          if (keyCap) keyCap.textContent = 'LMB';
+          if (promptText) {
+            promptText.textContent = placement.valid
+              ? `COLOCAR ${placement.typeName} · ${placement.cost} CHATARRA · [ESC] CANCELAR`
+              : `${placement.reason} · [ESC] CANCELAR`;
+          }
+        } else if (nearby) {
+          if (keyCap) keyCap.textContent = 'E';
+          if (promptText) promptText.textContent = `MEJORAR / VENDER · ${nearby.name}`;
+        } else {
+          if (keyCap) keyCap.textContent = 'E';
+          if (promptText) promptText.textContent = 'CONSTRUIR TORRETA';
+        }
       }
     }
   }

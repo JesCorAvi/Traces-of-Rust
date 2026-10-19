@@ -155,17 +155,21 @@ export class SpawnPointSystem {
 
   update(dt) {
     this.elapsed += dt;
-    this.spawnPoints.forEach((sp, idx) => {
+    let idx = 0;
+    this.spawnPoints.forEach(sp => {
       sp.riftRing.rotation.z += dt * 1.1;
       if (sp.activeFlash > 0) {
         sp.activeFlash -= dt;
         sp.portalLight.intensity = 65;
         sp.riftMat.opacity = 1.0;
       } else {
+        // OJO: Map.forEach entrega la clave (string) como 2.º argumento, no un índice.
+        // Usamos un contador numérico para que la fase del pulso nunca sea NaN.
         const pulse = 0.55 + Math.sin(this.elapsed * 3.2 + idx) * 0.25;
         sp.portalLight.intensity = 22 * pulse;
         sp.riftMat.opacity = pulse;
       }
+      idx++;
     });
   }
 
