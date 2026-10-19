@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- Documento único: canvas, HUD, menús, overlays y paneles de torretas/tutorial. -->
 <html lang="es">
 <head>
   <meta charset="UTF-8">
@@ -55,14 +56,14 @@
         </span>
         <button class="rust-btn sm" id="btn-close-sheets"><span>[X] CERRAR</span></button>
       </div>
-      <p class="plate-sub">Atlas 512x512 con paneles 9-slice, botones, barras, 39 iconos detallados, placas +1..+8 y cursores. Haz clic para descargar PNG.</p>
+      <p class="plate-sub">Atlas 512x512 con paneles 9-slice, botones, barras, iconos detallados, placas +1..+8 y cursores. Haz clic para descargar PNG.</p>
       <div id="sheets-grid"></div>
     </div>
   </div>
 
-  <!-- HUD en partida al estilo Megabonk, con estética de Traces of Rust -->
+  <!-- HUD en partida adaptable por modo -->
   <div id="hud" class="hidden">
-    
+
     <!-- BARRA SUPERIOR TOTAL: DOSIS DE SUERO (EXP) -->
     <div id="hud-top-progress-container" title="Dosis de suero (XP) para el próximo Ciclo">
       <div class="segmented-bar exp-frame-top">
@@ -71,7 +72,39 @@
       </div>
     </div>
 
-    <!-- Barra de Vida del Boss (Centro Superior, por debajo de la EXP) -->
+    <!-- SECTOR ARRIBA-CENTRO: CRONÓMETRO + PANEL DE INTEGRIDAD DEL NÚCLEO (Modo Defensa) -->
+    <div id="hud-top-center">
+      <div id="timer-text">00:00</div>
+
+      <div id="core-defense-hud" class="metal-plate hidden">
+        <div class="core-hud-header">
+          <span class="core-hud-title-left">
+            <span class="ui-icon sm" data-ui-icon="core"></span>
+            <span>INTEGRIDAD DEL NÚCLEO</span>
+          </span>
+          <span id="core-state-tag">ESTABLE</span>
+        </div>
+        <div class="core-bar-frame">
+          <div id="core-hp-bar"></div>
+          <div class="stat-label-row-compact">
+            <span id="core-hp-text" class="led-val">1500 / 1500</span>
+          </div>
+        </div>
+        <div class="core-hud-subrow">
+          <span id="core-wave-counter">OLEADA 1/12</span>
+          <span id="core-enemies-left">HOSTILES: 0</span>
+        </div>
+        <div class="core-hud-subrow core-hud-economy">
+          <span class="core-scrap-line">
+            <span class="ui-icon sm" data-ui-icon="scrap"></span>
+            <span id="core-scrap-counter">CHATARRA: 0</span>
+          </span>
+          <span id="core-turret-counter">TORRETAS: 0/12</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Barra de Vida del Boss -->
     <div id="boss-hud" class="hidden">
       <div class="boss-plate">
         <div class="boss-header">
@@ -88,16 +121,28 @@
       </div>
     </div>
 
-    <!-- Banner de Fase Final (Minuto 15+) -->
+    <!-- Banner de Fase Final (Supervivencia Minuto 15+) -->
     <div id="endgame-banner" class="hidden">
       <span class="ui-icon sm" data-ui-icon="warning"></span>
       <span>FALLO DE CONTENCIÓN TOTAL // PROTOCOLO DE EXTERMINIO ACTIVO</span>
       <span class="ui-icon sm" data-ui-icon="warning"></span>
     </div>
 
-    <!-- SECTOR ARRIBA-IZQUIERDA: CONTADORES RÁPIDOS Y ESTADO VITAL -->
+    <!-- Banner de Alerta de Ataque al Núcleo (Modo Defensa) -->
+    <div id="core-attack-banner" class="hidden">
+      <span class="ui-icon sm" data-ui-icon="warning"></span>
+      <span>¡NÚCLEO BAJO ATAQUE!</span>
+      <span class="ui-icon sm" data-ui-icon="warning"></span>
+    </div>
+
+    <!-- Marcador direccional en pantalla hacia el Núcleo (Modo Defensa) -->
+    <div id="core-direction-indicator" class="hidden">
+      <span class="core-dir-arrow">▲</span>
+      <span class="core-dir-dist">NÚCLEO 0M</span>
+    </div>
+
+    <!-- SECTOR ARRIBA-IZQUIERDA: CONTADORES RÁPIDOS, VIDA DEL JUGADOR Y ARMAS -->
     <div id="hud-top-left">
-      <!-- Indicadores Digitales compactos -->
       <div class="counters-row-compact">
         <div class="compact-indicator-item" title="Tiempo de misión">
           <span class="ui-icon sm" data-ui-icon="clock"></span>
@@ -107,9 +152,9 @@
           <span class="ui-icon sm" data-ui-icon="tooth"></span>
           <span id="souls-hud">0</span>
         </div>
-        <div class="compact-indicator-item" title="Fuselajes/Mejoras compradas o acumuladas">
+        <div class="compact-indicator-item" title="Fusibles de actualización restantes">
           <span class="ui-icon sm" data-ui-icon="reroll"></span>
-          <span>15</span> <!-- Simulación de monedas secundarias / mejoras -->
+          <span>3</span>
         </div>
         <div class="compact-indicator-item" title="Bajas totales">
           <span class="ui-icon sm" data-ui-icon="skull"></span>
@@ -117,7 +162,6 @@
         </div>
       </div>
 
-      <!-- Placa de Pulso (Vida) -->
       <div class="metal-plate biometrics-plate-compact">
         <div class="screw tl"></div><div class="screw tr"></div><div class="screw bl"></div><div class="screw br"></div>
         <div class="stat-label-row-compact">
@@ -128,35 +172,25 @@
         </div>
       </div>
 
-      <!-- Ranuras de Armas de mano activas (Compactas con Nivel, en cuadrícula de 4) -->
-      <div class="slots-grid-compact" id="skills-bar">
-        <!-- Generadas dinámicamente -->
-      </div>
-    </div>
-
-    <!-- SECTOR ARRIBA-CENTRO: CRONÓMETRO INDUSTRIAL (Opcional, coincide con Megabonk y Traces) -->
-    <div id="hud-top-center">
-      <div id="timer-text">00:00</div>
+      <div class="slots-grid-compact" id="skills-bar"></div>
     </div>
 
     <!-- SECTOR ARRIBA-DERECHA: TELEMETRÍA Y ESCÁNER DE AMENAZA -->
     <div id="hud-top-right">
       <div class="telemetry-compact">
-        <!-- Nivel del Ciclo arriba del radar -->
         <div id="level-text" class="ciclo-badge-compact">CICLO 01</div>
-        
-        <!-- Radar Industrial / Escáner de Amenaza circular -->
+
         <div class="metal-plate radar-scanner-plate">
           <div class="screw tl"></div><div class="screw tr"></div><div class="screw bl"></div><div class="screw br"></div>
           <div class="radar-display">
             <div class="radar-sweeper"></div>
-            <!-- Simulación de scanner circular del juego, se puede complementar con CSS o datos 3D si es necesario -->
             <div class="radar-dot enemy-approx"></div>
             <div class="radar-dot boss-approx"></div>
+            <div class="radar-dot core-approx" title="Posición del Núcleo"></div>
           </div>
           <div id="radar-threat-label">SCANNER: OK</div>
         </div>
-        
+
         <div id="elev-container">
           <span class="ui-icon sm" data-ui-icon="moveSpd"></span>
           <span id="elev-text">COTA: 0.0M</span>
@@ -164,7 +198,7 @@
       </div>
     </div>
 
-    <!-- SECTOR MEDIO-IZQUIERDA: PANEL DE OBJETIVOS (Estilo papel clínico) -->
+    <!-- SECTOR MEDIO-IZQUIERDA: PANEL DE OBJETIVOS -->
     <div id="hud-objective-tracker">
       <div class="paper-note objective-note">
         <div class="objective-header">
@@ -179,7 +213,7 @@
       </div>
     </div>
 
-    <!-- SECTOR MEDIO-DERECHA: NOTIFICACIONES DE BOSSES (Enemigos abatidos, etc.) -->
+    <!-- SECTOR MEDIO-DERECHA: NOTIFICACIONES DE BOSSES Y OLEADA -->
     <div id="hud-alert-overlay-right">
       <div id="boss-killed-alert" class="hidden">
         <span class="ui-icon sm" data-ui-icon="boss_skull"></span>
@@ -188,23 +222,18 @@
       <div id="wave-text">AMENAZA: NIVEL 1</div>
     </div>
 
-    <!-- SECTOR ABAJO-CENTRO: RANURAS DE IMPLANTES PASIVOS (Fila horizontal de Megabonk) -->
+    <!-- SECTOR ABAJO-CENTRO: RANURAS DE IMPLANTES PASIVOS -->
     <div id="hud-bottom-slots-container">
       <div class="metal-plate implants-tray">
-        <div class="screw tl"></div><div class="screw tr"></div><div class="screw bl"></div><div class="screw br"></div>
-        <div class="ui-decor wire-top" data-ui-icon="wire_clamp"></div>
-        
         <div class="slots-horizontal-label">
           <span>IMPLANTES PASIVOS EN CURSO</span>
-          <span>[<span id="passives-count">0/4</span>/4]</span>
+          <span>[<span id="passives-count">0</span>/4]</span>
         </div>
-        <div id="passives-bar" class="slots-horizontal-row">
-          <!-- Generados dinámicamente -->
-        </div>
+        <div id="passives-bar" class="slots-horizontal-row"></div>
       </div>
     </div>
 
-    <!-- Capa de escape y dash (Válvula) -->
+    <!-- Indicador de Dash -->
     <div id="stamina-tracker-overlay">
       <div class="stamina-text-wrapper">
         <span class="ui-icon sm" data-ui-icon="moveSpd"></span>
@@ -216,19 +245,36 @@
     </div>
 
     <div id="crosshair"></div>
+
+    <!-- Aviso contextual para construir/mejorar torretas -->
+    <div id="turret-interact-prompt" class="hidden">
+      <span class="key-cap" id="turret-key-cap">E</span>
+      <span id="turret-interact-text">CONSTRUIR TORRETA</span>
+    </div>
+
     <div id="boss-alert" class="hidden">
       <span class="ui-icon sm" data-ui-icon="warning"></span>
       <span>ALERTA SÍSMICA: PRESENCIA HOSTIL DETECTADA</span>
       <span class="ui-icon sm" data-ui-icon="warning"></span>
     </div>
+
+    <!-- Panel del tutorial interactivo de Defensa -->
+    <div id="td-tutorial-panel" class="hidden">
+      <div class="paper-note td-tutorial-note">
+        <div class="td-tutorial-header">
+          <span id="td-tutorial-step">TUTORIAL</span>
+          <span class="td-tutorial-skip">[F] SALTAR</span>
+        </div>
+        <div id="td-tutorial-title" class="td-tutorial-title">ADIESTRAMIENTO</div>
+        <div id="td-tutorial-text" class="td-tutorial-text"></div>
+        <div id="td-tutorial-hint" class="td-tutorial-hint"></div>
+      </div>
+    </div>
   </div>
 
-  <!-- ========================================================================
-       PANTALLA DE INICIO ESTILO JUEGO DE ESCRITORIO (PC LAUNCHER / DESKTOP UI)
-       ======================================================================== -->
+  <!-- PANTALLA DE INICIO CON SELECTOR DE MODO -->
   <div id="start-screen" class="overlay desktop-start-overlay">
     <div class="desktop-launcher-layout">
-      <!-- Columna Izquierda: Identidad y Menú Vertical de Escritorio -->
       <div class="metal-plate desktop-nav-plate">
         <div class="screw tl"></div><div class="screw tr"></div><div class="screw bl"></div><div class="screw br"></div>
         <div class="ui-decor crack-tl" data-ui-icon="crack_1"></div>
@@ -241,19 +287,27 @@
         </div>
 
         <h1 class="buckshot-title desktop-main-title">Traces of Rust</h1>
-        <p class="plate-sub" style="margin-bottom:8px;">Debes limpiar de entidades las instalaciones.</p>
-        <p class="plate-sub" style="margin-bottom:8px;">Desertar no es una opción.</p>
-        <p class="plate-sub" style="margin-bottom:8px;">Suerte.</p>
+        <p class="plate-sub" style="margin-bottom:6px;">Selecciona el protocolo operativo antes de entrar en planta.</p>
 
-        <div class="teeth-banner" style="width:100%; margin-bottom:12px;">
+        <!-- Selector de Modo de Juego (Supervivencia vs Defender el Núcleo) -->
+        <div class="mode-selector-section">
+          <div class="mode-selector-label">SELECCIONAR MODO DE OPERACIÓN:</div>
+          <div id="mode-selector-group" class="mode-selector-grid"></div>
+        </div>
+
+        <div class="teeth-banner" style="width:100%; margin-bottom:10px;">
           <span class="ui-icon sm" data-ui-icon="tooth"></span>
           <span>DIENTES EN RESERVA: <span id="start-souls">0</span></span>
         </div>
 
         <div class="desktop-menu-list">
+          <button class="rust-btn desktop-menu-btn hidden" id="btn-td-tutorial">
+            <span class="ui-icon sm" data-ui-icon="level"></span>
+            <span>[ TUTORIAL INTERACTIVO DE DEFENSA ]</span>
+          </button>
           <button class="rust-btn primary desktop-menu-btn" id="btn-start">
             <span class="ui-icon sm" data-ui-icon="slash"></span>
-            <span>[ FIRMAR CONTRATO Y ENTRAR ]</span>
+            <span id="btn-start-label">[ FIRMAR CONTRATO Y ENTRAR ]</span>
           </button>
           <button class="rust-btn desktop-menu-btn" id="btn-open-shop">
             <span class="ui-icon sm" data-ui-icon="tooth"></span>
@@ -274,24 +328,24 @@
         </div>
 
         <div class="desktop-version-footer">
-          <span>BUILD DESKTOP-64 · REV 1.0.4</span>
+          <span>BUILD DESKTOP-64 · REV 2.0 (MODOS)</span>
           <span id="gpu-status-badge" style="color:#a8c499;">● GPU ACTIVA</span>
         </div>
       </div>
 
-      <!-- Columna Derecha Inferior: Expediente de Carrera y Telemetría del Paciente -->
+      <!-- Expediente de Carrera separado por modo -->
       <div class="metal-plate desktop-dossier-plate">
         <div class="screw tl"></div><div class="screw tr"></div><div class="screw bl"></div><div class="screw br"></div>
         <div class="ui-decor stain-rust" data-ui-icon="stain_rust"></div>
 
         <div class="tape-strip">
           <span class="ui-icon sm" data-ui-icon="skull"></span>
-          <span>EXPEDIENTE</span>
+          <span id="dossier-mode-label">EXPEDIENTE // SUPERVIVENCIA</span>
         </div>
 
         <div class="paper-note stats-report" style="margin:6px 0 10px;">
           <div class="report-row"><span>CONTRATOS FIRMADOS:</span><b id="career-runs" style="color:#f5ecd3">0</b></div>
-          <div class="report-row"><span>MEJOR TIEMPO EN PLANTA:</span><b id="career-best-time" style="color:#f0c954">00:00</b></div>
+          <div class="report-row"><span id="career-best-metric-label">MEJOR TIEMPO EN PLANTA:</span><b id="career-best-time" style="color:#f0c954">00:00</b></div>
           <div class="report-row"><span>ENTIDADES ELIMINADAS:</span><b id="career-total-kills" style="color:#ff6b6b">0</b></div>
           <div class="report-row"><span>JEFES PURGADOS:</span><b id="career-total-bosses" style="color:#f0c954">0</b></div>
           <div class="report-row"><span>IMPLANTES ADQUIRIDOS:</span><b id="career-upgrades-count" style="color:#a8c499">0</b></div>
@@ -303,20 +357,15 @@
           <span><b>SHIFT</b> DASH</span>
           <span><b>RATÓN</b> LINTERNA</span>
           <span><b>P</b> PAUSA</span>
+          <span><b>B / F3</b> DEBUG IA</span>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- ========================================================================
-       MENÚ DE AJUSTES DEL SISTEMA (VÍDEO, AUDIO, CONTROLES Y DATOS)
-       ======================================================================== -->
+  <!-- MENÚ DE AJUSTES DEL SISTEMA -->
   <div id="settings-screen" class="overlay hidden">
-    <div class="metal-plate wide-plate" style="max-width:780px;">
-      <div class="screw tl"></div><div class="screw tr"></div><div class="screw bl"></div><div class="screw br"></div>
-      <div class="ui-decor crack-tl" data-ui-icon="crack_1"></div>
-      <div class="ui-decor stain-rust" data-ui-icon="stain_rust"></div>
-
+    <div class="metal-plate wide-plate">
       <div class="plate-header">
         <span class="tape-label">
           <span class="ui-icon sm" data-ui-icon="atkSpd"></span>
@@ -326,41 +375,34 @@
       </div>
 
       <div class="settings-grid">
-        <!-- Bloque 1: Audio -->
         <div class="paper-note settings-section">
           <div class="settings-section-title">
             <span class="ui-icon sm" data-ui-icon="area"></span>
             <span>SUBSISTEMA DE AUDIO</span>
           </div>
-
           <div class="setting-row">
             <label for="set-master-vol">VOLUMEN MAESTRO: <b id="val-master-vol">85%</b></label>
             <input type="range" id="set-master-vol" min="0" max="100" value="85">
           </div>
-
           <div class="setting-row">
             <label for="set-sfx-vol">EFECTOS Y ARMAS (SFX): <b id="val-sfx-vol">90%</b></label>
             <input type="range" id="set-sfx-vol" min="0" max="100" value="90">
           </div>
-
           <div class="setting-row">
             <label for="set-amb-vol">DRON INDUSTRIAL (AMBIENTE): <b id="val-amb-vol">80%</b></label>
             <input type="range" id="set-amb-vol" min="0" max="100" value="80">
           </div>
-
           <div class="setting-row">
             <span>SILENCIAR AUDIO GLOBAL:</span>
             <button class="rust-btn sm" id="btn-toggle-mute"><span>DESACTIVADO</span></button>
           </div>
         </div>
 
-        <!-- Bloque 2: Vídeo y Renderizado 3D -->
         <div class="paper-note settings-section">
           <div class="settings-section-title">
             <span class="ui-icon sm" data-ui-icon="crit"></span>
             <span>VÍDEO Y RENDERIZADO 3D</span>
           </div>
-
           <div class="setting-row">
             <label for="set-res-scale">RESOLUCIÓN PIXEL-ART 3D:</label>
             <select id="set-res-scale" class="setting-select">
@@ -370,47 +412,39 @@
               <option value="1.0">1.00x (NATIVA DE MONITOR)</option>
             </select>
           </div>
-
           <div class="setting-row">
             <label for="set-fov">CAMPO DE VISIÓN (FOV): <b id="val-fov">70°</b></label>
             <input type="range" id="set-fov" min="60" max="95" value="70">
           </div>
-
           <div class="setting-row">
             <span>SOMBRAS DINÁMICAS DE LINTERNA:</span>
             <button class="rust-btn sm" id="btn-toggle-shadows"><span>ACTIVADAS</span></button>
           </div>
-
           <div class="setting-row">
             <span>FILTRO CRT Y GRANO DE PELÍCULA:</span>
             <button class="rust-btn sm" id="btn-toggle-crt"><span>ACTIVADOS</span></button>
           </div>
-
           <div class="setting-row">
             <span>MOSTRAR CONTADOR DE FPS:</span>
             <button class="rust-btn sm" id="btn-toggle-fps"><span>OCULTO</span></button>
           </div>
         </div>
 
-        <!-- Bloque 3: Controles y Datos -->
         <div class="paper-note settings-section settings-span-full">
           <div class="settings-section-title">
             <span class="ui-icon sm" data-ui-icon="suit"></span>
             <span>CONTROLES, CÁMARA Y DATOS DE GUARDADO</span>
           </div>
-
           <div class="settings-two-cols">
             <div class="setting-row">
               <label for="set-sens">SENSIBILIDAD DEL RATÓN: <b id="val-sens">1.0x</b></label>
               <input type="range" id="set-sens" min="20" max="250" value="100">
             </div>
-
             <div class="setting-row">
               <label for="set-shake">INTENSIDAD DE TEMBLOR DE CÁMARA: <b id="val-shake">100%</b></label>
               <input type="range" id="set-shake" min="0" max="100" value="100">
             </div>
           </div>
-
           <div class="setting-row" style="margin-top:8px; padding-top:8px; border-top:1px dashed #364832;">
             <span>RESTABLECER AJUSTES O BORRAR PARTIDA GUARDADA:</span>
             <div style="display:flex; gap:8px; flex-wrap:wrap;">
@@ -423,30 +457,24 @@
     </div>
   </div>
 
-  <!-- ========================================================================
-       MODAL DE MANUAL OPERATIVO Y CONTROLES
-       ======================================================================== -->
+  <!-- MODAL DE MANUAL OPERATIVO -->
   <div id="manual-modal" class="overlay hidden">
     <div class="metal-plate main-menu-plate" style="max-width:740px;">
-      <div class="screw tl"></div><div class="screw tr"></div><div class="screw bl"></div><div class="screw br"></div>
-      <div class="ui-decor crack-tl" data-ui-icon="crack_1"></div>
       <div class="plate-header">
         <span class="tape-label">
           <span class="ui-icon sm" data-ui-icon="level"></span>
-          <span>MANUAL OPERATIVO // PROTOCOLO DE SUPERVIVENCIA</span>
+          <span>MANUAL OPERATIVO // MODOS DE OPERACIÓN</span>
         </span>
         <button class="rust-btn sm" id="btn-close-manual"><span>[X] CERRAR</span></button>
       </div>
-
-      <div class="paper-note" style="font-size:20px; line-height:1.5;">
-        <b>1. MOVIMIENTO Y EXPLORACIÓN INDUSTRIAL:</b><br>
-        • Usa <b>WASD</b> para desplazarte por las plataformas y rampas elevadas.<br>
-        • Pulsa <b>ESPACIO</b> para saltar obstáculos y <b>SHIFT</b> para ejecutar una <b>Esquiva Brusca (Dash)</b> con invulnerabilidad momentánea.<br><br>
-        <b>2. LA LINTERNA Y EL OBSERVADOR:</b><br>
-        • Apunta con el <b>RATÓN</b>. La entidad <i>El Observador (Weeper)</i> se mueve a gran velocidad en la oscuridad, pero <b>queda completamente paralizada mientras la alumbres de frente</b>.<br><br>
-        <b>3. ARMAMENTO, PASIVAS Y JEFES:</b><br>
-        • Recoge <b>Viales de Suero</b> para subir de Ciclo. Puedes equipar hasta <b>4 Armas</b> y <b>4 Implantes Pasivos</b> (nivel máximo <b>+8</b>).<br>
-        • Cada <b>3 minutos</b> (03:00, 06:00, 09:00, 12:00, 15:00) aparecerá una aberración principal en planta. Al derrotarla soltará un <b>Maletín Quirúrgico</b> y <b>Dientes de Oro</b> para la Mesa del Cirujano.
+      <div class="paper-note" style="font-size:20px; line-height:1.45;">
+        <b>1. CONTROLES Y MOVIMIENTO:</b><br>
+        • <b>WASD</b> mover, <b>ESPACIO</b> saltar, <b>SHIFT</b> Dash invulnerable, <b>RATÓN</b> apuntar linterna, <b>B / F3</b> Modo Debug.<br><br>
+        <b>2. MODO SUPERVIVENCIA:</b><br>
+        • Resiste todo el tiempo posible. Cada 3 minutos emerge un Jefe de Planta.<br><br>
+        <b>3. MODO DEFENDER EL NÚCLEO:</b><br>
+        • Protege el Reactor Biomecánico Central durante 12 oleadas. Los enemigos avanzan por las vías industriales hacia el Núcleo, pero te perseguirán si te acercas demasiado.<br>
+        • Recoge <b>CHATARRA</b> de los hostiles abatidos. Pulsa <b>E</b> para abrir el terminal, elige una torreta y colócala libremente apuntando al suelo con la cámara (anillo verde = válido). Acércate a una torreta y pulsa <b>E</b> para mejorarla o venderla. Cada torreta tiene 3 rutas de mejora y solo una puede superar el nivel 2. El tutorial interactivo opcional enseña todo esto y las sinergias principales.
       </div>
     </div>
   </div>
@@ -454,14 +482,12 @@
   <!-- Menú de Pausa ([P]) -->
   <div id="pause-screen" class="overlay hidden">
     <div class="metal-plate main-menu-plate" style="max-width:520px;">
-      <div class="ui-decor crack-tl" data-ui-icon="crack_1"></div>
       <div class="tape-strip">
         <span class="ui-icon sm" data-ui-icon="clock"></span>
         <span>PROTOCOLO DE PAUSA // PLANTA INDUSTRIAL</span>
       </div>
       <h1 class="buckshot-title" style="font-size:22px;">JUEGO EN PAUSA</h1>
       <p class="plate-sub">Sistemas de soporte vital congelados temporalmente.</p>
-
       <div class="btn-group" style="flex-direction:column; gap:12px; margin-top:16px;">
         <button class="rust-btn primary" id="btn-resume"><span>[ CONTINUAR MISIÓN ]</span></button>
         <button class="rust-btn" id="btn-pause-settings">
@@ -473,11 +499,47 @@
     </div>
   </div>
 
-  <!-- Tienda Permanente Fuera de Partida (Mesa del Cirujano) -->
+  <!-- Pregunta inicial del tutorial de Defensa -->
+  <div id="tutorial-prompt-screen" class="overlay hidden">
+    <div class="metal-plate main-menu-plate" style="max-width:640px;">
+      <div class="tape-strip">
+        <span class="ui-icon sm" data-ui-icon="warning"></span>
+        <span>PROTOCOLO DE ADIESTRAMIENTO</span>
+      </div>
+      <h1 class="buckshot-title" style="font-size:22px;">¿EJECUTAR TUTORIAL?</h1>
+      <p class="plate-sub">
+        Es tu primer contrato de defensa. Puedes realizar un tutorial interactivo:
+        aprenderás a colocar torretas libremente, mejorarlas con rutas estilo BTD6,
+        recoger CHATARRA y combinar sinergias como Escarcha + Bombarda.
+      </p>
+      <p class="plate-sub" style="color:#877a5c;">
+        Esta elección solo se pregunta la primera vez. Después podrás repetirlo desde el menú principal.
+      </p>
+      <div class="btn-group" style="flex-direction:column; gap:12px; margin-top:16px;">
+        <button class="rust-btn primary" id="btn-tutorial-yes"><span>[ SÍ, INICIAR TUTORIAL INTERACTIVO ]</span></button>
+        <button class="rust-btn" id="btn-tutorial-no"><span>[ NO, JUGAR DIRECTO ]</span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Panel de Construcción / Mejora de Torretas -->
+  <div id="turret-build-screen" class="overlay hidden">
+    <div class="metal-plate turret-build-plate">
+      <div class="plate-header">
+        <span class="tape-label">
+          <span class="ui-icon sm" data-ui-icon="turret_gunner"></span>
+          <span>TERMINAL DE EMPLAZAMIENTO // TORRETAS</span>
+        </span>
+        <button class="rust-btn sm" id="btn-close-turret-build"><span>[ CERRAR (E) ]</span></button>
+      </div>
+      <div id="turret-build-content"></div>
+      <div class="turret-build-footer">CONSTRUYE Y MEJORA CON LA CHATARRA RECOGIDA DE LOS HOSTILES. SOLO UNA RUTA DE MEJORA PUEDE SUPERAR EL NIVEL 2.</div>
+    </div>
+  </div>
+
+  <!-- Tienda Permanente (Mesa del Cirujano) -->
   <div id="shop-screen" class="overlay hidden">
     <div class="metal-plate main-menu-plate">
-      <div class="ui-decor stain-blood" data-ui-icon="stain_blood"></div>
-      <div class="ui-decor crack-br" data-ui-icon="crack_2"></div>
       <div class="plate-header">
         <span class="tape-label">
           <span class="ui-icon sm" data-ui-icon="tooth"></span>
@@ -489,9 +551,7 @@
         </span>
       </div>
       <p class="plate-sub">Intercambia los dientes extraídos en tus partidas por implantes permanentes:</p>
-
       <div id="shop-list" class="shop-container"></div>
-
       <div class="btn-group" style="margin-top:14px;">
         <button class="rust-btn primary" id="btn-shop-play"><span>[ ENTRAR DIRECTO A PLANTA ]</span></button>
         <button class="rust-btn" id="btn-close-shop"><span>[ VOLVER ]</span></button>
@@ -499,11 +559,9 @@
     </div>
   </div>
 
-  <!-- Subida de Nivel (Armas + Pasivas + Botón Actualizar) -->
+  <!-- Subida de Nivel -->
   <div id="level-up-screen" class="overlay hidden">
     <div class="metal-plate levelup-plate">
-      <div class="ui-decor wire-top" data-ui-icon="wire_clamp"></div>
-      <div class="ui-decor stain-rust" data-ui-icon="stain_rust"></div>
       <div class="plate-header">
         <span class="tape-label">
           <span class="ui-icon sm" data-ui-icon="level"></span>
@@ -512,11 +570,9 @@
         <span id="lvlup-slots-info" class="led-val amber">ARMAS: 1/4 | PASIVAS: 0/4</span>
       </div>
       <p class="plate-sub">Elige 1 de las siguientes opciones (Tope máximo por pieza: +8):</p>
-
       <div id="upgrade-container"></div>
-
       <div class="reroll-bar">
-        <div class="reroll-charges-box" title="Fusibles de actualización restantes en esta partida">
+        <div class="reroll-charges-box">
           <span>CARGAS:</span>
           <div id="reroll-charges" class="reroll-charges"></div>
         </div>
@@ -528,11 +584,9 @@
     </div>
   </div>
 
-  <!-- Pantalla de Muerte / Informe de Autopsia -->
+  <!-- Pantalla de Resultados / Derrota / Victoria -->
   <div id="game-over-screen" class="overlay hidden">
     <div class="metal-plate gameover-plate">
-      <div class="ui-decor crack-tl" data-ui-icon="crack_1"></div>
-      <div class="ui-decor stain-blood" data-ui-icon="stain_blood"></div>
       <div class="tape-strip">
         <span class="ui-icon sm" data-ui-icon="skull"></span>
         <span>CERTIFICADO DE DEFUNCIÓN // EXPEDIENTE CERRADO</span>
@@ -541,18 +595,19 @@
       <p id="go-cause" class="plate-sub">CAUSA: DESMEMBRAMIENTO EN PLANTA INDUSTRIAL</p>
 
       <div class="paper-note stats-report">
-        <div class="report-row"><span>TIEMPO SOBREVIVIDO:</span><b id="go-time">00:00</b></div>
+        <div class="report-row"><span>TIEMPO EN PLANTA:</span><b id="go-time">00:00</b></div>
         <div class="report-row"><span>JEFES DERROTADOS:</span><b id="go-bosses" style="color:#f0c954">0 / 5</b></div>
         <div class="report-row"><span>ENEMIGOS ELIMINADOS:</span><b id="go-kills" style="color:#ff6b6b">0</b></div>
         <div class="report-row"><span>DIENTES EXTRAÍDOS EN PARTIDA:</span><b id="go-souls" style="color:#f0c954">+0</b></div>
         <div class="report-row"><span>RESERVA TOTAL DE DIENTES:</span><b id="go-total-souls" style="color:#f0c954">0</b></div>
         <div class="report-row"><span>CICLO ALCANZADO:</span><b id="go-level">CICLO 1</b></div>
-        <div class="report-row"><span>ESTADO DE FASE FINAL:</span><b id="go-endgame">NO ALCANZADA</b></div>
+        <div class="report-row"><span id="go-mode-extra-label">ESTADO DE FASE FINAL:</span><b id="go-endgame">NO ALCANZADA</b></div>
         <div class="report-loadout" id="go-loadout"></div>
       </div>
 
       <div class="btn-group">
         <button class="rust-btn primary" id="btn-restart"><span>[ NUEVA PARTIDA ]</span></button>
+        <button class="rust-btn" id="btn-results-menu"><span>[ VOLVER AL MENÚ / CAMBIAR MODO ]</span></button>
         <button class="rust-btn" id="btn-go-shop"><span>[ COMPRAR MEJORAS PERMANENTES ]</span></button>
       </div>
     </div>
