@@ -2,7 +2,7 @@
 // Exports: save, saveGame, gameSettings, careerByMode, saveCareer.
 
 import { CONFIG } from '../config.js';
-import { loadCareerStatsByMode, saveCareerStatsByMode } from '../ui/menusAndShop.js';
+import { loadCareerStatsByMode, saveCareerStatsByMode } from './career.js';
 
 export const save = JSON.parse(localStorage.getItem(CONFIG.SAVE_KEY)) || {
   souls: 0, dmg: 0, hp: 0, spd: 0, atkSpd: 0, mag: 0, reroll: 0
