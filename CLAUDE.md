@@ -21,7 +21,7 @@ Juego web 3D de terror/supervivencia + tower defense con Three.js. Sin bundler n
 - `js/defense/`: `defensiveStructure` (base), `coreMachine`, `turret`, `turretSystem`, `allyUnit`, `enemyTargetAI`, `pathSystem`, `spawnPointSystem`, `waveManager`; subcarpetas `turrets/` y `turretSystem/`.
 - `js/sprites/`: `spritePalette` y subcarpetas `entity/`, `player/`, `turret/`, `ui/`; barrels `entitySprites.js`, `playerSprites.js`, `turretSprites.js`, `uiAtlasBuilder.js`; registro en `spritesheets.js`.
 - `js/ui/`: `hudController` + `hud/` (`stats`, `radar`), `menusAndShop`, `resultsScreen`, `turretBuildMenu`.
-- `js/tutorial/towerDefenseTutorial.js`: tutorial interactivo de Defensa.
+- `js/tutorial/`: `towerDefenseTutorial` (orquestador y panel), `tutorialSteps` (datos de pasos), `tutorialMarkers` (anillos/haces 3D) y `practiceWave` (oleada de práctica).
 - `js/debug/debugOverlay.js`: debug de rutas/IA. `js/audio.js`: audio WebAudio sintetizado.
 - `js/utils/`: `routeMath` (proyección punto-segmento) y `dispose` (liberar Object3D).
 
