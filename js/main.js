@@ -5,8 +5,6 @@ import { CONFIG } from './config.js';
 import { AudioSys } from './audio.js';
 import {
   SpriteSheets,
-  getPlayerLoadoutSheet,
-  peekPlayerLoadoutSheet,
   initUISpritesCSS,
   refreshStaticDOMIcons
 } from './spritesheets.js';
@@ -29,8 +27,11 @@ import {
 } from './ui/menusAndShop.js';
 import { presentRunResultsScreen } from './ui/resultsScreen.js';
 import { updatePlayerWeaponsAndCombat } from './player/playerController.js';
-import { save, saveGame, gameSettings, saveSettings, careerByMode, saveCareer } from './core/saveState.js';
+import { save, saveGame, gameSettings, careerByMode, saveCareer } from './core/saveState.js';
 import { getActiveModifiers } from './gameplay/modifiers.js';
+import { createPlayerVisuals } from './gameplay/playerVisuals.js';
+import { createCombatRuntime } from './gameplay/combatRuntime.js';
+import { createLevelUpFlow } from './gameplay/levelUp.js';
 import { createPickupSystem } from './gameplay/pickups.js';
 import { keys, setupInput } from './core/input.js';
 import { setupGameFlow } from './core/gameFlow.js';
@@ -79,57 +80,6 @@ scene.add(playerLanternLight);
 
 let currentHandWeapon = 'slash';
 let lastUpgradedKey = null;
-const HAND_WEAPONS = ['slash', 'shotgun', 'flamethrower', 'harpoon', 'bolt', 'mines'];
-
-let prewarmGeneration = 0;
-function prewarmLoadoutSheets() {
-  const snapshot = { ...skills };
-  const gen = ++prewarmGeneration;
-  const queue = HAND_WEAPONS
-    .filter(w => snapshot[w] && !peekPlayerLoadoutSheet(snapshot, w))
-    .sort((a, b) => (b === currentHandWeapon) - (a === currentHandWeapon));
-  const next = () => {
-    if (gen !== prewarmGeneration) return;
-    const w = queue.shift();
-    if (!w) return;
-    const s = getPlayerLoadoutSheet(snapshot, w);
-    s.tex.repeat.set(1, 1); s.tex.offset.set(0, 0);
-    s.glowTex.repeat.set(1, 1); s.glowTex.offset.set(0, 0);
-    renderer.initTexture(s.tex);
-    renderer.initTexture(s.glowTex);
-    if (w === currentHandWeapon) syncPlayerVisualLoadout(currentHandWeapon);
-    setTimeout(next, 0);
-  };
-  setTimeout(next, 0);
-}
-
-function syncPlayerVisualLoadout(activeHand = currentHandWeapon) {
-  currentHandWeapon = activeHand;
-  const sheet = peekPlayerLoadoutSheet(skills, currentHandWeapon);
-  if (!sheet) return;
-
-  sheet.tex.repeat.set(1, 1); sheet.tex.offset.set(0, 0);
-  sheet.glowTex.repeat.set(1, 1); sheet.glowTex.offset.set(0, 0);
-
-  playerBillboard.tex = sheet.tex;
-  playerBillboard.glowTex = sheet.glowTex;
-  playerBillboard.cols = sheet.cols;
-  playerBillboard.rows = sheet.rows;
-  playerBillboard.numDirs = sheet.numDirs;
-  playerBillboard.lastTotalCol = -1;
-  playerBillboard.lastDirRow = -1;
-
-  if (playerBillboard.mesh.material.map !== sheet.tex) {
-    playerBillboard.mesh.material.map = sheet.tex;
-    playerBillboard.mesh.material.emissiveMap = sheet.tex;
-    playerBillboard.mesh.material.needsUpdate = true;
-  }
-  if (playerBillboard.glowMesh.material.map !== sheet.glowTex) {
-    playerBillboard.glowMesh.material.map = sheet.glowTex;
-  }
-  playerBillboard.setDirectionalFrame(playerBillboard.dirRow, playerBillboard.stateIdx, playerBillboard.col);
-}
-
 const auraMesh = new THREE.Mesh(
   new THREE.PlaneGeometry(1, 1),
   new THREE.MeshBasicMaterial({
@@ -264,113 +214,6 @@ function refreshHUD(includeInventory = false) {
     lastUpgradedKey = null;
   }
 }
-
-function damageEnemy(en, amount, knockback, isDoT = false) {
-  if (!en.active || en.state === 'dead') return;
-  const mods = getActiveModifiers(save, gameSettings, passives);
-  const isCrit = !isDoT && Math.random() < mods.critChance;
-  en.hp -= isCrit ? amount * 2.0 : amount;
-
-  if (!isDoT) {
-    en.state = 'hurt';
-    en.stateTimer = 0.15;
-    AudioSys.play(isCrit ? 290 : 145, 0.05, 'square', 0.035);
-  }
-  if (knockback && !en.isBoss) {
-    en.group.position.add(knockback);
-    worldPhysics.resolveCollision(en.group.position, 0.55, en.group.position.y);
-  }
-  if (en.isBoss) hudController.updateBossHUD(activeBoss, !isDoT);
-
-  if (en.hp <= 0) {
-    en.hp = 0;
-    en.state = 'dead';
-    en.stateTimer = 0;
-    kills++;
-    if (en.isBoss) {
-      activeBoss = null;
-      hudController.hideBossHUDDelayed();
-      AudioSys.playBossHorn();
-    }
-    ModeManager.onEnemyKilled(en, buildModeContext());
-    refreshHUD();
-  }
-}
-
-function dealDamageToPlayer(dmgAmount) {
-  if (invuln > 0 || state !== 'PLAYING') return;
-  stats.hp -= dmgAmount;
-  invuln = 0.72;
-  triggerScare(0.48);
-
-  const hpFrame = document.querySelector('.biometrics-plate-compact');
-  if (hpFrame) {
-    hpFrame.classList.add('bar-shake');
-    setTimeout(() => hpFrame.classList.remove('bar-shake'), 320);
-  }
-  document.getElementById('damage-flash').style.opacity = 1;
-  setTimeout(() => (document.getElementById('damage-flash').style.opacity = 0), 150);
-  refreshHUD();
-
-  if (stats.hp <= 0) {
-    ModeManager.onPlayerLethalDamage(buildModeContext());
-  }
-}
-
-function applyUpgradeOption(opt) {
-  AudioSys.playUISelect();
-  lastUpgradedKey = opt.id;
-  const modeId = ModeManager.getSelectedModeId();
-  careerByMode[modeId].totalUpgradesBought = (careerByMode[modeId].totalUpgradesBought || 0) + 1;
-  saveCareer();
-
-  if (opt.category === 'weapon') {
-    const current = skills[opt.id] || 0;
-    if (current < CONFIG.LIMITS.MAX_LEVEL) {
-      skills[opt.id] = current + 1;
-      if (opt.id === 'orbital') syncOrbitalsCount();
-      if (HAND_WEAPONS.includes(opt.id)) currentHandWeapon = opt.id;
-      prewarmLoadoutSheets();
-      syncPlayerVisualLoadout(currentHandWeapon);
-    }
-  } else if (opt.category === 'passive') {
-    const current = passives[opt.id] || 0;
-    if (current < CONFIG.LIMITS.MAX_LEVEL) {
-      passives[opt.id] = current + 1;
-      if (opt.id === 'maxHp') {
-        const bonus = CONFIG.PASSIVES.maxHp.perLevel;
-        stats.maxHp += bonus;
-        stats.hp = Math.min(stats.maxHp, stats.hp + bonus);
-      }
-      if (opt.id === 'multishot') syncOrbitalsCount();
-    }
-  } else if (opt.category === 'fallback') {
-    if (opt.id === 'heal_pack') stats.hp = Math.min(stats.maxHp, stats.hp + 75);
-    if (opt.id === 'teeth_bag') runSouls += 15;
-  }
-  refreshHUD(true);
-}
-
-function showLevelUp() {
-  state = 'LEVEL_UP';
-  if (document.pointerLockElement) document.exitPointerLock();
-  renderLevelUpCardsUI(skills, passives, rerollsLeft, maxRerollsRun, (_card, opt) => {
-    applyUpgradeOption(opt);
-    document.getElementById('level-up-screen').classList.add('hidden');
-    state = 'PLAYING';
-    document.body.requestPointerLock();
-  });
-  document.getElementById('level-up-screen').classList.remove('hidden');
-  document.querySelector('#upgrade-container .upg-card')?.focus();
-}
-
-document.getElementById('btn-reroll').onclick = () => {
-  if (rerollsLeft <= 0) { AudioSys.playUIError(); return; }
-  rerollsLeft--;
-  AudioSys.playReroll();
-  showLevelUp();
-  refreshHUD();
-};
 
 const clock = new THREE.Clock();
 let hudTickTimer = 0;
@@ -533,6 +376,41 @@ function animate() {
 }
 
 // Botones de navegación y Ajustes
+const playerVisuals = createPlayerVisuals({
+  playerBillboard,
+  renderer,
+  getSkills: () => skills,
+  getCurrentHandWeapon: () => currentHandWeapon,
+  setCurrentHandWeapon: value => { currentHandWeapon = value; }
+});
+const { prewarmLoadoutSheets, syncPlayerVisualLoadout } = playerVisuals;
+
+const combatRuntime = createCombatRuntime({
+  getMods: () => getActiveModifiers(save, gameSettings, passives),
+  get state() { return state; }, set state(v) { state = v; },
+  get stats() { return stats; },
+  get invuln() { return invuln; }, set invuln(v) { invuln = v; },
+  get kills() { return kills; }, set kills(v) { kills = v; },
+  get activeBoss() { return activeBoss; }, set activeBoss(v) { activeBoss = v; },
+  worldPhysics, hudController, AudioSys, ModeManager, buildModeContext, refreshHUD, triggerScare
+});
+const { damageEnemy, dealDamageToPlayer } = combatRuntime;
+
+const levelUpFlow = createLevelUpFlow({
+  get state() { return state; }, set state(v) { state = v; },
+  get lastUpgradedKey() { return lastUpgradedKey; }, set lastUpgradedKey(v) { lastUpgradedKey = v; },
+  get skills() { return skills; },
+  get passives() { return passives; },
+  get stats() { return stats; },
+  get maxRerollsRun() { return maxRerollsRun; },
+  get rerollsLeft() { return rerollsLeft; }, set rerollsLeft(v) { rerollsLeft = v; },
+  get currentHandWeapon() { return currentHandWeapon; }, set currentHandWeapon(v) { currentHandWeapon = v; },
+  get runSouls() { return runSouls; }, set runSouls(v) { runSouls = v; },
+  AudioSys, ModeManager, careerByMode, saveCareer, CONFIG, syncOrbitalsCount,
+  prewarmLoadoutSheets, syncPlayerVisualLoadout, renderLevelUpCardsUI, refreshHUD
+});
+const { showLevelUp } = levelUpFlow;
+
 const flowRuntime = {
   get state() { return state; }, set state(v) { state = v; },
   get pendingTutorial() { return pendingTutorial; }, set pendingTutorial(v) { pendingTutorial = v; },
