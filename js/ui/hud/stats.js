@@ -66,9 +66,17 @@ if (typeof modeTelemetry.coreHp === 'number') {
 
   if (coreBar) coreBar.style.width = `${corePct}%`;
   if (coreVal) coreVal.textContent = `${modeTelemetry.coreHp} / ${modeTelemetry.coreMaxHp} VIDAS`;
-  if (coreWave) coreWave.textContent = `OLEADA ${modeTelemetry.waveNumber}/${modeTelemetry.totalWaves}`;
+  if (coreWave) {
+    if (modeTelemetry.eventBadge) {
+      coreWave.textContent = `EVENTO // ${modeTelemetry.eventBadge}`;
+    } else {
+      coreWave.textContent = `OLEADA ${modeTelemetry.waveNumber}/${modeTelemetry.totalWaves}`;
+    }
+  }
   if (coreRem) {
-    if (modeTelemetry.isPrep) {
+    if (modeTelemetry.isFirstWavePrep) {
+      coreRem.textContent = 'EXPLORACIÓN LIBRE';
+    } else if (modeTelemetry.isPrep) {
       coreRem.textContent = `PAUSA: ${Math.ceil(modeTelemetry.prepSeconds)}S`;
     } else {
       coreRem.textContent = `HOSTILES: ${modeTelemetry.remainingEnemies}`;
@@ -88,12 +96,17 @@ if (typeof modeTelemetry.coreHp === 'number') {
   }
 
   const prepPrompt = document.getElementById('wave-prep-prompt');
-  const prepTimerVal = document.getElementById('prep-timer-val');
   if (prepPrompt) {
     prepPrompt.classList.toggle('hidden', !modeTelemetry.isPrep);
-  }
-  if (prepTimerVal && modeTelemetry.isPrep) {
-    prepTimerVal.textContent = `${Math.ceil(modeTelemetry.prepSeconds)}s`;
+    const tagSpan = prepPrompt.querySelector('.prep-prompt-tag span:last-child');
+    const skipSpan = prepPrompt.querySelector('.prep-skip-pill span:last-child');
+    if (modeTelemetry.isFirstWavePrep) {
+      if (tagSpan) tagSpan.innerHTML = 'EXPLORACIÓN LIBRE: <b id="prep-timer-val">SIN LÍMITE</b>';
+      if (skipSpan) skipSpan.textContent = 'INICIAR OLEADA 1';
+    } else {
+      if (tagSpan) tagSpan.innerHTML = `PAUSA DE CONSTRUCCIÓN: <b id="prep-timer-val">${Math.ceil(modeTelemetry.prepSeconds)}s</b>`;
+      if (skipSpan) skipSpan.textContent = 'SALTAR PAUSA';
+    }
   }
 
   const prompt = document.getElementById('turret-interact-prompt');

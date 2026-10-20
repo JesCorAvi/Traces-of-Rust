@@ -17,13 +17,16 @@ export const WAVES = {
     playerDamageMultiplierVsRoute: 0.45,
 
     // Eventos especiales de interrupción (cada 3 oleadas: tras ronda 3, 6, 9)
+    // Mini-modo supervivencia intenso de 2 minutos en zona amplia (radio 15m)
     EVENTS: {
       intervalWaves: 3,
-      repairDurationSec: 8.5,
-      repairRadius: 3.2,
-      repairScrapReward: 30,
-      infestationHostileCount: 12,
-      infestationScrapReward: 35
+      eventDurationSec: 120.0,       // 2 minutos de duración
+      survivalRadius: 15.0,          // Zona amplia de supervivencia (30m de diámetro)
+      scrapReward: 30,               // Recompensa estándar (30 chatarra)
+      maxEnemiesBase: 8,             // Enemigos concurrentes iniciales
+      maxEnemiesPeak: 18,            // Enemigos concurrentes en el clímax final
+      spawnIntervalStart: 2.2,       // Intervalo inicial de spawn
+      spawnIntervalEnd: 1.1          // Intervalo en el clímax final
     },
 
     SCHEDULE: [

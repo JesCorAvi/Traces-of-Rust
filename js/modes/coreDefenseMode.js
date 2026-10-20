@@ -71,9 +71,20 @@ export class CoreDefenseMode {
       getHpRatio: () => Math.max(0, Math.min(1, this.lives / Math.max(1, this.maxLives))),
       takeDamage: amt => {
         this.lives = Math.max(0, this.lives - amt);
+        if (this.coreMachine) {
+          this.coreMachine.hp = this.lives;
+          this.coreMachine.currentDamageState = { label: this.getDamageStateLabel() };
+        }
+        ctx.onCoreDamaged?.({ hp: this.lives, maxHp: this.maxLives, dmg: amt });
         if (this.lives <= 0) this.handleBreachDefeat(ctx);
       },
-      heal: amt => { this.lives = Math.min(this.maxLives, this.lives + amt); },
+      heal: amt => {
+        this.lives = Math.min(this.maxLives, this.lives + amt);
+        if (this.coreMachine) {
+          this.coreMachine.hp = this.lives;
+          this.coreMachine.currentDamageState = { label: this.getDamageStateLabel() };
+        }
+      },
       applyShield: () => {},
       update: () => {},
       destroy: () => {}
@@ -99,7 +110,8 @@ export class CoreDefenseMode {
       ctx.scene,
       ctx.worldPhysics,
       ctx.enemyPool,
-      this
+      this,
+      ctx.ambientLight
     );
     this.activeBoss = null;
     this.bossesDefeated = 0;
@@ -474,6 +486,7 @@ export class CoreDefenseMode {
     const waveNum = wm ? wm.currentWaveNumber : 1;
     const totalW = wm ? wm.totalWaves : 12;
     const isPrep = !!(wm && !this.tutorialActive && wm.state === 'PREP');
+    const isFirstWavePrep = isPrep && wm && wm.currentWaveIndex === 0;
     const prepSeconds = isPrep ? Math.max(0, wm.prepTimer) : 0;
 
     const eventInfo = this.defenseEventManager ? this.defenseEventManager.getActiveEventInfo() : null;
@@ -483,6 +496,8 @@ export class CoreDefenseMode {
       subTaskText = 'TUTORIAL INTERACTIVO EN CURSO';
     } else if (eventInfo) {
       subTaskText = eventInfo.subTaskText;
+    } else if (isFirstWavePrep) {
+      subTaskText = 'EXPLORACIÓN LIBRE // [F] INICIAR OLEADA 1';
     } else if (isPrep) {
       subTaskText = `PRÓXIMA OLEADA EN: ${prepSeconds.toFixed(1)}S · [F] SALTAR`;
     } else if (this.playerDownTimer > 0) {
@@ -499,15 +514,21 @@ export class CoreDefenseMode {
 
     const diffMeta = DIFFICULTIES[this.difficulty] || DIFFICULTIES.normal;
 
+    const eventAliveCount = eventInfo && this.defenseEventManager
+      ? this.defenseEventManager.eventEnemies.filter(e => e.active && e.state !== 'dead').length
+      : 0;
+
     return {
       objectiveText: eventInfo ? `[!] ${eventInfo.objectiveText}` : `Contén la brecha (${diffMeta.name})`,
       objectiveCheck: (eventInfo || this.lives < this.maxLives * 0.4) ? '[!]' : '[ ]',
       subTaskText,
-      waveBadgeText: eventInfo ? `EVENTO // ${eventInfo.badgeText}` : (isPrep ? `PREPARACIÓN // OLEADA ${waveNum}/${totalW}` : `OLEADA ${waveNum} / ${totalW}`),
-      remainingEnemies: remaining,
+      waveBadgeText: eventInfo ? `EVENTO // ${eventInfo.badgeText}` : (isFirstWavePrep ? 'EXPLORACIÓN // PREP. INICIAL' : (isPrep ? `PREPARACIÓN // OLEADA ${waveNum}/${totalW}` : `OLEADA ${waveNum} / ${totalW}`)),
+      eventBadge: eventInfo ? eventInfo.badgeText : null,
+      remainingEnemies: eventInfo ? eventAliveCount : remaining,
       waveNumber: waveNum,
       totalWaves: totalW,
       isPrep: isPrep && !eventInfo,
+      isFirstWavePrep: isFirstWavePrep && !eventInfo,
       prepSeconds,
       canSkipPrep: isPrep && !eventInfo,
       coreHp: this.lives,
@@ -574,6 +595,8 @@ export class CoreDefenseMode {
       this.defenseEventManager.cleanup();
       this.defenseEventManager = null;
     }
+    document.body.classList.remove('endgame-mode');
+    AudioSys.setEndgameDrone(false);
     this.extraStructures.forEach(st => st.destroy());
     this.extraStructures.length = 0;
     this.scrap = 0;

@@ -94,6 +94,58 @@ export class ExitPointSystem {
       rim.position.y = 0.04;
       group.add(rim);
 
+      // Columna de luz vertical (Skybeam de emergencia rojo) hacia el cielo, visible desde lejos (fog: false)
+      const skyBeamGeo = new THREE.CylinderGeometry(1.8, 0.6, 60, 16, 1, true);
+      const beamMat = new THREE.MeshBasicMaterial({
+        color: 0xff1e1e,
+        transparent: true,
+        opacity: 0.38,
+        depthWrite: false,
+        side: THREE.DoubleSide,
+        fog: false
+      });
+      const skyBeam = new THREE.Mesh(skyBeamGeo, beamMat);
+      skyBeam.position.set(0, 30, 0);
+      group.add(skyBeam);
+
+      const coreBeamGeo = new THREE.CylinderGeometry(0.38, 0.15, 60, 8, 1, true);
+      const coreBeamMat = new THREE.MeshBasicMaterial({
+        color: 0xff6666,
+        transparent: true,
+        opacity: 0.75,
+        depthWrite: false,
+        side: THREE.DoubleSide,
+        fog: false
+      });
+      const coreBeam = new THREE.Mesh(coreBeamGeo, coreBeamMat);
+      coreBeam.position.set(0, 30, 0);
+      group.add(coreBeam);
+
+      // Holograma 3D flotante sobre la compuerta de evacuación (a 7.0m de altura, sobre cualquier obstáculo)
+      const holoGroup = new THREE.Group();
+      holoGroup.position.set(0, 7.0, 0);
+
+      const glyphGeo = new THREE.OctahedronGeometry(1.0, 0);
+      const glyphMat = new THREE.MeshBasicMaterial({
+        color: 0xff2222,
+        fog: false
+      });
+      const glyphMesh = new THREE.Mesh(glyphGeo, glyphMat);
+      holoGroup.add(glyphMesh);
+
+      const ringGeo = new THREE.TorusGeometry(1.5, 0.07, 8, 24);
+      const ringMat = new THREE.MeshBasicMaterial({
+        color: 0xff3333,
+        transparent: true,
+        opacity: 0.85,
+        fog: false
+      });
+      const ringMesh = new THREE.Mesh(ringGeo, ringMat);
+      ringMesh.rotation.x = Math.PI / 2;
+      holoGroup.add(ringMesh);
+
+      group.add(holoGroup);
+
       this.rootGroup.add(group);
 
       this.exitPoints.set(exitCfg.id, {
@@ -102,6 +154,9 @@ export class ExitPointSystem {
         beaconLight,
         fieldMesh,
         beaconMesh,
+        skyBeam,
+        coreBeam,
+        holoGroup,
         flashTimer: 0
       });
     });
@@ -148,6 +203,15 @@ export class ExitPointSystem {
     this.elapsed += dt;
 
     this.exitPoints.forEach(ep => {
+      // Rotación y flotación del holograma de evacuación
+      if (ep.holoGroup) {
+        ep.holoGroup.rotation.y += dt * 1.8;
+        ep.holoGroup.position.y = 7.0 + Math.sin(this.elapsed * 3.0) * 0.4;
+      }
+      if (ep.skyBeam) {
+        ep.skyBeam.material.opacity = 0.28 + 0.16 * Math.sin(this.elapsed * 4.5);
+      }
+
       if (ep.flashTimer > 0) {
         ep.flashTimer -= dt;
         if (ep.flashTimer <= 0) {

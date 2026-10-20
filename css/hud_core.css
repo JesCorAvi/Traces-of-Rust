@@ -4,7 +4,9 @@
   position: absolute;
   top: 256px;
   left: 14px;
-  width: 244px;
+  min-width: 256px;
+  max-width: 330px;
+  width: fit-content;
   z-index: 17;
 }
 
@@ -51,11 +53,12 @@
 #next-boss-text {
   font-family: 'Press Start 2P', monospace;
   font-size: 8px;
-  line-height: 1.35;
+  line-height: 1.45;
   color: #a8c499;
   text-shadow: 1px 1px 0 #050605;
-  margin-top: 5px;
-  white-space: nowrap;
+  margin-top: 6px;
+  white-space: normal;
+  word-break: break-word;
 }
 
 /* Centro Superior: Cronómetro y Panel de Vida del Núcleo */

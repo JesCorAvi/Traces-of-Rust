@@ -214,6 +214,12 @@ export class WaveManager {
     if (this.state === 'VICTORY') return;
 
     if (this.state === 'PREP') {
+      // En la primera ronda (currentWaveIndex === 0), la preparación no tiene límite de tiempo
+      // para que el jugador explore libremente el mapa hasta que pulse [F].
+      if (this.currentWaveIndex === 0) {
+        return;
+      }
+
       this.prepTimer -= dt;
       if (this.prepTimer <= 0) {
         this.startNextWave();

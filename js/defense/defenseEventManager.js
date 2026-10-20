@@ -1,5 +1,5 @@
-// Gestor de eventos especiales de interrupción entre oleadas (cada X rondas).
-// Tipos de evento: Reparación de Subestación y Purga de Infestación.
+// Gestor de eventos especiales de interrupción entre oleadas (cada 3 rondas).
+// Mini-modo supervivencia intenso de 2 minutos (120s) en una zona amplia de contención (radio 15m).
 // Exports: DefenseEventManager.
 
 import * as THREE from 'three';
@@ -9,18 +9,21 @@ import { GameEvents } from '../core/eventBus.js';
 import { disposeObject3D } from '../utils/dispose.js';
 
 export class DefenseEventManager {
-  constructor(scene, worldPhysics, enemyPool, mode) {
+  constructor(scene, worldPhysics, enemyPool, mode, ambientLight = null) {
     this.scene = scene;
     this.worldPhysics = worldPhysics;
     this.enemyPool = enemyPool;
     this.mode = mode;
+    this.ambientLight = ambientLight;
     this.cfg = CORE_DEFENSE_CONFIG.WAVES.EVENTS || {
       intervalWaves: 3,
-      repairDurationSec: 8.5,
-      repairRadius: 3.2,
-      repairScrapReward: 30,
-      infestationHostileCount: 12,
-      infestationScrapReward: 35
+      eventDurationSec: 120.0,
+      survivalRadius: 15.0,
+      scrapReward: 30,
+      maxEnemiesBase: 8,
+      maxEnemiesPeak: 18,
+      spawnIntervalStart: 2.2,
+      spawnIntervalEnd: 1.1
     };
 
     this.activeEvent = null;
@@ -29,6 +32,13 @@ export class DefenseEventManager {
     this.eventEnemies = [];
     this.pulseTimer = 0;
     this.spawnTimer = 0;
+    this.warningSoundTimer = 0;
+    this.boundaryLeds = [];
+    this.beamMesh = null;
+    this.diamondMesh = null;
+    this.haloMesh = null;
+    this.redAtmosphereActive = false;
+    this.lastCtx = null;
   }
 
   isEventActive() {
@@ -38,106 +48,132 @@ export class DefenseEventManager {
   getActiveEventInfo() {
     if (!this.activeEvent) return null;
 
-    if (this.activeEvent.type === 'repair') {
-      const pct = Math.min(100, Math.floor(this.activeEvent.progress * 100));
-      const inZone = this.activeEvent.playerInRadius;
-      return {
-        type: 'repair',
-        badgeText: 'REPARACIÓN EN CURSO',
-        objectiveText: `Repara la ${this.activeEvent.targetName}`,
-        subTaskText: inZone
-          ? `REPARANDO: ${pct}% · ¡HOSTILES ATACANDO!`
-          : `▲ [${this.activeEvent.targetName} // ${Math.round(this.activeEvent.distToPlayer || 0)}m]`,
-        progress: this.activeEvent.progress
-      };
+    const ev = this.activeEvent;
+    const remainingSec = Math.max(0, Math.ceil(ev.duration - ev.elapsedSurvivalTime));
+    const mins = Math.floor(remainingSec / 60);
+    const secs = (remainingSec % 60).toString().padStart(2, '0');
+    const timeStr = `${mins}:${secs}`;
+    const aliveCount = this.eventEnemies.filter(e => e.active && e.state !== 'dead').length;
+    const article = ev.article || 'la';
+
+    let subTaskText = '';
+    if (ev.playerInRadius) {
+      subTaskText = `SUPERVIVENCIA: ${timeStr} · ${aliveCount} HOSTILES`;
     } else {
-      const remaining = this.eventEnemies.filter(e => e.active && e.state !== 'dead').length;
-      return {
-        type: 'infestation',
-        badgeText: 'BROTE DE INFESTACIÓN',
-        objectiveText: `Purga el nido en ${this.activeEvent.targetName}`,
-        subTaskText: `▲ [${this.activeEvent.targetName} // ${Math.round(this.activeEvent.distToPlayer || 0)}m] · ${remaining} HOSTILES`,
-        progress: 1 - (remaining / Math.max(1, this.activeEvent.totalEnemies))
-      };
+      const distOutside = Math.max(1, Math.round(ev.distToPlayer - ev.radius));
+      subTaskText = `¡VUELVE AL PERÍMETRO! // A ${distOutside}m`;
     }
+
+    let badgeText = 'ASALTO DE CONTENCIÓN';
+    if (ev.intensityPhase === 3) {
+      badgeText = '¡CLÍMAX DE SUPERVIVENCIA!';
+    } else if (ev.intensityPhase === 2) {
+      badgeText = 'ENJAMBRE EN AUMENTO';
+    }
+
+    const titlePrefix = ev.type === 'repair'
+      ? `Defiende ${article} ${ev.targetName}`
+      : `Sobrevive a la purga en ${ev.targetName}`;
+
+    return {
+      type: ev.type,
+      badgeText,
+      objectiveText: `${titlePrefix} [${timeStr}]`,
+      subTaskText,
+      progress: ev.progress
+    };
   }
 
   startEvent(type = 'repair') {
     this.cleanupVisuals();
 
     const locations = [
-      { x: 22, z: -16, name: 'SUBESTACIÓN ESTE' },
-      { x: -22, z: 14, name: 'GENERADOR OESTE' },
-      { x: 0, z: -26, name: 'CONSOLA DE CONTROL NORTE' },
-      { x: 18, z: 22, name: 'RELAIS DE ENERGÍA SUR' }
+      { x: 22, z: -16, name: 'SUBESTACIÓN ESTE', article: 'la' },
+      { x: -22, z: 14, name: 'GENERADOR OESTE', article: 'el' },
+      { x: 0, z: -26, name: 'CONSOLA NORTE', article: 'la' },
+      { x: 18, z: 22, name: 'RELÉ SUR', article: 'el' }
     ];
     const loc = locations[Math.floor(Math.random() * locations.length)];
     const gy = this.worldPhysics ? this.worldPhysics.getGroundHeight(loc.x, loc.z, 0, true) : 0;
     const targetPos = new THREE.Vector3(loc.x, gy, loc.z);
 
+    const duration = this.cfg.eventDurationSec || 120.0;
+    const radius = this.cfg.survivalRadius || 15.0;
+    const scrapReward = this.cfg.scrapReward || 30;
+
     this.activeEvent = {
       type,
       targetName: loc.name,
+      article: loc.article || 'la',
       position: targetPos,
+      duration,
+      radius,
+      scrapReward,
+      elapsedSurvivalTime: 0,
       progress: 0,
       playerInRadius: false,
       distToPlayer: 999,
-      totalEnemies: this.cfg.infestationHostileCount || 12,
-      repairSoundTimer: 0
+      intensityPhase: 1,
+      warnedPhase2: false,
+      warnedPhase3: false
     };
 
     this.eventEnemies = [];
     this.spawnTimer = 0.5;
+    this.warningSoundTimer = 0;
 
-    // Crear marcador 3D en el mundo
-    this.buildEventWorldVisuals(targetPos, type);
+    // Crear marcador y perímetro 3D en el mundo
+    this.buildEventWorldVisuals(targetPos, type, radius);
 
-    // Sonido de alarma industrial
+    // Alarma inicial de evento de emergencia
     AudioSys.play(140, 0.45, 'sawtooth', 0.12);
     AudioSys.play(210, 0.35, 'square', 0.08);
 
     GameEvents.emit('defense:event_started', {
       type,
       location: loc.name,
-      position: targetPos
+      position: targetPos,
+      duration,
+      radius
     });
   }
 
-  buildEventWorldVisuals(pos, type) {
+  buildEventWorldVisuals(pos, type, radius) {
     const isRepair = type === 'repair';
     const mainColor = isRepair ? 0xf0ad4e : 0xd9534f;
 
-    // 1. Haz de luz vertical prominente hacia el cielo (ignora la niebla para verse desde lejos)
+    // 1. Haz de luz vertical hacia el cielo (ignora la niebla para verse desde cualquier punto del mapa)
     const beamGeo = new THREE.CylinderGeometry(0.35, 1.4, 60, 16);
     const beamMat = new THREE.MeshBasicMaterial({
       color: mainColor,
       transparent: true,
       opacity: 0.65,
       depthWrite: false,
-      fog: false // ¡Sin niebla: visible desde cualquier rincón del mapa!
+      fog: false
     });
     const beam = new THREE.Mesh(beamGeo, beamMat);
     beam.position.set(pos.x, pos.y + 30, pos.z);
     this.visualGroup.add(beam);
+    this.beamMesh = beam;
 
-    // 2. Punto de referencia flotante elevado sobre el objetivo (holograma que se ve desde lejos)
+    // 2. Punto de referencia flotante elevado sobre el objetivo (holograma a 7.5m de altura)
     const markerGroup = new THREE.Group();
     markerGroup.position.set(pos.x, pos.y + 7.5, pos.z);
 
-    const diamondGeo = new THREE.OctahedronGeometry(1.1, 0);
+    const diamondGeo = new THREE.OctahedronGeometry(1.2, 0);
     const diamondMat = new THREE.MeshBasicMaterial({
       color: mainColor,
       transparent: true,
       opacity: 0.95,
       fog: false,
-      depthTest: false // Visible a través de paredes y obstáculos
+      depthTest: false
     });
     const diamond = new THREE.Mesh(diamondGeo, diamondMat);
     diamond.renderOrder = 999;
     markerGroup.add(diamond);
+    this.diamondMesh = diamond;
 
-    // Halo circular flotante
-    const haloGeo = new THREE.RingGeometry(1.4, 1.7, 24);
+    const haloGeo = new THREE.RingGeometry(1.5, 1.85, 24);
     const haloMat = new THREE.MeshBasicMaterial({
       color: mainColor,
       side: THREE.DoubleSide,
@@ -149,13 +185,13 @@ export class DefenseEventManager {
     const halo = new THREE.Mesh(haloGeo, haloMat);
     halo.renderOrder = 999;
     markerGroup.add(halo);
+    this.haloMesh = halo;
 
     this.visualGroup.add(markerGroup);
     this.floatingMarker = markerGroup;
 
-    // 3. Anillo de radio en el suelo
-    const radius = isRepair ? (this.cfg.repairRadius || 3.2) : 5.0;
-    const ringGeo = new THREE.RingGeometry(radius - 0.25, radius, 32);
+    // 3. Anillo perimetral amplio en el suelo (radio 15m, diámetro 30m)
+    const ringGeo = new THREE.RingGeometry(radius - 0.25, radius, 48);
     const ringMat = new THREE.MeshBasicMaterial({
       color: mainColor,
       side: THREE.DoubleSide,
@@ -169,22 +205,59 @@ export class DefenseEventManager {
     this.visualGroup.add(ring);
     this.pulseRing = ring;
 
-    // 4. Estructura o consola central
-    const consoleGeo = new THREE.BoxGeometry(0.8, 1.2, 0.8);
+    // Anillo interior sutil a mitad de radio
+    const innerRingGeo = new THREE.RingGeometry(radius * 0.5 - 0.15, radius * 0.5, 36);
+    const innerRingMat = new THREE.MeshBasicMaterial({
+      color: mainColor,
+      side: THREE.DoubleSide,
+      transparent: true,
+      opacity: 0.25,
+      depthWrite: false
+    });
+    const innerRing = new THREE.Mesh(innerRingGeo, innerRingMat);
+    innerRing.rotation.x = -Math.PI / 2;
+    innerRing.position.set(pos.x, pos.y + 0.06, pos.z);
+    this.visualGroup.add(innerRing);
+
+    // 4. Balizas perimetrales en los bordes del área (6 postes delimitadores cada 60°)
+    const postGeo = new THREE.BoxGeometry(0.2, 0.9, 0.2);
+    const postMat = new THREE.MeshStandardMaterial({ color: 0x221a14, roughness: 0.8 });
+    const ledGeo = new THREE.BoxGeometry(0.25, 0.2, 0.25);
+    const ledMat = new THREE.MeshBasicMaterial({ color: mainColor });
+
+    this.boundaryLeds = [];
+    for (let i = 0; i < 6; i++) {
+      const ang = (i / 6) * Math.PI * 2;
+      const bx = pos.x + Math.sin(ang) * radius;
+      const bz = pos.z + Math.cos(ang) * radius;
+      const by = this.worldPhysics ? this.worldPhysics.getGroundHeight(bx, bz, 0, true) : pos.y;
+
+      const post = new THREE.Mesh(postGeo, postMat);
+      post.position.set(bx, by + 0.45, bz);
+
+      const led = new THREE.Mesh(ledGeo, ledMat);
+      led.position.set(bx, by + 0.95, bz);
+
+      this.visualGroup.add(post, led);
+      this.boundaryLeds.push(led);
+    }
+
+    // 5. Estructura o consola central
+    const consoleGeo = new THREE.BoxGeometry(0.9, 1.3, 0.9);
     const consoleMat = new THREE.MeshStandardMaterial({
       color: 0x221a14,
       metalness: 0.6,
       roughness: 0.7
     });
     const terminal = new THREE.Mesh(consoleGeo, consoleMat);
-    terminal.position.set(pos.x, pos.y + 0.6, pos.z);
+    terminal.position.set(pos.x, pos.y + 0.65, pos.z);
     terminal.castShadow = true;
 
     // Baliza superior parpadeante
-    const beaconLightGeo = new THREE.BoxGeometry(0.3, 0.25, 0.3);
+    const beaconLightGeo = new THREE.BoxGeometry(0.35, 0.28, 0.35);
     const beaconLightMat = new THREE.MeshBasicMaterial({ color: mainColor });
     const beaconLight = new THREE.Mesh(beaconLightGeo, beaconLightMat);
-    beaconLight.position.set(pos.x, pos.y + 1.35, pos.z);
+    beaconLight.position.set(pos.x, pos.y + 1.45, pos.z);
 
     this.visualGroup.add(terminal, beaconLight);
     this.beaconMesh = beaconLight;
@@ -193,105 +266,151 @@ export class DefenseEventManager {
   update(dt, ctx) {
     if (!this.activeEvent) return;
 
-    this.pulseTimer += dt;
-    if (this.pulseRing) {
-      const scale = 1 + Math.sin(this.pulseTimer * 4) * 0.08;
-      this.pulseRing.scale.set(scale, scale, 1);
+    this.lastCtx = ctx;
+    if (ctx?.ambientLight && !this.ambientLight) {
+      this.ambientLight = ctx.ambientLight;
     }
+
+    const ev = this.activeEvent;
+    this.pulseTimer += dt;
+
+    // Animación visual del perímetro y balizas
+    if (this.pulseRing) {
+      const scale = 1 + Math.sin(this.pulseTimer * 3.5) * 0.04;
+      this.pulseRing.scale.set(scale, scale, 1);
+      // Si el jugador está fuera del perímetro, el anillo parpadea en rojo advertencia
+      if (!ev.playerInRadius) {
+        this.pulseRing.material.color.setHex(Math.sin(this.pulseTimer * 10) > 0 ? 0xff2222 : 0x881111);
+      } else if (ev.intensityPhase === 3) {
+        // En Fase 3 (Clímax), el anillo pulsa en rojo sangre amenazante
+        this.pulseRing.material.color.setHex(Math.sin(this.pulseTimer * 8) > 0 ? 0xff2222 : 0x991111);
+      } else {
+        const isRepair = ev.type === 'repair';
+        this.pulseRing.material.color.setHex(isRepair ? 0xf0ad4e : 0xd9534f);
+      }
+    }
+
     if (this.beaconMesh) {
       this.beaconMesh.visible = Math.sin(this.pulseTimer * 6) > -0.2;
     }
+
+    for (let i = 0; i < this.boundaryLeds.length; i++) {
+      this.boundaryLeds[i].visible = Math.sin(this.pulseTimer * 5 + i) > -0.1;
+    }
+
     if (this.floatingMarker) {
       this.floatingMarker.rotation.y += dt * 1.8;
-      const baseY = this.activeEvent.position.y + 7.5;
+      const baseY = ev.position.y + 7.5;
       this.floatingMarker.position.y = baseY + Math.sin(this.pulseTimer * 3.5) * 0.45;
     }
 
+    // Comprobación de distancia del jugador a la zona amplia (radio 15m)
     const playerPos = ctx.playerGroup.position;
-    const ev = this.activeEvent;
     const distToPlayer = Math.hypot(playerPos.x - ev.position.x, playerPos.z - ev.position.z);
     ev.distToPlayer = distToPlayer;
 
-    if (ev.type === 'repair') {
-      const inRadius = distToPlayer <= (this.cfg.repairRadius || 3.2);
-      ev.playerInRadius = inRadius;
+    const inZone = distToPlayer <= ev.radius;
+    ev.playerInRadius = inZone;
 
-      if (inRadius) {
-        const repairRate = 1.0 / (this.cfg.repairDurationSec || 8.5);
-        ev.progress = Math.min(1.0, ev.progress + dt * repairRate);
-
-        ev.repairSoundTimer = (ev.repairSoundTimer || 0) + dt;
-        if (ev.repairSoundTimer >= 0.28) {
-          ev.repairSoundTimer = 0;
-          AudioSys.play(320 + Math.random() * 80, 0.05, 'square', 0.03);
-        }
-
-        if (ev.progress >= 1.0) {
-          this.completeEvent();
-          return;
-        }
+    if (inZone) {
+      // El temporizador avanza mientras el jugador defiende el perímetro
+      ev.elapsedSurvivalTime += dt;
+      ev.progress = Math.min(1.0, ev.elapsedSurvivalTime / ev.duration);
+    } else {
+      // Advertencia sonora periódica si está fuera del perímetro
+      this.warningSoundTimer += dt;
+      if (this.warningSoundTimer >= 1.8) {
+        this.warningSoundTimer = 0;
+        AudioSys.play(180, 0.12, 'sawtooth', 0.05);
       }
+    }
 
-      // Generar enemigos que emboscan al jugador mientras repara
-      this.spawnTimer -= dt;
-      const aliveEventCount = this.eventEnemies.filter(e => e.active && e.state !== 'dead').length;
-      if (this.spawnTimer <= 0 && aliveEventCount < 6) {
-        this.spawnTimer = 2.2;
-        this.spawnAmbushEnemy(ctx, playerPos);
+    // Gestión de Fases de Intensidad a lo largo de los 2 minutos (120s)
+    if (ev.elapsedSurvivalTime < 40) {
+      ev.intensityPhase = 1;
+    } else if (ev.elapsedSurvivalTime < 80) {
+      ev.intensityPhase = 2;
+      if (!ev.warnedPhase2) {
+        ev.warnedPhase2 = true;
+        AudioSys.playBossHorn?.();
+        ctx.triggerScare?.(0.3);
       }
-    } else if (ev.type === 'infestation') {
-      // Si la infestación no ha spawneado su tanda inicial
-      if (this.eventEnemies.length === 0) {
-        this.spawnInfestationSwarm(ctx, ev.position, ev.totalEnemies);
+    } else {
+      ev.intensityPhase = 3; // ¡CLÍMAX FINAL (últimos 40s)!
+      if (!ev.warnedPhase3) {
+        ev.warnedPhase3 = true;
+        this.activateRedAtmosphere(ctx);
       }
+      // En Fase 3, el haz y holograma reflejan el color de alerta roja apocalíptica
+      if (this.beamMesh) this.beamMesh.material.color.setHex(0xff2222);
+      if (this.diamondMesh) this.diamondMesh.material.color.setHex(0xff3333);
+      if (this.haloMesh) this.haloMesh.material.color.setHex(0xff3333);
+    }
 
-      const remaining = this.eventEnemies.filter(e => e.active && e.state !== 'dead').length;
-      if (remaining === 0 && this.eventEnemies.length > 0) {
-        this.completeEvent();
-      }
+    // Parámetros dinámicos según la fase de supervivencia
+    let maxAlive = this.cfg.maxEnemiesBase || 8;
+    let spawnInterval = this.cfg.spawnIntervalStart || 2.2;
+    let hpMult = 1.0;
+    let spdMult = 1.0;
+    let dmgMult = 1.0;
+
+    if (ev.intensityPhase === 2) {
+      maxAlive = 13;
+      spawnInterval = 1.6;
+      hpMult = 1.1;
+      spdMult = 1.12;
+      dmgMult = 1.1;
+    } else if (ev.intensityPhase === 3) {
+      maxAlive = this.cfg.maxEnemiesPeak || 18;
+      spawnInterval = this.cfg.spawnIntervalEnd || 1.1;
+      hpMult = 1.25;
+      spdMult = 1.2;
+      dmgMult = 1.2;
+    }
+
+    // Limpiar enemigos muertos del array
+    this.eventEnemies = this.eventEnemies.filter(e => e.active && e.state !== 'dead');
+
+    // Generación de oleadas envolventes alrededor del perímetro
+    this.spawnTimer -= dt;
+    if (this.spawnTimer <= 0 && this.eventEnemies.length < maxAlive) {
+      this.spawnTimer = spawnInterval;
+      this.spawnPerimeterAssaultWave(ctx, ev, hpMult, spdMult, dmgMult);
+    }
+
+    // Si ha completado los 2 minutos (120 segundos) en el perímetro
+    if (ev.progress >= 1.0) {
+      this.completeEvent();
     }
   }
 
-  spawnAmbushEnemy(ctx, playerPos) {
-    const ang = Math.random() * Math.PI * 2;
-    const dist = 12 + Math.random() * 8;
-    const sx = playerPos.x + Math.sin(ang) * dist;
-    const sz = playerPos.z + Math.cos(ang) * dist;
-    const sy = this.worldPhysics ? this.worldPhysics.getGroundHeight(sx, sz, 0, true) : 0;
+  /**
+   * Spawnea enemigos de asalto en los bordes del perímetro de 15m
+   * dirigiéndose hacia el jugador para un asedio envolvente y activo.
+   */
+  spawnPerimeterAssaultWave(ctx, ev, hpMult, spdMult, dmgMult) {
+    const countToSpawn = ev.intensityPhase === 3 ? (Math.random() < 0.6 ? 2 : 1) : 1;
 
-    const type = Math.random() < 0.65 ? 'zombie' : 'worm';
-    const enemy = this.enemyPool.spawn(
-      type,
-      playerPos,
-      ctx.gameTime,
-      ctx.camFwd,
-      this.worldPhysics,
-      null,
-      {
-        isDefenseMode: false, // ¡No va por las vías de TD, ataca al jugador directamente!
-        hpMult: 0.9,          // Vida equilibrada de supervivencia para que el jugador se encargue solo
-        dmgMult: 1.0,
-        spdMult: 1.0
-      }
-    );
-
-    if (enemy) {
-      enemy.group.position.set(sx, sy, sz);
-      enemy.isEventEnemy = true;
-      enemy.defenseAI = null; // No sigue carriles de escape
-      this.eventEnemies.push(enemy);
-    }
-  }
-
-  spawnInfestationSwarm(ctx, centerPos, count) {
-    for (let i = 0; i < count; i++) {
-      const ang = (i / count) * Math.PI * 2 + (Math.random() - 0.5) * 0.4;
-      const r = 2.0 + Math.random() * 3.5;
-      const sx = centerPos.x + Math.sin(ang) * r;
-      const sz = centerPos.z + Math.cos(ang) * r;
+    for (let i = 0; i < countToSpawn; i++) {
+      const ang = Math.random() * Math.PI * 2;
+      // Spawnean alrededor del borde del perímetro (13m a 17m del centro)
+      const dist = ev.radius - 1.0 + Math.random() * 4.0;
+      const sx = ev.position.x + Math.sin(ang) * dist;
+      const sz = ev.position.z + Math.cos(ang) * dist;
       const sy = this.worldPhysics ? this.worldPhysics.getGroundHeight(sx, sz, 0, true) : 0;
 
-      const type = i % 3 === 2 ? 'weeper' : (i % 2 === 0 ? 'zombie' : 'worm');
+      // Composición de enemigos según la fase
+      let type = 'zombie';
+      const roll = Math.random();
+      if (ev.intensityPhase === 1) {
+        type = roll < 0.7 ? 'zombie' : 'worm';
+      } else if (ev.intensityPhase === 2) {
+        type = roll < 0.5 ? 'zombie' : (roll < 0.75 ? 'worm' : 'weeper');
+      } else {
+        // En Fase 3 (Clímax): alta presencia de Weepers (disparan a distancia) y zombis de choque
+        type = roll < 0.4 ? 'zombie' : (roll < 0.7 ? 'weeper' : 'worm');
+      }
+
       const enemy = this.enemyPool.spawn(
         type,
         ctx.playerGroup.position,
@@ -300,17 +419,17 @@ export class DefenseEventManager {
         this.worldPhysics,
         null,
         {
-          isDefenseMode: false,
-          hpMult: 0.95,
-          dmgMult: 1.0,
-          spdMult: 1.05
+          isDefenseMode: false, // Atacan directamente al jugador en modo supervivencia
+          hpMult,
+          dmgMult,
+          spdMult
         }
       );
 
       if (enemy) {
         enemy.group.position.set(sx, sy, sz);
         enemy.isEventEnemy = true;
-        enemy.defenseAI = null;
+        enemy.defenseAI = null; // No siguen vías de escape
         this.eventEnemies.push(enemy);
       }
     }
@@ -323,15 +442,66 @@ export class DefenseEventManager {
     }
   }
 
+  /**
+   * Activa la atmósfera roja de pesadilla inspirada en el último boss de Supervivencia:
+   * viñeta roja profunda, niebla densa carmesí (0x160303), luz ambiental roja (0x3a0808)
+   * y drone de subgraves perturbador.
+   */
+  activateRedAtmosphere(ctx) {
+    if (this.redAtmosphereActive) return;
+    this.redAtmosphereActive = true;
+    document.body.classList.add('endgame-mode');
+
+    const c = ctx || this.lastCtx;
+    const scene = c?.scene || this.scene;
+    if (scene?.fog) {
+      scene.fog.color.setHex(0x160303);
+      scene.fog.density = 0.058;
+    }
+
+    const amb = c?.ambientLight || this.ambientLight;
+    if (amb) {
+      amb.color.setHex(0x3a0808);
+    }
+
+    AudioSys.setEndgameDrone(true);
+    AudioSys.playBossHorn?.();
+    c?.triggerScare?.(0.5);
+  }
+
+  /**
+   * Restaura la atmósfera normal de defensa (niebla 0x040604, luz 0x212b20, quita viñeta y drone).
+   */
+  deactivateRedAtmosphere() {
+    if (!this.redAtmosphereActive) return;
+    document.body.classList.remove('endgame-mode');
+
+    const c = this.lastCtx;
+    const scene = c?.scene || this.scene;
+    if (scene?.fog) {
+      scene.fog.color.setHex(0x040604);
+      scene.fog.density = 0.035;
+    }
+
+    const amb = c?.ambientLight || this.ambientLight;
+    if (amb) {
+      amb.color.setHex(0x212b20);
+    }
+
+    AudioSys.setEndgameDrone(false);
+    this.redAtmosphereActive = false;
+  }
+
   completeEvent() {
     if (!this.activeEvent) return;
 
-    const isRepair = this.activeEvent.type === 'repair';
-    const scrapReward = isRepair
-      ? (this.cfg.repairScrapReward || 30)
-      : (this.cfg.infestationScrapReward || 35);
+    // Restaurar la atmósfera antes de concluir
+    this.deactivateRedAtmosphere();
 
-    // Otorgar chatarra extra
+    const ev = this.activeEvent;
+    const scrapReward = ev.scrapReward || 30;
+
+    // Otorgar chatarra extra de supervivencia
     this.mode.addScrap(scrapReward);
 
     // Sonidos triunfales
@@ -349,9 +519,12 @@ export class DefenseEventManager {
     });
     this.eventEnemies.length = 0;
 
-    const eventTitle = isRepair ? 'SUBESTACIÓN RESTAURADA' : 'INFESTACIÓN ERRADICADA';
+    const eventTitle = ev.type === 'repair'
+      ? 'SUBESTACIÓN DEFENDIDA'
+      : 'SECTOR PURGADO';
+
     GameEvents.emit('defense:event_completed', {
-      type: this.activeEvent.type,
+      type: ev.type,
       scrapReward,
       title: eventTitle
     });
@@ -374,9 +547,14 @@ export class DefenseEventManager {
     this.pulseRing = null;
     this.beaconMesh = null;
     this.floatingMarker = null;
+    this.beamMesh = null;
+    this.diamondMesh = null;
+    this.haloMesh = null;
+    this.boundaryLeds.length = 0;
   }
 
   cleanup() {
+    this.deactivateRedAtmosphere();
     this.cleanupVisuals();
     if (this.visualGroup) {
       this.scene.remove(this.visualGroup);
@@ -384,5 +562,6 @@ export class DefenseEventManager {
     }
     this.eventEnemies.length = 0;
     this.activeEvent = null;
+    this.lastCtx = null;
   }
 }

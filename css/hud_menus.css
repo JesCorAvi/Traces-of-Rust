@@ -67,12 +67,37 @@
   padding: 6px 4px !important;
   text-align: center;
   justify-content: center !important;
+  color: #e6dec8 !important;
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+.diff-btn > span {
+  color: #e6dec8;
+}
+.diff-btn:hover:not(.is-active-diff) {
+  border-image-source: var(--slice-btn_hover) !important;
+  color: #050605 !important;
+}
+.diff-btn:hover:not(.is-active-diff) > span {
+  color: #050605 !important;
 }
 .diff-btn.is-active-diff {
-  background: #f0c954 !important;
+  border-image-source: var(--slice-btn_hover) !important;
   color: #050605 !important;
-  border-color: #ffe699 !important;
-  box-shadow: 0 0 10px rgba(240, 201, 84, 0.4);
+  font-weight: bold;
+  text-shadow: none !important;
+  box-shadow: 0 0 12px rgba(240, 201, 84, 0.65) !important;
+  transform: translateY(-1px);
+}
+.diff-btn.is-active-diff > span {
+  color: #050605 !important;
+  text-shadow: none !important;
+}
+.diff-btn.is-active-diff:hover {
+  border-image-source: var(--slice-btn_hover) !important;
+  color: #050605 !important;
+}
+.diff-btn.is-active-diff:hover > span {
+  color: #050605 !important;
 }
 .diff-desc-text {
   font-family: 'VT323', monospace;

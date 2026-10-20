@@ -64,13 +64,13 @@ export const CORE = {
   };
 
   // 2. REGLA DE MUERTE DEL JUGADOR EN MODO DEFENSA
-  // Si el jugador cae a 0 HP, entra en reconstrucción de emergencia durante 4.5s,
+  // Si el jugador cae a 0 HP, entra en reconstrucción de emergencia durante 5.0s,
   // los enemigos que lo perseguían vuelven inmediatamente a su camino hacia el Núcleo,
-  // y el Núcleo sufre una sobrecarga de emergencia (-120 HP) para mantener la tensión.
+  // y el Núcleo sufre una sobrecarga de emergencia (-50 HP / vidas) para mantener la tensión.
 export const PLAYER_DEATH_POLICY = {
     mode: 'respawn_with_penalty', // 'respawn_with_penalty' | 'instant_defeat'
-    respawnDelaySec: 4.0,
-    coreHpPenaltyOnRespawn: 120,
+    respawnDelaySec: 5.0,
+    coreHpPenaltyOnRespawn: 50,
     respawnInvulnSec: 2.5
   };
 

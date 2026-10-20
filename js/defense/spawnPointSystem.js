@@ -99,6 +99,59 @@ export class SpawnPointSystem {
       portalLight.position.set(0, 2.2, 0);
       group.add(portalLight);
 
+      // Columna de luz vertical (Skybeam) hacia el cielo, visible desde cualquier distancia (fog: false)
+      const beamGeo = new THREE.CylinderGeometry(1.6, 0.5, 60, 16, 1, true);
+      const beamMat = new THREE.MeshBasicMaterial({
+        color: spCfg.color || 0x00e5ff,
+        transparent: true,
+        opacity: 0.35,
+        depthWrite: false,
+        side: THREE.DoubleSide,
+        fog: false
+      });
+      const skyBeam = new THREE.Mesh(beamGeo, beamMat);
+      skyBeam.position.set(0, 30, 0);
+      group.add(skyBeam);
+
+      // Núcleo láser interior blanco intenso
+      const coreBeamGeo = new THREE.CylinderGeometry(0.35, 0.12, 60, 8, 1, true);
+      const coreBeamMat = new THREE.MeshBasicMaterial({
+        color: 0xffffff,
+        transparent: true,
+        opacity: 0.72,
+        depthWrite: false,
+        side: THREE.DoubleSide,
+        fog: false
+      });
+      const coreBeam = new THREE.Mesh(coreBeamGeo, coreBeamMat);
+      coreBeam.position.set(0, 30, 0);
+      group.add(coreBeam);
+
+      // Holograma 3D flotante sobre la compuerta (a 6.5m de altura, sobre cualquier obstáculo)
+      const holoGroup = new THREE.Group();
+      holoGroup.position.set(0, 6.5, 0);
+
+      const glyphGeo = new THREE.OctahedronGeometry(0.85, 0);
+      const glyphMat = new THREE.MeshBasicMaterial({
+        color: spCfg.color || 0x00e5ff,
+        fog: false
+      });
+      const glyphMesh = new THREE.Mesh(glyphGeo, glyphMat);
+      holoGroup.add(glyphMesh);
+
+      const ringGeo = new THREE.TorusGeometry(1.3, 0.06, 8, 24);
+      const ringMat = new THREE.MeshBasicMaterial({
+        color: spCfg.color || 0x00e5ff,
+        transparent: true,
+        opacity: 0.85,
+        fog: false
+      });
+      const ringMesh = new THREE.Mesh(ringGeo, ringMat);
+      ringMesh.rotation.x = Math.PI / 2;
+      holoGroup.add(ringMesh);
+
+      group.add(holoGroup);
+
       this.rootGroup.add(group);
       this.spawnPoints.set(spCfg.id, {
         ...spCfg,
@@ -106,6 +159,9 @@ export class SpawnPointSystem {
         riftRing,
         riftMat,
         portalLight,
+        skyBeam,
+        coreBeam,
+        holoGroup,
         activeFlash: 0,
         worldPos: group.position.clone()
       });
@@ -162,16 +218,27 @@ export class SpawnPointSystem {
     let idx = 0;
     this.spawnPoints.forEach(sp => {
       sp.riftRing.rotation.z += dt * 1.1;
+
+      // Animación del holograma 3D flotante visible a larga distancia
+      if (sp.holoGroup) {
+        sp.holoGroup.rotation.y += dt * 1.4;
+        sp.holoGroup.position.y = 6.5 + Math.sin(this.elapsed * 2.8 + idx) * 0.35;
+      }
+
       if (sp.activeFlash > 0) {
         sp.activeFlash -= dt;
         sp.portalLight.intensity = 65;
         sp.riftMat.opacity = 1.0;
+        if (sp.skyBeam) sp.skyBeam.material.opacity = 0.85;
       } else {
         // OJO: Map.forEach entrega la clave (string) como 2.º argumento, no un índice.
         // Usamos un contador numérico para que la fase del pulso nunca sea NaN.
         const pulse = 0.55 + Math.sin(this.elapsed * 3.2 + idx) * 0.25;
         sp.portalLight.intensity = 22 * pulse;
         sp.riftMat.opacity = pulse;
+        if (sp.skyBeam) {
+          sp.skyBeam.material.opacity = 0.22 + 0.16 * pulse;
+        }
       }
       idx++;
     });
