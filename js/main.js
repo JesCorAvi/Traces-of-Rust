@@ -22,6 +22,7 @@ import { TurretBuildMenu } from './ui/turretBuildMenu.js';
 import {
   renderModeSelectorUI,
   updateCareerDossierForSelectedMode,
+  updateStartPlayButton,
   renderShopUI,
   renderLevelUpCardsUI
 } from './ui/menusAndShop.js';
@@ -442,7 +443,7 @@ const flowRuntime = {
   save, saveGame, careerByMode, saveCareer,
   buildModeContext, prewarmLoadoutSheets, syncPlayerVisualLoadout,
   refreshHUD, refreshStaticDOMIcons, presentRunResultsScreen,
-  renderModeSelectorUI, updateCareerDossierForSelectedMode, renderShopUI,
+  renderModeSelectorUI, updateCareerDossierForSelectedMode, updateStartPlayButton, renderShopUI,
   cleanupVfxItem, initUISpritesCSS
 };
 setupGameFlow(flowRuntime);

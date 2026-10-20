@@ -257,32 +257,6 @@
   color: #c49999;
 }
 
-/* Selector de Dificultad para Modo Defensa (Marco Inset de Sprite) */
-.td-difficulty-container {
-  position: relative;
-  border-style: solid;
-  border-width: var(--slice-panel_tech_inset-bw, 14px);
-  border-image: var(--slice-panel_tech_inset) var(--slice-panel_tech_inset-cut, 8) fill / var(--slice-panel_tech_inset-bw, 14px) stretch;
-  padding: 8px 12px;
-  margin: 4px 0;
-}
-.mode-selector-label {
-  font-family: 'Press Start 2P', monospace;
-  font-size: 8.5px;
-  color: #f0c954;
-  margin-bottom: 4px;
-}
-.difficulty-btn-row {
-  display: flex;
-  gap: 6px;
-  margin: 4px 0;
-}
-.diff-btn {
-  flex: 1;
-  font-size: 8.5px !important;
-  padding: 6px 4px !important;
-  justify-content: center !important;
-}
 
 /* Botón Gigante Principal de Jugar (Botón 3D Bevel por Sprite) */
 .desktop-main-action-wrap {
@@ -466,26 +440,7 @@
   }
 }
 
-.td-difficulty-container.hidden { display: none !important; }
-.diff-desc-text {
-  font-family: 'VT323', monospace;
-  font-size: 16px;
-  color: #8ef77b;
-  margin-top: 4px;
-  text-align: center;
-}
-.diff-btn.is-active-diff {
-  border-image-source: var(--slice-btn_hover) !important;
-  color: #050605 !important;
-  font-weight: bold;
-  text-shadow: none !important;
-  box-shadow: 0 0 12px rgba(240, 201, 84, 0.65) !important;
-  transform: translateY(-1px);
-}
-.diff-btn.is-active-diff > span {
-  color: #050605 !important;
-  text-shadow: none !important;
-}
+
 
 .main-menu-plate, .gameover-plate { max-width: 760px; width: 94%; text-align: center; padding: 14px 18px; }
 .levelup-plate { max-width: 920px; width: 96%; padding: 12px 16px; }
@@ -539,3 +494,405 @@
   .desktop-launcher-layout, .mode-selector-grid, #upgrade-container, .wide-plate .settings-grid, .settings-two-cols { grid-template-columns: 1fr; }
   .settings-span-full { grid-column: span 1; }
 }
+
+/* ==========================================================================
+   SELECTOR DE MAPAS ESTILO BLOONS TD 6 (MODO TOWER DEFENSE)
+   ========================================================================== */
+
+.map-select-plate {
+  width: min(1040px, 96vw) !important;
+  max-height: 94vh !important;
+  display: flex !important;
+  flex-direction: column !important;
+  border-width: var(--slice-panel_terminal-bw, 20px) !important;
+  border-image: var(--slice-panel_terminal) var(--slice-panel_terminal-cut, 10) fill / var(--slice-panel_terminal-bw, 20px) stretch !important;
+  padding: 12px 18px !important;
+  overflow: hidden;
+  box-shadow: 0 0 35px rgba(0, 0, 0, 0.85);
+}
+
+.map-select-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+  padding-bottom: 4px;
+  border-bottom: 1px dashed #27382a;
+}
+
+.map-select-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.map-screen-title {
+  font-size: 17px !important;
+  margin: 2px 0 0 !important;
+  color: #8ef77b;
+  text-shadow: 0 0 12px rgba(142, 247, 123, 0.35);
+}
+
+/* Barra de Pestañas de Dificultad (BTD6 Style) */
+.map-diff-bar {
+  display: flex;
+  gap: 8px;
+  margin: 6px 0 10px;
+}
+
+.map-diff-tab {
+  flex: 1;
+  background: #090f0a;
+  border-style: solid;
+  border-width: 14px;
+  border-image: var(--slice-btn_normal) 7 fill / 14px stretch;
+  padding: 6px 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  cursor: var(--cursor-pointer), pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.map-diff-tab .tab-badge {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 7px;
+  color: #7b8f72;
+  letter-spacing: 0.5px;
+}
+
+.map-diff-tab .tab-name {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 12px;
+  color: #f5ecd3;
+  margin: 2px 0;
+}
+
+.map-diff-tab .tab-sub {
+  font-size: 14px;
+  color: #9eb094;
+}
+
+.map-diff-tab:hover {
+  transform: translateY(-2px);
+  border-image-source: var(--slice-btn_hover);
+}
+
+.map-diff-tab.is-active-tab {
+  border-image-source: var(--slice-btn_pri_active);
+  transform: translateY(-1px);
+}
+
+.map-diff-tab.diff-easy.is-active-tab {
+  box-shadow: 0 0 14px rgba(142, 247, 123, 0.35);
+}
+.map-diff-tab.diff-easy.is-active-tab .tab-name {
+  color: #8ef77b;
+  text-shadow: 0 0 8px #8ef77b;
+}
+
+.map-diff-tab.diff-normal.is-active-tab {
+  box-shadow: 0 0 14px rgba(0, 229, 255, 0.35);
+}
+.map-diff-tab.diff-normal.is-active-tab .tab-name {
+  color: #00e5ff;
+  text-shadow: 0 0 8px #00e5ff;
+}
+
+.map-diff-tab.diff-hard.is-active-tab {
+  box-shadow: 0 0 14px rgba(255, 85, 85, 0.35);
+}
+.map-diff-tab.diff-hard.is-active-tab .tab-name {
+  color: #ff5555;
+  text-shadow: 0 0 8px #ff5555;
+}
+
+/* Envoltorio con scroll de las cartas */
+.map-cards-wrapper {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 4px;
+  margin-bottom: 6px;
+}
+
+.map-cards-wrapper::-webkit-scrollbar {
+  width: 6px;
+}
+.map-cards-wrapper::-webkit-scrollbar-thumb {
+  background: #27382a;
+  border-radius: 3px;
+}
+
+/* Rejilla 3x2 de mapas */
+.map-grid-3x2 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+/* Tarjeta individual de mapa */
+.map-card {
+  position: relative;
+  background: #060a07;
+  border-style: solid;
+  border-width: var(--slice-panel_tech_inset-bw, 14px);
+  border-image: var(--slice-panel_tech_inset) var(--slice-panel_tech_inset-cut, 8) fill / var(--slice-panel_tech_inset-bw, 14px) stretch;
+  padding: 4px;
+  cursor: var(--cursor-pointer), pointer;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  user-select: none;
+}
+
+.map-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 14px rgba(0, 229, 255, 0.25);
+}
+
+.map-card.is-selected {
+  border-image: var(--slice-card_hero_td_active) var(--slice-card_hero_td_active-cut, 10) fill / 16px stretch !important;
+  box-shadow: 0 0 20px rgba(0, 229, 255, 0.5), inset 0 0 10px rgba(0, 229, 255, 0.2) !important;
+  transform: scale(1.02);
+}
+
+.map-card-thumb {
+  position: relative;
+  width: 100%;
+  height: 110px;
+  background: #050805;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.map-card-thumb canvas {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  image-rendering: pixelated;
+  display: block;
+}
+
+.map-card-medal {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
+  padding: 3px 6px;
+  border: 1px solid;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  letter-spacing: 0.5px;
+}
+
+.map-card-medal.is-completed {
+  background: rgba(14, 40, 14, 0.92);
+  border-color: #8ef77b;
+  color: #8ef77b;
+  text-shadow: 0 0 4px #8ef77b;
+}
+
+.map-card-medal.is-in-progress {
+  background: rgba(45, 35, 12, 0.92);
+  border-color: #f0c954;
+  color: #f0c954;
+}
+
+.map-card-medal.is-unbeaten {
+  background: rgba(16, 20, 16, 0.88);
+  border-color: #364832;
+  color: #7b8f72;
+}
+
+.map-card-routetag {
+  position: absolute;
+  bottom: 4px;
+  left: 4px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 7px;
+  background: rgba(5, 10, 6, 0.88);
+  border: 1px solid #1e3522;
+  color: #00e5ff;
+  padding: 2px 5px;
+  letter-spacing: 0.4px;
+}
+
+.map-card-info {
+  padding: 5px 2px 2px;
+}
+
+.map-card-title {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 10px;
+  color: #f5ecd3;
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.map-card.is-selected .map-card-title {
+  color: #00e5ff;
+}
+
+.map-card-badge {
+  font-size: 14px;
+  color: #8ef77b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Panel Inferior: Detalles y Despliegue */
+.map-footer-panel {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  border-style: solid;
+  border-width: var(--slice-panel_tech_inset-bw, 14px);
+  border-image: var(--slice-panel_tech_inset) var(--slice-panel_tech_inset-cut, 8) fill / var(--slice-panel_tech_inset-bw, 14px) stretch;
+  padding: 8px 14px;
+  margin-top: 2px;
+  background: rgba(6, 10, 7, 0.9);
+}
+
+.map-detail-left {
+  flex: 1;
+  min-width: 0;
+}
+
+.map-detail-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 3px;
+}
+
+.map-detail-name {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 13px;
+  color: #8ef77b;
+}
+
+.map-detail-badge-chip {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
+  background: rgba(142, 247, 123, 0.12);
+  border: 1px solid #8ef77b;
+  color: #8ef77b;
+  padding: 2px 6px;
+}
+
+.map-detail-text {
+  font-size: 16px;
+  color: #e6dec8;
+  margin: 2px 0 6px;
+  line-height: 1.3;
+}
+
+.map-detail-chips-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.map-stat-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #090e0a;
+  border: 1px solid #27382a;
+  padding: 2px 8px;
+  font-size: 14px;
+}
+
+.map-stat-chip .chip-label {
+  color: #7b8f72;
+  font-weight: bold;
+}
+
+.map-stat-chip .chip-val {
+  color: #f5ecd3;
+}
+
+.map-stat-chip .chip-val.lives {
+  color: #8ef77b;
+}
+
+.map-stat-chip .chip-val.scrap {
+  color: #f0c954;
+}
+
+.map-stat-chip .chip-val.facil {
+  color: #8ef77b;
+}
+.map-stat-chip .chip-val.normal {
+  color: #00e5ff;
+}
+.map-stat-chip .chip-val.dificil {
+  color: #ff5555;
+}
+
+/* Botón Desplegar Hero */
+.map-deploy-hero-btn {
+  min-width: 280px;
+  height: 54px;
+  border-width: 16px !important;
+  border-image: var(--slice-btn_hero_play) var(--slice-btn_hero_play-cut, 8) fill / 16px stretch !important;
+  cursor: var(--cursor-pointer), pointer;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 16px !important;
+  transition: all 0.15s ease !important;
+}
+
+.map-deploy-hero-btn:hover {
+  border-image: var(--slice-btn_hero_play_hover) var(--slice-btn_hero_play_hover-cut, 8) fill / 16px stretch !important;
+  box-shadow: 0 0 20px rgba(142, 247, 123, 0.5) !important;
+  transform: translateY(-2px) !important;
+}
+
+.deploy-btn-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.deploy-main-txt {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 12px;
+  color: #ffffff;
+  text-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
+}
+
+.deploy-sub-txt {
+  font-size: 12px;
+  color: #00e5ff;
+  letter-spacing: 0.5px;
+}
+
+@media (max-width: 960px) {
+  .map-grid-3x2 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .map-footer-panel {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .map-deploy-hero-btn {
+    width: 100%;
+    min-width: 0;
+  }
+}
+

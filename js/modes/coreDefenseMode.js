@@ -50,7 +50,9 @@ export class CoreDefenseMode {
     this.cleanup();
 
     this.difficulty = localStorage.getItem('traces_td_difficulty') || 'normal';
-    this.mapData = generateProceduralMap(this.difficulty, ctx.worldPhysics);
+    this.mapId = localStorage.getItem('traces_td_selected_map') || null;
+    this.mapData = generateProceduralMap(this.difficulty, ctx.worldPhysics, this.mapId);
+    this.mapId = this.mapData.mapId;
     this.lives = this.mapData.maxLives;
     this.maxLives = this.mapData.maxLives;
     this.scrap = this.mapData.startingScrap;
@@ -216,11 +218,30 @@ export class CoreDefenseMode {
     }
   }
 
+  recordMapProgress(victory, waves) {
+    if (!this.mapId) return;
+    try {
+      const records = JSON.parse(localStorage.getItem('traces_td_map_records') || '{}');
+      const prev = records[this.mapId] || { completed: false, bestWave: 0 };
+      records[this.mapId] = {
+        completed: Boolean(prev.completed || victory),
+        bestWave: Math.max(prev.bestWave || 0, waves || 0),
+        lastPlayed: Date.now()
+      };
+      localStorage.setItem('traces_td_map_records', JSON.stringify(records));
+    } catch (e) {
+      // ignorar errores de localStorage
+    }
+  }
+
   handleBreachDefeat(ctx) {
+    this.recordMapProgress(false, this.waveManager ? this.waveManager.wavesCompleted : 0);
     ctx.triggerScare(0.8);
     ctx.triggerRunEnd({
       victory: false,
       modeId: 'core_defense',
+      mapId: this.mapId,
+      mapName: this.mapData?.mapName || 'Sector Industrial',
       title: 'BRECHA DE CONTENCIÓN',
       cause: 'CAUSA: LOS HOSTILES ESCAPARON DE LAS INSTALACIONES Y DESBORDARON EL PERÍMETRO',
       wavesCompleted: this.waveManager ? this.waveManager.wavesCompleted : 0,
@@ -237,12 +258,15 @@ export class CoreDefenseMode {
   }
 
   handleVictory(ctx, payload) {
+    this.recordMapProgress(true, payload.wavesCompleted);
     AudioSys.playUISelect();
     ctx.addRunSouls(35);
     const diffName = (DIFFICULTIES[this.difficulty] || DIFFICULTIES.normal).name;
     ctx.triggerRunEnd({
       victory: true,
       modeId: 'core_defense',
+      mapId: this.mapId,
+      mapName: this.mapData?.mapName || 'Sector Industrial',
       title: 'INSTALACIONES ASEGURADAS',
       cause: `PROTOCOLO DE CONTENCIÓN COMPLETADO // ${this.lives} VIDAS PRESERVADAS (${diffName})`,
       wavesCompleted: payload.wavesCompleted,

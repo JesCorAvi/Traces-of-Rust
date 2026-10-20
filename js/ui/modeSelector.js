@@ -5,7 +5,7 @@ import { CONFIG } from '../config.js';
 import { AudioSys } from '../audio.js';
 import { renderSpriteIconHTML } from '../spritesheets.js';
 import { ModeManager } from '../modes/gameModeManager.js';
-import { DIFFICULTIES } from '../defense/mapGenerator.js';
+import { DIFFICULTIES, getMapById, DEFAULT_MAP_IDS } from '../defense/mapGenerator.js';
 
 export function updateStartPlayButton(activeId, currentDiff = 'normal') {
   const startBtn = document.getElementById('btn-start');
@@ -13,13 +13,17 @@ export function updateStartPlayButton(activeId, currentDiff = 'normal') {
   const subEl = document.getElementById('btn-start-sub');
   if (!startBtn || !labelEl) return;
 
-  const diffMeta = DIFFICULTIES[currentDiff] || DIFFICULTIES.normal;
-
   if (activeId === 'core_defense') {
     startBtn.className = 'rust-btn primary play-hero-btn is-td-mode';
     labelEl.textContent = '[ JUGAR : TOWER DEFENSE ]';
+    const selectedMapId = localStorage.getItem('traces_td_selected_map') || DEFAULT_MAP_IDS[currentDiff];
+    const mapObj = getMapById(selectedMapId);
+    const mapDiff = mapObj?.difficulty || currentDiff;
+    const diffMeta = DIFFICULTIES[mapDiff] || DIFFICULTIES.normal;
+
     if (subEl) {
-      subEl.textContent = `★ CAMPAÑA PRINCIPAL // 12 OLEADAS // DIFICULTAD ${diffMeta.name}`;
+      const mapNameStr = mapObj ? ` // SECTOR: ${mapObj.name.toUpperCase()} (${diffMeta.name})` : '';
+      subEl.textContent = `★ CAMPAÑA PRINCIPAL${mapNameStr} // 12 OLEADAS`;
       subEl.style.color = '#8ef77b';
     }
   } else {
@@ -33,35 +37,9 @@ export function updateStartPlayButton(activeId, currentDiff = 'normal') {
 }
 
 export function setupDefenseDifficultySelector() {
-  const container = document.getElementById('td-difficulty-section');
-  if (!container) return;
-
-  const descEl = document.getElementById('td-diff-desc');
-  const buttons = Array.from(container.querySelectorAll('.diff-btn'));
-
-  function refreshDifficultyUI() {
-    const currentDiff = localStorage.getItem('traces_td_difficulty') || 'normal';
-    buttons.forEach(btn => {
-      const isSelected = btn.dataset.diff === currentDiff;
-      btn.classList.toggle('is-active-diff', isSelected);
-    });
-    if (descEl && DIFFICULTIES[currentDiff]) {
-      descEl.textContent = DIFFICULTIES[currentDiff].desc;
-    }
-    const activeId = ModeManager.getSelectedModeId();
-    updateStartPlayButton(activeId, currentDiff);
-  }
-
-  buttons.forEach(btn => {
-    btn.onclick = () => {
-      AudioSys.playUISelect();
-      const diff = btn.dataset.diff || 'normal';
-      localStorage.setItem('traces_td_difficulty', diff);
-      refreshDifficultyUI();
-    };
-  });
-
-  refreshDifficultyUI();
+  const currentDiff = localStorage.getItem('traces_td_difficulty') || 'normal';
+  const activeId = ModeManager.getSelectedModeId();
+  updateStartPlayButton(activeId, currentDiff);
 }
 
 export function renderModeSelectorUI(careerByMode, onModeChanged) {
@@ -140,15 +118,6 @@ export function renderModeSelectorUI(careerByMode, onModeChanged) {
   };
 
   container.appendChild(survCard);
-
-  // Selector de dificultad de TD: lo mostramos cuando TD está activo
-  const diffSection = document.getElementById('td-difficulty-section');
-  if (diffSection) {
-    diffSection.classList.toggle('hidden', activeId !== 'core_defense');
-    if (activeId === 'core_defense') {
-      setupDefenseDifficultySelector();
-    }
-  }
 
   // Actualizar el botón principal de inicio
   updateStartPlayButton(activeId, currentDiff);

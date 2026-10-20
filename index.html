@@ -314,23 +314,6 @@
         <!-- Selector de Modo Dual (PokéBonk Style: Tower Defense Principal + Supervivencia Arcade) -->
         <div class="mode-hierarchy-container" id="mode-selector-group"></div>
 
-        <!-- Selector de Dificultad para Modo Defensa -->
-        <div id="td-difficulty-section" class="td-difficulty-container">
-          <div class="mode-selector-label">DIFICULTAD DE DEFENSA:</div>
-          <div class="difficulty-btn-row">
-            <button type="button" class="rust-btn sm diff-btn" data-diff="facil">
-              <span>FÁCIL</span>
-            </button>
-            <button type="button" class="rust-btn sm diff-btn is-active-diff" data-diff="normal">
-              <span>NORMAL</span>
-            </button>
-            <button type="button" class="rust-btn sm diff-btn" data-diff="dificil">
-              <span>DIFÍCIL</span>
-            </button>
-          </div>
-          <div id="td-diff-desc" class="diff-desc-text">NORMAL: 2 Entradas · 1 Salida · 100 Vidas · 2 carriles convergentes</div>
-        </div>
-
         <!-- BOTÓN GIGANTE PRINCIPAL DE JUGAR (PokéBonk JUGAR / Vampire Survivors COMENZAR / Megabonk PLAY) -->
         <div class="desktop-main-action-wrap">
           <button type="button" class="rust-btn primary play-hero-btn" id="btn-start">
@@ -547,6 +530,78 @@
           <span>[ AJUSTES DEL SISTEMA ]</span>
         </button>
         <button class="rust-btn" id="btn-pause-to-menu"><span>[ ABANDONAR A MENÚ PRINCIPAL ]</span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pantalla de Selección de Mapas estilo Bloons TD 6 para Tower Defense -->
+  <div id="map-select-screen" class="overlay hidden">
+    <div class="metal-plate map-select-plate">
+      <div class="ui-decor crack-tl" data-ui-icon="crack_1"></div>
+      <div class="ui-decor stain-rust" data-ui-icon="stain_rust"></div>
+
+      <!-- Encabezado con título y botón volver -->
+      <div class="plate-header map-select-header">
+        <div class="map-select-title-group">
+          <span class="tape-label">
+            <span class="ui-icon sm" data-ui-icon="core"></span>
+            <span>EXPEDIENTE TÁCTICO // SECTORES INDUSTRIALES</span>
+          </span>
+          <h2 class="buckshot-title map-screen-title">SELECCIÓN DE SECTOR DE DESPLIEGUE</h2>
+        </div>
+        <button type="button" class="rust-btn sm" id="btn-map-back" title="Volver al menú principal">
+          <span>[ ◄ VOLVER AL MENÚ ]</span>
+        </button>
+      </div>
+
+      <!-- Pestañas de Dificultad (BTD6 Style) -->
+      <div class="map-diff-bar" id="map-diff-tabs" role="tablist">
+        <button type="button" class="map-diff-tab diff-easy" id="tab-map-facil" data-diff="facil" role="tab" aria-selected="false">
+          <span class="tab-badge">SECTOR APERTURA</span>
+          <span class="tab-name">FÁCIL</span>
+          <span class="tab-sub">150 VIDAS · 1 ENTRADA</span>
+        </button>
+        <button type="button" class="map-diff-tab diff-normal is-active-tab" id="tab-map-normal" data-diff="normal" role="tab" aria-selected="true">
+          <span class="tab-badge">SECTOR ESTÁNDAR</span>
+          <span class="tab-name">NORMAL</span>
+          <span class="tab-sub">100 VIDAS · 2 ENTRADAS</span>
+        </button>
+        <button type="button" class="map-diff-tab diff-hard" id="tab-map-dificil" data-diff="dificil" role="tab" aria-selected="false">
+          <span class="tab-badge">SECTOR CRÍTICO</span>
+          <span class="tab-name">DIFÍCIL</span>
+          <span class="tab-sub">75 VIDAS · 2 SALIDAS</span>
+        </button>
+      </div>
+
+      <!-- Rejilla 3x2 de mapas (6 mapas por dificultad) -->
+      <div class="map-cards-wrapper">
+        <div id="map-grid-container" class="map-grid-3x2">
+          <!-- Tarjetas generadas con miniaturas dinámicas por mapSelectorModal.js -->
+        </div>
+      </div>
+
+      <!-- Panel inferior: Detalles del mapa y Botón Desplegar -->
+      <div class="map-footer-panel">
+        <div class="map-detail-left">
+          <div class="map-detail-head">
+            <span id="map-detail-title" class="map-detail-name">Plaza Central</span>
+            <span id="map-detail-badge" class="map-detail-badge-chip">FÁCIL // BUCLE 360°</span>
+          </div>
+          <p id="map-detail-desc" class="map-detail-text">
+            Un recorrido largo con un bucle completo de 360° en el patio despejado.
+          </p>
+          <div id="map-detail-stats" class="map-detail-chips-row">
+            <!-- Chips de estadísticas inyectados dinámicamente -->
+          </div>
+        </div>
+        <div class="map-detail-right">
+          <button type="button" class="rust-btn primary map-deploy-hero-btn" id="btn-launch-map">
+            <div class="deploy-btn-inner">
+              <span class="deploy-main-txt">[ DESPLEGAR EN ESTE SECTOR ► ]</span>
+              <span class="deploy-sub-txt">INICIAR OPERACIÓN // 12 OLEADAS</span>
+            </div>
+          </button>
+        </div>
       </div>
     </div>
   </div>

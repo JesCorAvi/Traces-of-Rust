@@ -1,6 +1,8 @@
 // Flujo de partida: inicio, fin, pausa, menú y wiring de botones.
 // Exports: setupGameFlow.
 
+import { openMapSelector } from '../ui/mapSelectorModal.js';
+
 export function setupGameFlow(rt) {
 function clearSharedRunState() {
   rt.ModeManager.cleanupActiveMode(rt.buildModeContext());
@@ -86,6 +88,7 @@ function returnToMainMenu() {
   document.getElementById('start-screen').classList.remove('hidden');
   rt.renderModeSelectorUI(rt.careerByMode);
   rt.updateCareerDossierForSelectedMode(rt.careerByMode);
+  rt.updateStartPlayButton?.(rt.ModeManager.getSelectedModeId(), localStorage.getItem('traces_td_difficulty') || 'normal');
   rt.renderShopUI(rt.save, rt.saveGame);
 }
 
@@ -124,8 +127,14 @@ function showTutorialPrompt() {
 function requestStartGame() {
   rt.AudioSys.playUISelect();
   const tutorialKey = rt.CONFIG.CORE_DEFENSE.TUTORIAL.choiceKey;
-  if (rt.ModeManager.getSelectedModeId() === 'core_defense' && !localStorage.getItem(tutorialKey)) {
-    showTutorialPrompt();
+  if (rt.ModeManager.getSelectedModeId() === 'core_defense') {
+    if (!localStorage.getItem(tutorialKey)) {
+      showTutorialPrompt();
+      return;
+    }
+    openMapSelector(localStorage.getItem('traces_td_difficulty') || 'normal', () => {
+      startGame({ tutorial: false });
+    });
     return;
   }
   startGame({ tutorial: false });
@@ -190,7 +199,9 @@ document.getElementById('btn-tutorial-no').onclick = () => {
   localStorage.setItem(rt.CONFIG.CORE_DEFENSE.TUTORIAL.choiceKey, 'skipped');
   document.getElementById('tutorial-prompt-screen').classList.add('hidden');
   rt.AudioSys.playUISelect();
-  startGame({ tutorial: false });
+  openMapSelector(localStorage.getItem('traces_td_difficulty') || 'normal', () => {
+    startGame({ tutorial: false });
+  });
 };
 document.getElementById('btn-td-tutorial').onclick = () => {
   rt.AudioSys.playUISelect();
