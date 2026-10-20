@@ -1,23 +1,27 @@
-// Caché y construcción de hojas de loadout del jugador.
+// Caché y construcción de hojas de loadout del jugador por operador temático.
 // Exports: peekPlayerLoadoutSheet, getPlayerLoadoutSheet.
 
 import { CONFIG } from '../../config.js';
 import { applyCleanSpriteOutlineRect, makeTexture } from '../spritePalette.js';
 import { drawPlayer8DirCell } from './body.js';
+import { getSelectedCharacterId } from '../../config/charactersConfig.js';
 
 const playerLoadoutCache = new Map();
 
-function loadoutSignature(skills, activeHand) {
+function loadoutSignature(skills, activeHand, charId = null) {
   const equippedKeys = Object.keys(skills).filter(k => skills[k] > 0).sort().join(',');
-  return `${equippedKeys}::${activeHand}::${CONFIG.DIRECTIONAL.USE_MIRRORING}`;
+  const cid = charId || (typeof getSelectedCharacterId === 'function' ? getSelectedCharacterId() : 'otto');
+  return `${equippedKeys}::${activeHand}::${cid}::${CONFIG.DIRECTIONAL.USE_MIRRORING}`;
 }
 
-export function peekPlayerLoadoutSheet(skills = { slash: 1 }, activeHand = 'slash') {
-  return playerLoadoutCache.get(loadoutSignature(skills, activeHand)) || null;
+export function peekPlayerLoadoutSheet(skills = { slash: 1 }, activeHand = 'slash', charId = null) {
+  const cid = charId || (typeof getSelectedCharacterId === 'function' ? getSelectedCharacterId() : 'otto');
+  return playerLoadoutCache.get(loadoutSignature(skills, activeHand, cid)) || null;
 }
 
-export function getPlayerLoadoutSheet(skills = { slash: 1 }, activeHand = 'slash') {
-  const signature = loadoutSignature(skills, activeHand);
+export function getPlayerLoadoutSheet(skills = { slash: 1 }, activeHand = 'slash', charId = null) {
+  const cid = charId || (typeof getSelectedCharacterId === 'function' ? getSelectedCharacterId() : 'otto');
+  const signature = loadoutSignature(skills, activeHand, cid);
 
   if (playerLoadoutCache.has(signature)) {
     return playerLoadoutCache.get(signature);
@@ -44,7 +48,7 @@ export function getPlayerLoadoutSheet(skills = { slash: 1 }, activeHand = 'slash
         drawPlayer8DirCell(
           ctx, gCtx, dir, stateIdx, f,
           colIdx * CONFIG.FRAME_SIZE, dir * CONFIG.FRAME_SIZE,
-          skills, activeHand
+          skills, activeHand, cid
         );
       }
     }
@@ -57,7 +61,7 @@ export function getPlayerLoadoutSheet(skills = { slash: 1 }, activeHand = 'slash
   const glowTex = makeTexture(glowCanvas);
   glowTex.repeat.set(1 / cols, 1 / rows);
 
-  const entry = { name: `player_8dir_${activeHand}`, cols, rows, numDirs: 8, tex, glowTex, canvas };
+  const entry = { name: `player_8dir_${activeHand}_${cid}`, cols, rows, numDirs: 8, tex, glowTex, canvas };
   playerLoadoutCache.set(signature, entry);
   return entry;
 }

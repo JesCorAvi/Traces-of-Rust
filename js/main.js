@@ -24,8 +24,12 @@ import {
   updateCareerDossierForSelectedMode,
   updateStartPlayButton,
   renderShopUI,
-  renderLevelUpCardsUI
+  renderLevelUpCardsUI,
+  setupCharacterSelectorUI,
+  updateCharacterSelectorCard,
+  onCharacterChange
 } from './ui/menusAndShop.js';
+import { getSelectedCharacterId, getCharacterById } from './config/charactersConfig.js';
 import { presentRunResultsScreen } from './ui/resultsScreen.js';
 import { updatePlayerWeaponsAndCombat } from './player/playerController.js';
 import { save, saveGame, gameSettings, careerByMode, saveCareer } from './core/saveState.js';
@@ -109,6 +113,49 @@ const dashDirVec = new THREE.Vector3();
 let camShake = 0, targetFov = 70;
 let activeBoss = null;
 let fpsFrames = 0, fpsTimer = 0;
+let hitstopTimer = 0;
+let landingSquashTimer = 0;
+let playerTiltZ = 0;
+
+function triggerHitstop(duration = 0.06) {
+  hitstopTimer = Math.max(hitstopTimer, duration);
+}
+
+function triggerPlayerHurtJuice(dmg) {
+  camShake = Math.max(camShake, 0.38);
+  camera.fov = Math.max(62, camera.fov - 3.5);
+  AudioSys.play(110, 0.12, 'sawtooth', 0.06);
+}
+
+function spawnLandingDust(pos) {
+  const count = 7;
+  for (let i = 0; i < count; i++) {
+    const angle = (i / count) * Math.PI * 2;
+    const dustGeo = new THREE.PlaneGeometry(0.35, 0.35);
+    const dustMat = new THREE.MeshBasicMaterial({
+      color: 0x8a7a58,
+      transparent: true,
+      opacity: 0.65,
+      side: THREE.DoubleSide
+    });
+    const dust = new THREE.Mesh(dustGeo, dustMat);
+    dust.position.set(pos.x + Math.cos(angle) * 0.25, pos.y + 0.05, pos.z + Math.sin(angle) * 0.25);
+    dust.rotation.x = -Math.PI / 2;
+    scene.add(dust);
+    vfx.push({
+      mesh: dust,
+      disposeGeo: true,
+      disposeMat: true,
+      life: 0.22,
+      maxLife: 0.22,
+      vel: new THREE.Vector3(Math.cos(angle) * 2.2, 0.4, Math.sin(angle) * 2.2),
+      gravity: 3,
+      floorY: pos.y + 0.02,
+      fade: true,
+      scaleSpeed: 1.8
+    });
+  }
+}
 
 const weaponTimers = { slash: 0, shotgun: 0, flamethrower: 0, aura: 0, mines: 0, harpoon: 0, bolt: 0 };
 const drops = [], orbitals = [], minesList = [], vfx = [], bossHazards = [], bossProjectiles = [];
@@ -237,13 +284,22 @@ function animate() {
   });
 
   if (state === 'PLAYING') {
+    const activeChar = getCharacterById(getSelectedCharacterId());
+    const mods = getActiveModifiers(save, gameSettings, passives, activeChar);
+
+    // Congelamiento por impacto (Hitstop) para Game Feel contundente
+    if (hitstopTimer > 0) {
+      hitstopTimer -= dt;
+      camera.position.x += (Math.random() - 0.5) * 0.04;
+      camera.position.y += (Math.random() - 0.5) * 0.04;
+      dt = 0; // Pausa temporal de la física y movimiento durante el impacto
+    }
+
     gameTime += dt;
-    const mods = getActiveModifiers(save, gameSettings, passives);
     if (invuln > 0) invuln -= dt;
     if (dashCd > 0) dashCd -= dt;
     if (atkAnimTimer > 0) atkAnimTimer -= dt;
     stats.stamina = Math.min(100, stats.stamina + dt * 22);
-
 
     if (mods.regenPerSec > 0 && stats.hp < stats.maxHp) {
       stats.hp = Math.min(stats.maxHp, stats.hp + mods.regenPerSec * dt);
@@ -275,6 +331,7 @@ function animate() {
 
     playerBillboard.facingYaw = playerFacingYaw;
     const groundY = worldPhysics.getGroundHeight(playerGroup.position.x, playerGroup.position.z, playerGroup.position.y);
+    const wasGrounded = isGrounded;
     if (playerGroup.position.y > groundY + 0.02 || playerYVel !== 0) {
       isGrounded = false;
       playerGroup.position.y += playerYVel * dt;
@@ -285,6 +342,15 @@ function animate() {
     } else {
       playerGroup.position.y = groundY; isGrounded = true;
     }
+
+    // Impacto de aterrizaje (Landing Juice)
+    if (!wasGrounded && isGrounded) {
+      landingSquashTimer = 0.10;
+      camShake = Math.max(camShake, 0.10 * mods.shakeMod);
+      AudioSys.play(80, 0.08, 'sawtooth', 0.04);
+      spawnLandingDust(playerGroup.position);
+    }
+
     document.getElementById('elev-text').textContent = `COTA: ${playerGroup.position.y.toFixed(1)}M`;
 
     camera.position.copy(playerGroup.position)
@@ -310,6 +376,51 @@ function animate() {
 
     playerBillboard.animTimer += dt * fps;
     playerBillboard.setDirectionalFrame(playerBillboard.dirRow, pState, Math.floor(playerBillboard.animTimer) % 4);
+
+    // =========================================================================
+    // SQUASH & STRETCH DISCRETO Y SUAVE (MANTIENE LA NITIDEZ DEL PIXEL-ART)
+    // =========================================================================
+    let curSquashX = 1.0, curSquashY = 1.0;
+
+    if (landingSquashTimer > 0) {
+      landingSquashTimer -= dt;
+      const prog = 1 - (landingSquashTimer / 0.10);
+      if (prog < 0.5) {
+        // Micro-compresión suave al aterrizar (máximo 5%)
+        curSquashY = 0.95;
+        curSquashX = 1.03;
+      } else {
+        curSquashY = 1.0;
+        curSquashX = 1.0;
+      }
+    } else if (!isGrounded && playerYVel > 2.0) {
+      // Leve impulso vertical al despegar (máximo 3%)
+      curSquashY = 1.03;
+      curSquashX = 0.98;
+    } else if (dashTimer > 0) {
+      // Ligera elongación en dash (máximo 3%)
+      curSquashX = 0.97;
+      curSquashY = 1.03;
+    } else if (invuln > 0.45) {
+      // Reacción al impacto
+      curSquashX = 1.04;
+      curSquashY = 0.96;
+    } else if (atkAnimTimer > 0) {
+      // Golpe sutil
+      if (atkAnimTimer > 0.12) {
+        curSquashX = 1.02;
+        curSquashY = 0.98;
+      } else {
+        curSquashX = 0.98;
+        curSquashY = 1.02;
+      }
+    } else {
+      // Reposo y carrera: 100% escala nativa limpia sin deformación
+      curSquashX = 1.0;
+      curSquashY = 1.0;
+    }
+
+    playerBillboard.applyJuiceTransforms(curSquashX, curSquashY, 0, 0);
 
     const camAngle = Math.atan2(camera.position.x - playerGroup.position.x, camera.position.z - playerGroup.position.z);
     propBillboards.forEach(p => { p.rotation.y = camAngle; });
@@ -394,12 +505,15 @@ const playerVisuals = createPlayerVisuals({
 const { prewarmLoadoutSheets, syncPlayerVisualLoadout } = playerVisuals;
 
 const combatRuntime = createCombatRuntime({
-  getMods: () => getActiveModifiers(save, gameSettings, passives),
+  getMods: () => getActiveModifiers(save, gameSettings, passives, getCharacterById(getSelectedCharacterId())),
   get state() { return state; }, set state(v) { state = v; },
   get stats() { return stats; },
   get invuln() { return invuln; }, set invuln(v) { invuln = v; },
   get kills() { return kills; }, set kills(v) { kills = v; },
   get activeBoss() { return activeBoss; }, set activeBoss(v) { activeBoss = v; },
+  triggerHitstop,
+  triggerPlayerHurtJuice,
+  addCamShake: s => { camShake = Math.max(camShake, s); },
   worldPhysics, hudController, AudioSys, ModeManager, buildModeContext, refreshHUD, triggerScare
 });
 const { damageEnemy, dealDamageToPlayer } = combatRuntime;
@@ -443,6 +557,7 @@ const flowRuntime = {
   save, saveGame, careerByMode, saveCareer,
   buildModeContext, prewarmLoadoutSheets, syncPlayerVisualLoadout,
   refreshHUD, refreshStaticDOMIcons, presentRunResultsScreen,
+  getSelectedCharacterId, getCharacterById,
   renderModeSelectorUI, updateCareerDossierForSelectedMode, updateStartPlayButton, renderShopUI,
   cleanupVfxItem, initUISpritesCSS
 };
@@ -488,5 +603,15 @@ if (wavePrepPrompt) {
   });
 }
 
-syncPlayerVisualLoadout('slash');
+setupCharacterSelectorUI();
+onCharacterChange(char => {
+  activeCharacter = char;
+  skills = { [char.weapon]: 1 };
+  currentHandWeapon = char.weapon;
+  syncPlayerVisualLoadout(char.weapon, char.id);
+});
+const initChar = getCharacterById(getSelectedCharacterId());
+skills = { [initChar.weapon]: 1 };
+currentHandWeapon = initChar.weapon;
+syncPlayerVisualLoadout(initChar.weapon || 'slash', initChar.id);
 animate();

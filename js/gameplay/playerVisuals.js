@@ -1,9 +1,10 @@
-// Visuales del jugador: precarga y sincronización de hojas de loadout.
+// Visuales del jugador: precarga y sincronización de hojas de loadout por operador temático.
 // Exports: HAND_WEAPONS, createPlayerVisuals.
 
 import { getPlayerLoadoutSheet, peekPlayerLoadoutSheet } from '../spritesheets.js';
+import { getSelectedCharacterId } from '../config/charactersConfig.js';
 
-export const HAND_WEAPONS = ['slash', 'shotgun', 'flamethrower', 'harpoon', 'bolt', 'mines'];
+export const HAND_WEAPONS = ['slash', 'shotgun', 'flamethrower', 'harpoon', 'bolt', 'mines', 'aura', 'orbital'];
 
 export function createPlayerVisuals({ playerBillboard, renderer, getSkills, getCurrentHandWeapon, setCurrentHandWeapon }) {
   let prewarmGeneration = 0;
@@ -11,29 +12,36 @@ export function createPlayerVisuals({ playerBillboard, renderer, getSkills, getC
   function prewarmLoadoutSheets() {
     const snapshot = { ...getSkills() };
     const current = getCurrentHandWeapon();
+    const charId = getSelectedCharacterId();
     const gen = ++prewarmGeneration;
     const queue = HAND_WEAPONS
-      .filter(w => snapshot[w] && !peekPlayerLoadoutSheet(snapshot, w))
+      .filter(w => snapshot[w] && !peekPlayerLoadoutSheet(snapshot, w, charId))
       .sort((a, b) => (b === current) - (a === current));
+
     const next = () => {
       if (gen !== prewarmGeneration) return;
       const w = queue.shift();
       if (!w) return;
-      const s = getPlayerLoadoutSheet(snapshot, w);
+      const s = getPlayerLoadoutSheet(snapshot, w, charId);
       s.tex.repeat.set(1, 1); s.tex.offset.set(0, 0);
       s.glowTex.repeat.set(1, 1); s.glowTex.offset.set(0, 0);
       renderer.initTexture(s.tex);
       renderer.initTexture(s.glowTex);
-      if (w === getCurrentHandWeapon()) syncPlayerVisualLoadout(getCurrentHandWeapon());
+      if (w === getCurrentHandWeapon()) syncPlayerVisualLoadout(getCurrentHandWeapon(), charId);
       setTimeout(next, 0);
     };
     setTimeout(next, 0);
   }
 
-  function syncPlayerVisualLoadout(activeHand = getCurrentHandWeapon()) {
+  function syncPlayerVisualLoadout(activeHand = getCurrentHandWeapon(), charId = null) {
     setCurrentHandWeapon(activeHand);
-    const sheet = peekPlayerLoadoutSheet(getSkills(), activeHand);
-    if (!sheet) return;
+    const cid = charId || getSelectedCharacterId();
+    let sheet = peekPlayerLoadoutSheet(getSkills(), activeHand, cid);
+    if (!sheet) {
+      sheet = getPlayerLoadoutSheet(getSkills(), activeHand, cid);
+      renderer.initTexture(sheet.tex);
+      renderer.initTexture(sheet.glowTex);
+    }
 
     sheet.tex.repeat.set(1, 1); sheet.tex.offset.set(0, 0);
     sheet.glowTex.repeat.set(1, 1); sheet.glowTex.offset.set(0, 0);

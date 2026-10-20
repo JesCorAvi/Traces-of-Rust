@@ -18,9 +18,17 @@ export function createCombatRuntime(rt) {
       en.state = 'hurt';
       en.stateTimer = 0.15;
       rt.AudioSys.play(isCrit ? 290 : 145, 0.05, 'square', 0.035);
+      if (isCrit || appliedDmg >= 35) {
+        rt.triggerHitstop?.(isCrit ? 0.08 : 0.04);
+        rt.addCamShake?.(isCrit ? 0.28 : 0.12);
+      }
     }
     if (knockback && !en.isBoss) {
-      en.group.position.add(knockback);
+      const kb = knockback.clone ? knockback.clone() : knockback;
+      if (mods.knockbackMult && mods.knockbackMult !== 1.0) {
+        kb.multiplyScalar(mods.knockbackMult);
+      }
+      en.group.position.add(kb);
       rt.worldPhysics.resolveCollision(en.group.position, 0.55, en.group.position.y);
     }
     if (en.isBoss) rt.hudController.updateBossHUD(rt.activeBoss, !isDoT);
@@ -42,9 +50,15 @@ export function createCombatRuntime(rt) {
 
   function dealDamageToPlayer(dmgAmount) {
     if (rt.invuln > 0 || rt.state !== 'PLAYING') return;
-    rt.stats.hp -= dmgAmount;
+    const mods = rt.getMods();
+    let netDmg = dmgAmount;
+    if (mods.damageReduction > 0) {
+      netDmg *= Math.max(0.2, 1 - mods.damageReduction);
+    }
+    rt.stats.hp -= netDmg;
     rt.invuln = 0.72;
     rt.triggerScare(0.48);
+    rt.triggerPlayerHurtJuice?.(netDmg);
 
     const hpFrame = document.querySelector('.biometrics-plate-compact');
     if (hpFrame) {

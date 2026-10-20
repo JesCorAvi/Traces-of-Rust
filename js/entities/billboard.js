@@ -129,8 +129,14 @@ export function createBillboardSprite(sheetKey, size = 2.0) {
     lastDirRow: -1,
     facingYaw: 0,
     animTimer: Math.random(),
+    baseSize: size,
+    squashX: 1.0,
+    squashY: 1.0,
+    tiltAngle: 0.0,
+    extraOffsetY: 0.0,
 
     changeSheet(newKey, newSize = 2.0) {
+      this.baseSize = newSize;
       if (this.currentKey !== newKey) {
         const info = getSheetInfo(newKey);
         this.currentKey = newKey;
@@ -146,12 +152,24 @@ export function createBillboardSprite(sheetKey, size = 2.0) {
         this.glowMesh.material.map = this.glowTex;
       }
 
-      const scaleRatio = newSize / 2.0;
-      this.mesh.scale.set(scaleRatio, scaleRatio, 1);
-      this.glowMesh.scale.set(scaleRatio, scaleRatio, 1);
-      this.mesh.position.y = newSize * 0.5;
-      this.glowMesh.position.y = newSize * 0.5;
-      this.shadowDisc.scale.set(scaleRatio, scaleRatio, 1);
+      this.applyJuiceTransforms(this.squashX, this.squashY, this.tiltAngle, this.extraOffsetY);
+    },
+
+    applyJuiceTransforms(squashX = 1.0, squashY = 1.0, tiltZ = 0.0, extraY = 0.0) {
+      this.squashX = squashX;
+      this.squashY = squashY;
+      this.tiltAngle = tiltZ;
+      this.extraOffsetY = extraY;
+
+      const baseRatio = (this.baseSize || 2.0) / 2.0;
+      this.mesh.scale.set(baseRatio * squashX, baseRatio * squashY, 1);
+      this.glowMesh.scale.copy(this.mesh.scale);
+      const halfH = (this.baseSize || 2.0) * 0.5 * squashY;
+      this.mesh.position.set(0, halfH + extraY, 0);
+      this.glowMesh.position.set(0, halfH + extraY, 0);
+      this.mesh.rotation.z = tiltZ;
+      this.glowMesh.rotation.z = tiltZ;
+      this.shadowDisc.scale.set(baseRatio * squashX, baseRatio * squashX, 1);
     },
 
     setDirectionalFrame(dirRow, stateIdx, frameInState) {
@@ -171,6 +189,8 @@ export function createBillboardSprite(sheetKey, size = 2.0) {
       const angle = Math.atan2(camPos.x - this.group.position.x, camPos.z - this.group.position.z);
       this.mesh.rotation.y = angle;
       this.glowMesh.rotation.y = angle;
+      this.mesh.rotation.z = this.tiltAngle;
+      this.glowMesh.rotation.z = this.tiltAngle;
       this.dirRow = selectDirectionIndex(this.group.position, this.facingYaw, camPos, this.dirRow, this.numDirs);
     }
   };

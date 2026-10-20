@@ -27,19 +27,24 @@ function startGame(options = {}) {
   rt.careerByMode[modeId].runs = (rt.careerByMode[modeId].runs || 0) + 1;
   rt.saveCareer();
 
-  const baseHp = 100 + (rt.save.hp || 0) * 5;
+  const charId = rt.getSelectedCharacterId ? rt.getSelectedCharacterId() : (localStorage.getItem('traces_selected_character') || 'otto');
+  const character = (rt.getCharacterById ? rt.getCharacterById(charId) : null) || rt.CONFIG.CHARACTERS?.[charId] || rt.CONFIG.CHARACTERS?.otto;
+  rt.activeCharacter = character;
+
+  const baseHp = 100 + (rt.save.hp || 0) * 5 + (character?.statMods?.baseHpBonus || 0);
   rt.stats = { maxHp: baseHp, hp: baseHp, stamina: 100, level: 1, exp: 0, maxExp: 5 };
-  rt.skills = { slash: 1 };
+  const startWp = character?.weapon || 'slash';
+  rt.skills = { [startWp]: 1 };
   rt.passives = {};
   Object.keys(rt.weaponTimers).forEach(k => { rt.weaponTimers[k] = 0; });
   rt.maxRerollsRun = rt.CONFIG.LIMITS.REROLLS_PER_RUN + Math.min(3, rt.save.reroll || 0);
   rt.rerollsLeft = rt.maxRerollsRun;
-  rt.currentHandWeapon = 'slash';
+  rt.currentHandWeapon = startWp;
   rt.yaw = 0; rt.playerFacingYaw = 0; rt.dashTimer = 0; rt.playerYVel = 0;
   rt.gameTime = 0; rt.runSouls = 0; rt.kills = 0;
 
   rt.prewarmLoadoutSheets();
-  rt.syncPlayerVisualLoadout('slash');
+  rt.syncPlayerVisualLoadout(startWp);
 
   rt.ModeManager.startActiveMode(rt.buildModeContext());
   rt.pendingTutorial = false;

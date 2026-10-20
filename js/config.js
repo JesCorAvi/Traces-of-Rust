@@ -1,11 +1,13 @@
 // Configuración global CONFIG y reexport de las configuraciones de cada modo.
-// Exports: CONFIG, MODES_CONFIG, CORE_DEFENSE_CONFIG.
+// Exports: CONFIG, MODES_CONFIG, CORE_DEFENSE_CONFIG, CHARACTERS.
 import { MODES_CONFIG } from './config/modesConfig.js';
 import { CORE_DEFENSE_CONFIG } from './config/coreDefenseConfig.js';
+import { CHARACTERS, DEFAULT_CHARACTER_ID, getSelectedCharacterId, setSelectedCharacterId, getCharacterById } from './config/charactersConfig.js';
 
-export { MODES_CONFIG, CORE_DEFENSE_CONFIG };
+export { MODES_CONFIG, CORE_DEFENSE_CONFIG, CHARACTERS, DEFAULT_CHARACTER_ID, getSelectedCharacterId, setSelectedCharacterId, getCharacterById };
 
 export const CONFIG = {
+  CHARACTERS,
   SAVE_KEY: 'echoes_rust_buckshot_save_v4',
   PIXEL_SCALE: 0.44,
   FRAME_SIZE: 64,

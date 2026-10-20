@@ -10,6 +10,45 @@
   -webkit-font-smoothing: none;
   -moz-osx-font-smoothing: grayscale;
   font-smooth: never;
+  scrollbar-width: thin;
+  scrollbar-color: #523820 #080c08;
+}
+
+/* ==========================================================================
+   BARRAS DE DESPLAZAMIENTO INDUSTRIALES RETRO (PIXEL-ART RUST & STEEL)
+   ========================================================================== */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #060906;
+  border: 1px solid #1c261c;
+  box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.95);
+}
+
+::-webkit-scrollbar-thumb {
+  background: #3e2a18;
+  border: 1px solid #75502c;
+  box-shadow: inset 1px 1px 0 #9e6f3d, inset -1px -1px 0 #1e130a;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #5c3e23;
+  border-color: #f0c954;
+  box-shadow: inset 1px 1px 0 #f0c954, inset -1px -1px 0 #28190d;
+}
+
+::-webkit-scrollbar-thumb:active {
+  background: #f0c954;
+  border-color: #ffffff;
+  box-shadow: 0 0 8px rgba(240, 201, 84, 0.6);
+}
+
+::-webkit-scrollbar-corner {
+  background: #060906;
+  border: 1px solid #1c261c;
 }
 
 body {
