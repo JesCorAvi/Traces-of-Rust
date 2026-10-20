@@ -11,7 +11,17 @@ export function drawNineSliceBox(ctx, cfg, opts) {
     ctx.fillRect(rx, ry, rw, rh);
   };
 
-  px(0, 0, w, h, '#050605');
+  const isAlpha = opts.transparentBg || (opts.bg && typeof opts.bg === 'string' && opts.bg.startsWith('rgba'));
+  if (isAlpha) {
+    ctx.clearRect(0, 0, w, h);
+    const ob = opts.outerBorder || '#050605';
+    px(0, 0, w, 1, ob);
+    px(0, h - 1, w, 1, ob);
+    px(0, 0, 1, h, ob);
+    px(w - 1, 0, 1, h, ob);
+  } else {
+    px(0, 0, w, h, opts.outerBorder || '#050605');
+  }
 
   const inset = opts.borderThick || 2;
   px(inset, inset, w - inset * 2, h - inset * 2, opts.bg || '#0d110d');
@@ -64,6 +74,15 @@ export function drawNineSliceBox(ctx, cfg, opts) {
       px(rx, ry, 2, 2, '#050605');
       px(rx, ry, 1, 1, rCol);
     });
+  }
+
+  if (opts.cornerBrackets) {
+    const bCol = opts.bracketColor || opts.borderLight || '#8ef77b';
+    const bLen = opts.bracketLen || 5;
+    px(1, 1, bLen, 1, bCol); px(1, 1, 1, bLen, bCol);
+    px(w - 1 - bLen, 1, bLen, 1, bCol); px(w - 2, 1, 1, bLen, bCol);
+    px(1, h - 2, bLen, 1, bCol); px(1, h - 1 - bLen, 1, bLen, bCol);
+    px(w - 1 - bLen, h - 2, bLen, 1, bCol); px(w - 2, h - 1 - bLen, 1, bLen, bCol);
   }
 
   if (opts.tornEdges) {

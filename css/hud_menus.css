@@ -10,75 +10,469 @@
 #shop-screen { z-index: 60; }
 #pause-screen { z-index: 55; }
 
-.desktop-start-overlay { background: rgba(4, 5, 4, 0.94) !important; padding: 20px !important; overflow-y: auto !important; }
-.desktop-launcher-layout {
-  display: grid; grid-template-columns: 1fr 340px; gap: 16px;
-  max-width: 1080px; width: 100%; margin: auto; align-items: start;
+/* PANTALLA DE INICIO CON FONDO 3D DE FÁBRICA VISIBLE (ESTILO POKÉBONK / MEGABONK / VAMPIRE SURVIVORS) */
+.desktop-start-overlay {
+  background: radial-gradient(ellipse at center, rgba(3, 6, 4, 0.18) 0%, rgba(3, 6, 4, 0.48) 65%, rgba(1, 2, 1, 0.88) 100%) !important;
+  padding: 16px 24px !important;
+  overflow-y: auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: space-between !important;
+  pointer-events: none !important;
 }
-.desktop-nav-plate { text-align: left; padding: 16px 20px !important; }
-.desktop-main-title { font-size: 30px !important; margin: 6px 0 !important; }
 
-.mode-selector-section {
-  margin: 8px 0 12px;
-  padding: 8px 10px;
-  background: rgba(5, 7, 5, 0.85);
-  border: 2px solid #4a2518;
+#top-bar.hidden,
+#start-screen:not(.hidden) ~ #top-bar,
+.desktop-start-overlay:not(.hidden) ~ #top-bar {
+  display: none !important;
+}
+
+/* Barra superior flotante con recursos y controles */
+.start-top-bar {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  width: 100%;
+  max-width: 1380px;
+  margin: 0 auto 10px;
+  z-index: 10;
+  pointer-events: auto;
+}
+.start-top-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.sector-status-pill {
+  position: relative;
+  border-style: solid;
+  border-width: var(--slice-pill_frame_status-bw, 14px);
+  border-image: var(--slice-pill_frame_status) var(--slice-pill_frame_status-cut, 8) fill / var(--slice-pill_frame_status-bw, 14px) stretch;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 10px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
+  color: #a8c499;
+}
+.led-indicator {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #f0c954;
+  box-shadow: 0 0 8px #f0c954;
+  animation: ledPulse 1.8s infinite;
+}
+@keyframes ledPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.35; transform: scale(0.85); }
+}
+
+.start-currency-pill {
+  position: relative;
+  border-style: solid;
+  border-width: var(--slice-pill_frame_currency-bw, 14px);
+  border-image: var(--slice-pill_frame_currency) var(--slice-pill_frame_currency-cut, 8) fill / var(--slice-pill_frame_currency-bw, 14px) stretch;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 12px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8.5px;
+  color: #f5ecd3;
+}
+.start-top-btn {
+  font-size: 8px !important;
+  padding: 6px 12px !important;
+}
+
+/* Disposición principal: Columna izquierda + Centro abierto + Columna derecha */
+.start-main-layout {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  width: 100%;
+  max-width: 1380px;
+  margin: 0 auto;
+  flex: 1;
+  gap: 24px;
+  pointer-events: none;
+}
+.start-nav-column {
+  max-width: 530px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: auto;
+}
+.start-center-spacer {
+  flex: 1;
+  min-width: 80px;
+  pointer-events: none;
+}
+.start-dossier-column {
+  max-width: 360px;
+  width: 100%;
+  pointer-events: auto;
+}
+
+.launcher-header-group {
+  margin-bottom: 2px;
+}
+.desktop-main-title {
+  font-size: 34px !important;
+  margin: 0 0 2px !important;
+  letter-spacing: 2px;
+  color: #f5ecd3;
+  text-shadow: 0 0 16px rgba(240, 201, 84, 0.4), 2px 2px 0 #050605;
+}
+.launcher-genre-tag {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
+  color: #f0c954;
+  letter-spacing: 2px;
+  opacity: 0.9;
+  margin-bottom: 6px;
+}
+
+/* Selector de Modo Dual (PokéBonk style: 2 cápsulas por SPRITE lado a lado) */
+.mode-hierarchy-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin: 2px 0 6px;
+}
+
+.mode-card-hero {
+  position: relative;
+  border-style: solid;
+  border-width: var(--slice-card_hero_td-bw, 18px);
+  border-image: var(--slice-card_hero_td) var(--slice-card_hero_td-cut, 10) fill / var(--slice-card_hero_td-bw, 18px) stretch;
+  padding: 6px 12px;
+  cursor: var(--cursor-pointer), pointer;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 6px;
+  min-height: 72px;
+  transition: transform 0.1s ease;
+}
+.mode-card-hero:hover {
+  transform: translateY(-2px);
+}
+.mode-card-hero.is-active-mode {
+  border-image: var(--slice-card_hero_td_active) var(--slice-card_hero_td_active-cut, 10) fill / var(--slice-card_hero_td_active-bw, 18px) stretch;
+  box-shadow: 0 0 16px rgba(142, 247, 123, 0.4);
+}
+
+.mode-card-secondary {
+  position: relative;
+  border-style: solid;
+  border-width: var(--slice-card_sec_surv-bw, 18px);
+  border-image: var(--slice-card_sec_surv) var(--slice-card_sec_surv-cut, 10) fill / var(--slice-card_sec_surv-bw, 18px) stretch;
+  padding: 6px 12px;
+  cursor: var(--cursor-pointer), pointer;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 6px;
+  min-height: 72px;
+  transition: transform 0.1s ease;
+}
+.mode-card-secondary:hover {
+  transform: translateY(-2px);
+}
+.mode-card-secondary.is-active-mode {
+  border-image: var(--slice-card_sec_surv_active) var(--slice-card_sec_surv_active-cut, 10) fill / var(--slice-card_sec_surv-bw, 18px) stretch;
+  box-shadow: 0 0 16px rgba(255, 85, 85, 0.4);
+}
+
+.mode-capsule-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 6px;
+}
+.mode-capsule-badge {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 7.5px;
+  padding: 2px 5px;
+  letter-spacing: 0.5px;
+  font-weight: bold;
+}
+.badge-primary {
+  background: #f0c954;
+  color: #050605;
+}
+.badge-secondary {
+  background: #4a2828;
+  color: #ff9e9e;
+}
+.mode-capsule-status {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 7.5px;
+  color: #a8c499;
+  white-space: nowrap;
+}
+.mode-card-hero.is-active-mode .mode-capsule-status {
+  color: #8ef77b;
+  font-weight: bold;
+}
+.mode-card-secondary.is-active-mode .mode-capsule-status {
+  color: #ff8585;
+  font-weight: bold;
+}
+.mode-capsule-body {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.mode-capsule-icon {
+  flex-shrink: 0;
+}
+.mode-capsule-title {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 11px;
+  color: #f5ecd3;
+  line-height: 1.2;
+}
+.mode-card-hero.is-active-mode .mode-capsule-title {
+  color: #f0c954;
+  text-shadow: 0 0 8px rgba(240, 201, 84, 0.5);
+}
+.mode-card-secondary.is-active-mode .mode-capsule-title {
+  color: #ff6b6b;
+  text-shadow: 0 0 8px rgba(255, 107, 107, 0.5);
+}
+.mode-capsule-sub {
+  font-family: 'VT323', monospace;
+  font-size: 15px;
+  color: #a8c499;
+  line-height: 1.1;
+  margin-top: 2px;
+}
+.mode-card-secondary .mode-capsule-sub {
+  color: #c49999;
+}
+
+/* Selector de Dificultad para Modo Defensa (Marco Inset de Sprite) */
+.td-difficulty-container {
+  position: relative;
+  border-style: solid;
+  border-width: var(--slice-panel_tech_inset-bw, 14px);
+  border-image: var(--slice-panel_tech_inset) var(--slice-panel_tech_inset-cut, 8) fill / var(--slice-panel_tech_inset-bw, 14px) stretch;
+  padding: 8px 12px;
+  margin: 4px 0;
 }
 .mode-selector-label {
   font-family: 'Press Start 2P', monospace;
-  font-size: 9px; color: #f0c954; margin-bottom: 6px;
+  font-size: 8.5px;
+  color: #f0c954;
+  margin-bottom: 4px;
 }
-.mode-selector-grid {
-  display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;
-}
-.mode-select-btn {
-  display: flex !important; flex-direction: column !important;
-  align-items: flex-start !important; justify-content: space-between !important;
-  text-align: left !important; white-space: normal !important;
-  padding: 6px 10px !important; width: 100% !important;
-}
-.mode-btn-top {
-  display: flex; align-items: center; justify-content: space-between;
-  width: 100%; gap: 6px; font-family: 'Press Start 2P', monospace; font-size: 10px;
-}
-.mode-btn-check { font-size: 8px; color: #f0c954; }
-.mode-select-btn:hover .mode-btn-check { color: #050605; }
-.mode-btn-desc {
-  font-family: 'VT323', monospace; font-size: 17px; line-height: 1.15;
-  color: #e6dec8; text-transform: none; margin-top: 4px; white-space: normal !important;
-}
-.mode-select-btn:hover .mode-btn-desc { color: #050605; }
-
-.td-difficulty-container {
-  margin: 10px 0 12px;
-  padding: 8px 10px;
-  background: rgba(14, 20, 13, 0.85);
-  border: 1px dashed #4a6344;
-}
-.td-difficulty-container.hidden { display: none !important; }
 .difficulty-btn-row {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  display: flex;
   gap: 6px;
-  margin-top: 6px;
+  margin: 4px 0;
 }
 .diff-btn {
-  font-size: 9px !important;
+  flex: 1;
+  font-size: 8.5px !important;
   padding: 6px 4px !important;
-  text-align: center;
   justify-content: center !important;
-  color: #e6dec8 !important;
-  transition: transform 0.1s ease, box-shadow 0.1s ease;
 }
-.diff-btn > span {
-  color: #e6dec8;
+
+/* Botón Gigante Principal de Jugar (Botón 3D Bevel por Sprite) */
+.desktop-main-action-wrap {
+  margin: 4px 0;
 }
-.diff-btn:hover:not(.is-active-diff) {
-  border-image-source: var(--slice-btn_hover) !important;
+.play-hero-btn {
+  position: relative;
+  border-style: solid;
+  border-width: var(--slice-btn_hero_play-bw, 16px);
+  border-image: var(--slice-btn_hero_play) var(--slice-btn_hero_play-cut, 8) fill / var(--slice-btn_hero_play-bw, 16px) stretch;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  min-height: 56px !important;
+  padding: 10px 16px !important;
+  text-align: center !important;
+  cursor: var(--cursor-pointer), pointer;
+  transition: transform 0.1s ease;
+}
+.play-hero-btn:hover {
+  border-image: var(--slice-btn_hero_play_hover) var(--slice-btn_hero_play_hover-cut, 8) fill / var(--slice-btn_hero_play_hover-bw, 16px) stretch;
+  transform: translateY(-2px);
+  box-shadow: 0 0 24px rgba(240, 201, 84, 0.65) !important;
+}
+.play-hero-btn:active {
+  transform: translateY(1px);
+}
+
+.play-btn-title {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 13px !important;
+  color: #f5ecd3;
+  letter-spacing: 1px;
+}
+.play-hero-btn:hover .play-btn-title {
+  color: #050605;
+}
+.play-btn-sub {
+  font-family: 'VT323', monospace;
+  font-size: 16px;
+  color: #8ef77b;
+  letter-spacing: 0.5px;
+  margin-top: 2px;
+}
+.play-hero-btn:hover .play-btn-sub {
+  color: #121812;
+}
+
+/* Banner de Tutorial */
+.td-tutorial-banner-btn {
+  justify-content: center !important;
+  font-size: 8.5px !important;
+  color: #f0c954 !important;
+  padding: 8px 12px !important;
+  margin-bottom: 2px !important;
+}
+.td-tutorial-banner-btn:hover {
   color: #050605 !important;
 }
-.diff-btn:hover:not(.is-active-diff) > span {
-  color: #050605 !important;
+
+/* Grilla de Acciones Secundarias (PC UI Standard) */
+.desktop-sub-menu-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+}
+.desktop-sub-menu-btn {
+  font-size: 8.5px !important;
+  padding: 8px 6px !important;
+  justify-content: center !important;
+  text-align: center !important;
+  white-space: nowrap !important;
+}
+.btn-highlight-shop {
+  color: #f0c954 !important;
+  box-shadow: 0 0 10px rgba(240, 201, 84, 0.25);
+}
+
+/* Panel Flotante de Expediente de Servicio (Columna Derecha, Marco Terminal por Sprite) */
+.start-dossier-card {
+  position: relative;
+  border-style: solid;
+  border-width: var(--slice-panel_terminal-bw, 18px);
+  border-image: var(--slice-panel_terminal) var(--slice-panel_terminal-cut, 10) fill / var(--slice-panel_terminal-bw, 18px) stretch;
+  padding: 10px 14px;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.7);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.dossier-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8.5px;
+  color: #f0c954;
+  border-bottom: 1px dashed rgba(74, 99, 68, 0.6);
+  padding-bottom: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.stats-report-table {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-family: 'VT323', monospace;
+  font-size: 18px;
+}
+.stats-report-table .report-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 3px 0;
+  border-bottom: 1px dotted rgba(54, 72, 50, 0.4);
+  color: #c8c2ac;
+}
+.stats-report-table .report-row b {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 9px;
+}
+
+/* Directiva de Misión */
+.dossier-directive-box {
+  position: relative;
+  border-style: solid;
+  border-width: var(--slice-panel_tech_inset-bw, 12px);
+  border-image: var(--slice-panel_tech_inset) var(--slice-panel_tech_inset-cut, 8) fill / var(--slice-panel_tech_inset-bw, 12px) stretch;
+  padding: 6px 10px;
+  font-family: 'VT323', monospace;
+  font-size: 15.5px;
+  line-height: 1.25;
+  color: #a8c499;
+}
+.dossier-directive-box b {
+  color: #f0c954;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.desktop-quick-controls {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 5px 12px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 7.5px;
+  line-height: 1.4;
+  color: #a8c499;
+  padding-top: 6px;
+  border-top: 1px dashed #364832;
+}
+
+.desktop-version-footer {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px dashed #364832;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
+  color: #877a5c;
+}
+
+@media (max-width: 950px) {
+  .start-main-layout {
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
+  .start-center-spacer {
+    display: none;
+  }
+  .start-nav-column, .start-dossier-column {
+    max-width: 100%;
+    width: 100%;
+  }
+}
+
+.td-difficulty-container.hidden { display: none !important; }
+.diff-desc-text {
+  font-family: 'VT323', monospace;
+  font-size: 16px;
+  color: #8ef77b;
+  margin-top: 4px;
+  text-align: center;
 }
 .diff-btn.is-active-diff {
   border-image-source: var(--slice-btn_hover) !important;
@@ -91,33 +485,6 @@
 .diff-btn.is-active-diff > span {
   color: #050605 !important;
   text-shadow: none !important;
-}
-.diff-btn.is-active-diff:hover {
-  border-image-source: var(--slice-btn_hover) !important;
-  color: #050605 !important;
-}
-.diff-btn.is-active-diff:hover > span {
-  color: #050605 !important;
-}
-.diff-desc-text {
-  font-family: 'VT323', monospace;
-  font-size: 16px;
-  color: #8ef77b;
-  margin-top: 6px;
-  text-align: center;
-}
-
-.desktop-menu-list { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
-.desktop-menu-btn { justify-content: flex-start !important; width: 100% !important; padding: 8px 14px !important; font-size: 12px !important; }
-.desktop-version-footer {
-  display: flex; justify-content: space-between; margin-top: 12px; padding-top: 8px;
-  border-top: 1px dashed #364832; font-family: 'Press Start 2P', monospace; font-size: 8px; color: #877a5c;
-}
-.desktop-dossier-plate { text-align: left; padding: 16px 20px !important; }
-.desktop-quick-controls {
-  display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px 10px;
-  font-family: 'Press Start 2P', monospace; font-size: 8px; color: #a8c499;
-  margin-top: 10px; padding-top: 8px; border-top: 1px dashed #364832;
 }
 
 .main-menu-plate, .gameover-plate { max-width: 760px; width: 94%; text-align: center; padding: 14px 18px; }

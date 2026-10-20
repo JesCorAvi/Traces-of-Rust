@@ -1,4 +1,4 @@
-// Torreta: entidad defensiva, modelo/sprite, mejoras y lógica de combate.
+// Torreta: entidad defensiva, modelo 3D con calcomanías, mejoras y lógica de combate.
 // Exports: Turret.
 
 import * as THREE from 'three';
@@ -12,7 +12,7 @@ import {
   getSellValue
 } from './turrets/stats.js';
 import { buildMaterials, buildModel } from './turrets/models/base.js';
-import { buildBillboard, buildHealthBar, updateHealthBar } from './turrets/view.js';
+import { buildMuzzleFlash, buildHealthBar, updateHealthBar } from './turrets/view.js';
 import {
   getEffectiveDamage,
   getEffectiveFireRate,
@@ -65,6 +65,11 @@ export class Turret extends DefensiveStructure {
     this.supportRangeBonus = 0;
     this.supportScrapBonus = 0;
 
+    // Base fija anclada al suelo (no gira al apuntar)
+    this.baseRoot = new THREE.Group();
+    this.group.add(this.baseRoot);
+
+    // Cabezal giratorio (gira suavemente para seguir y apuntar a los enemigos)
     this.modelRoot = new THREE.Group();
     this.modelRoot.rotation.y = facingYaw;
     this.group.add(this.modelRoot);
@@ -73,9 +78,19 @@ export class Turret extends DefensiveStructure {
     buildMaterials(this);
     recomputeStats(this);
     buildModel(this);
-    buildBillboard(this);
+    buildMuzzleFlash(this);
     buildHealthBar(this);
     applyUpgradeVisuals(this);
+  }
+
+  addBasePart(geo, mat, x = 0, y = 0, z = 0, rx = 0, ry = 0, rz = 0) {
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.position.set(x, y, z);
+    mesh.rotation.set(rx, ry, rz);
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+    this.baseRoot.add(mesh);
+    return mesh;
   }
 
   addPart(geo, mat, x = 0, y = 0, z = 0, rx = 0, ry = 0, rz = 0, visible = true) {
@@ -122,11 +137,27 @@ export class Turret extends DefensiveStructure {
 
     const enemies = ctx.enemyPool.active;
 
-    if (this.sprite) {
-      this.sprite.faceCamera(ctx.camera.position);
-      const state = this.firingFlash > 0 ? 1 : 0;
-      const fps = state === 1 ? 12 : 4;
-      this.sprite.setDirectionalFrame(0, state, Math.floor(this.animTimer * fps) % 4);
+    // Destello de disparo dinámico en boca de cañón
+    if (this.muzzleFlashMesh) {
+      if (this.firingFlash > 0) {
+        this.muzzleFlashMesh.visible = true;
+        this.muzzleFlashMesh.rotation.z = Math.random() * Math.PI * 2;
+        const s = 0.85 + Math.random() * 0.35;
+        this.muzzleFlashMesh.scale.set(s, s, 1);
+      } else {
+        this.muzzleFlashMesh.visible = false;
+      }
+    }
+
+    // Rotación continua de antena / radar en support
+    if (this.radarDishMesh) {
+      this.radarDishMesh.rotation.y += dt * 2.2;
+    }
+
+    // Retroceso mecánico suave del cañón
+    if (this.barrelRecoilMesh) {
+      const targetZ = this.firingFlash > 0 ? (this.barrelBaseZ || 0) + 0.12 : (this.barrelBaseZ || 0);
+      this.barrelRecoilMesh.position.z += (targetZ - this.barrelRecoilMesh.position.z) * Math.min(1.0, dt * 25);
     }
 
     this.updateHealthBar(ctx.camera.position);

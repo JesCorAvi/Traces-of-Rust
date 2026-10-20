@@ -366,14 +366,17 @@ function animate() {
     hudController.updateRadarHUD(playerGroup.position, yaw, enemyPool.active, activeBoss, corePos);
     debugOverlay.update(ModeManager.getSelectedModeId(), enemyPool, playerGroup.position, corePos, worldPhysics);
   } else if (state === 'START') {
-    const t = performance.now() * 0.00045;
-    camera.position.set(Math.sin(t) * 11, 3.6, Math.cos(t) * 11);
-    camera.lookAt(0, 1.1, 0);
+    const t = performance.now() * 0.00032;
+    camera.position.set(Math.sin(t) * 12.5, 3.8 + Math.sin(t * 0.6) * 0.35, Math.cos(t) * 12.5);
+    camera.lookAt(0, 1.2, 0);
     playerBillboard.facingYaw = 0;
     playerBillboard.faceCamera(camera.position);
     playerBillboard.animTimer += dt * CONFIG.DIRECTIONAL.ANIM_FPS.IDLE;
     playerBillboard.setDirectionalFrame(playerBillboard.dirRow, 0, Math.floor(playerBillboard.animTimer) % 4);
-    playerLanternLight.position.set(Math.sin(t) * 3, 2.2, Math.cos(t) * 3);
+    const camAngle = Math.atan2(camera.position.x, camera.position.z);
+    propBillboards.forEach(p => { p.rotation.y = camAngle; });
+    dust.position.set(0, 0, 0);
+    playerLanternLight.position.set(Math.sin(t) * 2.8, 2.2, Math.cos(t) * 2.8);
   }
 
   renderer.render(scene, camera);

@@ -26,7 +26,7 @@
   <div id="scare-flash"></div>
 
   <!-- Barra superior de diagnóstico, FPS, escala de UI y exportador PNG -->
-  <div id="top-bar">
+  <div id="top-bar" class="hidden">
     <div id="fps-counter" class="scale-picker-box hidden" title="Fotogramas por segundo en tiempo real">
       <span>FPS: <b id="fps-val" style="color:#a8c499">60</b></span>
     </div>
@@ -38,10 +38,6 @@
         <option value="3">x3</option>
       </select>
     </div>
-    <button class="rust-btn sm" id="btn-open-sheets">
-      <span class="ui-icon sm" data-ui-icon="atkSpd"></span>
-      <span>ARCHIVO DE SPRITES (.PNG) [TAB]</span>
-    </button>
   </div>
 
   <!-- Modal Inspector / Descargador de Spritesheets -->
@@ -286,32 +282,41 @@
     </div>
   </div>
 
-  <!-- PANTALLA DE INICIO CON SELECTOR DE MODO -->
+  <!-- PANTALLA DE INICIO CON FONDO 3D DE LA FÁBRICA VISIBLE (ESTILO POKÉBONK / MEGABONK / VAMPIRE SURVIVORS) -->
   <div id="start-screen" class="overlay desktop-start-overlay">
-    <div class="desktop-launcher-layout">
-      <div class="metal-plate desktop-nav-plate">
-        <div class="screw tl"></div><div class="screw tr"></div><div class="screw bl"></div><div class="screw br"></div>
-        <div class="ui-decor crack-tl" data-ui-icon="crack_1"></div>
-        <div class="ui-decor stain-blood" data-ui-icon="stain_blood"></div>
-        <div class="ui-decor wire-top" data-ui-icon="wire_clamp"></div>
+    <!-- BARRA SUPERIOR FLOTANTE CON MONEDAS, AJUSTES Y PANTALLA COMPLETA -->
+    <header class="start-top-bar">
+      <div class="start-top-right">
+        <div class="start-souls-badge start-currency-pill" title="Dientes recolectados en planta">
+          <span class="ui-icon sm" data-ui-icon="tooth"></span>
+          <span>DIENTES: <b id="start-souls" style="color:#f0c954">0</b></span>
+        </div>
+        <button type="button" class="rust-btn sm start-top-btn" id="btn-toggle-fullscreen">
+          <span class="ui-icon sm" data-ui-icon="area"></span>
+          <span id="fullscreen-btn-text">PANTALLA COMPLETA</span>
+        </button>
+        <button type="button" class="rust-btn sm start-top-btn" id="btn-open-settings">
+          <span class="ui-icon sm" data-ui-icon="atkSpd"></span>
+          <span>AJUSTES</span>
+        </button>
+      </div>
+    </header>
 
-        <div class="tape-strip">
-          <span class="ui-icon sm" data-ui-icon="warning"></span>
-          <span>TERMINAL DE TRABAJO</span>
+    <!-- LAYOUT PRINCIPAL: ELEMENTOS FLOTANTES SOBRE EL MUNDO 3D -->
+    <main class="start-main-layout">
+      <!-- COLUMNA IZQUIERDA: TÍTULO, SELECTOR DE MODO DUAL, DIFICULTAD Y JUGAR -->
+      <section class="start-nav-column">
+        <div class="launcher-header-group">
+          <h1 class="buckshot-title desktop-main-title">Traces of Rust</h1>
+          <div class="launcher-genre-tag">TACTICAL HORROR · CORE DEFENSE &amp; SURVIVAL</div>
         </div>
 
-        <h1 class="buckshot-title desktop-main-title">Traces of Rust</h1>
-        <p class="plate-sub" style="margin-bottom:6px;">Selecciona el protocolo operativo antes de entrar en planta.</p>
+        <!-- Selector de Modo Dual (PokéBonk Style: Tower Defense Principal + Supervivencia Arcade) -->
+        <div class="mode-hierarchy-container" id="mode-selector-group"></div>
 
-        <!-- Selector de Modo de Juego (Supervivencia vs Defender el Núcleo) -->
-        <div class="mode-selector-section">
-          <div class="mode-selector-label">SELECCIONAR MODO DE OPERACIÓN:</div>
-          <div id="mode-selector-group" class="mode-selector-grid"></div>
-        </div>
-
-        <!-- Selector de Dificultad para Modo Defensa (Estilo Bloons TD 6) -->
-        <div id="td-difficulty-section" class="td-difficulty-container hidden">
-          <div class="mode-selector-label">DIFICULTAD // RUTAS DE INSTALACIÓN:</div>
+        <!-- Selector de Dificultad para Modo Defensa -->
+        <div id="td-difficulty-section" class="td-difficulty-container">
+          <div class="mode-selector-label">DIFICULTAD DE DEFENSA:</div>
           <div class="difficulty-btn-row">
             <button type="button" class="rust-btn sm diff-btn" data-diff="facil">
               <span>FÁCIL</span>
@@ -326,72 +331,88 @@
           <div id="td-diff-desc" class="diff-desc-text">NORMAL: 2 Entradas · 1 Salida · 100 Vidas · 2 carriles convergentes</div>
         </div>
 
-        <div class="teeth-banner" style="width:100%; margin-bottom:10px;">
-          <span class="ui-icon sm" data-ui-icon="tooth"></span>
-          <span>DIENTES EN RESERVA: <span id="start-souls">0</span></span>
+        <!-- BOTÓN GIGANTE PRINCIPAL DE JUGAR (PokéBonk JUGAR / Vampire Survivors COMENZAR / Megabonk PLAY) -->
+        <div class="desktop-main-action-wrap">
+          <button type="button" class="rust-btn primary play-hero-btn" id="btn-start">
+            <span class="play-btn-title" id="btn-start-label">[ JUGAR : TOWER DEFENSE ]</span>
+            <span class="play-btn-sub" id="btn-start-sub">★ CAMPAÑA PRINCIPAL // 12 OLEADAS // DIFICULTAD NORMAL</span>
+          </button>
         </div>
 
-        <div class="desktop-menu-list">
-          <button class="rust-btn desktop-menu-btn hidden" id="btn-td-tutorial">
-            <span class="ui-icon sm" data-ui-icon="level"></span>
-            <span>[ TUTORIAL INTERACTIVO DE DEFENSA ]</span>
-          </button>
-          <button class="rust-btn primary desktop-menu-btn" id="btn-start">
-            <span class="ui-icon sm" data-ui-icon="slash"></span>
-            <span id="btn-start-label">[ FIRMAR CONTRATO Y ENTRAR ]</span>
-          </button>
-          <button class="rust-btn desktop-menu-btn" id="btn-open-shop">
+        <!-- Botón de Tutorial de Defensa destacado -->
+        <button type="button" class="rust-btn desktop-menu-btn td-tutorial-banner-btn" id="btn-td-tutorial">
+          <span class="ui-icon sm" data-ui-icon="level"></span>
+          <span>[ ¿PRIMERA VEZ? TUTORIAL DE DEFENSA ]</span>
+        </button>
+
+        <!-- Grilla de Acciones Secundarias (Estilo PC UI) -->
+        <div class="desktop-sub-menu-grid">
+          <button type="button" class="rust-btn desktop-sub-menu-btn btn-highlight-shop" id="btn-open-shop">
             <span class="ui-icon sm" data-ui-icon="tooth"></span>
-            <span>[ MESA DEL CIRUJANO · MEJORAS ]</span>
+            <span>[ MEJORAS CIRUJANO ]</span>
           </button>
-          <button class="rust-btn desktop-menu-btn" id="btn-open-settings">
-            <span class="ui-icon sm" data-ui-icon="atkSpd"></span>
-            <span>[ AJUSTES DEL SISTEMA ]</span>
-          </button>
-          <button class="rust-btn desktop-menu-btn" id="btn-open-manual">
+          <button type="button" class="rust-btn desktop-sub-menu-btn" id="btn-open-manual">
             <span class="ui-icon sm" data-ui-icon="level"></span>
-            <span>[ MANUAL OPERATIVO Y CONTROLES ]</span>
-          </button>
-          <button class="rust-btn desktop-menu-btn" id="btn-toggle-fullscreen">
-            <span class="ui-icon sm" data-ui-icon="area"></span>
-            <span id="fullscreen-btn-text">[ PANTALLA COMPLETA: DESACTIVADA ]</span>
+            <span>[ MANUAL Y CONTROLES ]</span>
           </button>
         </div>
 
         <div class="desktop-version-footer">
-          <span>BUILD DESKTOP-64 · REV 2.0 (MODOS)</span>
+          <span>BUILD DESKTOP-64 · TD EDITION</span>
           <span id="gpu-status-badge" style="color:#a8c499;">● GPU ACTIVA</span>
         </div>
-      </div>
+      </section>
 
-      <!-- Expediente de Carrera separado por modo -->
-      <div class="metal-plate desktop-dossier-plate">
-        <div class="screw tl"></div><div class="screw tr"></div><div class="screw bl"></div><div class="screw br"></div>
-        <div class="ui-decor stain-rust" data-ui-icon="stain_rust"></div>
+      <!-- CENTRO ABIERTO: PERMITE ADMIRAR LA ESCENA 3D DE LA FÁBRICA EN ROTACIÓN -->
+      <div class="start-center-spacer"></div>
 
-        <div class="tape-strip">
-          <span class="ui-icon sm" data-ui-icon="skull"></span>
-          <span id="dossier-mode-label">EXPEDIENTE // SUPERVIVENCIA</span>
+      <!-- COLUMNA DERECHA: EXPEDIENTE DE SERVICIO FLOTANTE (ESTILO POKÉBONK SEASON / DOSSIER) -->
+      <aside class="start-dossier-column">
+        <div class="start-dossier-card">
+          <div class="dossier-card-header">
+            <span class="ui-icon sm" data-ui-icon="core"></span>
+            <span id="dossier-mode-label">EXPEDIENTE // TOWER DEFENSE</span>
+          </div>
+
+          <div class="stats-report-table">
+            <div class="report-row">
+              <span id="career-best-metric-label">MEJOR OLEADA SUPERADA:</span>
+              <b id="career-best-time" style="color:#f0c954">0 / 12</b>
+            </div>
+            <div class="report-row">
+              <span>EXPEDICIONES TOTALES:</span>
+              <b id="career-runs" style="color:#f5ecd3">0</b>
+            </div>
+            <div class="report-row">
+              <span>ENTIDADES ELIMINADAS:</span>
+              <b id="career-total-kills" style="color:#ff6b6b">0</b>
+            </div>
+            <div class="report-row">
+              <span>JEFES PURGADOS:</span>
+              <b id="career-total-bosses" style="color:#f0c954">0</b>
+            </div>
+            <div class="report-row">
+              <span>IMPLANTES ADQUIRIDOS:</span>
+              <b id="career-upgrades-count" style="color:#a8c499">0</b>
+            </div>
+          </div>
+
+          <div id="dossier-directive-box" class="dossier-directive-box">
+            <b>DIRECTIVA TÁCTICA // TOWER DEFENSE:</b>
+            Protege el reactor biomecánico frente a 12 oleadas. Despliega torretas en las vías con [ESPACIO] o teclas [1-5]. El reactor tolera fugas limitadas. Cada 3 oleadas se activan eventos especiales.
+          </div>
+
+          <div class="desktop-quick-controls">
+            <span><b>WASD</b> MOVER</span>
+            <span><b>ESPACIO</b> TORRETAS</span>
+            <span><b>1-5</b> SELECCIÓN</span>
+            <span><b>SHIFT</b> DASH</span>
+            <span><b>F</b> OLEADA</span>
+            <span><b>P</b> PAUSA</span>
+          </div>
         </div>
-
-        <div class="paper-note stats-report" style="margin:6px 0 10px;">
-          <div class="report-row"><span>CONTRATOS FIRMADOS:</span><b id="career-runs" style="color:#f5ecd3">0</b></div>
-          <div class="report-row"><span id="career-best-metric-label">MEJOR TIEMPO EN PLANTA:</span><b id="career-best-time" style="color:#f0c954">00:00</b></div>
-          <div class="report-row"><span>ENTIDADES ELIMINADAS:</span><b id="career-total-kills" style="color:#ff6b6b">0</b></div>
-          <div class="report-row"><span>JEFES PURGADOS:</span><b id="career-total-bosses" style="color:#f0c954">0</b></div>
-          <div class="report-row"><span>IMPLANTES ADQUIRIDOS:</span><b id="career-upgrades-count" style="color:#a8c499">0</b></div>
-        </div>
-
-        <div class="desktop-quick-controls">
-          <span><b>WASD</b> MOVER</span>
-          <span><b>ESPACIO</b> SALTAR</span>
-          <span><b>SHIFT</b> DASH</span>
-          <span><b>RATÓN</b> LINTERNA</span>
-          <span><b>P</b> PAUSA</span>
-          <span><b>B / F3</b> DEBUG IA</span>
-        </div>
-      </div>
-    </div>
+      </aside>
+    </main>
   </div>
 
   <!-- MENÚ DE AJUSTES DEL SISTEMA -->

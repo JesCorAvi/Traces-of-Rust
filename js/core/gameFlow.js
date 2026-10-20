@@ -43,6 +43,7 @@ function startGame(options = {}) {
   rt.pendingTutorial = false;
   rt.hudController.applyModeLayout(rt.ModeManager.getHudConfig());
   rt.debugOverlay.rebuildStaticPaths(modeId, rt.worldPhysics);
+  document.getElementById('top-bar')?.classList.remove('hidden');
 
   document.querySelectorAll('.overlay').forEach(el => el.classList.add('hidden'));
   document.getElementById('hud').classList.remove('hidden');
@@ -81,6 +82,7 @@ function returnToMainMenu() {
   rt.playerGroup.position.set(0, 0, 0);
   document.querySelectorAll('.overlay').forEach(el => el.classList.add('hidden'));
   document.getElementById('hud').classList.add('hidden');
+  document.getElementById('top-bar')?.classList.add('hidden');
   document.getElementById('start-screen').classList.remove('hidden');
   rt.renderModeSelectorUI(rt.careerByMode);
   rt.updateCareerDossierForSelectedMode(rt.careerByMode);
@@ -175,7 +177,7 @@ document.getElementById('btn-close-settings').onclick = () => {
   document.getElementById('settings-screen').classList.add('hidden');
   document.getElementById(rt.lastMenuScreen).classList.remove('hidden');
 };
-document.getElementById('btn-open-sheets').onclick = () => document.getElementById('sheets-modal').classList.remove('hidden');
+document.getElementById('btn-open-sheets')?.addEventListener('click', () => document.getElementById('sheets-modal')?.classList.remove('hidden'));
 document.getElementById('btn-close-sheets').onclick = () => document.getElementById('sheets-modal').classList.add('hidden');
 
 document.getElementById('btn-tutorial-yes').onclick = () => {

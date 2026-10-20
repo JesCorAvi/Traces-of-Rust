@@ -5,28 +5,34 @@
 // ============================================================================
 
 export const MODES_CONFIG = {
-  DEFAULT_MODE: 'survival',
+  DEFAULT_MODE: 'core_defense',
   CAREER_STORAGE_KEY: 'echoes_rust_career_modes_v2',
 
   // Catálogo para el selector de modo en el menú principal y el registro de modos
   CATALOG: {
+    core_defense: {
+      id: 'core_defense',
+      title: 'TOWER DEFENSE',
+      subtitle: 'DEFENDER EL NÚCLEO',
+      badge: '★ MODO PRINCIPAL // CAMPAÑA',
+      isPrimary: true,
+      shortTitle: 'TOWER DEFENSE',
+      icon: 'core',
+      tagline: 'Construye defensas en las vías industriales, sobrevive a 12 oleadas letales y protege el reactor biomecánico.',
+      objectiveTitle: 'PROTOCOLO DE DEFENSA',
+      objectiveDefault: 'Impide que las entidades alcancen la esclusa del Núcleo'
+    },
     survival: {
       id: 'survival',
       title: 'SUPERVIVENCIA',
+      subtitle: 'HORDA INFINITA',
+      badge: 'MODO SECUNDARIO // ARCADE',
+      isPrimary: false,
       shortTitle: 'SUPERVIVENCIA',
       icon: 'skull',
-      tagline: 'Resiste el asedio infinito en planta y purga a los 5 jefes.',
+      tagline: 'Modo secundario de acción rápida: combate directo sin torretas, recoge suero y purga a los 5 jefes de planta.',
       objectiveTitle: 'OBJETIVO DE PLANTA',
       objectiveDefault: 'Encuentra y purga a los jefes de planta'
-    },
-    core_defense: {
-      id: 'core_defense',
-      title: 'DEFENDER EL NÚCLEO',
-      shortTitle: 'DEFENSA NÚCLEO',
-      icon: 'core',
-      tagline: 'Protege el reactor biomecánico central frente a 12 oleadas letales.',
-      objectiveTitle: 'PROTOCOLO DE DEFENSA',
-      objectiveDefault: 'Impide que las entidades destruyan el Núcleo'
     }
   },
 

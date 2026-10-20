@@ -13,11 +13,8 @@ window.addEventListener('keydown', e => {
     rt.debugOverlay.toggle();
     return;
   }
-  if (e.key === 'Tab' && rt.state !== 'LEVEL_UP') {
+  if (e.key === 'Tab') {
     e.preventDefault();
-    const modal = document.getElementById('sheets-modal');
-    const isHidden = modal.classList.toggle('hidden');
-    if (!isHidden && document.pointerLockElement) document.exitPointerLock();
     return;
   }
 

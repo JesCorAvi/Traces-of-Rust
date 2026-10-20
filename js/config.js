@@ -48,7 +48,19 @@ export const CONFIG = {
       btn_pri_normal:   { x: 0,   y: 120, w: 48, h: 24, slice: 7 },
       btn_pri_hover:    { x: 48,  y: 120, w: 48, h: 24, slice: 7 },
       btn_pri_active:   { x: 96,  y: 120, w: 48, h: 24, slice: 7 },
-      btn_pri_disabled: { x: 144, y: 120, w: 48, h: 24, slice: 7 }
+      btn_pri_disabled: { x: 144, y: 120, w: 48, h: 24, slice: 7 },
+
+      // Paneles y tarjetas especializadas por sprite para la pantalla de inicio estilo PC
+      panel_terminal:        { x: 0,   y: 304, w: 48, h: 48, slice: 10 },
+      card_hero_td:          { x: 48,  y: 304, w: 48, h: 48, slice: 10 },
+      card_hero_td_active:   { x: 96,  y: 304, w: 48, h: 48, slice: 10 },
+      card_sec_surv:         { x: 144, y: 304, w: 48, h: 48, slice: 10 },
+      card_sec_surv_active:  { x: 192, y: 304, w: 48, h: 48, slice: 10 },
+      panel_tech_inset:      { x: 240, y: 304, w: 48, h: 32, slice: 8 },
+      btn_hero_play:         { x: 288, y: 304, w: 64, h: 32, slice: 8 },
+      btn_hero_play_hover:   { x: 352, y: 304, w: 64, h: 32, slice: 8 },
+      pill_frame_status:     { x: 0,   y: 352, w: 48, h: 24, slice: 8 },
+      pill_frame_currency:   { x: 48,  y: 352, w: 48, h: 24, slice: 8 }
     },
 
     BAR_FILLS: {
