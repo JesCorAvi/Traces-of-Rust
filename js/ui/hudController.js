@@ -25,7 +25,11 @@ export class HUDController {
     if (coreHudBox) coreHudBox.classList.toggle('hidden', !isDefense);
 
     const dirIndicator = document.getElementById('core-direction-indicator');
-    if (dirIndicator) dirIndicator.classList.toggle('hidden', !isDefense);
+    if (dirIndicator) {
+      const showMarker = isDefense && !!hudConfig.showCoreDirectionMarker;
+      dirIndicator.classList.toggle('hidden', !showMarker);
+      if (!showMarker) dirIndicator.style.display = 'none';
+    }
 
     const timerText = document.getElementById('timer-text');
     if (timerText) {
@@ -43,6 +47,7 @@ export class HUDController {
 
     if (!isDefense) {
       document.getElementById('turret-interact-prompt')?.classList.add('hidden');
+      document.getElementById('wave-prep-prompt')?.classList.add('hidden');
     }
   }
 
@@ -53,6 +58,14 @@ export class HUDController {
 
   updateInventoryHUD(skills, passives, lastUpgradedKey) {
     updateInventoryHUD(skills, passives, lastUpgradedKey);
+  }
+
+  hideCoreDirectionIndicator() {
+    const dirIndicator = document.getElementById('core-direction-indicator');
+    if (dirIndicator) {
+      dirIndicator.classList.add('hidden');
+      dirIndicator.style.display = 'none';
+    }
   }
 
   updateCoreDirectionIndicator(camera, playerPos, corePos, coreRatio = 1) {

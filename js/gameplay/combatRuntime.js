@@ -6,7 +6,13 @@ export function createCombatRuntime(rt) {
     if (!en.active || en.state === 'dead') return;
     const mods = rt.getMods();
     const isCrit = !isDoT && Math.random() < mods.critChance;
-    en.hp -= isCrit ? amount * 2.0 : amount;
+    let appliedDmg = amount;
+    // En modo defensa, los enemigos de ruta tienen blindaje frente a armas ligeras del jugador (estilo Orcs Must Die / Dungeon Defenders)
+    // Los enemigos de eventos especiales (en.isEventEnemy) reciben daño completo del jugador (100%) para poder resolverlos a solas.
+    if (!isDoT && en.defenseAI && en.defenseAI.enabled && !en.isEventEnemy) {
+      appliedDmg *= 0.45;
+    }
+    en.hp -= isCrit ? appliedDmg * 2.0 : appliedDmg;
 
     if (!isDoT) {
       en.state = 'hurt';

@@ -86,7 +86,7 @@ if (system.worldPhysics.isRampAt && system.worldPhysics.isRampAt(pos.x, pos.z)) 
 }
 
 const core = system.mode.coreMachine;
-if (core && !core.destroyed) {
+if (core && core.collisionRadius > 0 && !core.destroyed) {
   const minCore = core.collisionRadius + cfg.base.collisionRadius + P.minCorePadding;
   if (horizontalDistance(pos, core.position) < minCore) {
     return { valid: false, reason: 'DEMASIADO CERCA DEL NÚCLEO' };
@@ -97,9 +97,17 @@ if (distanceToRoutes(system, pos) < P.minPathDistance) {
   return { valid: false, reason: 'BLOQUEA LA RUTA' };
 }
 
-for (const sp of CORE_DEFENSE_CONFIG.SPAWN_POINTS) {
+const spawnList = system.mode?.spawnPoints || CORE_DEFENSE_CONFIG.SPAWN_POINTS;
+for (const sp of spawnList) {
   if (horizontalDistance(pos, sp.position) < P.spawnClearance) {
-    return { valid: false, reason: 'COMPUERTA DE APARICIÓN' };
+    return { valid: false, reason: 'COMPUERTA DE ENTRADA' };
+  }
+}
+
+const exitList = system.mode?.exitPoints || [];
+for (const ep of exitList) {
+  if (horizontalDistance(pos, ep.position) < P.spawnClearance) {
+    return { valid: false, reason: 'COMPUERTA DE SALIDA' };
   }
 }
 

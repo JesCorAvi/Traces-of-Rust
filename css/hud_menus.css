@@ -49,6 +49,39 @@
 }
 .mode-select-btn:hover .mode-btn-desc { color: #050605; }
 
+.td-difficulty-container {
+  margin: 10px 0 12px;
+  padding: 8px 10px;
+  background: rgba(14, 20, 13, 0.85);
+  border: 1px dashed #4a6344;
+}
+.td-difficulty-container.hidden { display: none !important; }
+.difficulty-btn-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  margin-top: 6px;
+}
+.diff-btn {
+  font-size: 9px !important;
+  padding: 6px 4px !important;
+  text-align: center;
+  justify-content: center !important;
+}
+.diff-btn.is-active-diff {
+  background: #f0c954 !important;
+  color: #050605 !important;
+  border-color: #ffe699 !important;
+  box-shadow: 0 0 10px rgba(240, 201, 84, 0.4);
+}
+.diff-desc-text {
+  font-family: 'VT323', monospace;
+  font-size: 16px;
+  color: #8ef77b;
+  margin-top: 6px;
+  text-align: center;
+}
+
 .desktop-menu-list { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
 .desktop-menu-btn { justify-content: flex-start !important; width: 100% !important; padding: 8px 14px !important; font-size: 12px !important; }
 .desktop-version-footer {

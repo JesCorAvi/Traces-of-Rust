@@ -11,7 +11,7 @@ import { disposeObject3D } from '../utils/dispose.js';
 // ============================================================================
 
 export class SpawnPointSystem {
-  constructor(scene, worldPhysics, vfxList) {
+  constructor(scene, worldPhysics, vfxList, spawnPointsList = null) {
     this.scene = scene;
     this.worldPhysics = worldPhysics;
     this.vfx = vfxList;
@@ -20,14 +20,15 @@ export class SpawnPointSystem {
     this.elapsed = 0;
 
     this.scene.add(this.rootGroup);
-    this.buildSpawnPortals();
+    this.buildSpawnPortals(spawnPointsList);
   }
 
-  buildSpawnPortals() {
+  buildSpawnPortals(customList = null) {
     const metalTex = SpriteSheets.env.metal.tex;
     const crateTex = SpriteSheets.env.crate.tex;
+    const list = customList || CORE_DEFENSE_CONFIG.SPAWN_POINTS;
 
-    CORE_DEFENSE_CONFIG.SPAWN_POINTS.forEach(spCfg => {
+    list.forEach(spCfg => {
       const group = new THREE.Group();
       const gy = this.worldPhysics
         ? this.worldPhysics.getGroundHeight(spCfg.position.x, spCfg.position.z, 0)

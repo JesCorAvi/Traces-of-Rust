@@ -3,18 +3,20 @@
 import * as THREE from 'three';
 import { MODES_CONFIG, CORE_DEFENSE_CONFIG } from '../config.js';
 import { AudioSys } from '../audio.js';
-import { triggerBossSpecialAttack } from '../combat.js';
+import { triggerBossSpecialAttack, spawnEnemyProjectile } from '../combat.js';
 import { GameEvents } from '../core/eventBus.js';
-import { CoreMachine } from '../defense/coreMachine.js';
+import { generateProceduralMap, DIFFICULTIES } from '../defense/mapGenerator.js';
+import { ExitPointSystem } from '../defense/exitPointSystem.js';
 import { PathSystem } from '../defense/pathSystem.js';
 import { SpawnPointSystem } from '../defense/spawnPointSystem.js';
 import { WaveManager } from '../defense/waveManager.js';
 import { TurretSystem } from '../defense/turretSystem.js';
 import { TowerDefenseTutorial } from '../tutorial/towerDefenseTutorial.js';
+import { DefenseEventManager } from '../defense/defenseEventManager.js';
 import { updateEnemies } from './enemyLoop.js';
 
 // ============================================================================
-// MODO 2: DEFENDER EL NÚCLEO (Tower Defense con colocación libre de torretas)
+// MODO 2: DEFENDER LAS INSTALACIONES (Tower Defense estilo Bloons TD 6)
 // ============================================================================
 
 export class CoreDefenseMode {
@@ -24,24 +26,62 @@ export class CoreDefenseMode {
     this.coreMachine = null;
     this.pathSystem = null;
     this.spawnPointSystem = null;
+    this.exitPointSystem = null;
     this.waveManager = null;
     this.turretSystem = null;
+    this.defenseEventManager = null;
     this.tutorial = null;
     this.tutorialActive = false;
-    this.extraStructures = []; // Torretas y tropas aliadas (contrato de la IA enemiga)
+    this.extraStructures = []; // Tropas aliadas (los enemigos ya no atacan torretas)
     this.scrap = 0;
     this.activeBoss = null;
     this.bossesDefeated = 0;
     this.playerDownTimer = 0;
+    this.difficulty = 'normal';
+    this.lives = 100;
+    this.maxLives = 100;
+    this.mapData = null;
+    this.spawnPoints = [];
+    this.exitPoints = [];
     this.unsubscribers = [];
   }
 
   init(ctx) {
     this.cleanup();
 
-    this.coreMachine = new CoreMachine(ctx.scene, ctx.worldPhysics, ctx.vfx);
-    this.pathSystem = new PathSystem(ctx.scene, ctx.worldPhysics);
-    this.spawnPointSystem = new SpawnPointSystem(ctx.scene, ctx.worldPhysics, ctx.vfx);
+    this.difficulty = localStorage.getItem('traces_td_difficulty') || 'normal';
+    this.mapData = generateProceduralMap(this.difficulty, ctx.worldPhysics);
+    this.lives = this.mapData.maxLives;
+    this.maxLives = this.mapData.maxLives;
+    this.scrap = this.mapData.startingScrap;
+    this.spawnPoints = this.mapData.spawnPoints;
+    this.exitPoints = this.mapData.exitPoints;
+
+    // Sistema de contención global (vidas estilo Bloons TD 6)
+    this.coreMachine = {
+      hp: this.lives,
+      maxHp: this.maxLives,
+      position: new THREE.Vector3(0, 0, 0),
+      hasPhysicalCore: false,
+      collisionRadius: 0,
+      attackStopDistance: 1.5,
+      active: true,
+      destroyed: false,
+      currentDamageState: { label: this.getDamageStateLabel() },
+      getHpRatio: () => Math.max(0, Math.min(1, this.lives / Math.max(1, this.maxLives))),
+      takeDamage: amt => {
+        this.lives = Math.max(0, this.lives - amt);
+        if (this.lives <= 0) this.handleBreachDefeat(ctx);
+      },
+      heal: amt => { this.lives = Math.min(this.maxLives, this.lives + amt); },
+      applyShield: () => {},
+      update: () => {},
+      destroy: () => {}
+    };
+
+    this.pathSystem = new PathSystem(ctx.scene, ctx.worldPhysics, this.mapData.routes);
+    this.spawnPointSystem = new SpawnPointSystem(ctx.scene, ctx.worldPhysics, ctx.vfx, this.mapData.spawnPoints);
+    this.exitPointSystem = new ExitPointSystem(ctx.scene, ctx.worldPhysics, ctx.vfx, this.mapData.exitPoints);
     this.waveManager = new WaveManager(
       ctx.enemyPool,
       this.pathSystem,
@@ -49,19 +89,24 @@ export class CoreDefenseMode {
       ctx.worldPhysics
     );
     this.extraStructures = [];
-    this.scrap = CORE_DEFENSE_CONFIG.SCRAP.startingScrap;
     this.turretSystem = new TurretSystem(
       ctx.scene,
       ctx.worldPhysics,
       this.extraStructures,
       this
     );
+    this.defenseEventManager = new DefenseEventManager(
+      ctx.scene,
+      ctx.worldPhysics,
+      ctx.enemyPool,
+      this
+    );
     this.activeBoss = null;
     this.bossesDefeated = 0;
     this.playerDownTimer = 0;
 
-    // Colocar al jugador frente al Núcleo, fuera de su radio de colisión sólida
-    const startPos = CORE_DEFENSE_CONFIG.CORE.playerStartPos;
+    // Posición inicial del jugador en el centro del complejo
+    const startPos = this.mapData.playerStartPos || { x: 0, y: 0, z: 0 };
     const gy = ctx.worldPhysics.getGroundHeight(startPos.x, startPos.z, 0);
     ctx.playerGroup.position.set(startPos.x, gy, startPos.z);
 
@@ -95,6 +140,17 @@ export class CoreDefenseMode {
       }),
       GameEvents.on('defense:victory', payload => {
         this.handleVictory(ctx, payload);
+      }),
+      GameEvents.on('defense:special_event_triggered', payload => {
+        if (this.defenseEventManager) {
+          this.defenseEventManager.startEvent(payload.eventType);
+        }
+        ctx.onCoreUnderAttackAlert?.('¡EVENTO DE EMERGENCIA DETECTADO! // OLEADAS EN PAUSA');
+        ctx.triggerScare?.(0.32);
+      }),
+      GameEvents.on('defense:event_completed', payload => {
+        ctx.onCoreUnderAttackAlert?.(`¡${payload.title}! +${payload.scrapReward} CHATARRA`);
+        AudioSys.playUISelect();
       })
     );
 
@@ -110,40 +166,78 @@ export class CoreDefenseMode {
       showTimerAsPrimary: false,
       showCoreBar: true,
       showWaveCounter: true,
-      showCoreDirectionMarker: true,
+      showCoreDirectionMarker: false,
       objectiveHeader: this.meta.objectiveTitle
     };
   }
 
-  handleCoreDestroyed(ctx) {
-    ctx.triggerScare(0.75);
+  getDamageStateLabel() {
+    const ratio = this.lives / Math.max(1, this.maxLives);
+    if (ratio <= 0.25) return 'CRÍTICO';
+    if (ratio <= 0.5) return 'ALERTA';
+    return 'ESTABLE';
+  }
+
+  handleEnemyLeak(enemy, ctx) {
+    if (this.lives <= 0) return;
+    const leakLives = enemy.isBoss ? 20 : (enemy.type === 'weeper' ? 3 : enemy.type === 'worm' ? 2 : 1);
+    this.lives = Math.max(0, this.lives - leakLives);
+    if (this.coreMachine) {
+      this.coreMachine.hp = this.lives;
+      this.coreMachine.currentDamageState = { label: this.getDamageStateLabel() };
+    }
+
+    AudioSys.play(180, 0.28, 'sawtooth', 0.12);
+    AudioSys.play(240, 0.22, 'square', 0.08);
+
+    const ep = this.exitPointSystem ? this.exitPointSystem.getExitPointByPath(enemy.defenseAI?.routeId) : null;
+    if (ep && this.exitPointSystem) {
+      this.exitPointSystem.triggerLeakEffect(ep.id);
+    }
+
+    ctx.onCoreDamaged?.({ hp: this.lives, maxHp: this.maxLives, dmg: leakLives });
+    ctx.onCoreUnderAttackAlert?.(`¡FUGA DETECTADA! -${leakLives} ${leakLives === 1 ? 'VIDA' : 'VIDAS'}`);
+    ctx.triggerScare?.(0.25);
+
+    if (this.lives <= 0) {
+      this.handleBreachDefeat(ctx);
+    }
+  }
+
+  handleBreachDefeat(ctx) {
+    ctx.triggerScare(0.8);
     ctx.triggerRunEnd({
       victory: false,
       modeId: 'core_defense',
-      title: 'COLAPSO DEL NÚCLEO',
-      cause: 'CAUSA: DESTRUCCIÓN DEL REACTOR BIOMECÁNICO CENTRAL',
+      title: 'BRECHA DE CONTENCIÓN',
+      cause: 'CAUSA: LOS HOSTILES ESCAPARON DE LAS INSTALACIONES Y DESBORDARON EL PERÍMETRO',
       wavesCompleted: this.waveManager ? this.waveManager.wavesCompleted : 0,
       currentWave: this.waveManager ? this.waveManager.currentWaveNumber : 1,
       totalWaves: this.waveManager ? this.waveManager.totalWaves : 12,
       coreHpLeft: 0,
-      coreMaxHp: this.coreMachine ? this.coreMachine.maxHp : 1500,
+      coreMaxHp: this.maxLives,
       bossesDefeated: this.bossesDefeated
     });
   }
 
+  handleCoreDestroyed(ctx) {
+    this.handleBreachDefeat(ctx);
+  }
+
   handleVictory(ctx, payload) {
     AudioSys.playUISelect();
-    ctx.addRunSouls(25); // Bonificación por defender el núcleo con éxito
+    ctx.addRunSouls(35);
+    const diffName = (DIFFICULTIES[this.difficulty] || DIFFICULTIES.normal).name;
     ctx.triggerRunEnd({
       victory: true,
       modeId: 'core_defense',
-      title: 'NÚCLEO ASEGURADO',
-      cause: 'PROTOCOLO DE CONTENCIÓN COMPLETADO // REACTOR ESTABILIZADO',
+      title: 'INSTALACIONES ASEGURADAS',
+      cause: `PROTOCOLO DE CONTENCIÓN COMPLETADO // ${this.lives} VIDAS PRESERVADAS (${diffName})`,
       wavesCompleted: payload.wavesCompleted,
       currentWave: payload.wavesCompleted,
       totalWaves: payload.totalWaves,
-      coreHpLeft: this.coreMachine ? Math.ceil(this.coreMachine.hp) : 0,
-      coreMaxHp: this.coreMachine ? this.coreMachine.maxHp : 1500,
+      coreHpLeft: this.lives,
+      coreMaxHp: this.maxLives,
       bossesDefeated: this.bossesDefeated
     });
   }
@@ -166,17 +260,20 @@ export class CoreDefenseMode {
       playerAlive = false;
       this.playerDownTimer -= dt;
       if (this.playerDownTimer <= 0) {
-        const startPos = CORE_DEFENSE_CONFIG.CORE.playerStartPos;
+        const startPos = this.mapData?.playerStartPos || { x: 0, y: 0, z: 0 };
         const gy = worldPhysics.getGroundHeight(startPos.x, startPos.z, 0);
         playerGroup.position.set(startPos.x, gy, startPos.z);
         ctx.revivePlayerAfterPenalty(CORE_DEFENSE_CONFIG.PLAYER_DEATH_POLICY.respawnInvulnSec);
       }
     }
 
+    const isPrep = !!(this.waveManager && !this.tutorialActive && this.waveManager.state === 'PREP');
     if (this.coreMachine) this.coreMachine.update(dt, camera.position);
-    if (this.pathSystem) this.pathSystem.update(dt);
+    if (this.pathSystem) this.pathSystem.update(dt, isPrep);
     if (this.spawnPointSystem) this.spawnPointSystem.update(dt);
+    if (this.exitPointSystem) this.exitPointSystem.update(dt);
     if (this.turretSystem) this.turretSystem.update(dt, ctx);
+    if (this.defenseEventManager) this.defenseEventManager.update(dt, ctx);
 
     if (this.tutorialActive && this.tutorial) {
       this.tutorial.update(dt, ctx);
@@ -202,13 +299,16 @@ export class CoreDefenseMode {
         if (playerAlive) ctx.dealDamageToPlayer(attacker.dmg);
       },
       onBurnTick: (burningEnemy, burnDmg) => ctx.damageEnemy(burningEnemy, burnDmg, null, true),
+      onShootProjectile: (origin, dir, speed, dmg) => {
+        spawnEnemyProjectile(ctx.scene, bossProjectiles, origin, dir, speed, dmg);
+        AudioSys.play(380, 0.12, 'sawtooth', 0.05);
+      },
+      onEnemyEscaped: enemy => {
+        this.handleEnemyLeak(enemy, ctx);
+      },
       onBossPhaseChange: () => ctx.onBossPhaseChange(),
       onBossSpecial: (boss, atkType) => {
-        // Si el Boss está atacando al Núcleo, sus ataques de área también dañan al Núcleo
-        const targetPos = boss.defenseAI?.targetKind === 'player'
-          ? playerGroup.position
-          : (this.coreMachine ? this.coreMachine.position : playerGroup.position);
-
+        const targetPos = playerGroup.position;
         triggerBossSpecialAttack(
           ctx.scene,
           boss,
@@ -229,6 +329,9 @@ export class CoreDefenseMode {
   }
 
   onEnemyKilled(enemy, ctx) {
+    if (this.defenseEventManager) {
+      this.defenseEventManager.onEnemyKilled(enemy);
+    }
     const scrapCfg = CORE_DEFENSE_CONFIG.SCRAP;
 
     if (enemy.isBoss) {
@@ -322,6 +425,16 @@ export class CoreDefenseMode {
     return this.turretSystem.sellTurret(turretId);
   }
 
+  canSkipPrep() {
+    return !!(this.waveManager && !this.tutorialActive && this.waveManager.canSkipPrep());
+  }
+
+  skipPrep() {
+    if (!this.canSkipPrep()) return false;
+    AudioSys.playUISelect();
+    return this.waveManager.skipPrep();
+  }
+
   handleTutorialKey(key) {
     if (!this.tutorial || !this.tutorialActive) return false;
     return this.tutorial.handleKey(key);
@@ -360,12 +473,18 @@ export class CoreDefenseMode {
     const remaining = wm ? wm.getRemainingHostilesCount() : 0;
     const waveNum = wm ? wm.currentWaveNumber : 1;
     const totalW = wm ? wm.totalWaves : 12;
+    const isPrep = !!(wm && !this.tutorialActive && wm.state === 'PREP');
+    const prepSeconds = isPrep ? Math.max(0, wm.prepTimer) : 0;
+
+    const eventInfo = this.defenseEventManager ? this.defenseEventManager.getActiveEventInfo() : null;
 
     let subTaskText = `HOSTILES RESTANTES: ${remaining}`;
     if (this.tutorialActive) {
       subTaskText = 'TUTORIAL INTERACTIVO EN CURSO';
-    } else if (wm && wm.state === 'PREP') {
-      subTaskText = `PRÓXIMA OLEADA EN: ${wm.prepTimer.toFixed(1)}S`;
+    } else if (eventInfo) {
+      subTaskText = eventInfo.subTaskText;
+    } else if (isPrep) {
+      subTaskText = `PRÓXIMA OLEADA EN: ${prepSeconds.toFixed(1)}S · [F] SALTAR`;
     } else if (this.playerDownTimer > 0) {
       subTaskText = `RECONSTRUYENDO OPERARIO: ${this.playerDownTimer.toFixed(1)}S`;
     }
@@ -378,20 +497,28 @@ export class CoreDefenseMode {
       : null;
     const placement = this.getPlacementState();
 
+    const diffMeta = DIFFICULTIES[this.difficulty] || DIFFICULTIES.normal;
+
     return {
-      objectiveText: `Protege el Núcleo (${stateLabel})`,
-      objectiveCheck: coreHp < coreMax * 0.45 ? '[!]' : '[ ]',
+      objectiveText: eventInfo ? `[!] ${eventInfo.objectiveText}` : `Contén la brecha (${diffMeta.name})`,
+      objectiveCheck: (eventInfo || this.lives < this.maxLives * 0.4) ? '[!]' : '[ ]',
       subTaskText,
-      waveBadgeText: `OLEADA ${waveNum} / ${totalW}`,
+      waveBadgeText: eventInfo ? `EVENTO // ${eventInfo.badgeText}` : (isPrep ? `PREPARACIÓN // OLEADA ${waveNum}/${totalW}` : `OLEADA ${waveNum} / ${totalW}`),
       remainingEnemies: remaining,
       waveNumber: waveNum,
       totalWaves: totalW,
-      coreHp,
-      coreMaxHp: coreMax,
-      coreRatio: coreHp / Math.max(1, coreMax),
+      isPrep: isPrep && !eventInfo,
+      prepSeconds,
+      canSkipPrep: isPrep && !eventInfo,
+      coreHp: this.lives,
+      coreMaxHp: this.maxLives,
+      coreRatio: this.lives / Math.max(1, this.maxLives),
       coreStateLabel: stateLabel,
-      corePosition: this.coreMachine ? this.coreMachine.position : null,
-      spawnPoints: this.spawnPointSystem ? this.spawnPointSystem.getAllSpawnPoints() : [],
+      corePosition: null,
+      hasPhysicalCore: false,
+      spawnPoints: this.spawnPoints || (this.spawnPointSystem ? this.spawnPointSystem.getAllSpawnPoints() : []),
+      exitPoints: this.exitPoints || [],
+      difficulty: this.difficulty,
       bossesDefeated: this.bossesDefeated,
       totalBosses: 5,
       scrap: this.scrap,
@@ -422,10 +549,11 @@ export class CoreDefenseMode {
     }
     this.tutorialActive = false;
 
-    if (this.coreMachine) {
+    if (this.coreMachine && this.coreMachine.destroy) {
       this.coreMachine.destroy();
-      this.coreMachine = null;
     }
+    this.coreMachine = null;
+
     if (this.pathSystem) {
       this.pathSystem.destroy();
       this.pathSystem = null;
@@ -434,9 +562,17 @@ export class CoreDefenseMode {
       this.spawnPointSystem.destroy();
       this.spawnPointSystem = null;
     }
+    if (this.exitPointSystem) {
+      this.exitPointSystem.destroy();
+      this.exitPointSystem = null;
+    }
     if (this.turretSystem) {
       this.turretSystem.destroy();
       this.turretSystem = null;
+    }
+    if (this.defenseEventManager) {
+      this.defenseEventManager.cleanup();
+      this.defenseEventManager = null;
     }
     this.extraStructures.forEach(st => st.destroy());
     this.extraStructures.length = 0;
@@ -444,5 +580,8 @@ export class CoreDefenseMode {
     this.waveManager = null;
     this.activeBoss = null;
     this.playerDownTimer = 0;
+    this.spawnPoints = [];
+    this.exitPoints = [];
+    this.mapData = null;
   }
 }

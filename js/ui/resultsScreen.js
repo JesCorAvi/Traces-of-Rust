@@ -56,7 +56,7 @@ export function presentRunResultsScreen({
     tapeLabelEl.textContent = isVictory
       ? 'INFORME DE CONTENCIÓN // OPERACIÓN EXITOSA'
       : (modeId === 'core_defense'
-          ? 'FALLO CATASTRÓFICO DE REACTOR // APAGÓN EN PLANTA'
+          ? 'BRECHA EN LA CONTENCIÓN // EVACUACIÓN FALLIDA'
           : 'CERTIFICADO DE DEFUNCIÓN // EXPEDIENTE CERRADO');
   }
 
@@ -82,9 +82,9 @@ export function presentRunResultsScreen({
   const endRowVal = document.getElementById('go-endgame');
 
   if (modeId === 'core_defense') {
-    if (endRowLabel) endRowLabel.textContent = 'OLEADAS SUPERADAS / ESTADO DEL NÚCLEO:';
+    if (endRowLabel) endRowLabel.textContent = 'OLEADAS SUPERADAS / VIDAS RESTANTES:';
     if (endRowVal) {
-      endRowVal.textContent = `${outcome.wavesCompleted || 0}/${outcome.totalWaves || 12} OLEADAS · NÚCLEO: ${outcome.coreHpLeft || 0}/${outcome.coreMaxHp || 1500} HP`;
+      endRowVal.textContent = `${outcome.wavesCompleted || 0}/${outcome.totalWaves || 12} OLEADAS · VIDAS: ${outcome.coreHpLeft || 0}/${outcome.coreMaxHp || 100}`;
       endRowVal.style.color = isVictory ? '#a8c499' : '#ff6b6b';
     }
   } else {

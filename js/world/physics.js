@@ -29,7 +29,7 @@ export function createWorldPhysics() {
       return false;
     },
 
-    getGroundHeight(x, z, currentY = 0) {
+    getGroundHeight(x, z, currentY = 0, ignoreStepLimit = false) {
       let h = 0;
       const stepTolerance = 0.82;
 
@@ -37,13 +37,13 @@ export function createWorldPhysics() {
         if (x >= r.minX && x <= r.maxX && z >= r.minZ && z <= r.maxZ) {
           const rampY = getRampSurfaceHeight(r, x, z) + 0.03;
           // No teletransportar al jugador sobre la rampa si entra por el lateral o por debajo
-          if (currentY + stepTolerance >= rampY && rampY > h) h = rampY;
+          if ((ignoreStepLimit || currentY + stepTolerance >= rampY) && rampY > h) h = rampY;
         }
       }
 
       for (const b of walkableBoxes) {
         if (x >= b.minX && x <= b.maxX && z >= b.minZ && z <= b.maxZ) {
-          if (currentY + stepTolerance >= b.topY && b.topY + 0.02 > h) {
+          if ((ignoreStepLimit || currentY + stepTolerance >= b.topY) && b.topY + 0.02 > h) {
             h = b.topY + 0.02;
           }
         }

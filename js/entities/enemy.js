@@ -56,13 +56,16 @@ export class Enemy {
       this.chargeTime = 0;
     } else {
       const size = type === 'weeper' ? 2.5 : 2.0;
-      this.hp = (type === 'weeper' ? 52 : type === 'worm' ? 36 : 22) * hpScale;
+      this.hp = (type === 'weeper' ? 48 : type === 'worm' ? 36 : 22) * hpScale;
       this.maxHp = this.hp;
-      this.dmg = (type === 'weeper' ? 20 : 13) * dmgScale;
-      this.speed = (type === 'weeper' ? 7.5 : 4.6) * spdBoost;
+      this.dmg = (type === 'weeper' ? 18 : 13) * dmgScale;
+      this.speed = (type === 'weeper' ? 4.2 : 4.6) * spdBoost;
       this.billboard.changeSheet(type, size);
       this.chargeVec = null;
       this.chargeTime = 0;
+      this.shootTimer = 1.0 + Math.random() * 1.5;
+      this.shootInterval = 2.6;
+      this.shootRange = 24.0;
     }
 
     this.state = 'walk';
@@ -202,6 +205,16 @@ export class Enemy {
       attackTargetType = nav.attackTarget;
       targetStructure = nav.structure;
       stopDist = nav.stopDist;
+
+      if (this.defenseAI && this.defenseAI.hasReachedExit) {
+        if (callbacks.onEnemyEscaped) {
+          callbacks.onEnemyEscaped(this);
+        }
+        this.active = false;
+        this.hp = 0;
+        this.group.visible = false;
+        return true;
+      }
     }
 
     const toGoal = new THREE.Vector3().subVectors(goalPos, this.group.position);
@@ -220,17 +233,17 @@ export class Enemy {
 
     let targetState = 1; // WALK
 
-    if (this.type === 'weeper' && (!isDef || attackTargetType === 'player')) {
-      const dirToEnemy = toPlayer.clone().negate().normalize();
-      const watched = playerFwd.angleTo(dirToEnemy) < 0.95 && horizDistPlayer < 26;
-      if (watched) {
-        moveSpd = 0;
-        targetState = 0; // IDLE
-        this.attackCharge = 0;
-      } else if (!this.hasTriggeredScare && horizDistPlayer < 13 && horizDistPlayer > 8) {
-        this.hasTriggeredScare = true;
-        this.group.position.add(toPlayer.clone().setY(0).normalize().multiplyScalar(1.1));
-        if (callbacks.onScare) callbacks.onScare();
+    if (this.type === 'weeper') {
+      this.shootTimer = (this.shootTimer || 0) - dt;
+      if (this.shootTimer <= 0 && horizDistPlayer <= (this.shootRange || 24.0)) {
+        this.shootTimer = this.shootInterval || 2.6;
+        targetState = 2; // ATTACK
+        if (callbacks.onShootProjectile) {
+          const spawnOrigin = this.group.position.clone().add(new THREE.Vector3(0, 1.25, 0));
+          const targetChest = playerPos.clone().add(new THREE.Vector3(0, 1.0, 0));
+          const dir = new THREE.Vector3().subVectors(targetChest, spawnOrigin).normalize();
+          callbacks.onShootProjectile(spawnOrigin, dir, 12.0, this.dmg * 0.75);
+        }
       }
     }
 

@@ -46,8 +46,10 @@ const s = {
   spawnInterval: turret.base.spawnInterval || 8,
   healAmount: turret.base.healAmount || 0,
   healRadius: turret.base.healRadius || 0,
-  buffFireRate: 0,
-  buffDamage: 0,
+  buffFireRate: turret.base.buffFireRate || 0,
+  buffDamage: turret.base.buffDamage || 0,
+  buffRange: turret.base.buffRange || 0,
+  buffScrap: turret.base.buffScrap || 0,
   auraArmor: 0,
   shieldAmount: 0,
   shieldInterval: 10,
@@ -127,6 +129,8 @@ for (let p = 0; p < turret.paths.length; p++) {
         case 'healRadiusMult': mul('healRadius', v); break;
         case 'buffFireRate': add('buffFireRate', v); break;
         case 'buffDamage': add('buffDamage', v); break;
+        case 'buffRange': add('buffRange', v); break;
+        case 'buffScrap': add('buffScrap', v); break;
         case 'auraArmor': add('auraArmor', v); break;
         case 'shieldAmount': add('shieldAmount', v); break;
         case 'shieldAmountMult': mul('shieldAmount', v); break;

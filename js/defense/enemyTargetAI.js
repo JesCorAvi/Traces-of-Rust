@@ -142,13 +142,14 @@ export function evaluateEnemyTarget(enemy, dt, playerPos, playerAlive, coreMachi
       return;
     }
 
-    // Estructuras defensivas (torretas y tropas aliadas): se elige la más cercana
+    // Estructuras defensivas: los enemigos ya no atacan torretas (solo tropas aliadas si bloquean el paso)
     if (Array.isArray(extraStructures) && extraStructures.length > 0 && !ai.isAttackingCore) {
       let closest = null;
       let closestDist = Infinity;
       for (let i = 0; i < extraStructures.length; i++) {
         const st = extraStructures[i];
         if (!st || !st.active || st.destroyed) continue;
+        if (st.structureType === 'turret') continue; // Torretas ignoradas por completo
         const dStruct = Math.hypot(st.position.x - pos.x, st.position.z - pos.z);
         if (dStruct <= prof.detectRadius && dStruct < closestDist) {
           closest = st;
@@ -208,34 +209,42 @@ export function resolveEnemyNavigationGoal(enemy, dt, playerPos, coreMachine, pa
     };
   }
 
-  // Navegación por waypoints hacia el Núcleo
-  const corePos = coreMachine ? coreMachine.position : new THREE.Vector3(0, 0, 0);
-  const coreStopDist = (coreMachine ? coreMachine.attackStopDistance : 3.15) + (enemy.isBoss ? 0.55 : 0);
-  const distToCore = Math.hypot(corePos.x - pos.x, corePos.z - pos.z);
+  // Navegación por waypoints hacia el Núcleo (si existe físicamente en el mapa)
+  const hasPhysicalCore = !!(coreMachine && coreMachine.hasPhysicalCore !== false && coreMachine.position);
+  if (hasPhysicalCore) {
+    const corePos = coreMachine.position;
+    const coreStopDist = (coreMachine.attackStopDistance || 3.15) + (enemy.isBoss ? 0.55 : 0);
+    const distToCore = Math.hypot(corePos.x - pos.x, corePos.z - pos.z);
 
-  if (distToCore <= coreStopDist + 0.2) {
-    ai.isAttackingCore = true;
-    return {
-      goalPos: corePos,
-      attackTarget: 'core',
-      structure: coreMachine,
-      stopDist: coreStopDist
-    };
+    if (distToCore <= coreStopDist + 0.2) {
+      ai.isAttackingCore = true;
+      return {
+        goalPos: corePos,
+        attackTarget: 'core',
+        structure: coreMachine,
+        stopDist: coreStopDist
+      };
+    }
   }
 
   ai.isAttackingCore = false;
   if (!pathSystem) {
-    return { goalPos: corePos, attackTarget: 'core', structure: coreMachine, stopDist: coreStopDist };
+    const defaultPos = coreMachine?.position || new THREE.Vector3(0, 0, 0);
+    return { goalPos: defaultPos, attackTarget: hasPhysicalCore ? 'core' : 'exit', structure: coreMachine, stopDist: 1.5 };
   }
 
   let wp = pathSystem.getWaypoint(ai.routeId, ai.waypointIdx);
   const distToWp = Math.hypot(wp.x - pos.x, wp.z - pos.z);
 
-  if (distToWp <= pathCfg.waypointReachRadius && !pathSystem.isFinalWaypoint(ai.routeId, ai.waypointIdx)) {
-    ai.waypointIdx++;
-    wp = pathSystem.getWaypoint(ai.routeId, ai.waypointIdx);
-    ai.stuckTimer = 0;
-    ai.lastProgressPos.copy(pos);
+  if (distToWp <= pathCfg.waypointReachRadius) {
+    if (!pathSystem.isFinalWaypoint(ai.routeId, ai.waypointIdx)) {
+      ai.waypointIdx++;
+      wp = pathSystem.getWaypoint(ai.routeId, ai.waypointIdx);
+      ai.stuckTimer = 0;
+      ai.lastProgressPos.copy(pos);
+    } else {
+      ai.hasReachedExit = true;
+    }
   }
 
   // Detección y desatasco automático si un enemigo se bloquea contra una esquina o caja
@@ -255,8 +264,8 @@ export function resolveEnemyNavigationGoal(enemy, dt, playerPos, coreMachine, pa
 
   return {
     goalPos: wp,
-    attackTarget: 'core',
-    structure: coreMachine,
-    stopDist: pathSystem.isFinalWaypoint(ai.routeId, ai.waypointIdx) ? coreStopDist : 0.2
+    attackTarget: hasPhysicalCore ? 'core' : 'exit',
+    structure: hasPhysicalCore ? coreMachine : null,
+    stopDist: pathSystem.isFinalWaypoint(ai.routeId, ai.waypointIdx) ? (hasPhysicalCore ? 3.15 : 0.5) : 0.2
   };
 }

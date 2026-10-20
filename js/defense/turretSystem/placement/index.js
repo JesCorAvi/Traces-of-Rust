@@ -83,7 +83,7 @@ const turret = new Turret(
 );
 
 system.turrets.set(turret.id, turret);
-system.extraStructures.push(turret);
+// Los enemigos ya no atacan torretas en modo defensa (solo se añaden tropas aliadas a extraStructures)
 
 system.spawnPulse(position, 1.6, cfg.color);
 system.spawnSparks(position.clone().add(new THREE.Vector3(0, 0.7, 0)), cfg.color);

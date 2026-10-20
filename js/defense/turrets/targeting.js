@@ -16,6 +16,7 @@ return turret.stats.fireRate * (1 + turret.supportFireRateBonus);
 export function getEnemiesInRange(turret, enemies) {
 const out = [];
 const pos = turret.group.position;
+const effectiveRange = turret.stats.range * (1 + (turret.supportRangeBonus || 0));
 for (let i = 0; i < enemies.length; i++) {
   const e = enemies[i];
   if (!e.active || e.state === 'dead') continue;
@@ -24,7 +25,7 @@ for (let i = 0; i < enemies.length; i++) {
   const dy = Math.abs(e.group.position.y - pos.y);
   if (dy > 4.5) continue;
   const d = Math.hypot(dx, dz);
-  if (d <= turret.stats.range) {
+  if (d <= effectiveRange) {
     out.push({ enemy: e, dist: d });
   }
 }

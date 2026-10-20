@@ -260,3 +260,79 @@
   border-color: #ff8a8a;
   color: #ffdada;
 }
+
+/* ==========================================================================
+   PAUSA DE CONSTRUCCIÓN ENTRE RONDAS (TOWER DEFENSE)
+   ========================================================================== */
+#wave-prep-prompt {
+  width: min(440px, 46vw);
+  padding: 5px 10px;
+  background-color: rgba(8, 11, 8, 0.94);
+  border: 2px solid #b89c46;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.9);
+  cursor: pointer;
+  pointer-events: auto;
+  user-select: none;
+  animation: prepPulse 2.4s infinite ease-in-out;
+  transition: transform 0.1s ease, border-color 0.2s ease;
+}
+#wave-prep-prompt:hover {
+  border-color: #f0c954;
+  transform: scale(1.015);
+}
+#wave-prep-prompt:active {
+  transform: scale(0.99);
+}
+#wave-prep-prompt.hidden {
+  display: none !important;
+}
+.prep-prompt-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+.prep-prompt-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 9px;
+  color: #f0c954;
+  text-shadow: 1px 1px 0 #050605;
+}
+.prep-prompt-tag b {
+  color: #8ef77b;
+  font-weight: normal;
+}
+.prep-skip-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 9px;
+  color: #f5ecd3;
+  background: rgba(27, 38, 25, 0.85);
+  padding: 3px 6px;
+  border: 1px solid #7d8f6d;
+}
+.prep-skip-pill:hover {
+  border-color: #8ef77b;
+  color: #8ef77b;
+}
+.prep-skip-pill .key-cap {
+  min-width: 20px;
+  height: 20px;
+  font-size: 10px;
+  padding: 0 4px;
+}
+@keyframes prepPulse {
+  0%, 100% { border-color: #b89c46; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.9); }
+  50% { border-color: #f0c954; box-shadow: 0 4px 18px rgba(240, 201, 84, 0.25); }
+}
+
+.turret-build-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}

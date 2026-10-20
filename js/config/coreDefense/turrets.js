@@ -24,7 +24,7 @@ export const TURRETS = {
       color: 0xb89c46,
       spriteSize: 1.5,
       base: {
-        damage: 6, range: 11, fireRate: 2.8, hp: 220,
+        damage: 15, range: 11, fireRate: 2.8, hp: 220,
         collisionRadius: 0.55, height: 1.7, attackStopDistance: 1.6,
         projectileSpeed: 42, tracer: true
       },
@@ -70,8 +70,8 @@ export const TURRETS = {
       color: 0x9c6b3f,
       spriteSize: 1.65,
       base: {
-        damage: 18, range: 16, fireRate: 0.55, hp: 260,
-        aoeRadius: 2.4, collisionRadius: 0.65, height: 1.85, attackStopDistance: 1.8,
+        damage: 44, range: 16, fireRate: 0.55, hp: 260,
+        aoeRadius: 2.8, collisionRadius: 0.65, height: 1.85, attackStopDistance: 1.8,
         projectileSpeed: 12, arcProjectile: true
       },
       paths: [
@@ -117,7 +117,7 @@ export const TURRETS = {
       spriteSize: 1.55,
       base: {
         damage: 0, range: 10, fireRate: 0.8, hp: 240,
-        aoeRadius: 3.2, slowFactor: 0.6, slowDuration: 1.6,
+        aoeRadius: 3.2, slowFactor: 0.5, slowDuration: 2.2,
         collisionRadius: 0.6, height: 1.8, attackStopDistance: 1.7
       },
       paths: [
@@ -163,8 +163,8 @@ export const TURRETS = {
       spriteSize: 1.7,
       base: {
         damage: 0, range: 10, fireRate: 1, hp: 300,
-        spawnInterval: 8, allyCap: 2,
-        allyHp: 60, allyDamage: 6, allySpeed: 4.2, allyAttackInterval: 0.9,
+        spawnInterval: 6, allyCap: 2,
+        allyHp: 120, allyDamage: 14, allySpeed: 4.2, allyAttackInterval: 0.9,
         allyRange: 10, collisionRadius: 0.7, height: 2.0, attackStopDistance: 2.0
       },
       paths: [
@@ -201,46 +201,44 @@ export const TURRETS = {
     support: {
       id: 'support',
       name: 'TALLER',
-      role: 'SOPORTE',
+      role: 'AMPLIFICADOR',
       icon: 'turret_support',
       spriteKey: 'turret_support',
-      description: 'Estación de mantenimiento. Repara estructuras y potencia a las torretas cercanas.',
-      cost: 12,
-      color: 0x6b7f5a,
+      description: 'Torre de enlace táctico. Potencia a las torretas cercanas aumentando su cadencia, daño y alcance.',
+      cost: 14,
+      color: 0xb89c46,
       spriteSize: 1.5,
       base: {
-        damage: 0, range: 12, fireRate: 1, hp: 200,
-        pulseInterval: 3, healAmount: 8, healRadius: 12,
-        buffFireRate: 0, buffDamage: 0, auraArmor: 0,
-        shieldAmount: 0, shieldInterval: 10,
+        damage: 0, range: 14, fireRate: 1, hp: 300,
+        buffFireRate: 0.15, buffDamage: 0.15, buffRange: 0.15,
         collisionRadius: 0.55, height: 1.65, attackStopDistance: 1.7
       },
       paths: [
         {
-          id: 'repair', name: 'REPARACIÓN', color: 0x9caf6b,
-          upgrades: [
-            { cost: 7, name: 'Herramientas finas', desc: '+30% de curación.', effects: { healAmountMult: 1.3 } },
-            { cost: 14, name: 'Aura de reparación', desc: 'Reparación continua en lugar de pulsos.', effects: { continuousHeal: true }, special: 'repair_aura', visual: 'tool_arms' },
-            { cost: 24, name: 'Soldadura reforzada', desc: '+40% de curación.', effects: { healAmountMult: 1.4 } },
-            { cost: 44, name: 'Reconstrucción', desc: 'Duplica la curación y +30% de radio.', effects: { healAmountMult: 2, healRadiusMult: 1.3 }, special: 'rebuild', visual: 'repair_beacon' }
-          ]
-        },
-        {
           id: 'overclock', name: 'SOBRECARGA', color: 0xb89c46,
           upgrades: [
-            { cost: 7, name: 'Aceite conductor', desc: '+10% de cadencia a torretas cercanas.', effects: { buffFireRate: 0.1 } },
-            { cost: 14, name: 'Overclock', desc: '+25% de daño y +15% de cadencia a torretas cercanas.', effects: { buffFireRate: 0.15, buffDamage: 0.25 }, special: 'overclock', visual: 'tesla_coils' },
-            { cost: 24, name: 'Reactor auxiliar', desc: '+10% de daño y cadencia adicionales.', effects: { buffFireRate: 0.1, buffDamage: 0.1 } },
-            { cost: 44, name: 'Pico de potencia', desc: 'Cada 20s, +80% de cadencia durante 5s.', effects: { overclockBurst: 0.8, overclockBurstDuration: 5, overclockBurstInterval: 20 }, special: 'power_surge', visual: 'surge_core' }
+            { cost: 8, name: 'Bobinas aceleradoras', desc: '+15% de cadencia a torretas cercanas.', effects: { buffFireRate: 0.15 } },
+            { cost: 16, name: 'Sincronizador armónico', desc: '+20% de cadencia adicional.', effects: { buffFireRate: 0.20 }, special: 'harmonic_sync', visual: 'tesla_coils' },
+            { cost: 28, name: 'Frecuencia de choque', desc: '+25% de cadencia adicional.', effects: { buffFireRate: 0.25 } },
+            { cost: 48, name: 'Tormenta cinética', desc: '+40% de cadencia y ráfagas de hipervelocidad periódicas.', effects: { buffFireRate: 0.40, overclockBurst: 0.5 }, special: 'power_surge', visual: 'surge_core' }
           ]
         },
         {
-          id: 'shield', name: 'ESCUDO', color: 0x6f8f9c,
+          id: 'power', name: 'POTENCIA', color: 0xd95326,
           upgrades: [
-            { cost: 7, name: 'Placas de refuerzo', desc: '+10% de armadura para estructuras cercanas.', effects: { auraArmor: 0.1 } },
-            { cost: 14, name: 'Escudo', desc: 'Otorga 20 HP de escudo periódico.', effects: { shieldAmount: 20, shieldInterval: 10 }, special: 'shield', visual: 'dome' },
-            { cost: 24, name: 'Blindaje compuesto', desc: '+10% de armadura y +50% de escudo.', effects: { auraArmor: 0.1, shieldAmountMult: 1.5 } },
-            { cost: 44, name: 'Barrera', desc: '30% de reducción de daño para estructuras en el área.', effects: { auraArmor: 0.2, barrier: true }, special: 'barrier', visual: 'barrier_ring' }
+            { cost: 8, name: 'Cargas de tungsteno', desc: '+15% de daño a torretas cercanas.', effects: { buffDamage: 0.15 } },
+            { cost: 16, name: 'Amplificador cinético', desc: '+25% de daño a torretas cercanas.', effects: { buffDamage: 0.25 }, special: 'kinetic_amp', visual: 'tool_arms' },
+            { cost: 28, name: 'Sobrealimentación', desc: '+30% de daño adicional.', effects: { buffDamage: 0.30 } },
+            { cost: 48, name: 'Fisión industrial', desc: '+45% de daño adicional a torretas en rango.', effects: { buffDamage: 0.45 }, special: 'fission', visual: 'repair_beacon' }
+          ]
+        },
+        {
+          id: 'radar', name: 'RADAR Y ALCANCE', color: 0x6f8f9c,
+          upgrades: [
+            { cost: 6, name: 'Antena de rastreo', desc: '+20% de alcance a torretas cercanas.', effects: { buffRange: 0.20 } },
+            { cost: 14, name: 'Sensor multiespectral', desc: '+25% de alcance y +15% de chatarra por bajas cercanas.', effects: { buffRange: 0.25, buffScrap: 0.15 }, special: 'sensor_sweep', visual: 'dome' },
+            { cost: 24, name: 'Faro de puntería', desc: '+30% de alcance adicional.', effects: { buffRange: 0.30 } },
+            { cost: 45, name: 'Red de mando orbital', desc: '+50% de alcance masivo y +25% de chatarra global.', effects: { buffRange: 0.50, buffScrap: 0.25 }, special: 'orbital_link', visual: 'barrier_ring' }
           ]
         }
       ]

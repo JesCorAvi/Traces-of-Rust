@@ -355,9 +355,13 @@ function animate() {
       refreshHUD();
     }
 
-    const corePos = activeCore ? activeCore.position : null;
+    const hasPhysical = !!(activeCore && activeCore.hasPhysicalCore !== false && activeCore.position);
+    const corePos = hasPhysical ? activeCore.position : null;
     if (corePos) {
-      hudController.updateCoreDirectionIndicator(camera, playerGroup.position, corePos, activeCore.getHpRatio());
+      const coreRatio = typeof activeCore.getHpRatio === 'function' ? activeCore.getHpRatio() : 1;
+      hudController.updateCoreDirectionIndicator(camera, playerGroup.position, corePos, coreRatio);
+    } else {
+      hudController.hideCoreDirectionIndicator?.();
     }
     hudController.updateRadarHUD(playerGroup.position, yaw, enemyPool.active, activeBoss, corePos);
     debugOverlay.update(ModeManager.getSelectedModeId(), enemyPool, playerGroup.position, corePos, worldPhysics);
@@ -469,5 +473,16 @@ renderModeSelectorUI(careerByMode, () => flowRuntime.updateTdTutorialButton());
 updateCareerDossierForSelectedMode(careerByMode);
 flowRuntime.updateTdTutorialButton();
 renderShopUI(save, saveGame);
+const wavePrepPrompt = document.getElementById('wave-prep-prompt');
+if (wavePrepPrompt) {
+  wavePrepPrompt.addEventListener('click', () => {
+    if (state === 'PLAYING') {
+      if (ModeManager.activeMode?.skipPrep?.()) {
+        document.body.requestPointerLock();
+      }
+    }
+  });
+}
+
 syncPlayerVisualLoadout('slash');
 animate();

@@ -5,6 +5,37 @@ import { CONFIG } from '../config.js';
 import { AudioSys } from '../audio.js';
 import { renderSpriteIconHTML } from '../spritesheets.js';
 import { ModeManager } from '../modes/gameModeManager.js';
+import { DIFFICULTIES } from '../defense/mapGenerator.js';
+
+export function setupDefenseDifficultySelector() {
+  const container = document.getElementById('td-difficulty-section');
+  if (!container) return;
+
+  const descEl = document.getElementById('td-diff-desc');
+  const buttons = Array.from(container.querySelectorAll('.diff-btn'));
+
+  function refreshDifficultyUI() {
+    const currentDiff = localStorage.getItem('traces_td_difficulty') || 'normal';
+    buttons.forEach(btn => {
+      const isSelected = btn.dataset.diff === currentDiff;
+      btn.classList.toggle('is-active-diff', isSelected);
+    });
+    if (descEl && DIFFICULTIES[currentDiff]) {
+      descEl.textContent = DIFFICULTIES[currentDiff].desc;
+    }
+  }
+
+  buttons.forEach(btn => {
+    btn.onclick = () => {
+      AudioSys.playUISelect();
+      const diff = btn.dataset.diff || 'normal';
+      localStorage.setItem('traces_td_difficulty', diff);
+      refreshDifficultyUI();
+    };
+  });
+
+  refreshDifficultyUI();
+}
 
 export function renderModeSelectorUI(careerByMode, onModeChanged) {
   const container = document.getElementById('mode-selector-group');
@@ -55,6 +86,14 @@ export function renderModeSelectorUI(careerByMode, onModeChanged) {
 
     container.appendChild(btn);
   });
+
+  const diffSection = document.getElementById('td-difficulty-section');
+  if (diffSection) {
+    diffSection.classList.toggle('hidden', activeId !== 'core_defense');
+    if (activeId === 'core_defense') {
+      setupDefenseDifficultySelector();
+    }
+  }
 }
 
 export function updateCareerDossierForSelectedMode(careerByMode) {

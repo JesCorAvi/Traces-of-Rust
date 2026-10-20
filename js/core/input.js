@@ -1,4 +1,4 @@
-// Entrada de teclado y ratón, pointer lock, dash y colocación de torretas.
+// Entrada de teclado y ratÃƒÂ³n, pointer lock, dash y colocaciÃƒÂ³n de torretas.
 // Exports: keys, setupInput.
 
 import * as THREE from 'three';
@@ -27,6 +27,13 @@ window.addEventListener('keydown', e => {
     if (k === 'e' || k === 'escape') {
       e.preventDefault();
       rt.turretBuildMenu.close();
+      return;
+    }
+    if ((k === 'f' || k === 'g') && rt.ModeManager.activeMode?.canSkipPrep?.()) {
+      e.preventDefault();
+      rt.turretBuildMenu.close();
+      rt.ModeManager.activeMode.skipPrep();
+      return;
     }
     return;
   }
@@ -49,6 +56,11 @@ window.addEventListener('keydown', e => {
         document.body.requestPointerLock();
         return;
       }
+    }
+    if ((k === 'f' || k === 'g') && mode?.canSkipPrep?.()) {
+      e.preventDefault();
+      mode.skipPrep();
+      return;
     }
   }
 
@@ -136,7 +148,7 @@ window.addEventListener('mousedown', e => {
     return;
   }
 
-  // Recuperar el pointer lock si se perdió (por ejemplo al cancelar una colocación)
+  // Recuperar el pointer lock si se perdiÃƒÂ³ (por ejemplo al cancelar una colocaciÃƒÂ³n)
   if (e.button === 0 && !document.pointerLockElement) {
     document.body.requestPointerLock();
   }

@@ -3,7 +3,7 @@
 import * as THREE from 'three';
 import { CONFIG, MODES_CONFIG } from '../config.js';
 import { AudioSys } from '../audio.js';
-import { triggerBossSpecialAttack } from '../combat.js';
+import { triggerBossSpecialAttack, spawnEnemyProjectile } from '../combat.js';
 import { GameEvents } from '../core/eventBus.js';
 import { updateEnemies } from './enemyLoop.js';
 
@@ -107,6 +107,10 @@ export class SurvivalMode {
       onScare: () => ctx.triggerScare(0.35),
       onDealDamage: attacker => ctx.dealDamageToPlayer(attacker.dmg),
       onBurnTick: (burningEnemy, burnDmg) => ctx.damageEnemy(burningEnemy, burnDmg, null, true),
+      onShootProjectile: (origin, dir, speed, dmg) => {
+        spawnEnemyProjectile(ctx.scene, bossProjectiles, origin, dir, speed, dmg);
+        AudioSys.play(380, 0.12, 'sawtooth', 0.05);
+      },
       onBossPhaseChange: () => ctx.onBossPhaseChange(),
       onBossSpecial: (boss, atkType) => {
         triggerBossSpecialAttack(
@@ -143,13 +147,14 @@ export class SurvivalMode {
           CONFIG.DIFFICULTY.BASE_SPAWN_INTERVAL - progress * 0.82
         );
         const r = Math.random();
-        const type = gameTime > 35 && r > 0.76 ? 'weeper' : gameTime > 12 && r < 0.28 ? 'worm' : 'zombie';
+        // El Weeper aparece solo en etapas más avanzadas y con menor probabilidad
+        const type = gameTime > 90 && r > 0.88 ? 'weeper' : gameTime > 15 && r < 0.32 ? 'worm' : 'zombie';
         enemyPool.spawn(type, playerGroup.position, gameTime, camFwd, worldPhysics);
       } else {
         this.spawnTimer = 0.12;
         for (let b = 0; b < CONFIG.DIFFICULTY.ENDGAME_SPAWN_BURST; b++) {
           const r = Math.random();
-          const type = r > 0.65 ? 'weeper' : r < 0.3 ? 'worm' : 'zombie';
+          const type = r > 0.78 ? 'weeper' : r < 0.3 ? 'worm' : 'zombie';
           enemyPool.spawn(type, playerGroup.position, gameTime, camFwd, worldPhysics);
         }
       }

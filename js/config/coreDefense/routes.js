@@ -3,7 +3,7 @@
 
   // 4. CAMINOS DE ENEMIGOS (Aprovechan plataformas elevadas, escalones, rampas y diques de world.js)
 export const PATHS = {
-    waypointReachRadius: 1.55,
+    waypointReachRadius: 1.85,
     corridorClearanceRadius: 2.8, // Evita que cajas aleatorias bloqueen los caminos
     stuckTimeoutSec: 2.4,
     stuckMinProgressDist: 0.45,

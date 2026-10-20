@@ -20,7 +20,7 @@ function formatStats(cfg) {
     case 'barracks':
       return `ALIADOS ${b.allyCap} · CADA ${b.spawnInterval}s`;
     case 'support':
-      return `CURA ${b.healAmount} · RADIO ${b.healRadius}m`;
+      return `BUFF DAÑO +${Math.round((b.buffDamage || 0.15) * 100)}% · CAD +${Math.round((b.buffFireRate || 0.15) * 100)}% · RADIO ${b.range}m`;
     default:
       return '';
   }
@@ -46,6 +46,15 @@ export class TurretBuildMenu {
     this.content = document.getElementById('turret-build-content');
     const closeBtn = document.getElementById('btn-close-turret-build');
     if (closeBtn) closeBtn.onclick = () => this.close();
+    const skipBtn = document.getElementById('btn-skip-prep-build');
+    if (skipBtn) {
+      skipBtn.onclick = () => {
+        if (this.mode?.canSkipPrep?.()) {
+          this.close();
+          this.mode.skipPrep();
+        }
+      };
+    }
   }
 
   open(mode, turret, onClose) {
@@ -70,6 +79,11 @@ export class TurretBuildMenu {
 
   render() {
     if (!this.isOpen || !this.mode) return;
+
+    const skipBtn = document.getElementById('btn-skip-prep-build');
+    if (skipBtn) {
+      skipBtn.classList.toggle('hidden', !this.mode?.canSkipPrep?.());
+    }
 
     const scrap = this.mode.getScrap();
     const turret = this.turretId ? this.mode.getTurretById(this.turretId) : null;

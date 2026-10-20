@@ -80,14 +80,14 @@
         <div class="core-hud-header">
           <span class="core-hud-title-left">
             <span class="ui-icon sm" data-ui-icon="core"></span>
-            <span>INTEGRIDAD DEL NÚCLEO</span>
+            <span>INTEGRIDAD DE CONTENCIÓN</span>
           </span>
           <span id="core-state-tag">ESTABLE</span>
         </div>
         <div class="core-bar-frame">
           <div id="core-hp-bar"></div>
           <div class="stat-label-row-compact">
-            <span id="core-hp-text" class="led-val">1500 / 1500</span>
+            <span id="core-hp-text" class="led-val">100 / 100 VIDAS</span>
           </div>
         </div>
         <div class="core-hud-subrow">
@@ -100,6 +100,20 @@
             <span id="core-scrap-counter">CHATARRA: 0</span>
           </span>
           <span id="core-turret-counter">TORRETAS: 0/12</span>
+        </div>
+      </div>
+
+      <!-- Aviso y botón de salto para la pausa de construcción entre rondas -->
+      <div id="wave-prep-prompt" class="metal-plate hidden" role="button" tabindex="0" title="Pulsa F o haz clic para comenzar la oleada de inmediato">
+        <div class="prep-prompt-row">
+          <span class="prep-prompt-tag">
+            <span class="ui-icon sm" data-ui-icon="turret_gunner"></span>
+            <span>PAUSA DE CONSTRUCCIÓN: <b id="prep-timer-val">60s</b></span>
+          </span>
+          <span class="prep-skip-pill">
+            <span class="key-cap">F</span>
+            <span>SALTAR PAUSA</span>
+          </span>
         </div>
       </div>
     </div>
@@ -136,7 +150,7 @@
     </div>
 
     <!-- Marcador direccional en pantalla hacia el Núcleo (Modo Defensa) -->
-    <div id="core-direction-indicator" class="hidden">
+    <div id="core-direction-indicator" class="hidden" style="display: none;">
       <span class="core-dir-arrow">▲</span>
       <span class="core-dir-dist">NÚCLEO 0M</span>
     </div>
@@ -293,6 +307,23 @@
         <div class="mode-selector-section">
           <div class="mode-selector-label">SELECCIONAR MODO DE OPERACIÓN:</div>
           <div id="mode-selector-group" class="mode-selector-grid"></div>
+        </div>
+
+        <!-- Selector de Dificultad para Modo Defensa (Estilo Bloons TD 6) -->
+        <div id="td-difficulty-section" class="td-difficulty-container hidden">
+          <div class="mode-selector-label">DIFICULTAD // RUTAS DE INSTALACIÓN:</div>
+          <div class="difficulty-btn-row">
+            <button type="button" class="rust-btn sm diff-btn" data-diff="facil">
+              <span>FÁCIL</span>
+            </button>
+            <button type="button" class="rust-btn sm diff-btn is-active-diff" data-diff="normal">
+              <span>NORMAL</span>
+            </button>
+            <button type="button" class="rust-btn sm diff-btn" data-diff="dificil">
+              <span>DIFÍCIL</span>
+            </button>
+          </div>
+          <div id="td-diff-desc" class="diff-desc-text">NORMAL: 2 Entradas · 1 Salida · 100 Vidas · 2 carriles convergentes</div>
         </div>
 
         <div class="teeth-banner" style="width:100%; margin-bottom:10px;">
@@ -530,7 +561,10 @@
           <span class="ui-icon sm" data-ui-icon="turret_gunner"></span>
           <span>TERMINAL DE EMPLAZAMIENTO // TORRETAS</span>
         </span>
-        <button class="rust-btn sm" id="btn-close-turret-build"><span>[ CERRAR (E) ]</span></button>
+        <div class="turret-build-header-actions">
+          <button class="rust-btn sm hidden" id="btn-skip-prep-build"><span>[ INICIAR OLEADA (F) ]</span></button>
+          <button class="rust-btn sm" id="btn-close-turret-build"><span>[ CERRAR (E) ]</span></button>
+        </div>
       </div>
       <div id="turret-build-content"></div>
       <div class="turret-build-footer">CONSTRUYE Y MEJORA CON LA CHATARRA RECOGIDA DE LOS HOSTILES. SOLO UNA RUTA DE MEJORA PUEDE SUPERAR EL NIVEL 2.</div>

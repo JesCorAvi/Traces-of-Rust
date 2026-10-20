@@ -23,6 +23,7 @@ export const SHARED_MAT = {
   shellRed:   new THREE.MeshBasicMaterial({ color: 0xa52020 }),
   mineBody:   new THREE.MeshStandardMaterial({ color: 0x3b2316, roughness: 0.85 }),
   mineLed:    new THREE.MeshBasicMaterial({ color: 0xff2222 }),
+  enemyProj:  new THREE.MeshBasicMaterial({ color: 0xff3b16 }),
   slashMat:   null,
   orbitalMat: null
 };
@@ -82,4 +83,18 @@ export function getDirectionalHandPos(playerPos, facingYaw, forwardDist = 0.85, 
     .addScaledVector(fwd, forwardDist)
     .addScaledVector(right, rightOffset)
     .add(new THREE.Vector3(0, heightOffset, 0));
+}
+
+export function spawnEnemyProjectile(scene, projectiles, origin, dir, speed, dmg) {
+  if (!scene || !projectiles) return;
+  const pMesh = new THREE.Mesh(SHARED_GEO.bossProj, SHARED_MAT.enemyProj);
+  pMesh.position.copy(origin);
+  pMesh.scale.set(0.65, 0.65, 0.65);
+  scene.add(pMesh);
+  projectiles.push({
+    mesh: pMesh,
+    vel: dir.clone().multiplyScalar(speed),
+    life: 3.5,
+    dmg
+  });
 }

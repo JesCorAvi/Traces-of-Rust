@@ -65,9 +65,15 @@ if (typeof modeTelemetry.coreHp === 'number') {
   const coreStatus = document.getElementById('core-state-tag');
 
   if (coreBar) coreBar.style.width = `${corePct}%`;
-  if (coreVal) coreVal.textContent = `${modeTelemetry.coreHp} / ${modeTelemetry.coreMaxHp}`;
+  if (coreVal) coreVal.textContent = `${modeTelemetry.coreHp} / ${modeTelemetry.coreMaxHp} VIDAS`;
   if (coreWave) coreWave.textContent = `OLEADA ${modeTelemetry.waveNumber}/${modeTelemetry.totalWaves}`;
-  if (coreRem) coreRem.textContent = `HOSTILES: ${modeTelemetry.remainingEnemies}`;
+  if (coreRem) {
+    if (modeTelemetry.isPrep) {
+      coreRem.textContent = `PAUSA: ${Math.ceil(modeTelemetry.prepSeconds)}S`;
+    } else {
+      coreRem.textContent = `HOSTILES: ${modeTelemetry.remainingEnemies}`;
+    }
+  }
   if (coreStatus) {
     coreStatus.textContent = modeTelemetry.coreStateLabel || 'ESTABLE';
     coreStatus.classList.toggle('critical', corePct < 45);
@@ -79,6 +85,15 @@ if (typeof modeTelemetry.coreHp === 'number') {
   const turretEl = document.getElementById('core-turret-counter');
   if (turretEl) {
     turretEl.textContent = `TORRETAS: ${modeTelemetry.turretCount || 0}/${modeTelemetry.turretMax || 0}`;
+  }
+
+  const prepPrompt = document.getElementById('wave-prep-prompt');
+  const prepTimerVal = document.getElementById('prep-timer-val');
+  if (prepPrompt) {
+    prepPrompt.classList.toggle('hidden', !modeTelemetry.isPrep);
+  }
+  if (prepTimerVal && modeTelemetry.isPrep) {
+    prepTimerVal.textContent = `${Math.ceil(modeTelemetry.prepSeconds)}s`;
   }
 
   const prompt = document.getElementById('turret-interact-prompt');

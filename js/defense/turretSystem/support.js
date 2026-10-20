@@ -2,34 +2,31 @@
 // Exports: applySupportBuffs, healAround, shieldAround.
 
 export function applySupportBuffs(system, ctx) {
-const core = system.mode ? system.mode.coreMachine : null;
-
 for (const turret of system.turrets.values()) {
   turret.supportFireRateBonus = 0;
   turret.supportDamageBonus = 0;
+  turret.supportRangeBonus = 0;
+  turret.supportScrapBonus = 0;
   turret.damageReduction = 0;
 }
-if (core && !core.destroyed) core.damageReduction = 0;
 
 for (const support of system.turrets.values()) {
   if (support.cfg.id !== 'support' || support.destroyed) continue;
   const s = support.stats;
-  const radius = s.healRadius || 12;
+  const radius = s.range || 14;
   const burstBonus = support.burstActive > 0 ? (s.overclockBurst || 0) : 0;
-  const fireBuff = (s.buffFireRate || 0) + burstBonus;
-  const dmgBuff = s.buffDamage || 0;
-  const armor = s.auraArmor || 0;
+  const fireBuff = (s.buffFireRate || 0.15) + burstBonus;
+  const dmgBuff = (s.buffDamage || 0.15);
+  const rangeBuff = (s.buffRange || 0.15);
+  const scrapBuff = (s.buffScrap || 0);
 
   for (const turret of system.turrets.values()) {
     if (turret === support || turret.destroyed) continue;
     if (!system.inRadius(support.group.position, turret.group.position, radius)) continue;
-    turret.supportFireRateBonus = Math.min(1.5, turret.supportFireRateBonus + fireBuff);
-    turret.supportDamageBonus = Math.min(1.0, turret.supportDamageBonus + dmgBuff);
-    turret.damageReduction = Math.min(0.6, turret.damageReduction + armor);
-  }
-
-  if (core && !core.destroyed && system.inRadius(support.group.position, core.position, radius)) {
-    core.damageReduction = Math.min(0.6, core.damageReduction + armor);
+    turret.supportFireRateBonus = Math.min(2.5, turret.supportFireRateBonus + fireBuff);
+    turret.supportDamageBonus = Math.min(2.5, turret.supportDamageBonus + dmgBuff);
+    turret.supportRangeBonus = Math.min(2.0, turret.supportRangeBonus + rangeBuff);
+    turret.supportScrapBonus = Math.min(1.0, turret.supportScrapBonus + scrapBuff);
   }
 }
 }

@@ -62,6 +62,8 @@ export class Turret extends DefensiveStructure {
 
     this.supportFireRateBonus = 0;
     this.supportDamageBonus = 0;
+    this.supportRangeBonus = 0;
+    this.supportScrapBonus = 0;
 
     this.modelRoot = new THREE.Group();
     this.modelRoot.rotation.y = facingYaw;

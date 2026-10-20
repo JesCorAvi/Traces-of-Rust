@@ -29,6 +29,18 @@ export class WaveManager {
     this.wavesCompleted = 0;
   }
 
+  canSkipPrep() {
+    return this.state === 'PREP';
+  }
+
+  skipPrep() {
+    if (!this.canSkipPrep()) return false;
+    this.prepTimer = 0;
+    this.startNextWave();
+    this.totalQueuedAtStart = this.spawnQueue.length;
+    return true;
+  }
+
   get currentWaveNumber() {
     return Math.max(1, this.currentWaveIndex);
   }
@@ -39,11 +51,18 @@ export class WaveManager {
     return aliveInWorld + queuedCount;
   }
 
+  getActiveRoutes(waveCfg = null) {
+    if (this.pathSystem && this.pathSystem.routes.size > 0) {
+      return Array.from(this.pathSystem.routes.keys());
+    }
+    return waveCfg?.routes && waveCfg.routes.length > 0 ? waveCfg.routes : ['path_north'];
+  }
+
   buildWaveQueue(waveCfg) {
     const queue = [];
     const total = waveCfg.count;
     const comp = waveCfg.composition || { zombie: 1, worm: 0, weeper: 0 };
-    const routes = waveCfg.routes && waveCfg.routes.length > 0 ? waveCfg.routes : ['path_north'];
+    const routes = this.getActiveRoutes(waveCfg);
 
     for (let i = 0; i < total; i++) {
       const r = Math.random();
@@ -65,7 +84,7 @@ export class WaveManager {
     const schedule = this.cfg.SCHEDULE;
     const waveCfg = schedule[Math.min(schedule.length - 1, this.currentWaveIndex - 1)];
 
-    this.activeRoutes = waveCfg.routes || ['path_north'];
+    this.activeRoutes = this.getActiveRoutes(waveCfg);
     this.spawnQueue = this.buildWaveQueue(waveCfg);
     this.spawnInterval = waveCfg.interval || 1.0;
     this.spawnTimer = 0.25;
@@ -92,8 +111,9 @@ export class WaveManager {
 
   getWaveScalingMultipliers() {
     const w = Math.max(0, this.currentWaveIndex - 1);
+    const baseMult = this.cfg.tdBaseHpMult || 2.8;
     return {
-      hpMult: 1 + w * this.cfg.hpMultiplierPerWave,
+      hpMult: (1 + w * this.cfg.hpMultiplierPerWave) * baseMult,
       dmgMult: 1 + w * this.cfg.dmgMultiplierPerWave,
       spdMult: 1 + w * this.cfg.speedMultiplierPerWave
     };
@@ -237,10 +257,27 @@ export class WaveManager {
             });
           }
         } else {
-          this.state = 'PREP';
-          this.prepTimer = this.cfg.betweenWavesRestSec;
+          const evCfg = this.cfg.EVENTS || { intervalWaves: 3 };
+          if (evCfg.intervalWaves > 0 && this.currentWaveIndex % evCfg.intervalWaves === 0) {
+            this.state = 'EVENT';
+            this.prepTimer = 0;
+            const eventType = (Math.floor(this.currentWaveIndex / evCfg.intervalWaves) % 2 === 1) ? 'repair' : 'infestation';
+            GameEvents.emit('defense:special_event_triggered', {
+              waveIndex: this.currentWaveIndex,
+              eventType
+            });
+          } else {
+            this.state = 'PREP';
+            this.prepTimer = this.cfg.betweenWavesRestSec;
+          }
         }
       }
     }
+  }
+
+  completeSpecialEvent() {
+    this.state = 'PREP';
+    this.prepTimer = this.cfg.betweenWavesRestSec;
+    AudioSys.playUISelect();
   }
 }

@@ -5,7 +5,13 @@ import * as THREE from 'three';
 
 export function updateCoreDirectionIndicator(camera, playerPos, corePos, coreRatio = 1) {
 const indicator = document.getElementById('core-direction-indicator');
-if (!indicator || !corePos) return;
+if (!indicator) return;
+if (!corePos) {
+  indicator.classList.add('hidden');
+  indicator.style.display = 'none';
+  return;
+}
+indicator.style.display = '';
 
 const dist = Math.hypot(corePos.x - playerPos.x, corePos.z - playerPos.z);
 const targetWorld = new THREE.Vector3(corePos.x, corePos.y + 2.8, corePos.z);
