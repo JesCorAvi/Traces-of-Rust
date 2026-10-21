@@ -2,6 +2,66 @@
 @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap');
 @import url('./hud_modes.css');
 
+:root {
+  /* ========================================================================
+     PALETA DE DISEÑO INDUSTRIAL: TRACES OF RUST (HEAVY MACHINERY & RIVETS)
+     ======================================================================== */
+  --rust-iron-dark: #090c09;
+  --rust-iron-plate: #111711;
+  --rust-iron-light: #243324;
+  --rust-iron-edge: #415940;
+  --rust-brown-deep: #2c1609;
+  --rust-brown: #5c2c16;
+  --rust-brown-light: #8e441f;
+  --rust-brass: #b89c46;
+  --rust-brass-bright: #f0c954;
+  --rust-hazard-amber: #e5a93b;
+  --rust-hazard-black: #12100d;
+  --rust-blood-dark: #4d0e0e;
+  --rust-blood: #9e1c1c;
+  --rust-blood-bright: #e83333;
+  --rust-steel-dim: #7f8c7b;
+  --rust-text-main: #f5ecd3;
+  --rust-text-gold: #f0c954;
+  --rust-text-dim: #98a692;
+
+  /* Biseles mecánicos y chamfers tácticos a 45° */
+  --chamfer-4px: polygon(4px 0, calc(100% - 4px) 0, 100% 4px, 100% calc(100% - 4px), calc(100% - 4px) 100%, 4px 100%, 0 calc(100% - 4px), 0 4px);
+  --chamfer-6px: polygon(6px 0, calc(100% - 6px) 0, 100% 6px, 100% calc(100% - 6px), calc(100% - 6px) 100%, 6px 100%, 0 calc(100% - 6px), 0 6px);
+  --chamfer-8px: polygon(8px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px), 0 8px);
+  --chamfer-12px: polygon(12px 0, calc(100% - 12px) 0, 100% 12px, 100% calc(100% - 12px), calc(100% - 12px) 100%, 12px 100%, 0 calc(100% - 12px), 0 12px);
+
+  /* Sombras físicas pesadas multicapa */
+  --shadow-heavy-plate: 0 14px 36px rgba(0, 0, 0, 0.96), 0 4px 12px rgba(0, 0, 0, 0.85), 4px 4px 0 #050605;
+  --shadow-lift: 0 8px 24px rgba(0, 0, 0, 0.9), 0 2px 6px rgba(0, 0, 0, 0.8), 2px 2px 0 #050605;
+  --shadow-inset-well: inset 0 3px 8px rgba(0, 0, 0, 0.95), inset 0 0 15px rgba(0, 0, 0, 0.8);
+  --bevel-light-top: inset 1px 1px 0 rgba(255, 240, 200, 0.22);
+  --bevel-shadow-bot: inset -1px -1px 0 rgba(0, 0, 0, 0.85);
+}
+
+/* Animaciones globales de Game Juice */
+@keyframes metalSheen {
+  0% { transform: translateX(-150%) skewX(-25deg); opacity: 0; }
+  25% { opacity: 0.38; }
+  100% { transform: translateX(250%) skewX(-25deg); opacity: 0; }
+}
+
+@keyframes industrialPistonGlow {
+  0%, 100% { box-shadow: 0 0 12px rgba(240, 201, 84, 0.35), inset 0 1px 0 rgba(255, 246, 224, 0.4); }
+  50% { box-shadow: 0 0 24px rgba(240, 201, 84, 0.7), inset 0 1px 0 rgba(255, 246, 224, 0.7); }
+}
+
+@keyframes criticalAlarmPulse {
+  0%, 100% {
+    box-shadow: 0 0 18px rgba(232, 51, 51, 0.85), inset 0 0 12px rgba(232, 51, 51, 0.45);
+    border-color: #e83333;
+  }
+  50% {
+    box-shadow: 0 0 6px rgba(158, 28, 28, 0.4), inset 0 0 4px rgba(158, 28, 28, 0.2);
+    border-color: #6e1414;
+  }
+}
+
 * {
   box-sizing: border-box;
   user-select: none;
@@ -224,6 +284,7 @@ body.endgame-mode #vignette-overlay {
   border-width: var(--slice-panel_metal-bw, 20px);
   border-image: var(--slice-panel_metal) 12 fill / var(--slice-panel_metal-bw, 20px) stretch;
   padding: 6px 8px;
+  box-shadow: var(--shadow-heavy-plate);
 }
 
 .boss-plate {
@@ -232,6 +293,7 @@ body.endgame-mode #vignette-overlay {
   border-width: var(--slice-panel_boss-bw, 20px);
   border-image: var(--slice-panel_boss) 12 fill / var(--slice-panel_boss-bw, 20px) stretch;
   padding: 6px 10px;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.95), 0 0 20px rgba(138, 20, 20, 0.45), 4px 4px 0 #050605;
 }
 
 .paper-note {
@@ -246,6 +308,7 @@ body.endgame-mode #vignette-overlay {
   text-shadow: 1px 1px 0 #050605;
   text-align: left;
   margin: 12px 0 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.9), 3px 3px 0 #050605;
 }
 .paper-note b { color: #f5ecd3; }
 
@@ -266,6 +329,7 @@ body.endgame-mode #vignette-overlay {
   text-transform: uppercase;
   margin-bottom: 10px;
   text-shadow: none;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.35);
 }
 
 .teeth-banner {
@@ -283,6 +347,7 @@ body.endgame-mode #vignette-overlay {
   line-height: 1.3;
   padding: 4px 14px;
   margin: 6px 0;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.85), inset 0 1px 0 rgba(255, 246, 224, 0.3);
 }
 
 /* ==========================================================================
@@ -315,9 +380,27 @@ body.endgame-mode #vignette-overlay {
   cursor: var(--cursor-pointer), pointer;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  overflow: hidden;
+  box-shadow: 2px 3px 0 rgba(0, 0, 0, 0.85), inset 1px 1px 0 rgba(255, 240, 200, 0.22), inset -1px -1px 0 rgba(0, 0, 0, 0.7);
+  transition: transform 0.08s cubic-bezier(0.18, 0.89, 0.32, 1.28), box-shadow 0.12s ease, filter 0.12s ease;
+}
+
+.rust-btn::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 246, 224, 0.32), transparent);
+  transform: translateX(-150%) skewX(-25deg);
+  pointer-events: none;
+  z-index: 3;
 }
 
 .rust-btn > span {
+  position: relative;
+  z-index: 2;
   display: inline;
   white-space: nowrap;
 }
@@ -333,14 +416,21 @@ body.endgame-mode #vignette-overlay {
   border-image-source: var(--slice-btn_hover);
   color: #050605;
   text-shadow: none;
-  transform: translateY(-2px);
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 6px 18px rgba(240, 201, 84, 0.45), 2px 4px 0 #050605;
+}
+
+.rust-btn:hover:not(:disabled)::after {
+  animation: metalSheen 0.55s ease forwards;
 }
 
 .rust-btn:active:not(:disabled) {
   border-image-source: var(--slice-btn_active);
   color: #e6d7a5;
   text-shadow: 2px 2px 0 #050605;
-  transform: translateY(2px);
+  transform: translateY(2px) scale(0.96, 0.93);
+  box-shadow: inset 0 3px 6px rgba(0, 0, 0, 0.95), 0 1px 2px rgba(0, 0, 0, 0.8);
+  transition: transform 0.04s ease-out;
 }
 
 .rust-btn:disabled {
@@ -349,26 +439,33 @@ body.endgame-mode #vignette-overlay {
   text-shadow: 1px 1px 0 #050605;
   cursor: var(--cursor-default), not-allowed;
   opacity: 0.75;
+  box-shadow: none;
 }
 
 .rust-btn.primary {
   border-image-source: var(--slice-btn_pri_normal);
   color: #fff6e0;
   text-shadow: 2px 2px 0 #050605;
+  box-shadow: 0 0 14px rgba(240, 201, 84, 0.35), 2px 3px 0 #050605;
 }
 .rust-btn.primary:hover:not(:disabled) {
   border-image-source: var(--slice-btn_pri_hover);
   color: #050605;
   text-shadow: none;
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 8px 24px rgba(240, 201, 84, 0.65), 2px 4px 0 #050605;
 }
 .rust-btn.primary:active:not(:disabled) {
   border-image-source: var(--slice-btn_pri_active);
   color: #fff6e0;
   text-shadow: 2px 2px 0 #050605;
+  transform: translateY(2px) scale(0.95, 0.92);
+  box-shadow: inset 0 4px 8px rgba(0, 0, 0, 0.95), 0 1px 2px rgba(0, 0, 0, 0.8);
 }
 .rust-btn.primary:disabled {
   border-image-source: var(--slice-btn_pri_disabled);
   color: #6e5252;
+  box-shadow: none;
 }
 
 .rust-btn:focus-visible,
@@ -471,18 +568,41 @@ select:focus-visible {
   padding: 0;
   border-width: 8px;
   border-image: var(--slice-panel_metal) 12 fill / 8px stretch;
-  box-shadow: 3px 3px 0 rgba(5, 6, 5, 0.92);
+  box-shadow: var(--shadow-heavy-plate);
+  transition: box-shadow 0.25s ease, border-color 0.25s ease;
 }
 .biometrics-plate-compact .screw { display: none; }
 
+.biometrics-plate-compact.is-critical {
+  animation: criticalAlarmPulse 0.45s ease-in-out infinite alternate;
+}
+
 .hp-frame-compact {
+  position: relative;
   height: 24px;
   margin: 0;
   border-width: 3px;
-  background-color: #140505;
+  background-color: #0c0404;
+  overflow: hidden;
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.95);
+}
+
+.hp-ghost-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, #9e2a12, #e57e24);
+  box-shadow: 0 0 10px rgba(229, 126, 36, 0.7);
+  z-index: 1;
+  pointer-events: none;
 }
 
 #hp-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
   display: block !important;
   width: 100%;
   height: 100% !important;
@@ -491,7 +611,8 @@ select:focus-visible {
   background-image: var(--bar-fill-hp) !important;
   background-repeat: repeat-x !important;
   background-size: auto 100% !important;
-  transition: width 0.12s steps(10);
+  z-index: 2;
+  transition: width 0.08s ease-out;
 }
 
 .stat-label-row-compact {
@@ -550,12 +671,19 @@ select:focus-visible {
   align-items: center;
   gap: 2px;
   pointer-events: auto;
-  box-shadow: 3px 3px 0 rgba(5, 6, 5, 0.9);
+  box-shadow: 3px 3px 0 rgba(5, 6, 5, 0.9), inset 0 0 8px rgba(0, 0, 0, 0.85);
+  transition: transform 0.1s cubic-bezier(0.18, 0.89, 0.32, 1.28), box-shadow 0.12s ease;
 }
 
 .weapon-slot:hover {
   border-image-source: var(--slice-card_hover);
-  transform: translateY(-2px);
+  transform: translateY(-3px) scale(1.06);
+  box-shadow: 0 6px 16px rgba(240, 201, 84, 0.45), 2px 4px 0 #050605;
+}
+
+.weapon-slot:active {
+  transform: translateY(1px) scale(0.96);
+  transition: transform 0.04s ease-out;
 }
 
 .weapon-slot-name {

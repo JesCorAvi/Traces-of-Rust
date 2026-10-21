@@ -98,9 +98,14 @@
 /* Panel HUD de Integridad del Núcleo y Oleadas (Solo en Modo Defensa) */
 #core-defense-hud {
   width: min(440px, 46vw);
-  padding: 5px 10px 7px;
-  background-color: rgba(8, 11, 8, 0.92);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.92);
+  padding: 6px 12px 8px;
+  background-color: rgba(8, 11, 8, 0.94);
+  box-shadow: var(--shadow-heavy-plate);
+  transition: box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+#core-defense-hud.is-critical {
+  animation: criticalAlarmPulse 0.45s ease-in-out infinite alternate;
 }
 
 .core-hud-header {
@@ -143,9 +148,13 @@
   border-width: 4px;
   border-image: var(--slice-bar_frame) 5 fill / 4px stretch;
   overflow: hidden;
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.95);
 }
 
 #core-hp-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
   display: block;
   width: 100%;
   height: 100%;
@@ -153,7 +162,8 @@
   background-image: var(--bar-fill-core);
   background-repeat: repeat-x;
   background-size: auto 100%;
-  transition: width 0.14s steps(12);
+  z-index: 2;
+  transition: width 0.08s ease-out;
 }
 
 .core-hud-subrow {
@@ -410,10 +420,16 @@
   position: relative; width: 100%; height: 22px;
   background-color: #050605; border-style: solid; border-width: 4px;
   border-image: var(--slice-bar_frame) 5 fill / 4px stretch; overflow: hidden;
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.95);
 }
 #boss-hp-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
   display: block !important; width: 100%; height: 100% !important;
   background-color: #b82525 !important; background-image: var(--bar-fill-boss) !important;
+  z-index: 2;
+  transition: width 0.08s ease-out;
 }
 
 #boss-alert, #endgame-banner, #core-attack-banner {

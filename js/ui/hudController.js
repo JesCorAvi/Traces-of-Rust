@@ -119,6 +119,17 @@ export class HUDController {
 
     const hpBarEl = document.getElementById('boss-hp-bar');
     if (hpBarEl) hpBarEl.style.width = `${pct}%`;
+    const hpGhostEl = document.getElementById('boss-hp-bar-ghost');
+    if (hpGhostEl) {
+      const currentBossGhost = parseFloat(hpGhostEl.style.width) || 100;
+      if (pct >= currentBossGhost) {
+        hpGhostEl.style.transition = 'none';
+        hpGhostEl.style.width = `${pct}%`;
+      } else {
+        hpGhostEl.style.transition = 'width 0.5s cubic-bezier(0.25, 1, 0.5, 1)';
+        hpGhostEl.style.width = `${pct}%`;
+      }
+    }
 
     if (triggerHitShake) {
       const bossFrame = document.querySelector('.boss-bar-frame');
@@ -133,6 +144,8 @@ export class HUDController {
     this.bossTargetPct = 0;
     const hpBarEl = document.getElementById('boss-hp-bar');
     if (hpBarEl) hpBarEl.style.width = '0%';
+    const hpGhostEl = document.getElementById('boss-hp-bar-ghost');
+    if (hpGhostEl) hpGhostEl.style.width = '0%';
 
     if (this.bossHideHudTimeout) clearTimeout(this.bossHideHudTimeout);
     this.bossHideHudTimeout = setTimeout(() => {

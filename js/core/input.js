@@ -1,4 +1,4 @@
-// Entrada de teclado y ratÃƒÂ³n, pointer lock, dash y colocaciÃƒÂ³n de torretas.
+// Entrada de teclado y ratón, pointer lock, dash y colocación de torretas.
 // Exports: keys, setupInput.
 
 import * as THREE from 'three';
@@ -102,7 +102,12 @@ window.addEventListener('keydown', e => {
   if (k === 'shift' && rt.dashCd <= 0 && rt.stats.stamina >= 35 && rt.dashTimer <= 0) {
     rt.stats.stamina -= 35;
     document.getElementById('stam-bar').style.width = Math.max(0, rt.stats.stamina) + '%';
-    rt.dashCd = 0.85; rt.dashTimer = 0.22; rt.dashGhostTimer = 0; rt.invuln = 0.35;
+    rt.dashCd = 0.85;
+    rt.dashTimer = 0.24;
+    rt.dashGhostTimer = 0.045; // Provoca la primera estela y chispas instantáneamente al despegar
+    rt.invuln = 0.35;
+    if (rt.playerBillboard) rt.playerBillboard.animTimer = 0; // Sincroniza la animación para iniciar siempre desde el fotograma 0 de empuje
+    if (typeof rt.camShake === 'number') rt.camShake = Math.max(rt.camShake, 0.12);
     const camFwd = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), rt.yaw);
     const camRight = new THREE.Vector3(1, 0, 0).applyAxisAngle(new THREE.Vector3(0, 1, 0), rt.yaw);
     rt.dashDirVec.set(0, 0, 0);
@@ -116,9 +121,9 @@ window.addEventListener('keydown', e => {
     } else {
       rt.dashDirVec.set(-Math.sin(rt.playerFacingYaw), 0, -Math.cos(rt.playerFacingYaw)).normalize();
     }
-    rt.camera.fov = 77;
+    rt.camera.fov = 78;
     rt.camera.updateProjectionMatrix();
-    AudioSys.play(340, 0.11, 'triangle', 0.07);
+    AudioSys.playDash();
   }
   if (e.code === 'Space' && rt.isGrounded) {
     rt.playerYVel = 9.2;
@@ -150,7 +155,7 @@ window.addEventListener('mousedown', e => {
     return;
   }
 
-  // Recuperar el pointer lock si se perdiÃƒÂ³ (por ejemplo al cancelar una colocaciÃƒÂ³n)
+  // Recuperar el pointer lock si se perdió (por ejemplo al cancelar una colocación)
   if (e.button === 0 && !document.pointerLockElement) {
     document.body.requestPointerLock();
   }

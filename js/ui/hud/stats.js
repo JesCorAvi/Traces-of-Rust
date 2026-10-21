@@ -20,7 +20,22 @@ const hpPct = Math.min(100, Math.max(0, (stats.hp / Math.max(1, stats.maxHp)) * 
 const expPct = Math.min(100, Math.max(0, (stats.exp / Math.max(1, stats.maxExp)) * 100));
 const stamPct = Math.min(100, Math.max(0, stats.stamina));
 
-document.getElementById('hp-bar').style.width = `${hpPct}%`;
+const hpBar = document.getElementById('hp-bar');
+if (hpBar) hpBar.style.width = `${hpPct}%`;
+const hpGhost = document.getElementById('hp-bar-ghost');
+if (hpGhost) {
+  const currentGhost = parseFloat(hpGhost.style.width) || 100;
+  if (hpPct >= currentGhost) {
+    hpGhost.style.transition = 'none';
+    hpGhost.style.width = `${hpPct}%`;
+  } else {
+    hpGhost.style.transition = 'width 0.45s cubic-bezier(0.25, 1, 0.5, 1)';
+    hpGhost.style.width = `${hpPct}%`;
+  }
+}
+const bioPlate = document.querySelector('.biometrics-plate-compact');
+if (bioPlate) bioPlate.classList.toggle('is-critical', hpPct <= 25);
+
 document.getElementById('hp-text').textContent = `${Math.ceil(Math.max(0, stats.hp))}/${stats.maxHp}`;
 document.getElementById('exp-bar').style.width = `${expPct}%`;
 document.getElementById('stam-bar').style.width = `${stamPct}%`;
@@ -65,6 +80,19 @@ if (typeof modeTelemetry.coreHp === 'number') {
   const coreStatus = document.getElementById('core-state-tag');
 
   if (coreBar) coreBar.style.width = `${corePct}%`;
+  const coreGhost = document.getElementById('core-hp-bar-ghost');
+  if (coreGhost) {
+    const currentCoreGhost = parseFloat(coreGhost.style.width) || 100;
+    if (corePct >= currentCoreGhost) {
+      coreGhost.style.transition = 'none';
+      coreGhost.style.width = `${corePct}%`;
+    } else {
+      coreGhost.style.transition = 'width 0.5s cubic-bezier(0.25, 1, 0.5, 1)';
+      coreGhost.style.width = `${corePct}%`;
+    }
+  }
+  const coreHudBox = document.getElementById('core-defense-hud');
+  if (coreHudBox) coreHudBox.classList.toggle('is-critical', corePct <= 25);
   if (coreVal) coreVal.textContent = `${modeTelemetry.coreHp} / ${modeTelemetry.coreMaxHp} VIDAS`;
   if (coreWave) {
     if (modeTelemetry.eventBadge) {

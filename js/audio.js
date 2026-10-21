@@ -200,6 +200,43 @@ export const AudioSys = {
     setTimeout(() => this.play(880, 0.18, 'sawtooth', 0.12), 220);
   },
 
+  // Impulso neumático y desplazamiento de aire al esquivar (Dash)
+  playDash() {
+    if (!this.ctx || this.muted) return;
+    try {
+      const now = this.ctx.currentTime;
+      const effectiveVol = 0.13 * this.masterVol * this.sfxVol;
+      if (effectiveVol <= 0.0005) return;
+
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      const filter = this.ctx.createBiquadFilter();
+
+      filter.type = 'bandpass';
+      filter.frequency.setValueAtTime(460, now);
+      filter.frequency.exponentialRampToValueAtTime(120, now + 0.18);
+      filter.Q.value = 1.8;
+
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(320, now);
+      osc.frequency.exponentialRampToValueAtTime(80, now + 0.20);
+
+      gain.gain.setValueAtTime(effectiveVol, now);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.20);
+
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(this.ctx.destination);
+
+      osc.start(now);
+      osc.stop(now + 0.20);
+
+      this.play(130, 0.14, 'triangle', 0.08);
+    } catch (e) {
+      this.play(260, 0.16, 'sawtooth', 0.08);
+    }
+  },
+
   // Sirena industrial para eventos y alertas críticas
   playIndustrialSiren() {
     if (!this.ctx || this.muted) return;

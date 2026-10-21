@@ -66,17 +66,24 @@
   display: flex;
   align-items: center;
   gap: 9px;
-  background: rgba(5, 6, 5, 0.92);
-  border: 2px solid #b89c46;
-  padding: 6px 14px;
+  background: rgba(8, 12, 8, 0.94);
+  border: 2px solid #f0c954;
+  clip-path: var(--chamfer-6px);
+  padding: 8px 16px;
   font-family: 'Press Start 2P', monospace;
   font-size: 10px;
   color: #f0c954;
-  text-shadow: 1px 1px 0 #050605;
+  text-shadow: 2px 2px 0 #050605;
   pointer-events: none;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.9);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.95), 0 0 16px rgba(240, 201, 84, 0.35);
+  animation: turretPromptBob 2.2s ease-in-out infinite;
 }
 #turret-interact-prompt.hidden { display: none !important; }
+
+@keyframes turretPromptBob {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50% { transform: translateX(-50%) translateY(-4px); }
+}
 .key-cap {
   display: inline-flex;
   align-items: center;
@@ -147,10 +154,19 @@
   color: #f5ecd3;
   padding: 6px 8px;
   font-family: 'VT323', monospace;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.8), 2px 2px 0 #050605;
+  transition: transform 0.1s cubic-bezier(0.18, 0.89, 0.32, 1.28), box-shadow 0.15s ease;
 }
 .turret-card:hover:not(:disabled) {
   border-image-source: var(--slice-card_hover);
-  transform: translateY(-2px);
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 8px 24px rgba(240, 201, 84, 0.45), 2px 4px 0 #050605;
+}
+.turret-card:active:not(:disabled) {
+  transform: translateY(1px) scale(0.98);
+  transition: transform 0.04s ease-out;
 }
 .turret-card:disabled, .turret-card.is-locked {
   opacity: 0.55;

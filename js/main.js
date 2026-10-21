@@ -175,6 +175,116 @@ function spawnLandingDust(pos) {
   }
 }
 
+function spawnDashGhost(pos, billboard, camAngle, curTiltZ, curSquashX, curSquashY) {
+  if (!billboard || !billboard.geo || !billboard.tex) return;
+  // Geometría clonada con las UVs exactas del fotograma actual del dash
+  const ghostGeo = billboard.geo.clone();
+  const ghostMat = new THREE.MeshBasicMaterial({
+    map: billboard.tex,
+    transparent: true,
+    opacity: 0.7,
+    color: 0xc8a44d,
+    blending: THREE.AdditiveBlending,
+    side: THREE.DoubleSide,
+    depthWrite: false
+  });
+  const ghostMesh = new THREE.Mesh(ghostGeo, ghostMat);
+  const halfH = (billboard.baseSize || 2.0) * 0.5 * curSquashY;
+  ghostMesh.position.set(pos.x, pos.y + halfH, pos.z);
+  ghostMesh.rotation.y = camAngle;
+  ghostMesh.rotation.z = curTiltZ;
+  const baseRatio = (billboard.baseSize || 2.0) / 2.0;
+  ghostMesh.scale.set(baseRatio * curSquashX, baseRatio * curSquashY, 1);
+  scene.add(ghostMesh);
+
+  vfx.push({
+    mesh: ghostMesh,
+    disposeGeo: true,
+    disposeMat: true,
+    life: 0.16,
+    maxLife: 0.16,
+    fade: true,
+    billboard: true
+  });
+}
+
+function spawnDashSparksAndDust(pos, dir) {
+  const oppDir = dir.clone().negate();
+
+  // Polvo de fricción en suelo
+  for (let i = 0; i < 2; i++) {
+    const dustGeo = new THREE.PlaneGeometry(0.3, 0.3);
+    const dustMat = new THREE.MeshBasicMaterial({
+      color: 0x988562,
+      transparent: true,
+      opacity: 0.55,
+      side: THREE.DoubleSide,
+      depthWrite: false
+    });
+    const dust = new THREE.Mesh(dustGeo, dustMat);
+    dust.position.set(
+      pos.x + (Math.random() - 0.5) * 0.28,
+      pos.y + 0.05,
+      pos.z + (Math.random() - 0.5) * 0.28
+    );
+    dust.rotation.x = -Math.PI / 2;
+    scene.add(dust);
+
+    vfx.push({
+      mesh: dust,
+      disposeGeo: true,
+      disposeMat: true,
+      life: 0.18,
+      maxLife: 0.18,
+      vel: new THREE.Vector3(
+        oppDir.x * 2.4 + (Math.random() - 0.5) * 1.2,
+        0.35 + Math.random() * 0.35,
+        oppDir.z * 2.4 + (Math.random() - 0.5) * 1.2
+      ),
+      gravity: 3,
+      floorY: pos.y + 0.02,
+      fade: true,
+      scaleSpeed: 1.4
+    });
+  }
+
+  // Chispas incandescentes de alta velocidad
+  for (let i = 0; i < 3; i++) {
+    const sparkGeo = new THREE.PlaneGeometry(0.09, 0.09);
+    const sparkMat = new THREE.MeshBasicMaterial({
+      color: 0xffbb33,
+      transparent: true,
+      opacity: 0.85,
+      side: THREE.DoubleSide,
+      depthWrite: false
+    });
+    const spark = new THREE.Mesh(sparkGeo, sparkMat);
+    spark.position.set(
+      pos.x + (Math.random() - 0.5) * 0.2,
+      pos.y + 0.08 + Math.random() * 0.1,
+      pos.z + (Math.random() - 0.5) * 0.2
+    );
+    scene.add(spark);
+
+    vfx.push({
+      mesh: spark,
+      disposeGeo: true,
+      disposeMat: true,
+      life: 0.15,
+      maxLife: 0.15,
+      vel: new THREE.Vector3(
+        oppDir.x * (3.2 + Math.random() * 2.0) + (Math.random() - 0.5) * 1.6,
+        1.2 + Math.random() * 1.6,
+        oppDir.z * (3.2 + Math.random() * 2.0) + (Math.random() - 0.5) * 1.6
+      ),
+      gravity: 9,
+      floorY: pos.y + 0.02,
+      fade: true,
+      billboard: true
+    });
+  }
+}
+
 const weaponTimers = { slash: 0, shotgun: 0, flamethrower: 0, aura: 0, mines: 0, harpoon: 0, bolt: 0 };
 const drops = [], orbitals = [], minesList = [], vfx = [], bossHazards = [], bossProjectiles = [];
 
@@ -353,7 +463,10 @@ function animate() {
 
     if (dashTimer > 0) {
       dashTimer -= dt;
-      playerGroup.position.addScaledVector(dashDirVec, 20.5 * dt);
+      const progress = Math.max(0, Math.min(1, 1 - (dashTimer / 0.24)));
+      // Curva cinética de potencia: estallido inicial a ~32 m/s desacelerando fluidamente a carrera
+      const currentDashSpd = 26.0 * Math.pow(1 - progress * 0.72, 2.4) + 6.0;
+      playerGroup.position.addScaledVector(dashDirVec, currentDashSpd * dt);
       worldPhysics.resolveCollision(playerGroup.position, 0.55, playerGroup.position.y);
     } else if (isMoving) {
       move.normalize();
@@ -410,10 +523,13 @@ function animate() {
     playerBillboard.animTimer += dt * fps;
     playerBillboard.setDirectionalFrame(playerBillboard.dirRow, pState, Math.floor(playerBillboard.animTimer) % 4);
 
+    const camAngle = Math.atan2(camera.position.x - playerGroup.position.x, camera.position.z - playerGroup.position.z);
+    propBillboards.forEach(p => { p.rotation.y = camAngle; });
+
     // =========================================================================
-    // SQUASH & STRETCH DISCRETO Y SUAVE (MANTIENE LA NITIDEZ DEL PIXEL-ART)
+    // SQUASH & STRETCH DINÁMICO E INCLINACIÓN AERODINÁMICA (TILT EN DASH)
     // =========================================================================
-    let curSquashX = 1.0, curSquashY = 1.0;
+    let curSquashX = 1.0, curSquashY = 1.0, curTiltZ = 0.0;
 
     if (landingSquashTimer > 0) {
       landingSquashTimer -= dt;
@@ -431,9 +547,23 @@ function animate() {
       curSquashY = 1.03;
       curSquashX = 0.98;
     } else if (dashTimer > 0) {
-      // Ligera elongación en dash (máximo 3%)
-      curSquashX = 0.97;
-      curSquashY = 1.03;
+      const progress = Math.max(0, Math.min(1, 1 - (dashTimer / 0.24)));
+      if (progress < 0.40) {
+        // Fase 1: Impulso explosivo y elongación aerodinámica
+        curSquashX = 0.86;
+        curSquashY = 1.18;
+      } else if (progress < 0.82) {
+        // Fase 2: Deslizamiento y compresión de frenada
+        curSquashX = 1.12;
+        curSquashY = 0.90;
+      } else {
+        // Fase 3: Transición suave de vuelta a la vertical
+        curSquashX = 1.0;
+        curSquashY = 1.0;
+      }
+      // Inclinación lateral proporcional a la trayectoria respecto a la cámara
+      const lateralDot = dashDirVec.x * Math.cos(camAngle) - dashDirVec.z * Math.sin(camAngle);
+      curTiltZ = -lateralDot * 0.28;
     } else if (invuln > 0.45) {
       // Reacción al impacto
       curSquashX = 1.04;
@@ -453,10 +583,16 @@ function animate() {
       curSquashY = 1.0;
     }
 
-    playerBillboard.applyJuiceTransforms(curSquashX, curSquashY, 0, 0);
+    playerBillboard.applyJuiceTransforms(curSquashX, curSquashY, curTiltZ, 0);
 
-    const camAngle = Math.atan2(camera.position.x - playerGroup.position.x, camera.position.z - playerGroup.position.z);
-    propBillboards.forEach(p => { p.rotation.y = camAngle; });
+    if (dashTimer > 0) {
+      dashGhostTimer += dt;
+      if (dashGhostTimer >= 0.045) {
+        dashGhostTimer = 0;
+        spawnDashGhost(playerGroup.position, playerBillboard, camAngle, curTiltZ, curSquashX, curSquashY);
+        spawnDashSparksAndDust(playerGroup.position, dashDirVec);
+      }
+    }
 
     const toCam = new THREE.Vector3().subVectors(camera.position, playerGroup.position).setY(0).normalize();
     playerLanternLight.position.copy(playerGroup.position).addScaledVector(toCam, 1.1).add(new THREE.Vector3(0, 1.35, 0));
@@ -690,7 +826,9 @@ const inputRuntime = {
   get playerFacingYaw() { return playerFacingYaw; }, set playerFacingYaw(v) { playerFacingYaw = v; },
   get isGrounded() { return isGrounded; }, set isGrounded(v) { isGrounded = v; },
   get playerYVel() { return playerYVel; }, set playerYVel(v) { playerYVel = v; },
+  get camShake() { return camShake; }, set camShake(v) { camShake = v; },
   playerGroup,
+  playerBillboard,
   camera,
   gameSettings,
   ModeManager,

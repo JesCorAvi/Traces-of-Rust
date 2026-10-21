@@ -162,7 +162,7 @@ export const CONFIG = {
       ATTACK: 13,
       HURT: 9,
       ATTACK_WALK: 12,
-      DASH: 15
+      DASH: 16
     },
     ENTITY_DIRS: {
       player: 8,

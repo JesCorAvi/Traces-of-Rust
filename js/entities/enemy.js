@@ -25,6 +25,12 @@ export class Enemy {
     this.netTargetZ = null;
     this.netTargetIsLocal = true;
     this.visualState = 1;
+    this.yVel = 0;
+    this.isGrounded = true;
+    this.isJumping = false;
+    this.jumpTargetY = 0;
+    this.jumpCooldown = 0;
+    this.landingSquashTimer = 0;
     this.group.visible = false;
     scene.add(this.group);
   }
@@ -85,6 +91,12 @@ export class Enemy {
     this.slowFactor = 0.6;
     this.stunTimer = 0;
     this.steerDir = Math.random() < 0.5 ? 1 : -1;
+    this.yVel = 0;
+    this.isGrounded = true;
+    this.isJumping = false;
+    this.jumpTargetY = 0;
+    this.jumpCooldown = 0.2 + Math.random() * 0.3;
+    this.landingSquashTimer = 0;
     this.billboard.mesh.material.emissive.setHex(0x000000);
 
     if (defenseOpts && defenseOpts.isDefenseMode) {
@@ -171,6 +183,47 @@ export class Enemy {
     const horizDistPlayer = Math.hypot(toPlayer.x, toPlayer.z);
     const heightDiffPlayer = Math.abs(playerPos.y - this.group.position.y);
 
+    // ========================================================================
+    // FÍSICA VERTICAL, GRAVEDAD Y ATERRIZAJE (SALTO Y ESCALADA DE SUPERFICIES)
+    // ========================================================================
+    const GRAVITY = 23.0;
+    this.jumpCooldown = Math.max(0, (this.jumpCooldown || 0) - dt);
+
+    if (this.landingSquashTimer > 0) {
+      this.landingSquashTimer -= dt;
+      const t = Math.max(0, this.landingSquashTimer / 0.12);
+      this.billboard.applyJuiceTransforms(1 + t * 0.22, 1 - t * 0.18, 0, 0);
+    }
+
+    const currentGroundY = worldPhysics
+      ? worldPhysics.getGroundHeight(this.group.position.x, this.group.position.z, this.group.position.y)
+      : 0;
+
+    if (!this.isGrounded || this.yVel !== 0 || this.group.position.y > currentGroundY + 0.05) {
+      this.isGrounded = false;
+      this.yVel -= GRAVITY * dt;
+      this.group.position.y += this.yVel * dt;
+
+      if (this.group.position.y <= currentGroundY) {
+        this.group.position.y = currentGroundY;
+        this.yVel = 0;
+        this.isGrounded = true;
+        this.isJumping = false;
+        this.jumpTargetY = 0;
+        this.landingSquashTimer = 0.12;
+
+        if (this.isBoss && callbacks && typeof callbacks.camShake === 'number') {
+          callbacks.camShake = Math.max(callbacks.camShake, 0.22);
+        }
+      } else if (this.yVel > 1.8) {
+        this.billboard.applyJuiceTransforms(0.9, 1.12, 0, 0);
+      }
+    } else {
+      this.group.position.y = currentGroundY;
+      this.isGrounded = true;
+      this.yVel = 0;
+    }
+
     // En modo Supervivencia se mantiene el reposicionamiento si se quedan demasiado atrás
     if (!isDef && !this.isBoss && horizDistPlayer > 48) {
       const ang = Math.random() * Math.PI * 2;
@@ -185,10 +238,24 @@ export class Enemy {
         this.billboard.facingYaw = Math.atan2(-this.chargeVec.x, -this.chargeVec.z);
         this.group.position.addScaledVector(this.chargeVec, 18.5 * dt);
         if (worldPhysics) {
-          worldPhysics.resolveCollision(this.group.position, 0.85, this.group.position.y);
-          this.group.position.y = worldPhysics.getGroundHeight(this.group.position.x, this.group.position.z, this.group.position.y);
+          const aheadH = worldPhysics.getGroundHeight(
+            this.group.position.x + this.chargeVec.x * 0.85,
+            this.group.position.z + this.chargeVec.z * 0.85,
+            0, true
+          );
+          if (aheadH > this.group.position.y + 0.3 && this.isGrounded && this.jumpCooldown <= 0) {
+            this.yVel = Math.min(13.5, Math.sqrt(2 * GRAVITY * (aheadH - this.group.position.y + 0.6)));
+            this.isGrounded = false;
+            this.isJumping = true;
+            this.jumpTargetY = aheadH;
+            this.jumpCooldown = 0.5;
+          }
+          const effY = (this.isJumping && this.jumpTargetY > this.group.position.y)
+            ? Math.max(this.group.position.y, this.jumpTargetY - 0.7)
+            : this.group.position.y;
+          worldPhysics.resolveCollision(this.group.position, 0.85, effY);
         }
-        if (horizDistPlayer < 2.1 && heightDiffPlayer < 1.8 && callbacks.onDealDamage) callbacks.onDealDamage(this);
+        if (horizDistPlayer < 2.2 && heightDiffPlayer < 2.2 && callbacks.onDealDamage) callbacks.onDealDamage(this);
         return false;
       }
 
@@ -270,13 +337,27 @@ export class Enemy {
 
     // Ataque al objetivo actual (Jugador en cualquier modo, o Núcleo/Estructura en modo Defensa)
     if (attackTargetType === 'player') {
-      if (horizDistPlayer < stopDist && heightDiffPlayer < 1.6 && moveSpd > 0 && this.state !== 'hurt') {
+      const vertDiff = Math.abs(playerPos.y - this.group.position.y);
+      const inAttackRange = horizDistPlayer < stopDist && (vertDiff < 1.8 || (this.isJumping && vertDiff < 2.6));
+
+      // Si el jugador está en una superficie elevada y a distancia de asalto, abalanzarse con un salto hacia él
+      if (horizDistPlayer < stopDist + 1.4 && playerPos.y > this.group.position.y + 0.45 && this.isGrounded && this.jumpCooldown <= 0) {
+        const dy = playerPos.y - this.group.position.y;
+        this.yVel = Math.min(14.0, Math.sqrt(2 * GRAVITY * (dy + 0.65)));
+        this.isGrounded = false;
+        this.isJumping = true;
+        this.jumpTargetY = playerPos.y;
+        this.jumpCooldown = 0.5;
+        this.billboard.applyJuiceTransforms(1.15, 0.85, 0, 0);
+      }
+
+      if (inAttackRange && moveSpd > 0 && this.state !== 'hurt') {
         targetState = 2; // ATTACK
         moveSpd *= 0.25;
         this.attackCharge += dt;
         if (this.attackCharge >= 0.35) {
           this.attackCharge = -0.55;
-          if (horizDistPlayer < stopDist + 0.15 && heightDiffPlayer < 1.7 && callbacks.onDealDamage) {
+          if (horizDistPlayer < stopDist + 0.25 && vertDiff < 2.6 && callbacks.onDealDamage) {
             callbacks.onDealDamage(this);
           }
         }
@@ -310,20 +391,85 @@ export class Enemy {
       if (moveSpd > 0 && horizDistGoal > Math.max(0.25, stopDist * 0.72)) {
         const dir = new THREE.Vector3(toGoal.x, 0, toGoal.z).normalize();
         this.billboard.facingYaw = Math.atan2(-dir.x, -dir.z);
+
+        const dyGoal = goalPos.y - this.group.position.y;
+
+        // Comprobación de salto: ¿El objetivo está elevado (jugador sobre caja/plataforma)?
+        // o ¿Hay un obstáculo (cajas, bidones, fosos, rampas) enfrente que bloquea el camino?
+        let shouldJump = false;
+        let jumpTargetElevation = 0;
+
+        if (this.isGrounded && this.jumpCooldown <= 0) {
+          // Caso A: El objetivo está a mayor altura (jugador subido a cajas, plataformas o rampas)
+          if (dyGoal > 0.35 && horizDistGoal < 4.5) {
+            shouldJump = true;
+            jumpTargetElevation = goalPos.y;
+          } else if (worldPhysics) {
+            // Caso B: Sondeo hacia adelante para detectar obstáculos que se interpongan en el camino
+            const probeDist = Math.max(0.8, Math.min(1.6, moveSpd * 0.3));
+            const probeX = this.group.position.x + dir.x * probeDist;
+            const probeZ = this.group.position.z + dir.z * probeDist;
+            // ignoreStepLimit = true para obtener la cota superior real del obstáculo
+            const obstacleTopY = worldPhysics.getGroundHeight(probeX, probeZ, 0, true);
+            if (obstacleTopY > this.group.position.y + 0.35) {
+              shouldJump = true;
+              jumpTargetElevation = obstacleTopY;
+            }
+          }
+        }
+
+        if (shouldJump) {
+          const dy = Math.max(0.6, jumpTargetElevation - this.group.position.y);
+          // Velocidad vertical necesaria para coronar con holgura la superficie
+          const jumpImpulse = Math.min(14.5, Math.max(8.8, Math.sqrt(2 * GRAVITY * (dy + 0.65))));
+          this.yVel = jumpImpulse;
+          this.isGrounded = false;
+          this.isJumping = true;
+          this.jumpTargetY = jumpTargetElevation;
+          this.jumpCooldown = 0.45;
+          this.billboard.applyJuiceTransforms(1.18, 0.82, 0, 0);
+
+          if (horizDistPlayer < 14 && typeof AudioSys !== 'undefined' && Math.random() < 0.25) {
+            AudioSys.play(110 + Math.random() * 40, 0.08, 'sawtooth', 0.03);
+          }
+        }
+
         const prevX = this.group.position.x, prevZ = this.group.position.z;
-        this.group.position.addScaledVector(dir, moveSpd * stepDt);
+        // Si está saltando hacia un obstáculo, mantener o impulsar avance horizontal
+        const airMod = this.isJumping ? 1.15 : 1.0;
+        this.group.position.addScaledVector(dir, moveSpd * airMod * stepDt);
 
         if (worldPhysics) {
-          worldPhysics.resolveCollision(this.group.position, this.isBoss ? 0.8 : 0.55, this.group.position.y);
+          // Si está saltando hacia una elevación, calculamos la cota efectiva para no ser repelido
+          // por el frontal de la caja/plataforma mientras asciende
+          const effectiveY = (this.isJumping && this.jumpTargetY > this.group.position.y)
+            ? Math.max(this.group.position.y, this.jumpTargetY - 0.70)
+            : this.group.position.y;
+
+          worldPhysics.resolveCollision(this.group.position, this.isBoss ? 0.8 : 0.55, effectiveY);
+
           const moved = Math.hypot(this.group.position.x - prevX, this.group.position.z - prevZ);
           if (moved < moveSpd * stepDt * 0.35) {
-            const tangent = new THREE.Vector3(-dir.z * this.steerDir, 0, dir.x * this.steerDir);
-            this.billboard.facingYaw = Math.atan2(-tangent.x, -tangent.z);
-            this.group.position.addScaledVector(tangent, moveSpd * stepDt * 0.9);
-            worldPhysics.resolveCollision(this.group.position, 0.55, this.group.position.y);
+            // Caso C: Si quedó atascado contra un obstáculo que se interpone, saltar y treparlo
+            const blockH = worldPhysics.getGroundHeight(
+              this.group.position.x + dir.x * 0.8,
+              this.group.position.z + dir.z * 0.8,
+              0, true
+            );
+            if (blockH > this.group.position.y + 0.25 && this.isGrounded && this.jumpCooldown <= 0) {
+              const dyBlock = blockH - this.group.position.y;
+              this.yVel = Math.min(14.5, Math.max(8.8, Math.sqrt(2 * GRAVITY * (dyBlock + 0.65))));
+              this.isGrounded = false;
+              this.isJumping = true;
+              this.jumpTargetY = blockH;
+              this.jumpCooldown = 0.45;
+            } else {
+              const tangent = new THREE.Vector3(-dir.z * this.steerDir, 0, dir.x * this.steerDir);
+              this.billboard.facingYaw = Math.atan2(-tangent.x, -tangent.z);
+              this.group.position.addScaledVector(tangent, moveSpd * stepDt * 0.9);
+              worldPhysics.resolveCollision(this.group.position, 0.55, effectiveY);
+            }
           }
-          const targetY = worldPhysics.getGroundHeight(this.group.position.x, this.group.position.z, this.group.position.y);
-          this.group.position.y += (targetY - this.group.position.y) * 0.45;
         }
       }
 
