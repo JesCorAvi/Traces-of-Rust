@@ -19,8 +19,10 @@ const warn = msg => warnings.push(msg);
 function loadModule(rel, exportNames) {
   const file = path.join(ROOT, rel);
   let src = fs.readFileSync(file, 'utf8');
-  src = src.replace(/\bexport\s+const\s+/g, 'const ');
+  src = src.replace(/\bimport\s+.*?from\s+['"][^'"]+['"];?\s*/g, '');
+  src = src.replace(/\bexport\s+(?:const|let|var)\s+/g, 'const ');
   src = src.replace(/\bexport\s+function\s+/g, 'function ');
+  src = src.replace(/\bexport\s+default\s+/g, 'const __default__ = ');
   src += `\nmodule.exports = { ${exportNames.join(', ')} };`;
   const sandbox = { module: { exports: {} }, exports: {} };
   vm.runInNewContext(src, sandbox, { filename: file });

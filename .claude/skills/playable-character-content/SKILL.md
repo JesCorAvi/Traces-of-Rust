@@ -30,7 +30,7 @@ Produce un operador jugable completo y consistente: entrada en `CHARACTERS`, tem
 3. **Añade la entrada.** `CHARACTERS` en `js/config/charactersConfig.js`, al final para conservar el orden del selector.
 4. **Añade el tema.** `CHARACTER_THEMES` en `js/sprites/player/body.js`; sin él, el personaje se dibuja como Otto.
 5. **Implementa la pasiva.** Usa una clave genérica de `modifiers.js` o añade una clave específica y consúmela en el arma. No dejes `statMods` decorativos.
-6. **Valida.** Selector, tarjeta, partida, impacto medible de la pasiva y co-op.
+6. **Valida.** Ejecuta `audit-characters.mjs`, luego selector, tarjeta, partida, impacto medible de la pasiva y co-op.
 
 **Condición de parada:** si la pasiva requiere un comportamiento nuevo en un arma, implementa la clave y su consumo; no la documentes como si funcionara. Si el efecto exige una decisión de diseño, propone una opción medible y declara la suposición.
 
@@ -55,13 +55,13 @@ Produce un operador jugable completo y consistente: entrada en `CHARACTERS`, tem
 - **Tema obligatorio:** sin `CHARACTER_THEMES[id]`, el dibujo cae a Otto sin avisar.
 - **Pasiva real:** `passive`/`passiveDesc` son texto; el efecto debe estar en `statMods` o en código.
 - **Claves genéricas primero:** `moveSpeedMult`, `atkSpeedMult`, `critChanceBonus`, `areaMult`, `regenPerSec`, `bonusProjectiles`, `dmgMult`, `damageReduction`, `knockbackMult`, `baseHpBonus`.
-- **Claves específicas requieren consumidor:** hoy `slashDmgMult`, `projectileDmgMult`, `fireDmgMult`, `auraSlowBonus`, `explosiveDmgMult`, `harpoonDmgMult`, `orbitalDmgMult` y `boltChainsExtra` no se consumen.
+- **Claves específicas requieren consumidor:** hoy `slashDmgMult`, `projectileDmgMult`, `fireDmgMult`, `auraSlowBonus`, `explosiveDmgMult`, `harpoonDmgMult`, `orbitalDmgMult`, `boltChainsExtra`, `extraOrbitals` y `rangeMult` no se consumen.
 - **Sin valores redundantes:** no uses `dmgMult` genérico si la pasiva debe afectar solo a un arma.
 - **Online:** Host y Cliente deben compartir catálogo; un ID desconocido cae a Otto.
 
 ## Validation Ladder
 
-- **Nivel 0 — Estático:** ID único, arma/icono válidos, tema presente, claves de `statMods` consumidas o marcadas como pendientes.
+- **Nivel 0 — Estático:** ejecuta `audit-characters.mjs`; ID único, arma/icono válidos, tema presente, claves de `statMods` consumidas o marcadas como pendientes.
 - **Nivel 1 — Selector:** tarjeta, retrato, rol, arma y pasiva correctos; selección con ratón y teclado.
 - **Nivel 2 — Partida:** tema propio en 8 direcciones, arma inicial correcta y HUD coherente.
 - **Nivel 3 — Pasiva:** efecto medible (HP, daño, cadencia, área, regeneración, etc.).
@@ -74,12 +74,14 @@ Produce un operador jugable completo y consistente: entrada en `CHARACTERS`, tem
 - Identidad del operador y arma elegida.
 - Archivos tocados y claves de `statMods` implementadas.
 - Evidencia del efecto de la pasiva (valor antes/después).
+- Resultado de `audit-characters.mjs`.
 - Nivel de validación alcanzado y riesgos.
 
 ## References
 
 - `references/character-pipeline.md` — catálogo, tema, retrato, sprites, selector y orden de render.
 - `references/stats-and-online.md` — claves de `statMods`, implementación de pasivas y réplica P2P.
+- `scripts/audit-characters.mjs` — auditoría estática de catálogo, temas, armas, iconos y statMods.
 
 ## Related Skills
 

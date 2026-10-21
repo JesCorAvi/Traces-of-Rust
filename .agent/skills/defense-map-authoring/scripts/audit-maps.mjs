@@ -20,8 +20,10 @@ const EXPECTED = {
 
 function loadCatalog() {
   let src = fs.readFileSync(MAP_FILE, 'utf8');
-  src = src.replace(/\bexport\s+const\s+/g, 'const ');
+  src = src.replace(/\bimport\s+.*?from\s+['"][^'"]+['"];?\s*/g, '');
+  src = src.replace(/\bexport\s+(?:const|let|var)\s+/g, 'const ');
   src = src.replace(/\bexport\s+function\s+/g, 'function ');
+  src = src.replace(/\bexport\s+default\s+/g, 'const __default__ = ');
   src += '\nmodule.exports = { MAP_CATALOG, DEFAULT_MAP_IDS };';
   const sandbox = { module: { exports: {} }, exports: {} };
   vm.runInNewContext(src, sandbox, { filename: MAP_FILE });

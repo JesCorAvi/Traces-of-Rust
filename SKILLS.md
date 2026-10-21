@@ -20,22 +20,25 @@ Cada skill sigue el mismo contrato:
 | Skill | Cuándo usarla | Referencias | Script |
 |---|---|---|---|
 | `netcode-audit` | Enemigos, armas, torretas, pickups, economía, eventos o cualquier mecánica P2P. | `packet-contract`, `authority-lifecycle` | `audit-netcode.mjs` |
-| `procedural-3d-entity` | Modelos 3D, torretas, estructuras, props, sprites y memoria de GPU. | `entity-anatomy`, `textures-and-memory` | — |
+| `procedural-3d-entity` | Modelos 3D, torretas, estructuras, props, sprites y memoria de GPU. | `entity-anatomy`, `textures-and-memory` | `audit-entities.mjs` |
 | `defense-map-authoring` | Mapas de Tower Defense, rutas, compuertas, miniaturas, récords y online. | `map-schema`, `route-and-online` | `audit-maps.mjs` |
 | `game-balance-tuning` | Torretas, mejoras, oleadas, economía, colocación, eventos y jefes. | `turret-effects`, `waves-economy-survival` | `audit-config.mjs` |
 | `hud-ui-panel` | HUD, overlays, menús, modales, iconos y persistencia de ajustes. | `overlay-and-hud`, `persistence-and-audio` | `audit-dom.mjs` |
-| `playable-character-content` | Operadores: catálogo, retratos, temas, armas, `statMods` y réplica online. | `character-pipeline`, `stats-and-online` | — |
+| `playable-character-content` | Operadores: catálogo, retratos, temas, armas, `statMods` y réplica online. | `character-pipeline`, `stats-and-online` | `audit-characters.mjs` |
 | `procedural-sfx` | WebAudio, efectos, UI sonora, drones y ajustes de audio. | `webaudio-patterns`, `sound-catalog` | `audit-audio.mjs` |
-| `electron-steam-bridge` | Electron/Steamworks: IPC, preload, ventana, fullscreen, Overlay, P2P y build. | `ipc-and-steam`, `window-packaging` | — |
+| `electron-steam-bridge` | Electron/Steamworks: IPC, preload, ventana, fullscreen, Overlay, P2P y build. | `ipc-and-steam`, `window-packaging` | `audit-bridge.mjs` |
 
 ## Scripts de Auditoría
 
 ```bash
 node .claude/skills/netcode-audit/scripts/audit-netcode.mjs
+node .claude/skills/procedural-3d-entity/scripts/audit-entities.mjs
 node .claude/skills/defense-map-authoring/scripts/audit-maps.mjs
 node .claude/skills/game-balance-tuning/scripts/audit-config.mjs
 node .claude/skills/hud-ui-panel/scripts/audit-dom.mjs
+node .claude/skills/playable-character-content/scripts/audit-characters.mjs
 node .claude/skills/procedural-sfx/scripts/audit-audio.mjs
+node .claude/skills/electron-steam-bridge/scripts/audit-bridge.mjs
 ```
 
 Todos aceptan `--json` para integración con otras herramientas y salen con código 1 si hay errores.
@@ -74,7 +77,7 @@ Prueba manual mínima al modificar una skill. Cada caso debe pasar sin regresion
 
 - Claude Code descubre automáticamente `.claude/skills/*/SKILL.md` por el campo `description`.
 - Si una tarea coincide, se carga el `SKILL.md`; las referencias se leen solo cuando hacen falta.
-- Al modificar una skill, replica el cambio en `.agent/skills/` y ejecuta `npm run validate:skills`.
+- Al modificar una skill, ejecuta `npm run sync:skills` para replicar a `.agent/skills/` y luego `npm run validate:skills`.
 - No añadas versionado, manifiestos multiagente ni instaladores salvo que las skills vayan a distribuirse fuera del repo.
 
 ## Mantenimiento

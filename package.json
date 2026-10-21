@@ -6,6 +6,7 @@
   "scripts": {
     "start": "electron .",
     "build:win": "electron-packager . \"Traces of Rust\" --platform=win32 --arch=x64 --out=dist --overwrite --ignore=\"^/dist$\" && node scripts/postbuild-win.cjs",
+    "sync:skills": "node scripts/sync-skills.mjs",
     "validate:skills": "node scripts/validate-skills.mjs"
   },
   "keywords": [

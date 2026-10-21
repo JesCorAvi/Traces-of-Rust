@@ -29,7 +29,7 @@ Mantiene la integración de escritorio de **Traces of Rust**: proceso principal,
 2. **Define el contrato.** Canal, payload, retorno, evento push y comportamiento en navegador.
 3. **Implementa main + preload.** `ipcMain.handle`/`webContents.send` y un método estrecho en `contextBridge`.
 4. **Feature-detect en renderer.** No asumas Electron; añade fallback o degradación en `webRtcAdapter.js` si debe funcionar en navegador.
-5. **Valida en Electron y navegador.** `npm start` y `python -m http.server 8000`.
+5. **Valida.** Ejecuta `audit-bridge.mjs` y valida en Electron y navegador.
 6. **Empaqueta si toca.** `npm run build:win` y prueba el `.exe`.
 
 **Condición de parada:** si el cambio exige una decisión de producto (¿el navegador debe soportar esta función?), implementa la degradación segura y declara la suposición. No instales dependencias sin permiso.
@@ -60,7 +60,7 @@ Mantiene la integración de escritorio de **Traces of Rust**: proceso principal,
 
 ## Validation Ladder
 
-- **Nivel 0 — Estático:** contrato IPC completo (main + preload + renderer), feature detection, seguridad intacta.
+- **Nivel 0 — Estático:** ejecuta `audit-bridge.mjs`; contrato IPC completo (main + preload + renderer), feature detection, seguridad intacta.
 - **Nivel 1 — Electron:** `npm start` arranca, ventana correcta y sin errores de consola.
 - **Nivel 2 — Navegador:** `python -m http.server 8000` sigue funcionando con el fallback.
 - **Nivel 3 — Steam:** Overlay, invitación, lobby, P2P y desconexión.
@@ -73,12 +73,14 @@ Mantiene la integración de escritorio de **Traces of Rust**: proceso principal,
 - Capa(s) modificadas y contrato IPC.
 - Comportamiento en Electron y en navegador.
 - Riesgos de seguridad o compatibilidad.
+- Resultado de `audit-bridge.mjs`.
 - Nivel de validación alcanzado y artefactos generados.
 
 ## References
 
 - `references/ipc-and-steam.md` — canales, preload, Steamworks, lobbies, P2P y ciclo de vida.
 - `references/window-packaging.md` — ventana, pantalla completa, Overlay, scripts y empaquetado.
+- `scripts/audit-bridge.mjs` — auditoría estática de IPC, eventos push, preload y flags de seguridad.
 
 ## Related Skills
 

@@ -119,6 +119,8 @@ export function makeTexture(canvas, repeat = 1) {
   const tex = new THREE.CanvasTexture(canvas);
   tex.magFilter = THREE.NearestFilter;
   tex.minFilter = THREE.NearestFilter;
+  // Pixel-art coherente: sin mipmaps; se evita memoria y mezcla entre niveles.
+  tex.generateMipmaps = false;
   tex.colorSpace = THREE.SRGBColorSpace;
   if (repeat > 1) {
     tex.wrapS = tex.wrapT = THREE.RepeatWrapping;

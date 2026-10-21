@@ -30,7 +30,7 @@ Produce entidades visuales coherentes con la estética **dark industrial pixel-a
 3. **Construye la jerarquía.** Separa lo que no gira (`baseRoot`) de lo que apunta (`modelRoot`). Añade piezas con los helpers existentes.
 4. **Genera materiales y texturas.** Canvas 2D, paleta compartida, `NearestFilter`, sin `TextureLoader`.
 5. **Integra juego y niveles.** Engancha `faceTarget`, disparo, retroceso, muzzle flash y `visualParts` a las mejoras.
-6. **Cierra el ciclo de vida.** `destroy()` con `disposeObject3D`, marcando recursos compartidos.
+6. **Cierra el ciclo de vida y valida.** `destroy()` con `disposeObject3D`, recursos compartidos y ejecuta `audit-entities.mjs`.
 
 **Condición de parada:** si el diseño requiere una decisión artística no deducible (silueta, paleta, tamaño), propone una opción coherente con la clase existente y declara la suposición. No preguntes por detalles que ya están en `spritePalette` o en un modelo hermano.
 
@@ -57,7 +57,7 @@ Produce entidades visuales coherentes con la estética **dark industrial pixel-a
 
 ## Validation Ladder
 
-- **Nivel 0 — Estático:** imports, clases base, `sharedGeo/sharedMat`, `destroy()`, filtros de textura.
+- **Nivel 0 — Estático:** ejecuta `audit-entities.mjs`; cero texturas externas, NearestFilter, generateMipmaps y disposeObject3D en entidades dinámicas.
 - **Nivel 1 — Escena:** el modelo aparece, está anclado al suelo, no parpadea ni tiene caras invertidas.
 - **Nivel 2 — Combate:** `faceTarget` apunta, el muzzle flash nace en la boca correcta, el retroceso se reinicia y las mejoras muestran/ocultan piezas.
 - **Nivel 3 — Memoria:** construir/destruir 50+ instancias no incrementa `renderer.info.memory` de forma sostenida.
@@ -70,12 +70,14 @@ Produce entidades visuales coherentes con la estética **dark industrial pixel-a
 - Tipo de entidad y patrón elegido.
 - Archivos tocados y jerarquía (`baseRoot`/`modelRoot`, piezas, `visualParts`).
 - Texturas/materiales generados y cómo se comparten.
+- Resultado de `audit-entities.mjs`.
 - Nivel de validación alcanzado, capturas o comprobaciones realizadas y riesgos.
 
 ## References
 
 - `references/entity-anatomy.md` — jerarquía de torretas, apuntado, disparo, niveles y builders.
 - `references/textures-and-memory.md` — canvas, paleta, filtros, recursos compartidos y `dispose`.
+- `scripts/audit-entities.mjs` — auditoría estática de texturas externas, CanvasTexture y disposeObject3D.
 
 ## Related Skills
 

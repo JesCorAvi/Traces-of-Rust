@@ -65,6 +65,7 @@ function createNameplateSprite(nameText) {
   const texture = new THREE.CanvasTexture(canvas);
   texture.minFilter = THREE.NearestFilter;
   texture.magFilter = THREE.NearestFilter;
+  texture.generateMipmaps = false;
 
   const mat = new THREE.SpriteMaterial({
     map: texture,

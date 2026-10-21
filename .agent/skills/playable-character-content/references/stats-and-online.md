@@ -34,6 +34,8 @@ Declaradas en `charactersConfig.js` pero **sin consumidor**:
 | `harpoonDmgMult` | `harpoon.js` |
 | `orbitalDmgMult` | `playerController.js` (orbitales) |
 | `boltChainsExtra` | `bolt.js` |
+| `extraOrbitals` | `playerController.js` (número de orbitales) |
+| `rangeMult` | cálculo de alcance en `js/combat/weapons/*` y `playerController.js` |
 
 Si una pasiva usa una de estas claves, hoy **no hace nada**. Para implementarla:
 

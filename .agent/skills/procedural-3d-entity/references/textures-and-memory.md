@@ -13,7 +13,7 @@ Todo el arte es procedural. No se carga ninguna imagen externa: se dibuja en `HT
 - `applyCleanSpriteOutlineRect(ctx, w, h)` — contorno negro de 1 px.
 - `applyIcon16Outline(ctx, ox, oy)` — contorno para iconos de 16×16.
 
-Si generas una textura nueva, usa `makeTexture`; ya fija `NearestFilter` y `SRGBColorSpace`. Añade `tex.generateMipmaps = false` explícitamente si sigues el patrón estricto de pixel-art.
+Si generas una textura nueva, usa `makeTexture`; ya fija `NearestFilter`, `generateMipmaps = false` y `SRGBColorSpace`. Si creas una `CanvasTexture` a mano, replica esos tres ajustes.
 
 ## Filtros obligatorios
 
