@@ -83,8 +83,8 @@ export const TARGETING = {
       zombie: {
         coreDamage: 16,
         coreAttackInterval: 1.15,
-        detectRadius: 8.5,
-        abandonRadius: 13.5,
+        detectRadius: 3.8, maxAggroDuration: 3.5,
+        abandonRadius: 5.5,
         coreOverrideRadius: 2.8,
         reactionTime: 0.35,
         aggroScareCooldown: 4.5
@@ -93,8 +93,8 @@ export const TARGETING = {
       weeper: {
         coreDamage: 24,
         coreAttackInterval: 1.0,
-        detectRadius: 15.0,
-        abandonRadius: 21.0,
+        detectRadius: 6.0, maxAggroDuration: 3.5,
+        abandonRadius: 9.0,
         coreOverrideRadius: 5.2,
         reactionTime: 0.22,
         aggroScareCooldown: 3.5
@@ -103,8 +103,8 @@ export const TARGETING = {
       worm: {
         coreDamage: 30,
         coreAttackInterval: 1.25,
-        detectRadius: 4.2,
-        abandonRadius: 7.0,
+        detectRadius: 2.2, maxAggroDuration: 2.0,
+        abandonRadius: 3.8,
         coreOverrideRadius: 1.8,
         reactionTime: 0.55,
         aggroScareCooldown: 6.0
@@ -113,11 +113,12 @@ export const TARGETING = {
       boss: {
         coreDamage: 85,
         coreAttackInterval: 1.35,
-        detectRadius: 10.5,
-        abandonRadius: 16.0,
+        detectRadius: 35.0,
+        abandonRadius: 50.0,
         coreOverrideRadius: 3.6,
-        reactionTime: 0.4,
-        aggroScareCooldown: 5.0
+        reactionTime: 0.15,
+        aggroScareCooldown: 3.0,
+        prioritizePlayer: true
       }
     }
   };

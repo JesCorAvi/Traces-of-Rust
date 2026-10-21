@@ -46,6 +46,92 @@ export function buildEnvironmentTextures() {
   }
   applyEnvironmentDither(mCtx, 64, 64);
 
+  // Placa de cruce / plataforma giratoria para intersección de caminos
+  const iCan = document.createElement('canvas');
+  iCan.width = iCan.height = 64;
+  const iCtx = iCan.getContext('2d');
+  iCtx.fillStyle = '#182018';
+  iCtx.fillRect(0, 0, 64, 64);
+
+  // Malla de rombos industriales de fondo
+  iCtx.strokeStyle = '#243022';
+  iCtx.lineWidth = 1;
+  for (let d = -64; d <= 128; d += 8) {
+    iCtx.beginPath();
+    iCtx.moveTo(d, 0);
+    iCtx.lineTo(d + 64, 64);
+    iCtx.stroke();
+    iCtx.beginPath();
+    iCtx.moveTo(d, 64);
+    iCtx.lineTo(d + 64, 0);
+    iCtx.stroke();
+  }
+
+  // Franjas de advertencia en los 4 bordes (hazard warning #b89c46 / #050605)
+  for (let x = -6; x < 70; x += 10) {
+    iCtx.fillStyle = '#b89c46';
+    iCtx.fillRect(Math.max(0, x), 0, 5, 5);
+    iCtx.fillRect(Math.max(0, x), 59, 5, 5);
+    iCtx.fillRect(0, Math.max(0, x), 5, 5);
+    iCtx.fillRect(59, Math.max(0, x), 5, 5);
+  }
+
+  // Placa central de cruce giratorio (turntable)
+  iCtx.beginPath();
+  iCtx.arc(32, 32, 22, 0, Math.PI * 2);
+  iCtx.fillStyle = '#243022';
+  iCtx.fill();
+  iCtx.strokeStyle = '#b89c46';
+  iCtx.lineWidth = 2;
+  iCtx.stroke();
+
+  // Collar interior de acero oxidado
+  iCtx.beginPath();
+  iCtx.arc(32, 32, 15, 0, Math.PI * 2);
+  iCtx.fillStyle = '#182018';
+  iCtx.fill();
+  iCtx.strokeStyle = '#4a2518';
+  iCtx.lineWidth = 2;
+  iCtx.stroke();
+
+  // Guías de acero perpendiculares en cruz (4 vías)
+  iCtx.fillStyle = '#364832';
+  iCtx.fillRect(29, 10, 6, 44);
+  iCtx.fillRect(10, 29, 44, 6);
+  iCtx.fillStyle = '#877a5c';
+  iCtx.fillRect(31, 10, 2, 44);
+  iCtx.fillRect(10, 31, 44, 2);
+
+  // Placa central del buje
+  iCtx.beginPath();
+  iCtx.arc(32, 32, 5, 0, Math.PI * 2);
+  iCtx.fillStyle = '#4a2518';
+  iCtx.fill();
+  iCtx.strokeStyle = '#877a5c';
+  iCtx.lineWidth = 1;
+  iCtx.stroke();
+
+  // Remaches de acero en esquinas y collar
+  iCtx.fillStyle = '#877a5c';
+  const rivets = [
+    [7, 7], [56, 7], [7, 56], [56, 56],
+    [32, 13], [32, 51], [13, 32], [51, 32],
+    [21, 21], [43, 21], [21, 43], [43, 43],
+    [32, 32]
+  ];
+  for (const [rx, ry] of rivets) {
+    iCtx.fillRect(rx - 1, ry - 1, 3, 3);
+    iCtx.fillStyle = '#e6d7a5';
+    iCtx.fillRect(rx, ry, 1, 1);
+    iCtx.fillStyle = '#877a5c';
+  }
+
+  // Marco perimetral abisal
+  iCtx.strokeStyle = '#050605';
+  iCtx.lineWidth = 2;
+  iCtx.strokeRect(0, 0, 64, 64);
+  applyEnvironmentDither(iCtx, 64, 64);
+
   const aCan = document.createElement('canvas');
   aCan.width = aCan.height = 128;
   const aCtx = aCan.getContext('2d');
@@ -69,6 +155,7 @@ export function buildEnvironmentTextures() {
     ground:       { name: 'ground_tile', canvas: gCan, tex: makeTexture(gCan, 75) },
     crate:        { name: 'rust_crate',  canvas: cCan, tex: makeTexture(cCan) },
     metal:        { name: 'catwalk_tex', canvas: mCan, tex: makeTexture(mCan, 4) },
+    intersection: { name: 'intersection_tile', canvas: iCan, tex: makeTexture(iCan) },
     aura:         { name: 'bile_aura',   canvas: aCan, tex: makeTexture(aCan) },
     pillar:       { name: 'rust_pillar', canvas: pCan, tex: makeTexture(pCan) },
     slash:        weapons.slashSheet,

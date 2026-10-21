@@ -107,7 +107,7 @@ export function updatePlayerWeaponsAndCombat({
       const dmg = CONFIG.SKILLS.aura.baseDmg * (1 + (skills.aura - 1) * 0.22) * mods.dmgMult;
       activeEnemies.forEach(e => {
         if (e.state !== 'dead' && e.group.position.distanceTo(playerGroup.position) < auraRadius) {
-          e.applySlow(0.6, 0.6);
+          e.applySlow(Math.min(0.85, 0.6 + (mods.auraSlowBonus || 0)), 0.6);
           damageEnemy(e, dmg, null, true);
         }
       });
@@ -188,7 +188,7 @@ export function updatePlayerWeaponsAndCombat({
     activeEnemies.forEach(e => {
       if (e.state !== 'dead' && e.group.position.distanceTo(o.group.position) < 1.45) {
         const mult = 1 + (lvl - 1) * CONFIG.SKILLS.orbital.scalePerLvl;
-        damageEnemy(e, CONFIG.SKILLS.orbital.baseDmg * mult * mods.dmgMult * dt, null, true);
+        damageEnemy(e, CONFIG.SKILLS.orbital.baseDmg * mult * mods.dmgMult * (mods.orbitalDmgMult || 1.0) * dt, null, true);
 
         if (o.hitCd <= 0) {
           o.hitCd = 0.18;
@@ -223,7 +223,7 @@ export function updatePlayerWeaponsAndCombat({
     }
     if (triggered) {
       const blastRadius = (CONFIG.SKILLS.mines.baseRange + m.level * 0.3) * mods.areaMult;
-      const dmg = CONFIG.SKILLS.mines.baseDmg * (1 + (m.level - 1) * 0.28) * mods.dmgMult;
+      const dmg = CONFIG.SKILLS.mines.baseDmg * (1 + (m.level - 1) * 0.28) * mods.dmgMult * (mods.explosiveDmgMult || 1.0);
       AudioSys.play(68, 0.28, 'sawtooth', 0.11);
       addCamShake(0.22 * mods.shakeMod);
 

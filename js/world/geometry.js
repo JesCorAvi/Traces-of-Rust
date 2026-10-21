@@ -7,7 +7,7 @@ import { isNearDefenseRouteOrSpawn } from './routeClearance.js';
 export function buildWorldGeometry(scene, materials, physics) {
   const { metalMat, crateMat, barrelMat } = materials;
 
-  function addBoxMesh(cx, cy, cz, sx, sy, sz, mat, registerPhysics = true) {
+  function addBoxMesh(cx, cy, cz, sx, sy, sz, mat, registerPhysics = true, isObstacle = false) {
     const m = new THREE.Mesh(new THREE.BoxGeometry(sx, sy, sz), mat);
     m.position.set(cx, cy, cz);
     m.castShadow = true;
@@ -17,7 +17,8 @@ export function buildWorldGeometry(scene, materials, physics) {
       physics.addWalkableBox({
         minX: cx - sx / 2, maxX: cx + sx / 2,
         minZ: cz - sz / 2, maxZ: cz + sz / 2,
-        bottomY: cy - sy / 2, topY: cy + sy / 2
+        bottomY: cy - sy / 2, topY: cy + sy / 2,
+        isObstacle
       });
     }
     return m;
@@ -104,11 +105,11 @@ export function buildWorldGeometry(scene, materials, physics) {
     dummy.position.set(cx, 0.7, cz);
     dummy.updateMatrix();
     crateInst.setMatrixAt(cIdx++, dummy.matrix);
-    const crateBox = { minX: cx - 1, maxX: cx + 1, minZ: cz - 1, maxZ: cz + 1, bottomY: 0, topY: 1.4 };
+    const crateBox = { minX: cx - 1, maxX: cx + 1, minZ: cz - 1, maxZ: cz + 1, bottomY: 0, topY: 1.4, isObstacle: true };
     physics.addWalkableBox(crateBox);
 
     if (i % 2 === 0 && cIdx < 118 && !isNearDefenseRouteOrSpawn(cx + 1.8, cz)) {
-      addBoxMesh(cx + 1.8, 0.35, cz, 1.6, 0.7, 1.8, crateMat, true);
+      addBoxMesh(cx + 1.8, 0.35, cz, 1.6, 0.7, 1.8, crateMat, true, true);
     }
     if (i % 3 === 0 && cIdx < 119) {
       dummy.position.set(cx, 2.1, cz);

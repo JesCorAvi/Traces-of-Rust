@@ -5,7 +5,7 @@
   // Moneda exclusiva del modo Defensa; no se suma a los Dientes permanentes al terminar.
 export const SCRAP = {
     startingScrap: 10,
-    normalDropChance: 0.32,
+    normalDropChance: 0.22,
     normalDropValue: 1,
     bossDropValue: 18,
     waveCompletionBonus: 6,

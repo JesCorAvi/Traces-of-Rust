@@ -1043,7 +1043,8 @@ export const MultiplayerSync = {
       radius: ev.radius,
       elapsed: ev.elapsedSurvivalTime,
       phase: ev.intensityPhase,
-      progress: ev.progress
+      progress: ev.progress,
+      waveIndex: ev.waveIndex || 1
     };
   },
 
@@ -2187,7 +2188,8 @@ export const MultiplayerSync = {
                 radius: data.radius,
                 elapsed: data.elapsed,
                 phase: data.phase,
-                progress: data.progress
+                progress: data.progress,
+                waveIndex: data.waveIndex
               });
             } finally {
               this.isApplyingRemote = false;

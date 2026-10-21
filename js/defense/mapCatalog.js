@@ -73,19 +73,28 @@ export const MAP_CATALOG = {
         name: 'Conducto Espiral',
         color: 0x38ef7d,
         controlPoints: [
-          { x: -36, z: -44 },
-          { x: 26, z: -40 },
-          { x: 34, z: -16 },
-          { x: 30, z: 22 },
-          { x: -22, z: 34 },
-          { x: -28, z: 6 },
-          { x: -20, z: -20 },
-          { x: 16, z: -22 },
-          { x: 18, z: 12 },
-          { x: -8, z: 18 },
-          { x: -10, z: -4 },
-          { x: 6, z: -4 },
-          { x: 8, z: 44 }
+          { x: -42, z: -44 },
+          { x: -42, z: -10 },
+          { x: -42, z: 24 },
+          { x: -42, z: 40 },
+          { x: -20, z: 42 },
+          { x: 0, z: 42 },
+          { x: 20, z: 42 },
+          { x: 42, z: 40 },
+          { x: 42, z: 10 },
+          { x: 42, z: -16 },
+          { x: 42, z: -42 },
+          { x: 16, z: -42 },
+          { x: 12, z: -36 },
+          { x: 12, z: -22 },
+          { x: 6, z: -10 },
+          { x: 0, z: -3 },
+          { x: -6, z: 6 },
+          { x: -12, z: 14 },
+          { x: -14, z: 24 },
+          { x: -14, z: 34 },
+          { x: -7, z: 41 },
+          { x: 0, z: 44 }
         ]
       }
     },
@@ -113,14 +122,25 @@ export const MAP_CATALOG = {
         name: 'Vía Zigzag',
         color: 0x4facfe,
         controlPoints: [
-          { x: -34, z: -44 },
-          { x: 28, z: -32 },
-          { x: 34, z: -22 },
-          { x: -28, z: -8 },
-          { x: -34, z: 4 },
-          { x: 28, z: 16 },
-          { x: 34, z: 28 },
-          { x: -24, z: 38 },
+          { x: -42, z: -44 },
+          { x: -42, z: -41 },
+          { x: -14, z: -41 },
+          { x: 14, z: -41 },
+          { x: 42, z: -41 },
+          { x: 42, z: -14 },
+          { x: 42, z: 24 },
+          { x: 42, z: 41 },
+          { x: 14, z: 41 },
+          { x: 0, z: 41 },
+          { x: -14, z: 41 },
+          { x: -14, z: 26 },
+          { x: -12, z: 6 },
+          { x: 0, z: 1 },
+          { x: -12, z: 6 },
+          { x: -14, z: 18 },
+          { x: -14, z: 28 },
+          { x: -12, z: 35 },
+          { x: -7, z: 41 },
           { x: 0, z: 44 }
         ]
       }
@@ -150,13 +170,25 @@ export const MAP_CATALOG = {
         color: 0x00f2fe,
         controlPoints: [
           { x: 0, z: -44 },
-          { x: -26, z: -36 },
-          { x: -36, z: -18 },
-          { x: -36, z: 12 },
-          { x: -24, z: 28 },
-          { x: -8, z: 18 },
-          { x: 12, z: 14 },
-          { x: 24, z: 28 },
+          { x: -14, z: -41 },
+          { x: -42, z: -41 },
+          { x: -42, z: -14 },
+          { x: -42, z: 14 },
+          { x: -42, z: 36 },
+          { x: -20, z: 42 },
+          { x: 0, z: 42 },
+          { x: 20, z: 42 },
+          { x: 42, z: 36 },
+          { x: 42, z: 10 },
+          { x: 42, z: -10 },
+          { x: 42, z: -41 },
+          { x: 14, z: -41 },
+          { x: 10, z: -30 },
+          { x: 6, z: -10 },
+          { x: 0, z: 0 },
+          { x: -12, z: 14 },
+          { x: -14, z: 28 },
+          { x: -10, z: 38 },
           { x: 0, z: 44 }
         ]
       }
@@ -186,11 +218,16 @@ export const MAP_CATALOG = {
         color: 0x43e97b,
         controlPoints: [
           { x: 24, z: -44 },
-          { x: -16, z: -30 },
-          { x: -24, z: -14 },
-          { x: 8, z: -2 },
-          { x: 22, z: 14 },
-          { x: -8, z: 28 },
+          { x: 14, z: -41 },
+          { x: 12, z: -30 },
+          { x: 12, z: -18 },
+          { x: 6, z: -10 },
+          { x: 0, z: -4 },
+          { x: -6, z: 6 },
+          { x: -12, z: 14 },
+          { x: -14, z: 24 },
+          { x: -14, z: 34 },
+          { x: -18, z: 40 },
           { x: -20, z: 44 }
         ]
       }
@@ -219,13 +256,25 @@ export const MAP_CATALOG = {
         name: 'Gran Herradura',
         color: 0x38f9d7,
         controlPoints: [
-          { x: -28, z: -44 },
-          { x: -30, z: -10 },
-          { x: -26, z: 26 },
-          { x: 0, z: 36 },
-          { x: 26, z: 26 },
-          { x: 30, z: -10 },
-          { x: 12, z: -16 },
+          { x: -42, z: -44 },
+          { x: -42, z: -14 },
+          { x: -42, z: 14 },
+          { x: -42, z: 36 },
+          { x: -20, z: 42 },
+          { x: 0, z: 42 },
+          { x: 20, z: 42 },
+          { x: 42, z: 36 },
+          { x: 42, z: 14 },
+          { x: 42, z: -14 },
+          { x: 42, z: -41 },
+          { x: 14, z: -41 },
+          { x: 10, z: -28 },
+          { x: 6, z: -10 },
+          { x: 0, z: -4 },
+          { x: -8, z: 6 },
+          { x: -14, z: 20 },
+          { x: -14, z: 32 },
+          { x: -7, z: 41 },
           { x: 0, z: 44 }
         ]
       }
@@ -258,8 +307,8 @@ export const MAP_CATALOG = {
         color: 0xffc107,
         controlPoints: [
           { x: -24, z: -44 },
-          { x: -20, z: -32 },
-          { x: -15, z: -20 },
+          { x: -20, z: -36 },
+          { x: -14, z: -28 },
           { x: -6, z: -8 },
           { x: -3.8, z: 0 },
           { x: -3.8, z: 12 },
@@ -276,8 +325,8 @@ export const MAP_CATALOG = {
         color: 0xff3366,
         controlPoints: [
           { x: 24, z: -44 },
-          { x: 18, z: -32 },
-          { x: 11, z: -21 },
+          { x: 20, z: -36 },
+          { x: 12, z: -26 },
           { x: 6, z: -8 },
           { x: 3.8, z: 0 },
           { x: 3.8, z: 12 },
@@ -314,10 +363,12 @@ export const MAP_CATALOG = {
         name: 'Flanco Izquierdo',
         color: 0xffa000,
         controlPoints: [
-          { x: -44, z: -24 },
-          { x: -32, z: -14 },
-          { x: -18, z: -4 },
-          { x: -6, z: 8 },
+          { x: -44, z: -30 },
+          { x: -42, z: -10 },
+          { x: -40, z: 10 },
+          { x: -34, z: 26 },
+          { x: -14, z: 34 },
+          { x: -7, z: 41 },
           { x: 0, z: 44 }
         ]
       },
@@ -326,10 +377,12 @@ export const MAP_CATALOG = {
         name: 'Flanco Derecho',
         color: 0xff4081,
         controlPoints: [
-          { x: 44, z: -24 },
-          { x: 32, z: -14 },
-          { x: 18, z: -4 },
-          { x: 6, z: 8 },
+          { x: 44, z: -30 },
+          { x: 42, z: -10 },
+          { x: 40, z: 10 },
+          { x: 34, z: 26 },
+          { x: 14, z: 34 },
+          { x: 7, z: 41 },
           { x: 0, z: 44 }
         ]
       }
@@ -359,9 +412,14 @@ export const MAP_CATALOG = {
         name: 'Ruta Inferior',
         color: 0xf59e0b,
         controlPoints: [
-          { x: -16, z: -44 },
-          { x: -18, z: -16 },
-          { x: -12, z: 8 },
+          { x: 0, z: -44 },
+          { x: 6, z: -38 },
+          { x: 12, z: -26 },
+          { x: 6, z: -8 },
+          { x: 0, z: 4 },
+          { x: -10, z: 16 },
+          { x: -14, z: 28 },
+          { x: -8, z: 38 },
           { x: 0, z: 44 }
         ]
       },
@@ -370,9 +428,16 @@ export const MAP_CATALOG = {
         name: 'Ruta Elevada',
         color: 0xec4899,
         controlPoints: [
-          { x: 30, z: -44 },
-          { x: 26, z: -14 },
-          { x: 14, z: 12 },
+          { x: -42, z: -44 },
+          { x: -42, z: -14 },
+          { x: -42, z: 0 },
+          { x: -24, z: 0 },
+          { x: -14, z: 0 },
+          { x: 0, z: 4 },
+          { x: 14, z: 10 },
+          { x: 14, z: 28 },
+          { x: 14, z: 36 },
+          { x: 7, z: 41 },
           { x: 0, z: 44 }
         ]
       }
@@ -402,10 +467,14 @@ export const MAP_CATALOG = {
         name: 'Canal Norte',
         color: 0xfbbf24,
         controlPoints: [
-          { x: -8, z: -44 },
-          { x: -20, z: -24 },
-          { x: -10, z: 0 },
-          { x: 0, z: 20 },
+          { x: -14, z: -44 },
+          { x: -14, z: -32 },
+          { x: -8, z: -14 },
+          { x: -3.8, z: 0 },
+          { x: -3.8, z: 14 },
+          { x: -12, z: 26 },
+          { x: -12, z: 35 },
+          { x: -7, z: 41 },
           { x: 0, z: 44 }
         ]
       },
@@ -414,10 +483,14 @@ export const MAP_CATALOG = {
         name: 'Canal Noreste',
         color: 0xf43f5e,
         controlPoints: [
-          { x: 36, z: -44 },
-          { x: 24, z: -20 },
-          { x: 12, z: 2 },
-          { x: 0, z: 20 },
+          { x: 14, z: -44 },
+          { x: 14, z: -32 },
+          { x: 8, z: -14 },
+          { x: 3.8, z: 0 },
+          { x: 3.8, z: 14 },
+          { x: 12, z: 26 },
+          { x: 12, z: 35 },
+          { x: 7, z: 41 },
           { x: 0, z: 44 }
         ]
       }
@@ -447,10 +520,14 @@ export const MAP_CATALOG = {
         name: 'Onda Alfa',
         color: 0xd97706,
         controlPoints: [
-          { x: -18, z: -44 },
-          { x: -6, z: -22 },
-          { x: -16, z: 0 },
-          { x: -4, z: 20 },
+          { x: -14, z: -44 },
+          { x: -14, z: -30 },
+          { x: -6, z: -10 },
+          { x: 0, z: 2 },
+          { x: -8, z: 14 },
+          { x: -14, z: 26 },
+          { x: -12, z: 35 },
+          { x: -7, z: 41 },
           { x: 0, z: 44 }
         ]
       },
@@ -459,10 +536,14 @@ export const MAP_CATALOG = {
         name: 'Onda Beta',
         color: 0xe11d48,
         controlPoints: [
-          { x: 18, z: -44 },
-          { x: 6, z: -22 },
-          { x: 16, z: 0 },
-          { x: 4, z: 20 },
+          { x: 14, z: -44 },
+          { x: 14, z: -30 },
+          { x: 6, z: -10 },
+          { x: 0, z: 2 },
+          { x: 8, z: 14 },
+          { x: 13, z: 26 },
+          { x: 12, z: 35 },
+          { x: 7, z: 41 },
           { x: 0, z: 44 }
         ]
       }
@@ -492,10 +573,12 @@ export const MAP_CATALOG = {
         name: 'Flanco Oeste Foso',
         color: 0xf59e0b,
         controlPoints: [
-          { x: -28, z: -44 },
-          { x: -30, z: -14 },
-          { x: -18, z: 6 },
-          { x: -12, z: 28 },
+          { x: -42, z: -44 },
+          { x: -42, z: -16 },
+          { x: -40, z: 10 },
+          { x: -34, z: 26 },
+          { x: -14, z: 34 },
+          { x: -7, z: 41 },
           { x: 0, z: 44 }
         ]
       },
@@ -504,10 +587,12 @@ export const MAP_CATALOG = {
         name: 'Flanco Este Foso',
         color: 0xf43f5e,
         controlPoints: [
-          { x: 28, z: -44 },
-          { x: 30, z: -14 },
-          { x: 18, z: 6 },
-          { x: 12, z: 28 },
+          { x: 42, z: -44 },
+          { x: 42, z: -16 },
+          { x: 40, z: 10 },
+          { x: 34, z: 26 },
+          { x: 14, z: 34 },
+          { x: 7, z: 41 },
           { x: 0, z: 44 }
         ]
       }
@@ -592,11 +677,13 @@ export const MAP_CATALOG = {
         name: 'Traza NW-SE',
         color: 0xf97316,
         controlPoints: [
-          { x: -38, z: -44 },
-          { x: -28, z: -22 },
-          { x: -14, z: -6 },
-          { x: 6, z: 10 },
-          { x: 26, z: 28 },
+          { x: -42, z: -44 },
+          { x: -42, z: -14 },
+          { x: -42, z: 14 },
+          { x: -36, z: 26 },
+          { x: -14, z: 36 },
+          { x: -14, z: 41 },
+          { x: 14, z: 41 },
           { x: 38, z: 44 }
         ]
       },
@@ -605,11 +692,13 @@ export const MAP_CATALOG = {
         name: 'Traza NE-SW',
         color: 0xa855f7,
         controlPoints: [
-          { x: 38, z: -44 },
-          { x: 28, z: -22 },
-          { x: 14, z: -6 },
-          { x: -6, z: 10 },
-          { x: -26, z: 28 },
+          { x: 42, z: -44 },
+          { x: 42, z: -14 },
+          { x: 42, z: 14 },
+          { x: 36, z: 26 },
+          { x: 14, z: 36 },
+          { x: 14, z: 41 },
+          { x: -14, z: 41 },
           { x: -38, z: 44 }
         ]
       }
@@ -640,10 +729,10 @@ export const MAP_CATALOG = {
         name: 'Carril Rápido Oeste',
         color: 0xef4444,
         controlPoints: [
-          { x: -24, z: -44 },
-          { x: -26, z: -18 },
-          { x: -24, z: 12 },
-          { x: -26, z: 44 }
+          { x: -42, z: -44 },
+          { x: -42, z: -18 },
+          { x: -42, z: 14 },
+          { x: -40, z: 44 }
         ]
       },
       path_exp_r: {
@@ -651,10 +740,10 @@ export const MAP_CATALOG = {
         name: 'Carril Rápido Este',
         color: 0xc084fc,
         controlPoints: [
-          { x: 24, z: -44 },
-          { x: 26, z: -18 },
-          { x: 24, z: 12 },
-          { x: 26, z: 44 }
+          { x: 42, z: -44 },
+          { x: 42, z: -18 },
+          { x: 42, z: 14 },
+          { x: 40, z: 44 }
         ]
       }
     },
@@ -684,9 +773,12 @@ export const MAP_CATALOG = {
         name: 'Conducto Bajo',
         color: 0xff6600,
         controlPoints: [
-          { x: -36, z: -44 },
-          { x: -30, z: -16 },
-          { x: -28, z: 14 },
+          { x: -14, z: -44 },
+          { x: -14, z: -32 },
+          { x: -6, z: -10 },
+          { x: -6, z: 10 },
+          { x: -14, z: 22 },
+          { x: -14, z: 32 },
           { x: -34, z: 44 }
         ]
       },
@@ -695,9 +787,12 @@ export const MAP_CATALOG = {
         name: 'Puente Superior',
         color: 0x9333ea,
         controlPoints: [
-          { x: 36, z: -44 },
-          { x: 30, z: -16 },
-          { x: 28, z: 14 },
+          { x: 14, z: -44 },
+          { x: 14, z: -32 },
+          { x: 6, z: -10 },
+          { x: 6, z: 10 },
+          { x: 14, z: 22 },
+          { x: 14, z: 32 },
           { x: 34, z: 44 }
         ]
       }
@@ -728,11 +823,12 @@ export const MAP_CATALOG = {
         name: 'Pasillo de Cajas O',
         color: 0xe11d48,
         controlPoints: [
-          { x: -16, z: -44 },
-          { x: -32, z: -28 },
-          { x: -14, z: -12 },
-          { x: -30, z: 8 },
-          { x: -16, z: 26 },
+          { x: -14, z: -44 },
+          { x: -14, z: -41 },
+          { x: -42, z: -41 },
+          { x: -42, z: -6 },
+          { x: -42, z: 28 },
+          { x: -14, z: 28 },
           { x: -28, z: 44 }
         ]
       },
@@ -741,11 +837,12 @@ export const MAP_CATALOG = {
         name: 'Pasillo de Cajas E',
         color: 0x7c3aed,
         controlPoints: [
-          { x: 16, z: -44 },
-          { x: 32, z: -28 },
-          { x: 14, z: -12 },
-          { x: 30, z: 8 },
-          { x: 16, z: 26 },
+          { x: 14, z: -44 },
+          { x: 14, z: -41 },
+          { x: 42, z: -41 },
+          { x: 42, z: -6 },
+          { x: 42, z: 20 },
+          { x: 14, z: 26 },
           { x: 28, z: 44 }
         ]
       }
@@ -776,10 +873,11 @@ export const MAP_CATALOG = {
         name: 'Brecha Alfa',
         color: 0xdc2626,
         controlPoints: [
-          { x: -10, z: -44 },
-          { x: -26, z: -22 },
-          { x: -40, z: 0 },
-          { x: -26, z: 24 },
+          { x: -14, z: -44 },
+          { x: -14, z: -41 },
+          { x: -42, z: -41 },
+          { x: -42, z: 18 },
+          { x: -14, z: 32 },
           { x: -14, z: 44 }
         ]
       },
@@ -788,10 +886,11 @@ export const MAP_CATALOG = {
         name: 'Brecha Beta',
         color: 0x9333ea,
         controlPoints: [
-          { x: 10, z: -44 },
-          { x: 26, z: -22 },
-          { x: 40, z: 0 },
-          { x: 26, z: 24 },
+          { x: 14, z: -44 },
+          { x: 14, z: -41 },
+          { x: 42, z: -41 },
+          { x: 42, z: 18 },
+          { x: 14, z: 32 },
           { x: 14, z: 44 }
         ]
       }

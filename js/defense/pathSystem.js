@@ -1,4 +1,4 @@
-// Rutas de oleadas, pasarelas industriales con rieles 3D, balizas y flechas de flujo.
+// Rutas de oleadas, pasarelas industriales con rieles 3D, balizas, cruces giratorios y flechas de flujo.
 // Exports: PathSystem.
 import * as THREE from 'three';
 import { CORE_DEFENSE_CONFIG } from '../config/coreDefenseConfig.js';
@@ -9,6 +9,32 @@ import { disposeObject3D } from '../utils/dispose.js';
 // ============================================================================
 // SISTEMA DE CAMINOS Y VÍAS INDUSTRIALES (Solo en Modo Defensa)
 // ============================================================================
+
+/**
+ * Calcula la intersección 2D (plano XZ) entre dos segmentos (p1->p2) y (p3->p4).
+ * Retorna { x, y, z } si se cruzan y están a una cota vertical similar (ΔY < 1.0m), o null.
+ */
+function getSegmentIntersection2D(p1, p2, p3, p4) {
+  const d1x = p2.x - p1.x;
+  const d1z = p2.z - p1.z;
+  const d2x = p4.x - p3.x;
+  const d2z = p4.z - p3.z;
+  const denom = d1x * d2z - d1z * d2x;
+  if (Math.abs(denom) < 1e-5) return null;
+
+  const t = ((p3.x - p1.x) * d2z - (p3.z - p1.z) * d2x) / denom;
+  const u = ((p3.x - p1.x) * d1z - (p3.z - p1.z) * d1x) / denom;
+
+  if (t >= 0.01 && t <= 0.99 && u >= 0.01 && u <= 0.99) {
+    const ix = p1.x + t * d1x;
+    const iz = p1.z + t * d1z;
+    const iy1 = p1.y + t * (p2.y - p1.y);
+    const iy2 = p3.y + u * (p4.y - p3.y);
+    if (Math.abs(iy1 - iy2) > 1.0) return null; // No cruzan físicamente si uno va sobre puente/elevación
+    return { x: ix, y: Math.max(iy1, iy2), z: iz };
+  }
+  return null;
+}
 
 export class PathSystem {
   constructor(scene, worldPhysics, routesMap = null) {
@@ -33,7 +59,7 @@ export class PathSystem {
     Object.values(source).forEach(routeCfg => {
       const points = routeCfg.waypoints.map(wp => {
         const gy = this.worldPhysics
-          ? this.worldPhysics.getGroundHeight(wp.x, wp.z, 0, true)
+          ? this.worldPhysics.getGroundHeight(wp.x, wp.z, 0, true, true)
           : (wp.y || 0);
         return new THREE.Vector3(wp.x, Math.max(wp.y || 0, gy), wp.z);
       });
@@ -49,13 +75,15 @@ export class PathSystem {
   /**
    * Construye vías industriales inmersivas:
    * 1. Pasarela de rejilla metálica oxidada continua.
-   * 2. Rieles laterales de acero 3D con volumen.
-   * 3. Traviesas transversales metálicas remachadas.
-   * 4. Balizas de señalización en postes laterales.
-   * 5. Flechas de flujo direccionales (apuntando hacia la salida) activas en descansos.
+   * 2. Rieles laterales de acero 3D con volumen (interrumpidos limpiamente en cruces).
+   * 3. Placas de intersección giratorias remachadas con textura especializada y sin z-fighting.
+   * 4. Traviesas transversales metálicas remachadas.
+   * 5. Balizas de señalización en postes laterales.
+   * 6. Flechas de flujo direccionales (apuntando hacia la salida) activas en descansos.
    */
   buildSubtleWorldMarkers() {
-    const metalTex = SpriteSheets.env.metal.tex;
+    const metalTex = SpriteSheets?.env?.metal?.tex || null;
+    const intersectionTex = SpriteSheets?.env?.intersection?.tex || metalTex;
 
     // Materiales industriales compartidos
     const walkwayMat = new THREE.MeshStandardMaterial({
@@ -66,6 +94,16 @@ export class PathSystem {
       polygonOffset: true,
       polygonOffsetFactor: -2,
       polygonOffsetUnits: -2
+    });
+
+    const junctionMat = new THREE.MeshStandardMaterial({
+      map: intersectionTex,
+      color: 0x3d3024,
+      roughness: 0.85,
+      metalness: 0.45,
+      polygonOffset: true,
+      polygonOffsetFactor: -3,
+      polygonOffsetUnits: -3
     });
 
     const railMat = new THREE.MeshStandardMaterial({
@@ -86,6 +124,111 @@ export class PathSystem {
       color: 0x2b1d14,
       roughness: 0.9,
       metalness: 0.3
+    });
+
+    // -------------------------------------------------------------------------
+    // Detección de intersecciones y bifurcaciones entre rutas
+    // -------------------------------------------------------------------------
+    const allSegments = [];
+    const gatePoints = [];
+
+    this.routes.forEach(route => {
+      const wps = route.waypoints;
+      if (wps.length >= 2) {
+        gatePoints.push(wps[0]);
+        gatePoints.push(wps[wps.length - 1]);
+      }
+      for (let i = 0; i < wps.length - 1; i++) {
+        allSegments.push({
+          routeId: route.id,
+          segIdx: i,
+          a: wps[i],
+          b: wps[i + 1]
+        });
+      }
+    });
+
+    const rawCrossings = [];
+
+    // 1. Cruces de traza directa (XZ)
+    for (let i = 0; i < allSegments.length; i++) {
+      for (let j = i + 1; j < allSegments.length; j++) {
+        const s1 = allSegments[i];
+        const s2 = allSegments[j];
+        if (s1.routeId === s2.routeId && Math.abs(s1.segIdx - s2.segIdx) <= 4) continue;
+        const pt = getSegmentIntersection2D(s1.a, s1.b, s2.a, s2.b);
+        if (pt) {
+          const nearGate = gatePoints.some(g => Math.hypot(pt.x - g.x, pt.z - g.z) < 2.2);
+          if (!nearGate) rawCrossings.push(pt);
+        }
+      }
+    }
+
+    // 2. Nodos convergentes de rutas distintas que se tocan o pasan a menos de 0.85m
+    this.routes.forEach(r1 => {
+      this.routes.forEach(r2 => {
+        if (r1.id >= r2.id) return;
+        r1.waypoints.forEach(w1 => {
+          r2.waypoints.forEach(w2 => {
+            const d = Math.hypot(w1.x - w2.x, w1.z - w2.z);
+            if (d < 0.85 && Math.abs(w1.y - w2.y) < 0.8) {
+              const cx = (w1.x + w2.x) * 0.5;
+              const cz = (w1.z + w2.z) * 0.5;
+              const cy = Math.max(w1.y, w2.y);
+              const nearGate = gatePoints.some(g => Math.hypot(cx - g.x, cz - g.z) < 2.2);
+              if (!nearGate) rawCrossings.push({ x: cx, y: cy, z: cz });
+            }
+          });
+        });
+      });
+    });
+
+    // Agrupar cruces cercanos en un único centro de intersección (radio cluster 1.8m)
+    const junctions = [];
+    for (const pt of rawCrossings) {
+      let cluster = null;
+      for (const junc of junctions) {
+        if (Math.hypot(junc.x - pt.x, junc.z - pt.z) < 1.8) {
+          cluster = junc;
+          break;
+        }
+      }
+      if (cluster) {
+        cluster.x = (cluster.x * cluster.count + pt.x) / (cluster.count + 1);
+        cluster.y = Math.max(cluster.y, pt.y);
+        cluster.z = (cluster.z * cluster.count + pt.z) / (cluster.count + 1);
+        cluster.count++;
+      } else {
+        junctions.push({ x: pt.x, y: pt.y, z: pt.z, count: 1 });
+      }
+    }
+
+    // Placa de intersección y topes de esquina
+    const junctionGeo = new THREE.PlaneGeometry(2.35, 2.35);
+    const cornerStudGeo = new THREE.BoxGeometry(0.2, 0.08, 0.2);
+
+    junctions.forEach(j => {
+      const surfaceY = this.worldPhysics
+        ? this.worldPhysics.getGroundHeight(j.x, j.z, 0, true, true)
+        : j.y;
+      const jy = Math.max(j.y, surfaceY);
+
+      // Placa de cruce con textura especializada y renderOrder superior (sin Z-fighting)
+      const jMesh = new THREE.Mesh(junctionGeo, junctionMat);
+      jMesh.rotation.x = -Math.PI / 2;
+      jMesh.position.set(j.x, jy + 0.029, j.z);
+      jMesh.receiveShadow = true;
+      jMesh.renderOrder = 20;
+      this.visualGroup.add(jMesh);
+
+      // Topes esquineros remachados para delimitar el cruce
+      for (const ox of [-1.05, 1.05]) {
+        for (const oz of [-1.05, 1.05]) {
+          const stud = new THREE.Mesh(cornerStudGeo, tieMat);
+          stud.position.set(j.x + ox, jy + 0.045, j.z + oz);
+          this.visualGroup.add(stud);
+        }
+      }
     });
 
     // Geometría de doble flecha (chevron >>) en plano XZ, apuntando estrictamente hacia +Z (hacia la salida).
@@ -136,9 +279,16 @@ export class PathSystem {
         const midZ = (a.z + b.z) * 0.5;
         const midRefY = (a.y + b.y) * 0.5;
         const surfaceY = this.worldPhysics
-          ? this.worldPhysics.getGroundHeight(midX, midZ, 0, true)
+          ? this.worldPhysics.getGroundHeight(midX, midZ, 0, true, true)
           : midRefY;
         const py = Math.max(midRefY, surfaceY);
+
+        // Comprobar si este tramo o sus extremos caen dentro de un cruce
+        const isNearJunction = junctions.some(j =>
+          Math.hypot(midX - j.x, midZ - j.z) < 1.25 ||
+          Math.hypot(a.x - j.x, a.z - j.z) < 0.95 ||
+          Math.hypot(b.x - j.x, b.z - j.z) < 0.95
+        );
 
         // 1. Plancha / Pasarela metálica de suelo (1.35m de ancho)
         const walkGeo = new THREE.PlaneGeometry(1.35, segLen + 0.06);
@@ -149,24 +299,29 @@ export class PathSystem {
         walkMesh.receiveShadow = true;
         this.visualGroup.add(walkMesh);
 
-        // 2. Rieles laterales de acero 3D (a izquierda y derecha ±0.62m)
-        const railGeo = new THREE.BoxGeometry(0.08, 0.06, segLen + 0.04);
-        const railL = new THREE.Mesh(railGeo, railMat);
-        railL.rotation.y = yaw;
-        railL.position.set(midX - right.x * 0.62, py + 0.045, midZ - right.z * 0.62);
+        // 2. Rieles laterales de acero 3D (se omiten dentro del cruce para no cortar el camino transversal)
+        if (!isNearJunction) {
+          const railGeo = new THREE.BoxGeometry(0.08, 0.06, segLen + 0.04);
+          const railL = new THREE.Mesh(railGeo, railMat);
+          railL.rotation.y = yaw;
+          railL.position.set(midX - right.x * 0.62, py + 0.045, midZ - right.z * 0.62);
 
-        const railR = new THREE.Mesh(railGeo, railMat);
-        railR.rotation.y = yaw;
-        railR.position.set(midX + right.x * 0.62, py + 0.045, midZ + right.z * 0.62);
+          const railR = new THREE.Mesh(railGeo, railMat);
+          railR.rotation.y = yaw;
+          railR.position.set(midX + right.x * 0.62, py + 0.045, midZ + right.z * 0.62);
 
-        this.visualGroup.add(railL, railR);
+          this.visualGroup.add(railL, railR);
+        }
 
-        // 3. Traviesas metálicas transversales cada tramo
-        const tieGeo = new THREE.BoxGeometry(1.4, 0.035, 0.24);
-        const tieMesh = new THREE.Mesh(tieGeo, tieMat);
-        tieMesh.rotation.y = yaw;
-        tieMesh.position.set(a.x, a.y + 0.035, a.z);
-        this.visualGroup.add(tieMesh);
+        // 3. Traviesas metálicas transversales cada tramo (se omiten dentro del cruce)
+        const isTieInJunction = junctions.some(j => Math.hypot(a.x - j.x, a.z - j.z) < 1.15);
+        if (!isTieInJunction) {
+          const tieGeo = new THREE.BoxGeometry(1.4, 0.035, 0.24);
+          const tieMesh = new THREE.Mesh(tieGeo, tieMat);
+          tieMesh.rotation.y = yaw;
+          tieMesh.position.set(a.x, a.y + 0.035, a.z);
+          this.visualGroup.add(tieMesh);
+        }
 
         // 4. Flechas de flujo en el centro de la pasarela (apuntan estrictamente hacia la salida)
         // Se colocan en el centro del tramo elevadas sobre la pasarela (libres de la traviesa)
@@ -174,9 +329,14 @@ export class PathSystem {
           const spawnArrow = (t) => {
             const px = a.x + dir.x * segLen * t;
             const pz = a.z + dir.z * segLen * t;
+
+            // Omitir flechas si caen dentro de la plataforma de cruce
+            const isArrowInJunction = junctions.some(j => Math.hypot(px - j.x, pz - j.z) < 1.05);
+            if (isArrowInJunction) return;
+
             const refY = a.y + (b.y - a.y) * t;
             const gY = this.worldPhysics
-              ? this.worldPhysics.getGroundHeight(px, pz, 0, true)
+              ? this.worldPhysics.getGroundHeight(px, pz, 0, true, true)
               : refY;
             const arrowY = Math.max(refY, gY) + 0.058;
 
@@ -216,7 +376,7 @@ export class PathSystem {
         // 5. Baliza de señalización en poste lateral cada ~8 waypoints
         if (i > 0 && i % 8 === 0) {
           const beaconGroundY = this.worldPhysics
-            ? this.worldPhysics.getGroundHeight(a.x + right.x * 1.05, a.z + right.z * 1.05, 0, true)
+            ? this.worldPhysics.getGroundHeight(a.x + right.x * 1.05, a.z + right.z * 1.05, 0, true, true)
             : a.y;
           const postY = Math.max(a.y, beaconGroundY);
 

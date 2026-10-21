@@ -116,6 +116,9 @@ export class DefenseEventManager {
     const duration = Number.isFinite(options.duration) ? options.duration : (this.cfg.eventDurationSec || 120.0);
     const radius = Number.isFinite(options.radius) ? options.radius : (this.cfg.survivalRadius || 15.0);
     const scrapReward = this.cfg.scrapReward || 30;
+    const waveIndex = Number.isFinite(options.waveIndex)
+      ? options.waveIndex
+      : (this.mode?.waveManager?.currentWaveIndex || 1);
 
     this.activeEvent = {
       type,
@@ -125,6 +128,7 @@ export class DefenseEventManager {
       duration,
       radius,
       scrapReward,
+      waveIndex,
       elapsedSurvivalTime: Number.isFinite(options.elapsed) ? options.elapsed : 0,
       progress: Number.isFinite(options.progress) ? options.progress : 0,
       playerInRadius: false,
@@ -404,25 +408,30 @@ export class DefenseEventManager {
       if (this.haloMesh) this.haloMesh.material.color.setHex(0xff3333);
     }
 
-    // Parámetros dinámicos según la fase de supervivencia
-    let maxAlive = this.cfg.maxEnemiesBase || 8;
-    let spawnInterval = this.cfg.spawnIntervalStart || 2.2;
-    let hpMult = 1.0;
+    // Parámetros dinámicos según la fase de supervivencia y oleada alcanzada
+    const waveIdx = ev.waveIndex || 1;
+    const waveProgress = Math.max(0, waveIdx - 1);
+    const waveHpMult = 1 + waveProgress * (this.cfg.hpScalingPerWave || 0.16);
+    const waveDmgMult = 1 + waveProgress * (this.cfg.dmgScalingPerWave || 0.08);
+
+    let maxAlive = this.cfg.maxEnemiesBase || 30;
+    let spawnInterval = this.cfg.spawnIntervalStart || 0.65;
+    let hpMult = waveHpMult;
     let spdMult = 1.0;
-    let dmgMult = 1.0;
+    let dmgMult = waveDmgMult;
 
     if (ev.intensityPhase === 2) {
-      maxAlive = 13;
-      spawnInterval = 1.6;
-      hpMult = 1.1;
+      maxAlive = Math.round(((this.cfg.maxEnemiesBase || 30) + (this.cfg.maxEnemiesPeak || 65)) * 0.5);
+      spawnInterval = ((this.cfg.spawnIntervalStart || 0.65) + (this.cfg.spawnIntervalEnd || 0.22)) * 0.5;
+      hpMult = waveHpMult * 1.1;
       spdMult = 1.12;
-      dmgMult = 1.1;
+      dmgMult = waveDmgMult * 1.1;
     } else if (ev.intensityPhase === 3) {
-      maxAlive = this.cfg.maxEnemiesPeak || 18;
-      spawnInterval = this.cfg.spawnIntervalEnd || 1.1;
-      hpMult = 1.25;
+      maxAlive = this.cfg.maxEnemiesPeak || 65;
+      spawnInterval = this.cfg.spawnIntervalEnd || 0.22;
+      hpMult = waveHpMult * 1.25;
       spdMult = 1.2;
-      dmgMult = 1.2;
+      dmgMult = waveDmgMult * 1.2;
     }
 
     // Limpiar enemigos muertos del array
@@ -432,7 +441,7 @@ export class DefenseEventManager {
     this.spawnTimer -= dt;
     if (this.spawnTimer <= 0 && this.eventEnemies.length < maxAlive) {
       this.spawnTimer = spawnInterval;
-      this.spawnPerimeterAssaultWave(ctx, ev, hpMult, spdMult, dmgMult);
+      this.spawnPerimeterAssaultWave(ctx, ev, hpMult, spdMult, dmgMult, maxAlive);
     }
 
     // Si ha completado los 2 minutos (120 segundos) en el perímetro
@@ -445,8 +454,11 @@ export class DefenseEventManager {
    * Spawnea enemigos de asalto en los bordes del perímetro de 15m
    * dirigiéndose hacia el jugador para un asedio envolvente y activo.
    */
-  spawnPerimeterAssaultWave(ctx, ev, hpMult, spdMult, dmgMult) {
-    const countToSpawn = ev.intensityPhase === 3 ? (Math.random() < 0.6 ? 2 : 1) : 1;
+  spawnPerimeterAssaultWave(ctx, ev, hpMult, spdMult, dmgMult, maxAlive = 30) {
+    const aliveCount = this.eventEnemies.length;
+    const remainingSlots = Math.max(1, maxAlive - aliveCount);
+    const burstSize = ev.intensityPhase === 3 ? Math.floor(4 + Math.random() * 3) : (ev.intensityPhase === 2 ? Math.floor(3 + Math.random() * 2) : Math.floor(2 + Math.random() * 2));
+    const countToSpawn = Math.min(burstSize, remainingSlots);
 
     for (let i = 0; i < countToSpawn; i++) {
       const ang = Math.random() * Math.PI * 2;

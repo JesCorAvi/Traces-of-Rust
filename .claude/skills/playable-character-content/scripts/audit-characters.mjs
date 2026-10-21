@@ -84,20 +84,18 @@ const VALID_ICONS = new Set([
   'turret_gunner', 'turret_mortar', 'turret_cryo', 'turret_barracks', 'turret_support'
 ]);
 
-// Recognized statMod keys:
-// Generic keys actively consumed by modifiers.js or gameFlow.js
+// Recognized statMod keys: todas activamente consumidas por el motor de combate
 const CONSUMED_STAT_KEYS = new Set([
   'moveSpeedMult', 'atkSpeedMult', 'critChanceBonus', 'areaMult',
   'regenPerSec', 'bonusProjectiles', 'dmgMult', 'damageReduction',
-  'knockbackMult', 'baseHpBonus'
-]);
-
-// Weapon-specific keys declared in passives but pending direct consumer in weapons
-const PENDING_WEAPON_STAT_KEYS = new Set([
+  'knockbackMult', 'baseHpBonus',
   'slashDmgMult', 'projectileDmgMult', 'fireDmgMult', 'auraSlowBonus',
   'explosiveDmgMult', 'harpoonDmgMult', 'orbitalDmgMult', 'boltChainsExtra',
   'extraOrbitals', 'rangeMult'
 ]);
+
+// Claves de arma pendientes de consumidor (vacío: todas implementadas)
+const PENDING_WEAPON_STAT_KEYS = new Set([]);
 
 const ALL_RECOGNIZED_STAT_KEYS = new Set([...CONSUMED_STAT_KEYS, ...PENDING_WEAPON_STAT_KEYS]);
 

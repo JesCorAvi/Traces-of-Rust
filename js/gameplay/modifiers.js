@@ -30,6 +30,16 @@ export function getActiveModifiers(save, gameSettings, passives, character = nul
     bonusProjectiles: charBonusProj + (passives.multishot || 0) * CONFIG.PASSIVES.multishot.perLevel,
     damageReduction: charMods.damageReduction || 0.0,
     knockbackMult: charMods.knockbackMult || 1.0,
+    slashDmgMult: charMods.slashDmgMult || 1.0,
+    projectileDmgMult: charMods.projectileDmgMult || 1.0,
+    fireDmgMult: charMods.fireDmgMult || 1.0,
+    auraSlowBonus: charMods.auraSlowBonus || 0.0,
+    explosiveDmgMult: charMods.explosiveDmgMult || 1.0,
+    harpoonDmgMult: charMods.harpoonDmgMult || 1.0,
+    orbitalDmgMult: charMods.orbitalDmgMult || 1.0,
+    boltChainsExtra: charMods.boltChainsExtra || 0,
+    extraOrbitals: charMods.extraOrbitals || 0,
+    rangeMult: charMods.rangeMult || 1.0,
     shakeMod
   };
 }

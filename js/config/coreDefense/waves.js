@@ -7,40 +7,43 @@ export const WAVES = {
     initialPrepTimeSec: 60.0,
     betweenWavesRestSec: 60.0,
     enableEndgameSwarmAfterVictory: false, // Configurable según sección 4
-    coreHealPerWaveCompleted: 65,
+    coreHealPerWaveCompleted: 15,
 
-    // Escalado por oleada (1 a 12) y balance TD estilo Orcs Must Die / Dungeon Defenders
+    // Escalado por oleada (1 a 12) estilo Bloons TD / Orcs Must Die:
+    // La vida escala con mayor pendiente para retar las mejoras de torretas Tier 3/4.
     tdBaseHpMult: 2.8,
-    hpMultiplierPerWave: 0.28,
+    hpMultiplierPerWave: 0.52,
     dmgMultiplierPerWave: 0.14,
-    speedMultiplierPerWave: 0.025,
+    speedMultiplierPerWave: 0.045,
     playerDamageMultiplierVsRoute: 0.45,
 
     // Eventos especiales de interrupción (cada 3 oleadas: tras ronda 3, 6, 9)
-    // Mini-modo supervivencia intenso de 2 minutos en zona amplia (radio 15m)
+    // Mini-modo supervivencia masivo estilo Megabonk en perímetro de 30m
     EVENTS: {
       intervalWaves: 3,
       eventDurationSec: 120.0,       // 2 minutos de duración
       survivalRadius: 15.0,          // Zona amplia de supervivencia (30m de diámetro)
-      scrapReward: 30,               // Recompensa estándar (30 chatarra)
-      maxEnemiesBase: 8,             // Enemigos concurrentes iniciales
-      maxEnemiesPeak: 18,            // Enemigos concurrentes en el clímax final
-      spawnIntervalStart: 2.2,       // Intervalo inicial de spawn
-      spawnIntervalEnd: 1.1          // Intervalo en el clímax final
+      scrapReward: 35,               // Recompensa tras sobrevivir al enjambre
+      maxEnemiesBase: 30,            // Enemigos concurrentes iniciales (Fase 1)
+      maxEnemiesPeak: 65,            // Enemigos concurrentes en el clímax final (Fase 3)
+      spawnIntervalStart: 0.65,      // Intervalo inicial de spawn
+      spawnIntervalEnd: 0.22,        // Intervalo en el clímax final
+      hpScalingPerWave: 0.16,        // Escalado suave de vida por oleada superada (+16%/wave)
+      dmgScalingPerWave: 0.08        // Escalado de daño de los hostiles en eventos (+8%/wave)
     },
 
     SCHEDULE: [
-      { wave: 1,  count: 10, interval: 1.25, routes: ['path_north'], composition: { zombie: 1.0, worm: 0.0, weeper: 0.0 } },
-      { wave: 2,  count: 15, interval: 1.15, routes: ['path_north', 'path_east'], composition: { zombie: 0.82, worm: 0.18, weeper: 0.0 } },
-      { wave: 3,  count: 18, interval: 1.05, routes: ['path_north', 'path_east'], composition: { zombie: 0.70, worm: 0.30, weeper: 0.0 }, bossId: 'boss_butcher' },
-      { wave: 4,  count: 24, interval: 0.95, routes: ['path_north', 'path_west'], composition: { zombie: 0.65, worm: 0.35, weeper: 0.0 } },
-      { wave: 5,  count: 28, interval: 0.90, routes: ['path_east', 'path_west'], composition: { zombie: 0.60, worm: 0.36, weeper: 0.04 } },
-      { wave: 6,  count: 32, interval: 0.85, routes: ['path_north', 'path_east', 'path_west'], composition: { zombie: 0.55, worm: 0.39, weeper: 0.06 }, bossId: 'boss_siren' },
-      { wave: 7,  count: 38, interval: 0.78, routes: ['path_north', 'path_east', 'path_west'], composition: { zombie: 0.50, worm: 0.40, weeper: 0.10 } },
-      { wave: 8,  count: 42, interval: 0.72, routes: ['path_north', 'path_east', 'path_west'], composition: { zombie: 0.44, worm: 0.42, weeper: 0.14 } },
-      { wave: 9,  count: 46, interval: 0.68, routes: ['path_north', 'path_east', 'path_west'], composition: { zombie: 0.38, worm: 0.42, weeper: 0.20 }, bossId: 'boss_furnace' },
-      { wave: 10, count: 52, interval: 0.62, routes: ['path_north', 'path_east', 'path_west'], composition: { zombie: 0.32, worm: 0.42, weeper: 0.26 } },
-      { wave: 11, count: 58, interval: 0.56, routes: ['path_north', 'path_east', 'path_west'], composition: { zombie: 0.26, worm: 0.42, weeper: 0.32 }, bossId: 'boss_apostle' },
-      { wave: 12, count: 65, interval: 0.50, routes: ['path_north', 'path_east', 'path_west'], composition: { zombie: 0.20, worm: 0.42, weeper: 0.38 }, bossId: 'boss_warden' }
+      { wave: 1,  count: 24,  interval: 0.75, routes: ['path_north'], composition: { zombie: 1.0, worm: 0.0, weeper: 0.0 } },
+      { wave: 2,  count: 36,  interval: 0.65, routes: ['path_north', 'path_east'], composition: { zombie: 0.75, worm: 0.25, weeper: 0.0 } },
+      { wave: 3,  count: 48,  interval: 0.58, routes: ['path_north', 'path_east'], composition: { zombie: 0.65, worm: 0.35, weeper: 0.0 }, bossId: 'boss_butcher' },
+      { wave: 4,  count: 64,  interval: 0.50, routes: ['path_north', 'path_west'], composition: { zombie: 0.50, worm: 0.40, weeper: 0.10 } },
+      { wave: 5,  count: 80,  interval: 0.44, routes: ['path_east', 'path_west'], composition: { zombie: 0.42, worm: 0.42, weeper: 0.16 } },
+      { wave: 6,  count: 98,  interval: 0.38, routes: ['path_north', 'path_east', 'path_west'], composition: { zombie: 0.35, worm: 0.43, weeper: 0.22 }, bossId: 'boss_siren' },
+      { wave: 7,  count: 118, interval: 0.34, routes: ['path_north', 'path_east', 'path_west'], composition: { zombie: 0.28, worm: 0.44, weeper: 0.28 } },
+      { wave: 8,  count: 140, interval: 0.30, routes: ['path_north', 'path_east', 'path_west'], composition: { zombie: 0.22, worm: 0.44, weeper: 0.34 } },
+      { wave: 9,  count: 165, interval: 0.26, routes: ['path_north', 'path_east', 'path_west'], composition: { zombie: 0.18, worm: 0.42, weeper: 0.40 }, bossId: 'boss_furnace' },
+      { wave: 10, count: 190, interval: 0.24, routes: ['path_north', 'path_east', 'path_west'], composition: { zombie: 0.15, worm: 0.40, weeper: 0.45 } },
+      { wave: 11, count: 220, interval: 0.21, routes: ['path_north', 'path_east', 'path_west'], composition: { zombie: 0.12, worm: 0.38, weeper: 0.50 }, bossId: 'boss_apostle' },
+      { wave: 12, count: 255, interval: 0.18, routes: ['path_north', 'path_east', 'path_west'], composition: { zombie: 0.10, worm: 0.35, weeper: 0.55 }, bossId: 'boss_warden' }
     ]
   };

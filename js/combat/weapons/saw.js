@@ -10,7 +10,7 @@ import { SHARED_GEO, SHARED_MAT, triggerCombatFlash, getDirectionalHandPos, getW
 export function executeSawSlash(scene, playerPos, facingYaw, level, mods, enemies, vfx, onDamage, onMicroShake, bodyYaw = facingYaw) {
   const { cfg, mult } = getWeaponScaling('slash', level);
   const size = (3.1 + level * 0.3) * mods.areaMult;
-  const dmg = cfg.baseDmg * mult * mods.dmgMult;
+  const dmg = cfg.baseDmg * mult * mods.dmgMult * (mods.slashDmgMult || 1.0);
   const range = (cfg.baseRange + level * 0.28) * mods.areaMult;
 
   AudioSys.play(195, 0.13, 'sawtooth', 0.06);

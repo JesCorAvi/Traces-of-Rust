@@ -9,14 +9,14 @@ import { getDirectionalHandPos, getWeaponScaling } from '../shared.js';
 export function fireHarpoon(scene, playerPos, facingYaw, level, mods, enemies, vfx, onDamage, bodyYaw = facingYaw) {
   const alive = enemies.filter(e => e.state !== 'dead');
   const { cfg, mult } = getWeaponScaling('harpoon', level);
-  const maxRange = cfg.baseRange * mods.areaMult;
+  const maxRange = cfg.baseRange * mods.areaMult * (mods.rangeMult || 1.0);
   const count = 1 + (cfg.usesMultishot ? (mods.bonusProjectiles || 0) : 0);
 
   const baseDir = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), facingYaw);
 
   AudioSys.play(150, 0.18, 'triangle', 0.08);
   const start = getDirectionalHandPos(playerPos, bodyYaw, 0.85, 0.36, 1.08);
-  const dmg = cfg.baseDmg * mult * mods.dmgMult;
+  const dmg = cfg.baseDmg * mult * mods.dmgMult * (mods.harpoonDmgMult || 1.0);
   const maxPierce = 2 + level;
 
   for (let h = 0; h < count; h++) {

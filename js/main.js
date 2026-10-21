@@ -189,7 +189,9 @@ function cleanupVfxItem(v) {
 
 function syncOrbitalsCount() {
   if (!skills.orbital) return;
-  const targetCount = skills.orbital + (passives.multishot || 0);
+  const activeChar = getCharacterById(getSelectedCharacterId());
+  const charExtra = activeChar?.statMods?.extraOrbitals || 0;
+  const targetCount = skills.orbital + (passives.multishot || 0) + charExtra;
   while (orbitals.length < targetCount) orbitals.push(createOrbitalUnit(scene, 0));
   orbitals.forEach((o, idx) => { o.angle = (idx / orbitals.length) * Math.PI * 2; });
 }

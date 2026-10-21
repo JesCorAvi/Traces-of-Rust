@@ -9,7 +9,7 @@ import { getDirectionalHandPos, getWeaponScaling } from '../shared.js';
 export function fireDefibrillator(scene, playerPos, facingYaw, level, mods, enemies, vfx, onDamage) {
   const { cfg, mult } = getWeaponScaling('bolt', level);
   const range = cfg.baseRange * mods.areaMult;
-  const maxTargets = 2 + level;
+  const maxTargets = 2 + level + (mods.boltChainsExtra || 0);
   const near = enemies
     .filter(e => e.state !== 'dead' && e.group.position.distanceTo(playerPos) < range)
     .slice(0, maxTargets);

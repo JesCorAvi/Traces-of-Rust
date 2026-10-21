@@ -173,7 +173,7 @@ export class CoreDefenseMode {
       }),
       GameEvents.on('defense:special_event_triggered', payload => {
         if (this.defenseEventManager) {
-          this.defenseEventManager.startEvent(payload.eventType);
+          this.defenseEventManager.startEvent(payload.eventType, { waveIndex: payload.waveIndex });
         }
         ctx.onCoreUnderAttackAlert?.('¡EVENTO DE EMERGENCIA DETECTADO! // OLEADAS EN PAUSA');
         ctx.triggerScare?.(0.32);

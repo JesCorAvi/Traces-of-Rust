@@ -43,7 +43,7 @@ export function fireFlamethrower(scene, playerPos, facingYaw, level, mods, enemi
     });
   }
 
-  const dmg = cfg.baseDmg * mult * mods.dmgMult;
+  const dmg = cfg.baseDmg * mult * mods.dmgMult * (mods.fireDmgMult || 1.0);
   enemies.forEach(e => {
     if (e.state === 'dead') return;
     const toE = new THREE.Vector3().subVectors(e.group.position, playerPos);

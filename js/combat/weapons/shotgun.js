@@ -50,7 +50,7 @@ export function fireBuckshot(scene, playerPos, aimYaw, bodyYaw, level, mods, ene
   const bonusProj = cfg.usesMultishot ? (mods.bonusProjectiles || 0) : 0;
   const pelletCount = 7 + level * 2 + bonusProj * 3;
   const spreadArc = (0.48 + level * 0.03 + bonusProj * 0.06) * mods.areaMult;
-  const dmgPerPellet = cfg.baseDmg * mult * mods.dmgMult;
+  const dmgPerPellet = cfg.baseDmg * mult * mods.dmgMult * (mods.projectileDmgMult || 1.0);
 
   for (let i = 0; i < pelletCount; i++) {
     const t = pelletCount > 1 ? (i / (pelletCount - 1)) - 0.5 : 0;

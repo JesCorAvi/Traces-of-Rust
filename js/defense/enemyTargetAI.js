@@ -107,11 +107,18 @@ export function evaluateEnemyTarget(enemy, dt, playerPos, playerAlive, coreMachi
 
   // Si el jugador ha muerto o está fuera del radio de abandono, regresar al camino hacia el Núcleo
   if (ai.targetKind === TARGET_KIND.PLAYER) {
-    if (!playerAlive || distToPlayer > prof.abandonRadius) {
+    let dropAggro = !playerAlive || distToPlayer > prof.abandonRadius;
+    if (!enemy.isBoss) {
+      ai.aggroDuration = (ai.aggroDuration || 0) + dt;
+      if (ai.aggroDuration >= (prof.maxAggroDuration || 3.5)) dropAggro = true;
+    }
+    if (dropAggro) {
       ai.reactionTimer += dt;
       if (!playerAlive || ai.reactionTimer >= prof.reactionTime) {
         ai.targetKind = TARGET_KIND.CORE;
         ai.reactionTimer = 0;
+        ai.aggroDuration = 0;
+        ai.aggroCooldown = enemy.isBoss ? 0 : 4.5;
         ai.isAttackingCore = false;
         if (pathSystem) {
           ai.waypointIdx = pathSystem.findRejoinWaypointIndex(ai.routeId, pos);
@@ -125,14 +132,16 @@ export function evaluateEnemyTarget(enemy, dt, playerPos, playerAlive, coreMachi
 
   // Estado por defecto: avanzando hacia el Núcleo (o atacándolo)
   if (ai.targetKind === TARGET_KIND.CORE) {
+    if (ai.aggroCooldown > 0) ai.aggroCooldown -= dt;
     const requiredRadius = ai.isAttackingCore ? prof.coreOverrideRadius : prof.detectRadius;
 
-    if (playerAlive && distToPlayer <= requiredRadius) {
+    if (playerAlive && (ai.aggroCooldown <= 0 || enemy.isBoss) && distToPlayer <= requiredRadius) {
       ai.reactionTimer += dt;
       if (ai.reactionTimer >= prof.reactionTime) {
         ai.targetKind = TARGET_KIND.PLAYER;
         ai.isAttackingCore = false;
         ai.reactionTimer = 0;
+        ai.aggroDuration = 0;
 
         if (ai.scareCooldown <= 0) {
           ai.scareCooldown = prof.aggroScareCooldown;

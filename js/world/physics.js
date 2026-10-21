@@ -29,7 +29,7 @@ export function createWorldPhysics() {
       return false;
     },
 
-    getGroundHeight(x, z, currentY = 0, ignoreStepLimit = false) {
+    getGroundHeight(x, z, currentY = 0, ignoreStepLimit = false, structuralOnly = false) {
       let h = 0;
       const stepTolerance = 0.82;
 
@@ -42,6 +42,7 @@ export function createWorldPhysics() {
       }
 
       for (const b of walkableBoxes) {
+        if (structuralOnly && b.isObstacle) continue;
         if (x >= b.minX && x <= b.maxX && z >= b.minZ && z <= b.maxZ) {
           if ((ignoreStepLimit || currentY + stepTolerance >= b.topY) && b.topY + 0.02 > h) {
             h = b.topY + 0.02;

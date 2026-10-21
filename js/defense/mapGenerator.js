@@ -47,17 +47,22 @@ function buildSplineRoute(controlPoints, worldPhysics, sampleCount = 65) {
   const curve = new THREE.CatmullRomCurve3(pts, false, 'catmullrom', 0.28);
   const rawPoints = curve.getPoints(sampleCount);
 
-  // Muestrear altura de superficie real en cada punto (suelo o techo de plataforma)
+  // Muestrear altura estructural real en cada punto (suelo o techo de plataforma/rampa física)
+  // Ignora cajas u obstáculos sueltos (structuralOnly = true)
   const surfaceHeights = rawPoints.map(p => {
-    return worldPhysics ? worldPhysics.getGroundHeight(p.x, p.z, 0, true) : (p.y || 0);
+    const gy = worldPhysics ? worldPhysics.getGroundHeight(p.x, p.z, 0, true, true) : (p.y || 0);
+    return gy > 0.05 ? gy : 0;
   });
 
-  // Suavizado de altura para que transiciones sobre rampas o bordes sean continuas y naturales
+  // Suavizado lineal de altura únicamente donde existan pendientes de rampas
   const smoothHeights = [...surfaceHeights];
-  for (let pass = 0; pass < 3; pass++) {
+  for (let pass = 0; pass < 2; pass++) {
     for (let i = 1; i < smoothHeights.length - 1; i++) {
-      const avg = (smoothHeights[i - 1] + smoothHeights[i] * 2 + smoothHeights[i + 1]) / 4;
-      smoothHeights[i] = Math.max(surfaceHeights[i], avg);
+      if (surfaceHeights[i] > 0.05 || surfaceHeights[i - 1] > 0.05 || surfaceHeights[i + 1] > 0.05) {
+        smoothHeights[i] = (smoothHeights[i - 1] + smoothHeights[i] * 2 + smoothHeights[i + 1]) / 4;
+      } else {
+        smoothHeights[i] = 0;
+      }
     }
   }
 

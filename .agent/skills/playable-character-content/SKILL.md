@@ -55,7 +55,7 @@ Produce un operador jugable completo y consistente: entrada en `CHARACTERS`, tem
 - **Tema obligatorio:** sin `CHARACTER_THEMES[id]`, el dibujo cae a Otto sin avisar.
 - **Pasiva real:** `passive`/`passiveDesc` son texto; el efecto debe estar en `statMods` o en código.
 - **Claves genéricas primero:** `moveSpeedMult`, `atkSpeedMult`, `critChanceBonus`, `areaMult`, `regenPerSec`, `bonusProjectiles`, `dmgMult`, `damageReduction`, `knockbackMult`, `baseHpBonus`.
-- **Claves específicas requieren consumidor:** hoy `slashDmgMult`, `projectileDmgMult`, `fireDmgMult`, `auraSlowBonus`, `explosiveDmgMult`, `harpoonDmgMult`, `orbitalDmgMult`, `boltChainsExtra`, `extraOrbitals` y `rangeMult` no se consumen.
+- **Consumo de claves específicas:** las 10 claves de arma (`slashDmgMult`, `projectileDmgMult`, `fireDmgMult`, `auraSlowBonus`, `explosiveDmgMult`, `harpoonDmgMult`, `orbitalDmgMult`, `boltChainsExtra`, `extraOrbitals` y `rangeMult`) están conectadas y se consumen en combate.
 - **Sin valores redundantes:** no uses `dmgMult` genérico si la pasiva debe afectar solo a un arma.
 - **Online:** Host y Cliente deben compartir catálogo; un ID desconocido cae a Otto.
 
