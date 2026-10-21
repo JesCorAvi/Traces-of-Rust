@@ -142,7 +142,7 @@ function renderMapCardsGrid(diffKey) {
     // 1. Contenedor de la miniatura de la ruta
     const thumbWrap = document.createElement('div');
     thumbWrap.className = 'map-card-thumb';
-    const canvas = renderMapThumbnailCanvas(mapData, 190, 115);
+    const canvas = renderMapThumbnailCanvas(mapData, 240, 110);
     thumbWrap.appendChild(canvas);
 
     // 2. Medalla / Estado de récord estilo BTD6

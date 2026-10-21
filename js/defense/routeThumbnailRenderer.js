@@ -3,16 +3,22 @@
 // Exports: renderMapThumbnailCanvas, renderMapThumbnailDataURL.
 
 /**
- * Convierte coordenadas del mundo 3D (-50 a +50) a píxeles del canvas 2D.
+ * Convierte coordenadas del mundo 3D (-50 a +50) a píxeles del canvas 2D con márgenes de seguridad.
  */
-function worldToCanvas(x, z, cw, ch, padding = 10) {
-  const innerW = cw - padding * 2;
-  const innerH = ch - padding * 2;
-  const nx = (x + 48) / 96;
-  const nz = (z + 48) / 96;
+function worldToCanvas(x, z, cw, ch, padding = null) {
+  const padX = (padding && typeof padding === 'object') ? padding.x : (typeof padding === 'number' ? padding : Math.round(cw * 0.08));
+  const padY = (padding && typeof padding === 'object') ? padding.y : (typeof padding === 'number' ? padding : Math.round(ch * 0.14));
+  const innerW = cw - padX * 2;
+  const innerH = ch - padY * 2;
+  // El área jugable de MAP_CATALOG está en [-44, 44] para X y Z.
+  // Con span 104 (rango -52 a +52), los waypoints extremos (±44) y las splines (±46)
+  // quedan perfectamente dentro del área visible con holgura segura para balizas y glow.
+  const span = 104;
+  const nx = (x + 52) / span;
+  const nz = (z + 52) / span;
   return {
-    px: padding + Math.max(0, Math.min(1, nx)) * innerW,
-    py: padding + Math.max(0, Math.min(1, nz)) * innerH
+    px: padX + Math.max(0, Math.min(1, nx)) * innerW,
+    py: padY + Math.max(0, Math.min(1, nz)) * innerH
   };
 }
 
@@ -62,11 +68,11 @@ function getRoutePoints(route, samplesPerSegment = 8) {
 /**
  * Renderiza el plano del mapa en un elemento Canvas HTML5.
  * @param {Object} mapData - Datos del mapa con routes, spawnPoints, exitPoints.
- * @param {number} width - Ancho del canvas (default 180)
- * @param {number} height - Alto del canvas (default 115)
+ * @param {number} width - Ancho del canvas (default 240)
+ * @param {number} height - Alto del canvas (default 110)
  * @returns {HTMLCanvasElement}
  */
-export function renderMapThumbnailCanvas(mapData, width = 180, height = 115) {
+export function renderMapThumbnailCanvas(mapData, width = 240, height = 110) {
   const canvas = document.createElement('canvas');
   canvas.width = width;
   canvas.height = height;
@@ -93,6 +99,16 @@ export function renderMapThumbnailCanvas(mapData, width = 180, height = 115) {
     ctx.lineTo(width, gy);
     ctx.stroke();
   }
+
+  // 2b. Límite perimetral táctico del sector
+  const arenaTL = worldToCanvas(-46, -46, width, height);
+  const arenaBR = worldToCanvas(46, 46, width, height);
+  ctx.save();
+  ctx.strokeStyle = 'rgba(39, 56, 42, 0.4)';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([3, 3]);
+  ctx.strokeRect(arenaTL.px, arenaTL.py, arenaBR.px - arenaTL.px, arenaBR.py - arenaTL.py);
+  ctx.restore();
 
   // 3. Obstáculos / Plataformas principales de la fábrica
   // Plataforma Norte (-22z), Plataforma Sur (+22z) y bloques perimetrales
@@ -270,7 +286,7 @@ export function renderMapThumbnailCanvas(mapData, width = 180, height = 115) {
 /**
  * Devuelve la miniatura del mapa como una DataURL en formato PNG.
  */
-export function renderMapThumbnailDataURL(mapData, width = 180, height = 115) {
+export function renderMapThumbnailDataURL(mapData, width = 240, height = 110) {
   const canvas = renderMapThumbnailCanvas(mapData, width, height);
   return canvas.toDataURL('image/png');
 }
