@@ -2,6 +2,8 @@
 // Exports: setupGameFlow.
 
 import { openMapSelector } from '../ui/mapSelectorModal.js';
+import { openCharacterSelectorModal } from '../ui/characterSelectorModal.js';
+import { getMapById } from '../defense/mapGenerator.js';
 import { GameEvents } from './eventBus.js';
 import { MultiplayerSync } from '../online/multiplayerSync.js';
 
@@ -217,17 +219,43 @@ function restartMatch() {
 function requestStartGame() {
   rt.AudioSys.playUISelect();
   const tutorialKey = rt.CONFIG.CORE_DEFENSE.TUTORIAL.choiceKey;
-  if (rt.ModeManager.getSelectedModeId() === 'core_defense') {
+  const selectedMode = rt.ModeManager.getSelectedModeId();
+
+  if (selectedMode === 'core_defense') {
     if (!localStorage.getItem(tutorialKey)) {
       showTutorialPrompt();
       return;
     }
-    openMapSelector(localStorage.getItem('traces_td_difficulty') || 'normal', () => {
-      startGame({ tutorial: false });
+    const currentDiff = localStorage.getItem('traces_td_difficulty') || 'normal';
+    openMapSelector(currentDiff, (chosenMapId, chosenDiff) => {
+      const mapData = getMapById(chosenMapId);
+      const mapName = mapData ? mapData.name : 'MISIÓN';
+      openCharacterSelectorModal({
+        title: 'MESA DE ASIGNACIÓN // SELECCIÓN DE OPERADOR',
+        sub: `Selecciona tu superviviente para desplegar en ${mapName} (${(chosenDiff || currentDiff).toUpperCase()}):`,
+        confirmText: '[ ASIGNAR Y COMENZAR MISIÓN ]',
+        onConfirm: () => {
+          startGame({ tutorial: false });
+        },
+        onClose: () => {
+          document.getElementById('character-modal')?.classList.add('hidden');
+          openMapSelector(chosenDiff || currentDiff, (mId, dVal) => {
+            requestStartGame();
+          });
+        }
+      });
     });
     return;
   }
-  startGame({ tutorial: false });
+
+  openCharacterSelectorModal({
+    title: 'MESA DE ASIGNACIÓN // SELECCIÓN DE OPERADOR',
+    sub: 'Selecciona tu superviviente para la incursión táctica:',
+    confirmText: '[ ASIGNAR Y DESPLEGAR ]',
+    onConfirm: () => {
+      startGame({ tutorial: false });
+    }
+  });
 }
 
 function updateTdTutorialButton() {
@@ -286,9 +314,7 @@ document.getElementById('btn-tutorial-no').onclick = () => {
   localStorage.setItem(rt.CONFIG.CORE_DEFENSE.TUTORIAL.choiceKey, 'skipped');
   document.getElementById('tutorial-prompt-screen').classList.add('hidden');
   rt.AudioSys.playUISelect();
-  openMapSelector(localStorage.getItem('traces_td_difficulty') || 'normal', () => {
-    startGame({ tutorial: false });
-  });
+  requestStartGame();
 };
 document.getElementById('btn-td-tutorial').onclick = () => {
   rt.AudioSys.playUISelect();

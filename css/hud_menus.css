@@ -1286,6 +1286,32 @@
   margin-top: 6px !important;
 }
 
+.char-coop-status-box {
+  margin-top: 10px;
+  padding: 8px 14px;
+  background: rgba(10, 14, 10, 0.92);
+  border: 1px solid #f0c954;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
+  color: #f0c954;
+  text-shadow: 1px 1px 0 #000;
+  animation: coopWaitPulse 1.6s ease-in-out infinite alternate;
+}
+.char-coop-status-box.is-ready {
+  border-color: #55de3e;
+  color: #8ef77b;
+  background: rgba(12, 28, 12, 0.94);
+}
+@keyframes coopWaitPulse {
+  0% { box-shadow: 0 0 6px rgba(240, 201, 84, 0.2); }
+  100% { box-shadow: 0 0 16px rgba(240, 201, 84, 0.6); }
+}
+
 @media (max-width: 768px) {
   .character-grid {
     grid-template-columns: 1fr;

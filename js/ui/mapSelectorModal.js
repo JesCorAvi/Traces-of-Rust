@@ -67,6 +67,7 @@ export function openMapSelector(preferredDiff = null, onLaunch = null) {
   // Mostrar la pantalla de selector
   document.getElementById('start-screen')?.classList.add('hidden');
   document.getElementById('shop-screen')?.classList.add('hidden');
+  document.getElementById('character-modal')?.classList.add('hidden');
   screen.classList.remove('hidden');
 }
 
@@ -74,6 +75,7 @@ export function closeMapSelector() {
   AudioSys.playUIClick();
   const screen = document.getElementById('map-select-screen');
   if (screen) screen.classList.add('hidden');
+  document.getElementById('character-modal')?.classList.add('hidden');
   document.getElementById('start-screen')?.classList.remove('hidden');
 }
 

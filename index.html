@@ -303,8 +303,8 @@
         <!-- Selector de Modo Dual (PokéBonk Style: Tower Defense Principal + Supervivencia Arcade) -->
         <div class="mode-hierarchy-container" id="mode-selector-group"></div>
 
-        <!-- Selector Compacto de Operador Temático -->
-        <div id="character-selector-card" class="operator-compact-pill" role="button" tabindex="0" title="Haz clic para cambiar operador">
+        <!-- Selector Compacto de Operador Temático (Oculto del menú principal; se solicita tras elegir mapa) -->
+        <div id="character-selector-card" class="operator-compact-pill hidden" role="button" tabindex="0" title="Haz clic para cambiar operador" style="display:none;">
           <div class="op-compact-left">
             <div class="op-compact-avatar">
               <span class="ui-icon sm operator-avatar-icon" data-ui-icon="slash"></span>
@@ -502,12 +502,19 @@
       <div class="plate-header">
         <span class="tape-label">
           <span class="ui-icon sm" data-ui-icon="level"></span>
-          <span>MESA DE ASIGNACIÓN // OPERADORES DE PLANTA</span>
+          <span id="char-modal-title">MESA DE ASIGNACIÓN // OPERADORES DE PLANTA</span>
         </span>
         <button type="button" class="rust-btn sm" id="btn-close-characters"><span>[X] CERRAR</span></button>
       </div>
-      <p class="plate-sub">Selecciona tu superviviente. Cada operador está especializado en su arma insignia y cuenta con pasivas únicas de impacto y supervivencia:</p>
+      <p class="plate-sub" id="char-modal-sub">Selecciona tu superviviente. Cada operador está especializado en su arma insignia y cuenta con pasivas únicas de impacto y supervivencia:</p>
       <div id="character-grid" class="character-grid"></div>
+
+      <!-- Estado de espera en modo Cooperativo -->
+      <div id="char-coop-status-box" class="char-coop-status-box hidden">
+        <span class="ui-icon sm" data-ui-icon="warning"></span>
+        <span id="char-coop-status-msg">El otro jugador aún está seleccionando personaje...</span>
+      </div>
+
       <div class="btn-group" style="margin-top:14px;">
         <button type="button" class="rust-btn primary" id="btn-confirm-character"><span>[ ASIGNAR OPERADOR Y CONTINUAR ]</span></button>
       </div>

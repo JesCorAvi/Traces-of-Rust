@@ -4,5 +4,5 @@
 export { renderModeSelectorUI, updateCareerDossierForSelectedMode, updateStartPlayButton } from './modeSelector.js';
 export { renderShopUI } from './shop.js';
 export { renderLevelUpCardsUI } from './levelUpCards.js';
-export { setupCharacterSelectorUI, updateCharacterSelectorCard, openCharacterSelectorModal, closeCharacterSelectorModal, onCharacterChange } from './characterSelectorModal.js';
+export { setupCharacterSelectorUI, updateCharacterSelectorCard, openCharacterSelectorModal, closeCharacterSelectorModal, setCoopCharSelectionStatus, onCharacterChange } from './characterSelectorModal.js';
 export { setupSettingsUI, applyStoredFullscreen, setFullscreen, toggleFullscreen, isFullscreen } from './settingsMenu.js';

@@ -1,12 +1,18 @@
 // Módulo de interfaz y lógica para salas multijugador: Steamworks (AppID 480 /
 // Spacewar) en Electron y adaptador WebRTC P2P en navegador.
-// Exports: setupSteamLobbyUI, openSteamOnlineModal, closeSteamOnlineModal, updateSteamStatus, getCurrentLobbyData, getLocalPlayerSteamId.
+// Exports: setupSteamLobbyUI, openSteamOnlineModal, closeSteamOnlineModal, updateSteamStatus, getCurrentLobbyData, getLocalPlayerSteamId, handleRemoteStageMatch, handleRemoteCharReady, handleRemoteCancelStage, startCoopCharacterSelectionFlow.
 
 import { AudioSys } from '../audio.js';
 import { ModeManager } from '../modes/gameModeManager.js';
 import { openMapSelector } from '../ui/mapSelectorModal.js';
 import { MultiplayerSync } from './multiplayerSync.js';
 import { normalizeRoomCode } from './webRtcAdapter.js';
+import {
+  openCharacterSelectorModal,
+  closeCharacterSelectorModal,
+  setCoopCharSelectionStatus
+} from '../ui/characterSelectorModal.js';
+import { getMapById } from '../defense/mapGenerator.js';
 
 let modalEl = null;
 let currentLobbyData = null;
@@ -422,6 +428,122 @@ export function launchClientMatch(stateObj) {
   }
 }
 
+let coopMatchStage = null;
+
+export function handleRemoteStageMatch(data) {
+  console.log('[Steam UI] STAGE_MATCH recibido del Host:', data);
+  startCoopCharacterSelectionFlow(data, false);
+}
+
+export function handleRemoteCharReady(data) {
+  console.log('[Steam UI] CHAR_READY recibido de peer:', data);
+  if (!coopMatchStage) return;
+  coopMatchStage.peerReady = true;
+  coopMatchStage.peerCharId = data.charId;
+
+  if (coopMatchStage.localReady) {
+    finalizeAndLaunchCoopMatch();
+  } else {
+    setCoopCharSelectionStatus('peer_ready', '¡Compañero listo! Selecciona tu operador para comenzar.');
+  }
+}
+
+export function handleRemoteCancelStage() {
+  console.log('[Steam UI] CANCEL_STAGE recibido de peer');
+  if (coopMatchStage) {
+    coopMatchStage = null;
+    closeCharacterSelectorModal();
+    openSteamOnlineModal();
+    alert('Despliegue cancelado por el compañero.');
+  }
+}
+
+export function startCoopCharacterSelectionFlow(matchData, isHost) {
+  coopMatchStage = {
+    matchData,
+    isHost,
+    localReady: false,
+    peerReady: false,
+    localCharId: null,
+    peerCharId: null,
+    finalizing: false
+  };
+
+  closeSteamOnlineModal();
+  const mapScreen = document.getElementById('map-select-screen');
+  if (mapScreen) mapScreen.classList.add('hidden');
+
+  if (isHost) {
+    MultiplayerSync.broadcast('STAGE_MATCH', matchData, true);
+    try {
+      if (window.steamOnline?.setLobbyData) {
+        window.steamOnline.setLobbyData('matchStage', matchData);
+      }
+    } catch (e) {}
+  }
+
+  const mapObj = matchData.mapId ? getMapById(matchData.mapId) : null;
+  const mapTitle = mapObj ? mapObj.name : (matchData.mode === 'core_defense' ? 'DEFENSA DE NÚCLEO' : 'SUPERVIVENCIA');
+
+  openCharacterSelectorModal({
+    isCoop: true,
+    title: 'MESA DE ASIGNACIÓN // SELECCIÓN COOPERATIVA',
+    sub: `Selecciona tu operador para la misión cooperativa en ${mapTitle}. Ambos jugadores deben confirmar su personaje:`,
+    confirmText: '[ ASIGNAR OPERADOR Y LISTO ]',
+    onConfirm: (chosenChar) => {
+      handleCoopPlayerConfirmed(chosenChar.id);
+    },
+    onClose: () => {
+      handleCoopCancelStage();
+    }
+  });
+}
+
+function handleCoopPlayerConfirmed(charId) {
+  if (!coopMatchStage) return;
+  coopMatchStage.localReady = true;
+  coopMatchStage.localCharId = charId;
+
+  MultiplayerSync.broadcast('CHAR_READY', { charId }, true);
+
+  if (!coopMatchStage.peerReady) {
+    setCoopCharSelectionStatus('waiting', 'El otro jugador aún está seleccionando personaje...');
+    AudioSys.play(360, 0.12, 'square', 0.05);
+  } else {
+    finalizeAndLaunchCoopMatch();
+  }
+}
+
+function finalizeAndLaunchCoopMatch() {
+  if (!coopMatchStage || coopMatchStage.finalizing) return;
+  coopMatchStage.finalizing = true;
+  setCoopCharSelectionStatus('ready', '¡AMBOS OPERADORES LISTOS! INICIANDO DESPLIEGUE...');
+  AudioSys.play(600, 0.25, 'triangle', 0.15);
+
+  const stage = { ...coopMatchStage };
+  coopMatchStage = null;
+
+  if (stage.isHost) {
+    broadcastMatchStart(stage.matchData);
+  }
+
+  setTimeout(() => {
+    closeCharacterSelectorModal();
+    MultiplayerSync.onMatchStarted({ ...stage.matchData, isHost: stage.isHost });
+    if (gameFlowRuntime && typeof gameFlowRuntime.startGame === 'function') {
+      gameFlowRuntime.startGame({ tutorial: false, onlineMatch: stage.matchData });
+    }
+  }, 600);
+}
+
+function handleCoopCancelStage() {
+  if (!coopMatchStage) return;
+  coopMatchStage = null;
+  MultiplayerSync.broadcast('CANCEL_STAGE', {}, true);
+  closeCharacterSelectorModal();
+  openSteamOnlineModal();
+}
+
 async function handleHostStartCoopMatch() {
   AudioSys.playUISelect();
 
@@ -441,22 +563,14 @@ async function handleHostStartCoopMatch() {
         mapId: selectedMapId,
         diff: chosenDiff
       };
-      const startedMatch = await broadcastMatchStart(matchData) || matchData;
-      MultiplayerSync.onMatchStarted({ ...startedMatch, isHost: true });
-      if (gameFlowRuntime && typeof gameFlowRuntime.startGame === 'function') {
-        gameFlowRuntime.startGame({ tutorial: false, onlineMatch: startedMatch });
-      }
+      startCoopCharacterSelectionFlow(matchData, true);
     });
   } else {
     closeSteamOnlineModal();
     const matchData = {
       mode: 'survival'
     };
-    const startedMatch = await broadcastMatchStart(matchData) || matchData;
-    MultiplayerSync.onMatchStarted({ ...startedMatch, isHost: true });
-    if (gameFlowRuntime && typeof gameFlowRuntime.startGame === 'function') {
-      gameFlowRuntime.startGame({ tutorial: false, onlineMatch: startedMatch });
-    }
+    startCoopCharacterSelectionFlow(matchData, true);
   }
 }
 

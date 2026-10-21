@@ -13,7 +13,7 @@ import { CONFIG } from '../config.js';
 import { AudioSys } from '../audio.js';
 import { spawnEnemyProjectile } from '../combat.js';
 import { ModeManager } from '../modes/gameModeManager.js';
-import { getCurrentLobbyData, getLocalPlayerSteamId, launchClientMatch, getLastLaunchedMatchTimestamp, setLastLaunchedMatchTimestamp } from './steamLobbyUI.js';
+import { getCurrentLobbyData, getLocalPlayerSteamId, launchClientMatch, getLastLaunchedMatchTimestamp, setLastLaunchedMatchTimestamp, handleRemoteStageMatch, handleRemoteCharReady, handleRemoteCancelStage } from './steamLobbyUI.js';
 
 // Generador de etiquetas flotantes tácticas para jugadores remotos
 function createNameplateSprite(nameText) {
@@ -357,6 +357,9 @@ class RemotePlayer {
 // Paquetes válidos fuera de una partida activa (menú/lobby).
 const PRE_MATCH_PACKET_TYPES = new Set([
   'START_MATCH',
+  'STAGE_MATCH',
+  'CHAR_READY',
+  'CANCEL_STAGE',
   'LOBBY_PING',
   'LOBBY_PING_ACK',
   // Un peer puede completar el handshake justo antes de que onMatchStarted()
@@ -2359,6 +2362,21 @@ export const MultiplayerSync = {
         case 'PICKUP_COLLECTED': {
           if (this.isHost()) break;
           this.handlePickupCollected(data);
+          break;
+        }
+
+        case 'STAGE_MATCH': {
+          handleRemoteStageMatch(data);
+          break;
+        }
+
+        case 'CHAR_READY': {
+          handleRemoteCharReady(data);
+          break;
+        }
+
+        case 'CANCEL_STAGE': {
+          handleRemoteCancelStage(data);
           break;
         }
 
