@@ -2,6 +2,8 @@
 // Exports: setupGameFlow.
 
 import { openMapSelector } from '../ui/mapSelectorModal.js';
+import { GameEvents } from './eventBus.js';
+import { MultiplayerSync } from '../online/multiplayerSync.js';
 
 export function setupGameFlow(rt) {
 function clearSharedRunState() {
@@ -21,6 +23,16 @@ function clearSharedRunState() {
 function startGame(options = {}) {
   rt.pendingTutorial = !!options.tutorial;
   rt.AudioSys.init();
+
+  // El Host impone modo, mapa y dificultad; el Cliente ignora su selección
+  // local y carga exactamente el matchData recibido por lobby/P2P.
+  const onlineMatch = options.onlineMatch || null;
+  if (onlineMatch) {
+    if (onlineMatch.mode) rt.ModeManager.selectMode(onlineMatch.mode);
+    if (onlineMatch.mapId) localStorage.setItem('traces_td_selected_map', onlineMatch.mapId);
+    if (onlineMatch.diff) localStorage.setItem('traces_td_difficulty', onlineMatch.diff);
+  }
+
   clearSharedRunState();
 
   const modeId = rt.ModeManager.getSelectedModeId();
@@ -57,13 +69,31 @@ function startGame(options = {}) {
   rt.refreshHUD(true);
   rt.refreshStaticDOMIcons();
   rt.state = 'PLAYING';
+  // El match online ya se anunció en steamLobbyUI (onMatchStarted). Ahora que
+  // el modo está cargado, se solicita el snapshot completo de red.
+  MultiplayerSync.onLocalModeReady?.(options);
   document.body.requestPointerLock();
 }
 
-function finishRun(outcome) {
+function finishRun(outcome, options = {}) {
   if (rt.state === 'GAME_OVER') return;
   rt.state = 'GAME_OVER';
   if (document.pointerLockElement) document.exitPointerLock();
+  // La run compartida termina en ambos peers: el Host difunde el resultado y
+  // el Cliente solicita el fin si su jugador muere en Supervivencia. Si el fin
+  // vino de red, no se reenvía para evitar bucles.
+  if (!options.fromRemote && MultiplayerSync?.isMatchActive) {
+    if (MultiplayerSync.isHost()) MultiplayerSync.broadcastMatchOver?.(outcome);
+    else MultiplayerSync.requestRunEnd?.(outcome);
+  }
+  // Fin de run sin cerrar la sesión P2P: conserva matchInfo/isMatchActive para
+  // que Reintentar (MATCH_RESTART) o Volver al Menú (MATCH_END) funcionen.
+  MultiplayerSync?.onLocalRunEnded?.();
+  // En co-op la simulación sigue con menús locales abiertos; ciérralos para
+  // que la pantalla de resultados no quede tapada.
+  rt.turretBuildMenu?.closeSilently?.();
+  document.getElementById('pause-screen')?.classList.add('hidden');
+  document.getElementById('level-up-screen')?.classList.add('hidden');
 
   rt.save.souls = (rt.save.souls || 0) + rt.runSouls;
   rt.saveGame();
@@ -84,6 +114,11 @@ function finishRun(outcome) {
 
 function returnToMainMenu() {
   rt.AudioSys.playUISelect();
+  GameEvents.emit('game:menu');
+  // Avisa al compañero para que ambos salgan limpios (salvo si ya venimos
+  // de un MATCH_END remoto, para no rebotar el paquete).
+  MultiplayerSync?.notifyMatchEnd?.();
+  MultiplayerSync?.reset?.();
   clearSharedRunState();
   rt.state = 'START';
   rt.playerGroup.position.set(0, 0, 0);
@@ -129,6 +164,34 @@ function showTutorialPrompt() {
   document.getElementById('tutorial-prompt-screen')?.classList.remove('hidden');
 }
 
+function restartMatch() {
+  rt.AudioSys.playUISelect();
+  if (MultiplayerSync.isMatchActive) {
+    if (!MultiplayerSync.isHost()) {
+      MultiplayerSync.ctx?.hudController?.showWaveAnnouncement?.('ESPERANDO AL HOST PARA REINICIAR');
+      const btn = document.getElementById('btn-restart');
+      if (btn) {
+        const prev = btn.textContent;
+        btn.disabled = true;
+        btn.textContent = 'ESPERANDO AL HOST...';
+        setTimeout(() => {
+          btn.disabled = false;
+          btn.textContent = prev;
+        }, 2400);
+      }
+      rt.AudioSys.playUIError();
+      return;
+    }
+    const info = MultiplayerSync.broadcastMatchRestart()
+      || MultiplayerSync.getMatchInfo()
+      || { mode: rt.ModeManager.getSelectedModeId() };
+    MultiplayerSync.onMatchStarted({ ...info, isHost: true });
+    startGame({ tutorial: false, onlineMatch: info });
+    return;
+  }
+  startGame({ tutorial: false });
+}
+
 function requestStartGame() {
   rt.AudioSys.playUISelect();
   const tutorialKey = rt.CONFIG.CORE_DEFENSE.TUTORIAL.choiceKey;
@@ -153,7 +216,7 @@ function updateTdTutorialButton() {
 
 document.getElementById('btn-start').onclick = requestStartGame;
 document.getElementById('btn-shop-play').onclick = requestStartGame;
-document.getElementById('btn-restart').onclick = () => { rt.AudioSys.playUISelect(); startGame({ tutorial: false }); };
+document.getElementById('btn-restart').onclick = () => restartMatch();
 document.getElementById('btn-results-menu').onclick = () => returnToMainMenu();
 document.getElementById('btn-pause-to-menu').onclick = () => returnToMainMenu();
 document.getElementById('btn-resume').onclick = () => togglePauseGame();

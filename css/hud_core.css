@@ -298,6 +298,15 @@
   display: none;
 }
 
+.radar-dot.coop-approx {
+  top: 50%; left: 50%;
+  width: 6px; height: 6px;
+  background: #55de3e;
+  border: 1px solid #142214;
+  box-shadow: 0 0 6px #55de3e;
+  display: none;
+}
+
 #radar-threat-label {
   position: absolute; bottom: 12px; left: 50%;
   transform: translateX(-50%);
@@ -433,4 +442,33 @@
   background-image: var(--ui-atlas); background-size: var(--ui-atlas-w) var(--ui-atlas-h);
   background-position: calc(-32px * var(--ui-scale, 2)) calc(-280px * var(--ui-scale, 2));
   transform: translate(-50%, -50%);
+}
+
+/* Números de daño flotantes del jugador local */
+#damage-numbers {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 26;
+  overflow: hidden;
+}
+.dmg-number {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  font-family: 'Press Start 2P', monospace;
+  font-size: 10px;
+  color: #ffd6d6;
+  text-shadow: 2px 2px 0 #1a0505, -1px -1px 0 #1a0505;
+  animation: dmg-number-rise 0.78s ease-out forwards;
+  white-space: nowrap;
+}
+.dmg-number.is-crit {
+  font-size: 13px;
+  color: #ffb347;
+  text-shadow: 2px 2px 0 #2a1000, -1px -1px 0 #2a1000;
+}
+@keyframes dmg-number-rise {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.7); }
+  15% { opacity: 1; transform: translate(-50%, -60%) scale(1.08); }
+  100% { opacity: 0; transform: translate(-50%, -150%) scale(1.0); }
 }

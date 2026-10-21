@@ -102,22 +102,36 @@ export class SurvivalMode {
     }
 
     // 3. Actualización de todos los enemigos activos en la piscina
+    const isNetworkClient = !!(ctx.net?.isMatchActive && !ctx.net.isHost());
+    const playerTargets = (!isNetworkClient && ctx.net?.isMatchActive && typeof ctx.net.getPlayerTargets === 'function')
+      ? ctx.net.getPlayerTargets(playerGroup.position, true)
+      : null;
+
     const callbacks = {
       playerAlive: true,
+      playerTargets,
       onScare: () => ctx.triggerScare(0.35),
-      onDealDamage: attacker => ctx.dealDamageToPlayer(attacker.dmg),
-      onBurnTick: (burningEnemy, burnDmg) => ctx.damageEnemy(burningEnemy, burnDmg, null, true),
-      onShootProjectile: (origin, dir, speed, dmg) => {
+      onDealDamage: attacker => {
+        if (attacker.netTargetIsLocal !== false) ctx.dealDamageToPlayer(attacker.dmg);
+      },
+      onBurnTick: (burningEnemy, burnDmg) => ctx.damageEnemy(
+        burningEnemy, burnDmg, null, true,
+        { visualOnly: isNetworkClient }
+      ),
+      onBossPhaseChange: () => ctx.onBossPhaseChange()
+    };
+
+    if (!isNetworkClient) {
+      callbacks.onShootProjectile = (origin, dir, speed, dmg) => {
         spawnEnemyProjectile(ctx.scene, bossProjectiles, origin, dir, speed, dmg);
         AudioSys.play(380, 0.12, 'sawtooth', 0.05);
-      },
-      onBossPhaseChange: () => ctx.onBossPhaseChange(),
-      onBossSpecial: (boss, atkType) => {
+      };
+      callbacks.onBossSpecial = (boss, atkType, targetPos = playerGroup.position) => {
         triggerBossSpecialAttack(
           ctx.scene,
           boss,
           atkType,
-          playerGroup.position,
+          targetPos,
           worldPhysics,
           bossHazards,
           bossProjectiles,
@@ -125,7 +139,7 @@ export class SurvivalMode {
             for (let s = 0; s < count; s++) {
               enemyPool.spawn(
                 s % 2 === 0 ? 'zombie' : 'worm',
-                playerGroup.position,
+                targetPos,
                 gameTime,
                 camFwd,
                 worldPhysics
@@ -133,8 +147,8 @@ export class SurvivalMode {
             }
           }
         );
-      }
-    };
+      };
+    }
     updateEnemies(enemyPool, dt, playerGroup.position, camFwd, camera.position, worldPhysics, callbacks);
 
     // 4. Sistema de aparición continua alrededor del jugador (Idéntico al original)
@@ -166,14 +180,16 @@ export class SurvivalMode {
       this.bossesDefeated++;
       this.activeBoss = null;
       ctx.addRunSouls(enemy.bossData.teethReward || 15);
-      ctx.spawnLorePickup(enemy.group.position, 'chest');
+      const chestDrop = ctx.spawnLorePickup(enemy.group.position, 'chest');
+      if (chestDrop) enemy._networkDrop = { type: 'chest', pickupNetId: chestDrop.pickupNetId };
 
       if (this.bossesDefeated >= CONFIG.BOSS_SCHEDULE.length && !this.isEndgame) {
         this.activateEndgamePhase(ctx);
       }
     } else {
       const isTooth = Math.random() < 0.26;
-      ctx.spawnLorePickup(enemy.group.position, isTooth ? 'tooth' : 'serum');
+      const drop = ctx.spawnLorePickup(enemy.group.position, isTooth ? 'tooth' : 'serum');
+      if (drop) enemy._networkDrop = { type: drop.type, pickupNetId: drop.pickupNetId };
     }
   }
 

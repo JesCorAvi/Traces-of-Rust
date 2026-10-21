@@ -20,6 +20,16 @@ window.addEventListener('keydown', e => {
 
   const k = e.key.toLowerCase();
 
+  // Transferencia rápida de chatarra en co-op: T envía +5, Shift+T envía +1.
+  if (
+    k === 't' && !e.repeat && rt.MultiplayerSync?.isMatchActive &&
+    (rt.state === 'PLAYING' || rt.state === 'BUILD' || rt.state === 'LEVEL_UP' || rt.state === 'PAUSED')
+  ) {
+    e.preventDefault();
+    rt.MultiplayerSync.sendScrapToPeer(e.shiftKey ? 1 : 5);
+    return;
+  }
+
   if (rt.state === 'BUILD') {
     if (k === 'e' || k === 'escape') {
       e.preventDefault();

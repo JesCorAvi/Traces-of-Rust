@@ -24,6 +24,7 @@
   <div id="vignette-overlay"></div>
   <div id="damage-flash"></div>
   <div id="scare-flash"></div>
+  <div id="damage-numbers" aria-hidden="true"></div>
 
   <!-- Barra superior de diagnóstico, FPS, escala de UI y exportador PNG -->
   <div id="top-bar" class="hidden">
@@ -96,7 +97,11 @@
             <span id="core-scrap-counter">CHATARRA: 0</span>
           </span>
           <span id="core-turret-counter">TORRETAS: 0/12</span>
+          <span id="coop-scrap-transfer" class="coop-scrap-transfer hidden" role="button" tabindex="0" title="Enviar 5 de chatarra al compañero (T). Shift+T envía 1.">
+            <span class="key-cap">T</span><span>+5 AL COMPAÑERO</span>
+          </span>
         </div>
+        <div id="coop-scrap-toast" class="coop-scrap-toast hidden"></div>
       </div>
 
       <!-- Aviso y botón de salto para la pausa de construcción entre rondas -->
@@ -197,6 +202,7 @@
             <div class="radar-dot enemy-approx"></div>
             <div class="radar-dot boss-approx"></div>
             <div class="radar-dot core-approx" title="Posición del Núcleo"></div>
+            <div class="radar-dot coop-approx" title="Compañero Co-Op"></div>
           </div>
           <div id="radar-threat-label">SCANNER: OK</div>
         </div>
@@ -284,16 +290,16 @@
 
   <!-- PANTALLA DE INICIO CON FONDO 3D DE LA FÁBRICA VISIBLE (ESTILO POKÉBONK / MEGABONK / VAMPIRE SURVIVORS) -->
   <div id="start-screen" class="overlay desktop-start-overlay">
-    <!-- BARRA SUPERIOR FLOTANTE CON MONEDAS, AJUSTES Y PANTALLA COMPLETA -->
+    <!-- BARRA SUPERIOR FLOTANTE CON MONEDAS, STEAM ONLINE Y AJUSTES -->
     <header class="start-top-bar">
       <div class="start-top-right">
         <div class="start-souls-badge start-currency-pill" title="Dientes recolectados en planta">
           <span class="ui-icon sm" data-ui-icon="tooth"></span>
           <span>DIENTES: <b id="start-souls" style="color:#f0c954">0</b></span>
         </div>
-        <button type="button" class="rust-btn sm start-top-btn" id="btn-toggle-fullscreen">
-          <span class="ui-icon sm" data-ui-icon="area"></span>
-          <span id="fullscreen-btn-text">PANTALLA COMPLETA</span>
+        <button type="button" class="rust-btn sm start-top-btn" id="btn-steam-online" style="border-color:#4e8a44; color:#a2f593;">
+          <span class="ui-icon sm" data-ui-icon="core"></span>
+          <span id="steam-online-btn-text">STEAM ONLINE</span>
         </button>
         <button type="button" class="rust-btn sm start-top-btn" id="btn-open-settings">
           <span class="ui-icon sm" data-ui-icon="atkSpd"></span>
@@ -347,6 +353,10 @@
           <button type="button" class="rust-btn desktop-sub-menu-btn btn-highlight-shop" id="btn-open-shop">
             <span class="ui-icon sm" data-ui-icon="tooth"></span>
             <span>[ MEJORAS CIRUJANO ]</span>
+          </button>
+          <button type="button" class="rust-btn desktop-sub-menu-btn" id="btn-open-steam-modal" style="border-color:#3e6338;">
+            <span class="ui-icon sm" data-ui-icon="core"></span>
+            <span>[ STEAM CO-OP (480) ]</span>
           </button>
           <button type="button" class="rust-btn desktop-sub-menu-btn" id="btn-open-manual">
             <span class="ui-icon sm" data-ui-icon="level"></span>
@@ -466,6 +476,10 @@
             <input type="range" id="set-fov" min="60" max="95" value="70">
           </div>
           <div class="setting-row">
+            <span>PANTALLA COMPLETA:</span>
+            <button class="rust-btn sm" id="btn-toggle-fullscreen" aria-pressed="true"><span id="fullscreen-state-text">ACTIVADA</span></button>
+          </div>
+          <div class="setting-row">
             <span>SOMBRAS DINÁMICAS DE LINTERNA:</span>
             <button class="rust-btn sm" id="btn-toggle-shadows"><span>ACTIVADAS</span></button>
           </div>
@@ -520,6 +534,113 @@
       <div id="character-grid" class="character-grid"></div>
       <div class="btn-group" style="margin-top:14px;">
         <button type="button" class="rust-btn primary" id="btn-confirm-character"><span>[ ASIGNAR OPERADOR Y CONTINUAR ]</span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL DE STEAM ONLINE / LOBBIES SPACEWAR (APPID 480) -->
+  <div id="steam-online-modal" class="overlay hidden">
+    <div class="metal-plate steam-modal-plate">
+      <div class="plate-header">
+        <span class="tape-label">
+          <span class="ui-icon sm" data-ui-icon="core"></span>
+          <span>SISTEMA DE ENLACE TÁCTICO // STEAMWORKS ONLINE</span>
+        </span>
+        <span id="steam-status-badge" class="led-val" style="color:#55de3e;">INICIALIZANDO...</span>
+      </div>
+      <p class="plate-sub">Enlace multijugador P2P privado mediante Steamworks (Spacewar 480). Conexión exclusiva por código o invitación:</p>
+
+      <!-- Panel de Identidad Steam -->
+      <div class="steam-user-card" id="steam-user-card">
+        <div class="steam-user-left">
+          <div class="steam-avatar-box">
+            <span class="ui-icon sm" data-ui-icon="core"></span>
+          </div>
+          <div class="steam-user-info">
+            <span class="steam-player-name" id="steam-player-name">Detectando usuario...</span>
+            <span class="steam-player-id" id="steam-player-id">SteamID: ---</span>
+          </div>
+        </div>
+        <button type="button" class="rust-btn sm" id="btn-steam-overlay">
+          <span>[ ABRIR OVERLAY (SHIFT+TAB) ]</span>
+        </button>
+      </div>
+
+      <!-- Sección de Host y Unirse por Código -->
+      <div class="steam-panels-row">
+        <!-- Columna Izquierda: Crear y Gestionar Sala Privada -->
+        <div class="steam-box">
+          <h4 class="steam-box-title">★ CREAR SALA CO-OP (HOST)</h4>
+          <p class="steam-box-sub">Genera un canal privado. Comparte tu código de sala o invita directamente a tus amigos de Steam:</p>
+          
+          <div id="steam-no-lobby-view">
+            <button type="button" class="rust-btn primary" id="btn-create-lobby" style="width:100%; margin-top:8px;">
+              <span>[ CREAR SALA PRIVADA ]</span>
+            </button>
+          </div>
+
+          <div id="steam-active-lobby-view" class="hidden">
+            <div class="steam-active-card">
+              <div class="steam-active-header">
+                <span style="color:#8ef77b; font-weight:bold;">● SALA ACTIVA (PRIVADA)</span>
+                <span id="steam-lobby-members-count" style="color:#f0c954;">1 / 4 Operadores</span>
+              </div>
+              <div class="steam-lobby-id-row">
+                <span>CÓDIGO DE ENLACE:</span>
+                <code id="steam-active-lobby-id">---</code>
+              </div>
+              <div id="steam-lobby-members-list" style="margin: 8px 0; display: flex; flex-direction: column; gap: 4px;"></div>
+              
+              <!-- Control de Inicio Cooperativo -->
+              <div id="steam-host-launch-group" style="margin: 10px 0 6px;">
+                <button type="button" class="rust-btn primary" id="btn-start-coop-match" style="width:100%; padding: 8px 10px; font-size: 10px; border-color: #55de3e; color: #a2f593;">
+                  <span>[ ► INICIAR DESPLIEGUE CO-OP ]</span>
+                </button>
+              </div>
+              <div id="steam-client-wait-msg" class="hidden" style="margin: 10px 0 6px; padding: 6px; background: rgba(0,0,0,0.5); border: 1px dashed #4e8a44; font-family: 'VT323', monospace; font-size: 16px; color: #f0c954; text-align: center;">
+                ⏳ Conectado a la sala. Esperando a que el Host inicie el despliegue...
+              </div>
+
+              <div class="steam-lobby-actions">
+                <button type="button" class="rust-btn sm" id="btn-copy-lobby-id">
+                  <span>[ COPIAR CÓDIGO ]</span>
+                </button>
+                <button type="button" class="rust-btn sm primary" id="btn-invite-friends">
+                  <span>[ INVITAR AMIGOS ]</span>
+                </button>
+                <button type="button" class="rust-btn sm" id="btn-leave-lobby" style="color:#ff6b6b; border-color:#8a2020;">
+                  <span>[ SALIR ]</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Columna Derecha: Unirse por Código Directo -->
+        <div class="steam-box">
+          <h4 class="steam-box-title">★ UNIRSE POR CÓDIGO DIRECTO</h4>
+          <p class="steam-box-sub">Introduce el código de sala o Lobby ID facilitado por tu compañero:</p>
+
+          <div class="steam-join-input-group" style="margin-top: 10px;">
+            <input type="text" id="steam-join-input" class="steam-input" placeholder="Pegar código de sala aquí..." />
+            <button type="button" class="rust-btn sm primary" id="btn-join-by-id">
+              <span>[ CONECTARSE ]</span>
+            </button>
+          </div>
+
+          <div class="steam-private-info-box" style="margin-top: 16px; padding: 10px; background: #060a06; border: 1px solid #1c2b1c;">
+            <div style="font-family: 'Press Start 2P', monospace; font-size: 7.5px; color: #f0c954; margin-bottom: 6px;">
+              🔒 MODO EXCLUSIVO PRIVADO
+            </div>
+            <p style="font-family: 'VT323', monospace; font-size: 15px; color: #8fa389; line-height: 1.25; margin: 0;">
+              El explorador de salas públicas de Spacewar ha sido desactivado. Solo los jugadores con el código exacto de sala o invitados directamente por Steam pueden ingresar.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="btn-group" style="margin-top:14px;">
+        <button class="rust-btn" id="btn-close-steam-modal"><span>[ CERRAR ENLACE ]</span></button>
       </div>
     </div>
   </div>

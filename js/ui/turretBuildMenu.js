@@ -77,6 +77,15 @@ export class TurretBuildMenu {
     if (cb) cb();
   }
 
+  // Cierre forzado sin ejecutar onClose (por ejemplo, al terminar la partida
+  // mientras el panel estaba abierto en co-op).
+  closeSilently() {
+    this.isOpen = false;
+    this.onClose = null;
+    this.turretId = null;
+    if (this.overlay) this.overlay.classList.add('hidden');
+  }
+
   render() {
     if (!this.isOpen || !this.mode) return;
 
@@ -98,6 +107,7 @@ export class TurretBuildMenu {
       <div class="turret-panel-head">
         <span class="tape-strip">${renderSpriteIconHTML(turret ? turret.cfg.icon : 'turret_gunner', 'sm')} ${title}</span>
         <span class="turret-scrap-balance">${renderSpriteIconHTML('scrap', 'sm')} <b>${scrap}</b> CHATARRA</span>
+        ${this.mode.isNetworked ? '<button class="rust-btn sm" data-action="send-scrap" title="Envía 5 de chatarra a tu compañero (T)">ENVIAR +5</button>' : ''}
       </div>`;
 
     if (!turret) {
@@ -183,6 +193,11 @@ export class TurretBuildMenu {
     if (action === 'switch-build') {
       this.turretId = null;
       this.render();
+      return;
+    }
+
+    if (action === 'send-scrap') {
+      if (!this.mode.sendScrapToPeer?.(5)) AudioSys.playUIError();
       return;
     }
 

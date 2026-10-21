@@ -8,8 +8,13 @@ import { AudioSys } from '../../audio.js';
 export function spawnAlly(system, turret) {
 const stats = turret.stats;
 const type = stats.allyRanged ? 'drone' : (stats.allyArmor > 0 ? 'elite' : 'guard');
-const angle = Math.random() * Math.PI * 2;
-const dist = 1.0 + Math.random() * 1.1;
+// Despliegue determinista por índice de tropa + posición de la torreta:
+// ambos peers ven a los soldados en el mismo lugar (la torreta está replicada).
+const index = countAlliesFor(system, turret);
+const seed = Math.abs(Math.round(turret.group.position.x * 17 + turret.group.position.z * 31));
+const slots = Math.max(1, stats.allyCap || 4);
+const angle = ((index + (seed % slots)) / slots) * Math.PI * 2;
+const dist = 1.0 + ((index + seed) % 3) * 0.35;
 const px = turret.group.position.x + Math.cos(angle) * dist;
 const pz = turret.group.position.z + Math.sin(angle) * dist;
 const py = system.worldPhysics
@@ -23,6 +28,7 @@ const ally = new AllyUnit(
   turret,
   stats
 );
+ally.animTimer = index * 0.17;
 system.allies.push(ally);
 system.extraStructures.push(ally);
 return ally;

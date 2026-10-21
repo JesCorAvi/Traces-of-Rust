@@ -95,6 +95,7 @@ export function spawnEnemyProjectile(scene, projectiles, origin, dir, speed, dmg
     mesh: pMesh,
     vel: dir.clone().multiplyScalar(speed),
     life: 3.5,
-    dmg
+    dmg,
+    sharedMat: true
   });
 }

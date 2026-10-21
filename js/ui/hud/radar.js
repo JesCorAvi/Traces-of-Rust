@@ -54,16 +54,34 @@ if (distEl) {
 indicator.classList.toggle('under-attack', coreRatio < 0.45);
 }
 
-export function updateRadarHUD(playerPos, yaw, activeEnemies, activeBoss, corePos = null) {
+export function updateRadarHUD(playerPos, yaw, activeEnemies, activeBoss, corePos = null, coopPos = null) {
 const enemyDot = document.querySelector('.radar-dot.enemy-approx');
 const bossDot = document.querySelector('.radar-dot.boss-approx');
 const coreDot = document.querySelector('.radar-dot.core-approx');
+const coopDot = document.querySelector('.radar-dot.coop-approx');
 const threatLabel = document.getElementById('radar-threat-label');
 if (!enemyDot || !bossDot) return;
 
 const maxRadarDist = 34;
 const cosY = Math.cos(-yaw);
 const sinY = Math.sin(-yaw);
+
+// Punto del Compañero Co-Op en el radar
+if (coopDot) {
+  if (coopPos) {
+    coopDot.style.display = 'block';
+    const dx = coopPos.x - playerPos.x;
+    const dz = coopPos.z - playerPos.z;
+    const rx = dx * cosY - dz * sinY;
+    const rz = dx * sinY + dz * cosY;
+    const normX = Math.max(-0.84, Math.min(0.84, rx / maxRadarDist));
+    const normZ = Math.max(-0.84, Math.min(0.84, rz / maxRadarDist));
+    coopDot.style.left = `${50 + normX * 42}%`;
+    coopDot.style.top = `${50 + normZ * 42}%`;
+  } else {
+    coopDot.style.display = 'none';
+  }
+}
 
 // Punto del Núcleo en el radar (si estamos en modo Defensa)
 if (coreDot) {

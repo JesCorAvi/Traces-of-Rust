@@ -1,35 +1,114 @@
 // Daño y muerte en runtime: enemigos, jugador y sus efectos.
 // Exports: createCombatRuntime.
 
+import * as THREE from 'three';
+import { SHARED_GEO, SHARED_MAT } from '../combat.js';
+
 export function createCombatRuntime(rt) {
-  function damageEnemy(en, amount, knockback, isDoT = false) {
+  function spawnHitFeedback(en, damage, isCrit) {
+    const scene = rt.scene;
+    const vfx = rt.vfx;
+    if (!scene || !vfx || !en?.group) return;
+    const now = performance.now();
+    if (en._lastHitFeedbackAt && now - en._lastHitFeedbackAt < 60) return;
+    en._lastHitFeedbackAt = now;
+    const base = en.group.position;
+    const count = isCrit ? 4 : 2;
+    for (let i = 0; i < count; i++) {
+      const mesh = new THREE.Mesh(SHARED_GEO.spark, SHARED_MAT.sparkBlood);
+      mesh.position.copy(base).add(new THREE.Vector3(0, 1.05, 0));
+      scene.add(mesh);
+      vfx.push({
+        mesh,
+        life: 0.24,
+        maxLife: 0.24,
+        vel: new THREE.Vector3(
+          (Math.random() - 0.5) * 6,
+          2.2 + Math.random() * 3,
+          (Math.random() - 0.5) * 6
+        ),
+        gravity: 16,
+        floorY: base.y + 0.05
+      });
+    }
+    rt.hudController?.showDamageNumber?.(rt.camera, base.clone().add(new THREE.Vector3(0, 1.55, 0)), damage, isCrit);
+  }
+
+  function damageEnemy(en, amount, knockback, isDoT = false, opts = {}) {
     if (!en.active || en.state === 'dead') return;
     const mods = rt.getMods();
-    const isCrit = !isDoT && Math.random() < mods.critChance;
+    const isReplicaClient = !!(rt.net?.isMatchActive && !rt.net.isHost() && en.isNetworkReplica);
+    const isCrit = opts.isCrit !== undefined
+      ? !!opts.isCrit
+      : (!isDoT && Math.random() < mods.critChance);
+
     let appliedDmg = amount;
-    // En modo defensa, los enemigos de ruta tienen blindaje frente a armas ligeras del jugador (estilo Orcs Must Die / Dungeon Defenders)
-    // Los enemigos de eventos especiales (en.isEventEnemy) reciben daño completo del jugador (100%) para poder resolverlos a solas.
-    if (!isDoT && en.defenseAI && en.defenseAI.enabled && !en.isEventEnemy) {
-      appliedDmg *= 0.45;
+    if (!opts.finalDamage) {
+      // En modo defensa, los enemigos de ruta tienen blindaje frente a armas
+      // ligeras del jugador. Los enemigos de evento reciben daño completo.
+      if (!isDoT && en.defenseAI && en.defenseAI.enabled && !en.isEventEnemy) {
+        appliedDmg *= 0.45;
+      }
+      if (isCrit) appliedDmg *= 2.0;
     }
-    en.hp -= isCrit ? appliedDmg * 2.0 : appliedDmg;
+
+    const kb = knockback
+      ? (knockback.clone ? knockback.clone() : knockback)
+      : null;
+
+    // Cliente: daño visual inmediato y envío al Host. El HP local nunca baja
+    // de 1 ni dispara muertes/recompensas; la autoridad real es del Host.
+    if (isReplicaClient) {
+      en.hp = Math.max(1, en.hp - appliedDmg);
+      if (!isDoT) {
+        en.state = 'hurt';
+        en.stateTimer = 0.15;
+        rt.AudioSys.play(isCrit ? 290 : 145, 0.05, 'square', 0.035);
+        if (isCrit || appliedDmg >= 35) rt.addCamShake?.(isCrit ? 0.28 : 0.12);
+        spawnHitFeedback(en, appliedDmg, isCrit);
+      }
+      if (kb && !en.isBoss) {
+        if (mods.knockbackMult && mods.knockbackMult !== 1.0) kb.multiplyScalar(mods.knockbackMult);
+        en.group.position.add(kb);
+        rt.worldPhysics.resolveCollision(en.group.position, 0.55, en.group.position.y);
+      }
+      if (en.isBoss) rt.hudController.updateBossHUD(rt.activeBoss, !isDoT);
+      if (!opts.visualOnly && Number.isFinite(en.netId)) {
+        rt.net.queuePlayerHit(en.netId, appliedDmg, isCrit, kb, {
+          dot: isDoT,
+          burnDps: opts.burnDps,
+          burnDuration: opts.burnDuration
+        });
+      }
+      return;
+    }
+
+    en.hp -= appliedDmg;
 
     if (!isDoT) {
       en.state = 'hurt';
       en.stateTimer = 0.15;
-      rt.AudioSys.play(isCrit ? 290 : 145, 0.05, 'square', 0.035);
-      if (isCrit || appliedDmg >= 35) {
-        rt.triggerHitstop?.(isCrit ? 0.08 : 0.04);
-        rt.addCamShake?.(isCrit ? 0.28 : 0.12);
+      if (opts.fromRemote) {
+        rt.AudioSys.play(145, 0.04, 'square', 0.02);
+        spawnHitFeedback(en, appliedDmg, isCrit);
+      } else {
+        rt.AudioSys.play(isCrit ? 290 : 145, 0.05, 'square', 0.035);
+        if (isCrit || appliedDmg >= 35) {
+          rt.triggerHitstop?.(isCrit ? 0.08 : 0.04);
+          rt.addCamShake?.(isCrit ? 0.28 : 0.12);
+        }
       }
     }
-    if (knockback && !en.isBoss) {
-      const kb = knockback.clone ? knockback.clone() : knockback;
-      if (mods.knockbackMult && mods.knockbackMult !== 1.0) {
+    if (kb && !en.isBoss) {
+      // El Cliente ya aplicó su multiplicador antes de enviar PLAYER_HIT.
+      if (!opts.fromRemote && mods.knockbackMult && mods.knockbackMult !== 1.0) {
         kb.multiplyScalar(mods.knockbackMult);
       }
       en.group.position.add(kb);
       rt.worldPhysics.resolveCollision(en.group.position, 0.55, en.group.position.y);
+    }
+    if (opts.burnDps && opts.burnDuration) {
+      en.applyBurn(opts.burnDps, opts.burnDuration);
     }
     if (en.isBoss) rt.hudController.updateBossHUD(rt.activeBoss, !isDoT);
 
@@ -44,12 +123,17 @@ export function createCombatRuntime(rt) {
         rt.AudioSys.playBossHorn();
       }
       rt.ModeManager.onEnemyKilled(en, rt.buildModeContext());
+      // El Host declara la muerte después de generar los drops, para incluir
+      // en ENEMY_DIE el tipo/pickupNetId del botín principal.
+      rt.net?.sendEnemyDie?.(en);
       rt.refreshHUD();
     }
   }
 
   function dealDamageToPlayer(dmgAmount) {
-    if (rt.invuln > 0 || rt.state !== 'PLAYING') return;
+    // En co-op el mundo sigue vivo mientras el jugador está en un menú local.
+    const simActive = rt.state === 'PLAYING' || rt.isOnlineSimulationActive?.();
+    if (rt.invuln > 0 || !simActive) return;
     const mods = rt.getMods();
     let netDmg = dmgAmount;
     if (mods.damageReduction > 0) {

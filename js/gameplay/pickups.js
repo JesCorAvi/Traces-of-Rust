@@ -29,16 +29,28 @@ const PICKUP_ASSETS = {
   });
 });
 
-export function createPickupSystem({ scene, worldPhysics, drops }) {
-  function spawnLorePickup(originPos, type = 'serum', value = 1) {
+export function createPickupSystem({ scene, worldPhysics, drops, net = null }) {
+  let nextPickupNetId = 1;
+  let lastCtx = null;
+
+  function spawnLorePickup(originPos, type = 'serum', value = 1, opts = {}) {
+    // En co-op el Cliente no genera pickups: llegan por PICKUP_SPAWN.
+    if (!opts.fromNetwork && net?.isMatchActive && !net.isHost()) return null;
     if (type === 'scrap' && drops.length >= (CONFIG.CORE_DEFENSE.SCRAP.maxActivePickups || 40)) {
-      return;
+      return null;
+    }
+    if (opts.fromNetwork && Number.isFinite(opts.pickupNetId)
+      && drops.some(d => d.pickupNetId === opts.pickupNetId)) {
+      return null;
     }
 
     const group = new THREE.Group();
     const isChest = type === 'chest';
     const isTooth = type === 'tooth';
     const isScrap = type === 'scrap';
+    const pickupNetId = opts.fromNetwork && Number.isFinite(opts.pickupNetId)
+      ? opts.pickupNetId
+      : nextPickupNetId++;
     const groundY = worldPhysics ? worldPhysics.getGroundHeight(originPos.x, originPos.z, originPos.y) : originPos.y;
     group.position.set(originPos.x, groundY, originPos.z);
 
@@ -57,18 +69,71 @@ export function createPickupSystem({ scene, worldPhysics, drops }) {
 
     group.add(spriteMesh, shadowDisc);
     scene.add(group);
-    drops.push({
+
+    const drop = {
       group, spriteMesh, shadowDisc, baseHeight,
+      type,
+      pickupNetId,
       bobPhase: Math.random() * Math.PI * 2,
       age: 0,
       isBossChest: isChest,
       isTooth,
       isScrap,
       value: Math.max(1, value)
-    });
+    };
+    drops.push(drop);
+
+    if (!opts.fromNetwork && net?.isMatchActive && net.isHost()) {
+      net.sendPickupSpawn(drop);
+    }
+    return drop;
+  }
+
+  function removePickupByNetId(pickupNetId) {
+    const idx = drops.findIndex(d => d.pickupNetId === pickupNetId);
+    if (idx === -1) return null;
+    const drop = drops[idx];
+    scene.remove(drop.group);
+    drops.splice(idx, 1);
+    return drop;
+  }
+
+  function applyRewardToLocal(type, value) {
+    const ctx = lastCtx;
+    if (!ctx) return;
+    if (type === 'chest') {
+      ctx.stats.hp = Math.min(ctx.stats.maxHp, ctx.stats.hp + ctx.stats.maxHp * 0.5);
+      ctx.stats.level++;
+      AudioSys.playUISelect();
+      ctx.showLevelUp();
+    } else if (type === 'tooth') {
+      ctx.onTooth();
+      AudioSys.play(640, 0.07, 'sine', 0.05);
+    } else if (type === 'scrap') {
+      ctx.onScrap(value || 1);
+      AudioSys.play(520, 0.07, 'square', 0.045);
+    } else {
+      ctx.stats.exp++;
+      AudioSys.play(420, 0.06, 'sine', 0.04);
+      if (ctx.stats.exp >= ctx.stats.maxExp) {
+        ctx.stats.level++;
+        ctx.stats.exp -= ctx.stats.maxExp;
+        ctx.stats.maxExp = Math.floor(ctx.stats.maxExp * 1.38);
+        ctx.showLevelUp();
+      }
+    }
+    ctx.refreshHUD();
+  }
+
+  function applyCollectedReward(data) {
+    if (!data) return;
+    const type = data.pickupType || data.type;
+    if (type === 'scrap') return;
+    applyRewardToLocal(type, data.value);
   }
 
   function updateDrops(dt, ctx) {
+    lastCtx = ctx;
     const { playerGroup, gameTime, camAngle, stats, magnetRange, onTooth, onScrap, showLevelUp, refreshHUD } = ctx;
 
     const frameOffset = (Math.floor(gameTime * 6.5) % 4) * 0.25;
@@ -93,31 +158,38 @@ export function createPickupSystem({ scene, worldPhysics, drops }) {
       if (dist < 1.45) {
         scene.remove(d.group);
         drops.splice(i, 1);
-        if (d.isBossChest) {
-          stats.hp = Math.min(stats.maxHp, stats.hp + stats.maxHp * 0.5);
-          stats.level++;
-          AudioSys.playUISelect();
-          showLevelUp();
-        } else if (d.isTooth) {
-          onTooth();
-          AudioSys.play(640, 0.07, 'sine', 0.05);
-        } else if (d.isScrap) {
-          onScrap(d.value || 1);
-          AudioSys.play(520, 0.07, 'square', 0.045);
-        } else {
-          stats.exp++;
-          AudioSys.play(420, 0.06, 'sine', 0.04);
-          if (stats.exp >= stats.maxExp) {
-            stats.level++;
-            stats.exp -= stats.maxExp;
-            stats.maxExp = Math.floor(stats.maxExp * 1.38);
-            showLevelUp();
+
+        if (net?.isMatchActive) {
+          if (net.isHost()) {
+            // El Host arbitra la recogida y confirma a ambos peers.
+            applyRewardToLocal(d.type, d.value);
+            net.broadcastPickupCollected({
+              pickupNetId: d.pickupNetId,
+              pickupType: d.type,
+              value: d.value,
+              collector: net.getLocalSteamId?.() || 'host'
+            });
+          } else {
+            // El Cliente confirma con el Host antes de aplicar la recompensa;
+            // la chatarra se acredita vía SCRAP_GAIN (reparto 50/50).
+            net.requestPickupCollect({
+              pickupNetId: d.pickupNetId,
+              pickupType: d.type,
+              value: d.value
+            });
           }
+        } else {
+          applyRewardToLocal(d.type, d.value);
         }
         refreshHUD();
       }
     }
   }
 
-  return { spawnLorePickup, updateDrops };
+  return {
+    spawnLorePickup,
+    updateDrops,
+    removePickupByNetId,
+    applyCollectedReward
+  };
 }

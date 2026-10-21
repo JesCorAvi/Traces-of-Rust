@@ -6,12 +6,56 @@
   padding-top: 5px;
   border-top: 1px dashed #364832;
   color: #d9b38c;
+  flex-wrap: wrap;
+  gap: 6px;
 }
 .core-scrap-line {
   display: inline-flex;
   align-items: center;
   gap: 6px;
 }
+
+/* Transferencia de chatarra al compañero (solo co-op online) */
+.coop-scrap-transfer {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 6px;
+  background: rgba(10, 22, 10, 0.92);
+  border: 1px solid #4a6b42;
+  color: #a8e6a0;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
+  cursor: pointer;
+  pointer-events: auto;
+}
+.coop-scrap-transfer:hover {
+  border-color: #75f085;
+  color: #e8ffe2;
+  background: rgba(18, 40, 18, 0.95);
+}
+.coop-scrap-transfer.hidden { display: none !important; }
+.coop-scrap-transfer .key-cap {
+  min-width: 16px;
+  height: 16px;
+  padding: 0 3px;
+  font-size: 8px;
+  border-width: 1px;
+}
+.coop-scrap-toast {
+  margin-top: 4px;
+  padding: 3px 6px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
+  line-height: 1.4;
+  border-left: 2px solid #4a6b42;
+  background: rgba(4, 10, 4, 0.88);
+  color: #d9e8cf;
+}
+.coop-scrap-toast.hidden { display: none !important; }
+.coop-scrap-toast.is-send { color: #f0c954; border-left-color: #b89c46; }
+.coop-scrap-toast.is-receive { color: #8ef77b; border-left-color: #55de3e; }
+.coop-scrap-toast.is-error { color: #ff6b6b; border-left-color: #a32222; }
 
 #turret-interact-prompt {
   position: fixed;

@@ -9,10 +9,16 @@ export const save = JSON.parse(localStorage.getItem(CONFIG.SAVE_KEY)) || {
 };
 export const saveGame = () => localStorage.setItem(CONFIG.SAVE_KEY, JSON.stringify(save));
 
-export const gameSettings = JSON.parse(localStorage.getItem('echoes_rust_settings_v1')) || {
+const SETTINGS_KEY = 'echoes_rust_settings_v1';
+
+export const gameSettings = JSON.parse(localStorage.getItem(SETTINGS_KEY)) || {
   masterVol: 85, sfxVol: 90, ambVol: 80, muted: false,
   resScale: 0.44, fov: 70, shadows: true, crt: true, fpsCounter: false,
-  mouseSens: 100, camShake: 100
+  mouseSens: 100, camShake: 100, fullscreen: true
 };
+// Preferencia nueva: los guardados antiguos no tienen `fullscreen`.
+if (typeof gameSettings.fullscreen !== 'boolean') gameSettings.fullscreen = true;
+
+export const saveGameSettings = () => localStorage.setItem(SETTINGS_KEY, JSON.stringify(gameSettings));
 export const careerByMode = loadCareerStatsByMode();
 export const saveCareer = () => saveCareerStatsByMode(careerByMode);

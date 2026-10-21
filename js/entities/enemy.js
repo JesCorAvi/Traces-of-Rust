@@ -19,6 +19,12 @@ export class Enemy {
     this.active = false;
     this.isBoss = false;
     this.defenseAI = null;
+    this.netId = 0;
+    this.isNetworkReplica = false;
+    this.netTargetX = null;
+    this.netTargetZ = null;
+    this.netTargetIsLocal = true;
+    this.visualState = 1;
     this.group.visible = false;
     scene.add(this.group);
   }
@@ -127,6 +133,14 @@ export class Enemy {
       return this.stateTimer > 0.5;
     }
 
+    // Corrección suave de las réplicas del Cliente hacia la última posición
+    // autoritativa del Host (10 Hz); el movimiento local sigue a 60 FPS.
+    if (this.isNetworkReplica && this.netTargetX !== null) {
+      const k = Math.min(1, dt * 8);
+      this.group.position.x += (this.netTargetX - this.group.position.x) * k;
+      this.group.position.z += (this.netTargetZ - this.group.position.z) * k;
+    }
+
     const isDef = !!(this.defenseAI && this.defenseAI.enabled);
 
     if (this.burnTimer > 0) {
@@ -183,7 +197,7 @@ export class Enemy {
         this.specialTimer = 3.6;
         const atkList = this.bossData.attacks;
         const chosen = atkList[Math.floor(Math.random() * atkList.length)];
-        if (callbacks.onBossSpecial) callbacks.onBossSpecial(this, chosen);
+        if (callbacks.onBossSpecial) callbacks.onBossSpecial(this, chosen, playerPos);
       }
     }
 
@@ -284,6 +298,7 @@ export class Enemy {
       }
     }
 
+    this.visualState = targetState;
     const isFar = !this.isBoss && horizDistPlayer > CONFIG.DIFFICULTY.AI_LOD_DIST;
     const tickRate = isFar ? 0.14 : (this.type === 'weeper' ? 0.06 : 0.08);
 

@@ -247,6 +247,7 @@ export class CoreMachine extends DefensiveStructure {
       core: this,
       amount,
       hp: this.hp,
+      currentHp: this.hp,
       maxHp: this.maxHp,
       ratio: this.getHpRatio(),
       state: this.currentDamageState,

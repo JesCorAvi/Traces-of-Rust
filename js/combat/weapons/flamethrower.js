@@ -48,7 +48,10 @@ export function fireFlamethrower(scene, playerPos, facingYaw, level, mods, enemi
     if (e.state === 'dead') return;
     const toE = new THREE.Vector3().subVectors(e.group.position, playerPos);
     if (Math.abs(toE.y) < 2.2 && toE.length() < range && fwd.angleTo(toE.clone().setY(0).normalize()) < coneHalfAngle) {
-      onDamage(e, dmg);
+      onDamage(e, dmg, null, false, {
+        burnDps: dmg * 1.6,
+        burnDuration: 2.5 + level * 0.3
+      });
       e.burnTimer = 2.5 + level * 0.3;
       e.burnDps = dmg * 1.6;
     }

@@ -30,16 +30,19 @@ const freezeNow = turret.stats.freezeEvery > 0
   && turret.pulseCount % turret.stats.freezeEvery === 0
   && turret.stats.freezeDuration > 0;
 
+const canApplyStatus = turret.system.isDamageAuthority?.() !== false;
 for (let i = 0; i < inRange.length; i++) {
   const e = inRange[i];
-  e.applySlow(turret.stats.slowFactor, turret.stats.slowDuration);
-  if (freezeNow) e.applyStun(turret.stats.freezeDuration);
+  if (canApplyStatus) {
+    e.applySlow(turret.stats.slowFactor, turret.stats.slowDuration);
+    if (freezeNow) e.applyStun(turret.stats.freezeDuration);
+  }
 
   if (turret.stats.damage > 0) {
     turret.system.damageEnemy(e, getEffectiveDamage(turret), turret);
   }
 
-  if (turret.stats.frostbiteDps > 0 && (e.slowTimer > 0 || e.stunTimer > 0)) {
+  if (canApplyStatus && turret.stats.frostbiteDps > 0 && (e.slowTimer > 0 || e.stunTimer > 0)) {
     e.applyBurn(turret.stats.frostbiteDps * turret.stats.frostbiteDpsMult, 1.0);
   }
 }

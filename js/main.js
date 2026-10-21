@@ -27,9 +27,13 @@ import {
   renderLevelUpCardsUI,
   setupCharacterSelectorUI,
   updateCharacterSelectorCard,
-  onCharacterChange
+  onCharacterChange,
+  setupSettingsUI,
+  applyStoredFullscreen
 } from './ui/menusAndShop.js';
 import { getSelectedCharacterId, getCharacterById } from './config/charactersConfig.js';
+import { setupSteamLobbyUI } from './online/steamLobbyUI.js';
+import { MultiplayerSync } from './online/multiplayerSync.js';
 import { presentRunResultsScreen } from './ui/resultsScreen.js';
 import { updatePlayerWeaponsAndCombat } from './player/playerController.js';
 import { save, saveGame, gameSettings, careerByMode, saveCareer } from './core/saveState.js';
@@ -103,6 +107,15 @@ scene.add(flashlight, flashlight.target);
 const enemyPool = new EnemyPool(scene, CONFIG.DIFFICULTY.MAX_ACTIVE_ENEMIES);
 
 let state = 'START', lastMenuScreen = 'start-screen';
+
+// En co-op online el mundo sigue simulando aunque el jugador local abra
+// BUILD / LEVEL_UP / PAUSED; solo se bloquea su input y sus armas.
+function isOnlineSimulationActive() {
+  return !!(
+    MultiplayerSync.isMatchActive &&
+    (state === 'PLAYING' || state === 'BUILD' || state === 'LEVEL_UP' || state === 'PAUSED')
+  );
+}
 let pendingTutorial = false;
 let yaw = 0, pitch = -0.22, playerFacingYaw = 0;
 let gameTime = 0, runSouls = 0, kills = 0;
@@ -114,6 +127,7 @@ let camShake = 0, targetFov = 70;
 let activeBoss = null;
 let fpsFrames = 0, fpsTimer = 0;
 let hitstopTimer = 0;
+let lastAttackHit = null;
 let landingSquashTimer = 0;
 let playerTiltZ = 0;
 
@@ -160,7 +174,7 @@ function spawnLandingDust(pos) {
 const weaponTimers = { slash: 0, shotgun: 0, flamethrower: 0, aura: 0, mines: 0, harpoon: 0, bolt: 0 };
 const drops = [], orbitals = [], minesList = [], vfx = [], bossHazards = [], bossProjectiles = [];
 
-const pickupSystem = createPickupSystem({ scene, worldPhysics, drops });
+const pickupSystem = createPickupSystem({ scene, worldPhysics, drops, net: MultiplayerSync });
 const spawnLorePickup = pickupSystem.spawnLorePickup;
 
 function cleanupVfxItem(v) {
@@ -176,10 +190,14 @@ function syncOrbitalsCount() {
   orbitals.forEach((o, idx) => { o.angle = (idx / orbitals.length) * Math.PI * 2; });
 }
 
-function triggerWeaponVisualAttack(weaponId, _targetYaw = null, animDuration = 0.24, onlyIfIdle = false) {
+function triggerWeaponVisualAttack(weaponId, _targetYaw = null, animDuration = 0.24, onlyIfIdle = false, hitOverride = null, originOverride = null) {
   if (onlyIfIdle && atkAnimTimer > 0.05) return;
   atkAnimTimer = animDuration;
   syncPlayerVisualLoadout(weaponId);
+  const atkDir = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), playerFacingYaw);
+  const hit = hitOverride || lastAttackHit;
+  MultiplayerSync.sendAttack(weaponId, originOverride || playerGroup.position, atkDir, hit);
+  lastAttackHit = null;
 }
 
 function triggerScare(intensity = 0.42) {
@@ -197,6 +215,7 @@ function triggerScare(intensity = 0.42) {
 function buildModeContext(camFwd = new THREE.Vector3(0, 0, -1)) {
   return {
     scene,
+    net: MultiplayerSync,
     ambientLight,
     playerGroup,
     camera,
@@ -268,7 +287,7 @@ let hudTickTimer = 0;
 
 function animate() {
   requestAnimationFrame(animate);
-  const dt = Math.min(clock.getDelta(), 0.1);
+  let dt = Math.min(clock.getDelta(), 0.1);
   updateCombatLight(dt);
 
   if (gameSettings.fpsCounter) {
@@ -292,7 +311,9 @@ function animate() {
       hitstopTimer -= dt;
       camera.position.x += (Math.random() - 0.5) * 0.04;
       camera.position.y += (Math.random() - 0.5) * 0.04;
-      dt = 0; // Pausa temporal de la física y movimiento durante el impacto
+      // El hitstop local congelaría solo a este peer en co-op: se aplica el
+      // golpe de cámara pero no se anula dt durante una partida online.
+      if (!MultiplayerSync.isMatchActive) dt = 0;
     }
 
     gameTime += dt;
@@ -433,14 +454,32 @@ function animate() {
     const modeCtx = buildModeContext(camFwd);
     ModeManager.updateActiveMode(dt, modeCtx);
 
+    // Sincronización multijugador online P2P (post-simulación, para que el
+    // flush de enemigos/proyectiles vea lo creado en este mismo frame).
+    const downTimer = ModeManager.activeMode?.playerDownTimer || 0;
+    MultiplayerSync.update(dt, camAngle, camera, {
+      x: playerGroup.position.x,
+      y: playerGroup.position.y,
+      z: playerGroup.position.z,
+      yaw: playerFacingYaw,
+      pitch,
+      isMoving,
+      pState,
+      hp: stats.hp,
+      maxHp: stats.maxHp,
+      down: downTimer > 0,
+      downTimer,
+      charId: getSelectedCharacterId()
+    });
+
     const activeCore = ModeManager.activeMode?.coreMachine || null;
     updatePlayerWeaponsAndCombat({
       dt, gameTime, scene, playerGroup, yaw, playerFacingYaw, camAngle,
       skills, mods, weaponTimers, auraMesh, orbitals, minesList,
       bossHazards, bossProjectiles, vfx, activeEnemies: enemyPool.active,
-      worldPhysics, coreMachine: activeCore, damageEnemy, dealDamageToPlayer,
+      worldPhysics, coreMachine: activeCore, damageEnemy: networkDamageEnemy, dealDamageToPlayer,
       addCamShake: s => { camShake = Math.max(camShake, s); },
-      triggerWeaponVisualAttack, cleanupVfxItem
+      triggerWeaponVisualAttack, sendAutomaticAttack, cleanupVfxItem
     });
 
     pickupSystem.updateDrops(dt, {
@@ -475,8 +514,54 @@ function animate() {
     } else {
       hudController.hideCoreDirectionIndicator?.();
     }
-    hudController.updateRadarHUD(playerGroup.position, yaw, enemyPool.active, activeBoss, corePos);
+    const coopPos = MultiplayerSync.getPrimaryRemotePlayerPos();
+    hudController.updateRadarHUD(playerGroup.position, yaw, enemyPool.active, activeBoss, corePos, coopPos);
     debugOverlay.update(ModeManager.getSelectedModeId(), enemyPool, playerGroup.position, corePos, worldPhysics);
+  } else if (isOnlineSimulationActive()) {
+    // Menú local abierto en co-op: el mundo (oleadas, torretas, enemigos,
+    // Núcleo y red) sigue avanzando; solo se congela el input del jugador.
+    gameTime += dt;
+    if (invuln > 0) invuln -= dt;
+    if (atkAnimTimer > 0) atkAnimTimer -= dt;
+
+    const camFwd = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), yaw);
+    const camAngle = Math.atan2(camera.position.x - playerGroup.position.x, camera.position.z - playerGroup.position.z);
+
+    ModeManager.updateActiveMode(dt, buildModeContext(camFwd));
+
+    const downTimer = ModeManager.activeMode?.playerDownTimer || 0;
+    MultiplayerSync.update(dt, camAngle, camera, {
+      x: playerGroup.position.x,
+      y: playerGroup.position.y,
+      z: playerGroup.position.z,
+      yaw: playerFacingYaw,
+      pitch,
+      isMoving: false,
+      pState: 0,
+      hp: stats.hp,
+      maxHp: stats.maxHp,
+      down: downTimer > 0,
+      downTimer,
+      charId: getSelectedCharacterId()
+    });
+
+    const m = String(Math.floor(gameTime / 60)).padStart(2, '0');
+    const s = String(Math.floor(gameTime % 60)).padStart(2, '0');
+    document.getElementById('timer-text').textContent = `${m}:${s}`;
+    document.getElementById('compact-time-indicator').textContent = `${m}:${s}`;
+
+    hudTickTimer += dt;
+    if (hudTickTimer >= 0.15) {
+      hudTickTimer = 0;
+      refreshHUD();
+    }
+
+    const activeCore = ModeManager.activeMode?.coreMachine || null;
+    const corePos = activeCore && activeCore.hasPhysicalCore !== false && activeCore.position
+      ? activeCore.position
+      : null;
+    const coopPos = MultiplayerSync.getPrimaryRemotePlayerPos();
+    hudController.updateRadarHUD(playerGroup.position, yaw, enemyPool.active, activeBoss, corePos, coopPos);
   } else if (state === 'START') {
     const t = performance.now() * 0.00032;
     camera.position.set(Math.sin(t) * 12.5, 3.8 + Math.sin(t * 0.6) * 0.35, Math.cos(t) * 12.5);
@@ -507,6 +592,7 @@ const { prewarmLoadoutSheets, syncPlayerVisualLoadout } = playerVisuals;
 const combatRuntime = createCombatRuntime({
   getMods: () => getActiveModifiers(save, gameSettings, passives, getCharacterById(getSelectedCharacterId())),
   get state() { return state; }, set state(v) { state = v; },
+  isOnlineSimulationActive,
   get stats() { return stats; },
   get invuln() { return invuln; }, set invuln(v) { invuln = v; },
   get kills() { return kills; }, set kills(v) { kills = v; },
@@ -514,9 +600,26 @@ const combatRuntime = createCombatRuntime({
   triggerHitstop,
   triggerPlayerHurtJuice,
   addCamShake: s => { camShake = Math.max(camShake, s); },
+  scene, camera, vfx, net: MultiplayerSync,
   worldPhysics, hudController, AudioSys, ModeManager, buildModeContext, refreshHUD, triggerScare
 });
 const { damageEnemy, dealDamageToPlayer } = combatRuntime;
+
+// Registra el primer impacto real de un arma para replicar ATTACK con hit.
+const networkDamageEnemy = (en, amount, knockback, isDoT = false, opts = {}) => {
+  if (!isDoT && en?.group) {
+    lastAttackHit = en.group.position.clone().add(new THREE.Vector3(0, 1.1, 0));
+  }
+  return damageEnemy(en, amount, knockback, isDoT, opts);
+};
+
+// Armas automáticas (aura/orbital) replican su ataque sin pisar la animación
+// local del arma principal.
+function sendAutomaticAttack(weaponId, hit = null, origin = null) {
+  const atkDir = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), playerFacingYaw);
+  MultiplayerSync.sendAttack(weaponId, origin || playerGroup.position, atkDir, hit);
+  lastAttackHit = null;
+}
 
 const levelUpFlow = createLevelUpFlow({
   get state() { return state; }, set state(v) { state = v; },
@@ -579,6 +682,7 @@ const inputRuntime = {
   camera,
   gameSettings,
   ModeManager,
+  MultiplayerSync,
   turretBuildMenu,
   debugOverlay,
   dashDirVec,
@@ -586,6 +690,10 @@ const inputRuntime = {
   togglePauseGame: flowRuntime.togglePauseGame
 };
 setupInput(inputRuntime);
+
+document.getElementById('coop-scrap-transfer')?.addEventListener('click', () => {
+  MultiplayerSync.sendScrapToPeer(5);
+});
 
 refreshStaticDOMIcons();
 renderModeSelectorUI(careerByMode, () => flowRuntime.updateTdTutorialButton());
@@ -596,6 +704,7 @@ const wavePrepPrompt = document.getElementById('wave-prep-prompt');
 if (wavePrepPrompt) {
   wavePrepPrompt.addEventListener('click', () => {
     if (state === 'PLAYING') {
+      MultiplayerSync.sendWaveAction('SKIP_PREP');
       if (ModeManager.activeMode?.skipPrep?.()) {
         document.body.requestPointerLock();
       }
@@ -604,6 +713,44 @@ if (wavePrepPrompt) {
 }
 
 setupCharacterSelectorUI();
+setupSettingsUI();
+applyStoredFullscreen();
+setupSteamLobbyUI({
+  startGame: (opts) => flowRuntime.startGame(opts)
+});
+enemyPool.setNetwork(MultiplayerSync);
+MultiplayerSync.init({
+  scene,
+  camera,
+  playerGroup,
+  hudController,
+  enemyPool,
+  worldPhysics,
+  vfx,
+  drops,
+  bossProjectiles,
+  bossHazards,
+  pickupSystem,
+  damageEnemy,
+  setActiveBoss: (boss, bossCfg) => {
+    activeBoss = boss;
+    hudController.showBossBanner(boss, bossCfg);
+    refreshHUD();
+  },
+  clearActiveBoss: () => {
+    activeBoss = null;
+    hudController.hideBossHUDDelayed?.();
+    refreshHUD();
+  },
+  onMatchEnded: () => flowRuntime.returnToMainMenu(),
+  onRemoteRunEnded: outcome => flowRuntime.finishRun(outcome, { fromRemote: true }),
+  onNetworkKill: () => { kills++; refreshHUD(); },
+  getStats: () => stats,
+  getSelectedCharacterId,
+  getTurretSystem: () => ModeManager.activeMode?.turretSystem || null,
+  getModeManager: () => ModeManager,
+  audioSys: AudioSys
+});
 onCharacterChange(char => {
   activeCharacter = char;
   skills = { [char.weapon]: 1 };

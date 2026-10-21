@@ -34,6 +34,13 @@ export class CoreDefenseMode {
     this.tutorialActive = false;
     this.extraStructures = []; // Tropas aliadas (los enemigos ya no atacan torretas)
     this.scrap = 0;
+    this.initialScrapTotal = 0;
+    this.net = null;
+    this.isNetworked = false;
+    this.isNetworkHost = false;
+    this._ctx = null;
+    this._defeatTriggered = false;
+    this._victoryTriggered = false;
     this.activeBoss = null;
     this.bossesDefeated = 0;
     this.playerDownTimer = 0;
@@ -49,13 +56,26 @@ export class CoreDefenseMode {
   init(ctx) {
     this.cleanup();
 
+    this._ctx = ctx;
+    this.net = ctx.net || null;
+    this.isNetworked = !!(this.net && this.net.isMatchActive);
+    this.isNetworkHost = this.isNetworked && this.net.isHost();
+    this._defeatTriggered = false;
+    this._victoryTriggered = false;
+
     this.difficulty = localStorage.getItem('traces_td_difficulty') || 'normal';
     this.mapId = localStorage.getItem('traces_td_selected_map') || null;
     this.mapData = generateProceduralMap(this.difficulty, ctx.worldPhysics, this.mapId);
     this.mapId = this.mapData.mapId;
     this.lives = this.mapData.maxLives;
     this.maxLives = this.mapData.maxLives;
-    this.scrap = this.mapData.startingScrap;
+    this.initialScrapTotal = this.mapData.startingScrap;
+    // Economía de suma cero: la chatarra inicial se reparte entre Host y Cliente.
+    this.scrap = this.initialScrapTotal;
+    if (this.isNetworked) {
+      const hostShare = Math.floor(this.initialScrapTotal / 2);
+      this.scrap = this.isNetworkHost ? hostShare : this.initialScrapTotal - hostShare;
+    }
     this.spawnPoints = this.mapData.spawnPoints;
     this.exitPoints = this.mapData.exitPoints;
 
@@ -72,15 +92,10 @@ export class CoreDefenseMode {
       currentDamageState: { label: this.getDamageStateLabel() },
       getHpRatio: () => Math.max(0, Math.min(1, this.lives / Math.max(1, this.maxLives))),
       takeDamage: amt => {
-        this.lives = Math.max(0, this.lives - amt);
-        if (this.coreMachine) {
-          this.coreMachine.hp = this.lives;
-          this.coreMachine.currentDamageState = { label: this.getDamageStateLabel() };
-        }
-        ctx.onCoreDamaged?.({ hp: this.lives, maxHp: this.maxLives, dmg: amt });
-        if (this.lives <= 0) this.handleBreachDefeat(ctx);
+        this.applyCoreDamage(amt, ctx, 'core');
       },
       heal: amt => {
+        if (this.isNetworked && !this.isNetworkHost) return;
         this.lives = Math.min(this.maxLives, this.lives + amt);
         if (this.coreMachine) {
           this.coreMachine.hp = this.lives;
@@ -101,6 +116,7 @@ export class CoreDefenseMode {
       this.spawnPointSystem,
       ctx.worldPhysics
     );
+    this.waveManager.setAuthority(!this.isNetworked || this.isNetworkHost);
     this.extraStructures = [];
     this.turretSystem = new TurretSystem(
       ctx.scene,
@@ -181,6 +197,7 @@ export class CoreDefenseMode {
       showCoreBar: true,
       showWaveCounter: true,
       showCoreDirectionMarker: false,
+      coopScrapTransfer: this.isNetworked,
       objectiveHeader: this.meta.objectiveTitle
     };
   }
@@ -195,11 +212,8 @@ export class CoreDefenseMode {
   handleEnemyLeak(enemy, ctx) {
     if (this.lives <= 0) return;
     const leakLives = enemy.isBoss ? 20 : (enemy.type === 'weeper' ? 3 : enemy.type === 'worm' ? 2 : 1);
-    this.lives = Math.max(0, this.lives - leakLives);
-    if (this.coreMachine) {
-      this.coreMachine.hp = this.lives;
-      this.coreMachine.currentDamageState = { label: this.getDamageStateLabel() };
-    }
+
+    if (this.isNetworkHost) this.net?.sendEnemyLeak?.(enemy);
 
     AudioSys.play(180, 0.28, 'sawtooth', 0.12);
     AudioSys.play(240, 0.22, 'square', 0.08);
@@ -209,12 +223,12 @@ export class CoreDefenseMode {
       this.exitPointSystem.triggerLeakEffect(ep.id);
     }
 
-    ctx.onCoreDamaged?.({ hp: this.lives, maxHp: this.maxLives, dmg: leakLives });
     ctx.onCoreUnderAttackAlert?.(`¡FUGA DETECTADA! -${leakLives} ${leakLives === 1 ? 'VIDA' : 'VIDAS'}`);
     ctx.triggerScare?.(0.25);
 
-    if (this.lives <= 0) {
-      this.handleBreachDefeat(ctx);
+    // Solo el Host resta vidas. El Cliente recibe el HP real por CORE_SYNC.
+    if (!this.isNetworked || this.isNetworkHost) {
+      this.applyCoreDamage(leakLives, ctx, 'leak');
     }
   }
 
@@ -235,6 +249,8 @@ export class CoreDefenseMode {
   }
 
   handleBreachDefeat(ctx) {
+    if (this._defeatTriggered) return;
+    this._defeatTriggered = true;
     this.recordMapProgress(false, this.waveManager ? this.waveManager.wavesCompleted : 0);
     ctx.triggerScare(0.8);
     ctx.triggerRunEnd({
@@ -257,7 +273,63 @@ export class CoreDefenseMode {
     this.handleBreachDefeat(ctx);
   }
 
+  syncCoreFields() {
+    if (!this.coreMachine) return;
+    this.coreMachine.hp = this.lives;
+    this.coreMachine.maxHp = this.maxLives;
+    this.coreMachine.currentDamageState = { label: this.getDamageStateLabel() };
+  }
+
+  // Aplica daño al Núcleo con autoridad local. En co-op solo se invoca en el Host.
+  applyCoreDamage(amount, ctx = this._ctx, reason = 'core') {
+    // El Cliente nunca modifica mode.lives por su cuenta: espera CORE_SYNC.
+    if (this.isNetworked && !this.isNetworkHost) return;
+    if (!Number.isFinite(amount) || amount <= 0 || this._defeatTriggered) return;
+    this.lives = Math.max(0, this.lives - amount);
+    this.syncCoreFields();
+    GameEvents.emit('core:damaged', {
+      currentHp: this.lives,
+      hp: this.lives,
+      maxHp: this.maxLives,
+      dmg: amount,
+      reason
+    });
+    if (this.lives <= 0) this.handleBreachDefeat(ctx || this._ctx);
+  }
+
+  // Aplica el HP autoritativo recibido del Host (CORE_SYNC) sin reenviarlo.
+  applyRemoteCoreState(hp, maxHp) {
+    if (!Number.isFinite(hp)) return;
+    const prevHp = this.lives;
+    if (Number.isFinite(maxHp) && maxHp > 0) this.maxLives = maxHp;
+    this.lives = Math.max(0, Math.min(this.maxLives, hp));
+    this.syncCoreFields();
+    if (this.lives !== prevHp) {
+      this._ctx?.onCoreDamaged?.({ hp: this.lives, maxHp: this.maxLives, dmg: Math.max(0, prevHp - this.lives) });
+    }
+    if (this.lives <= 0) this.handleBreachDefeat(this._ctx);
+  }
+
+  handleNetworkVictory(payload = {}) {
+    if (!this.isNetworked || this.isNetworkHost) return;
+    this.handleVictory(this._ctx, {
+      wavesCompleted: payload.wavesCompleted ?? (this.waveManager ? this.waveManager.wavesCompleted : 0),
+      totalWaves: payload.totalWaves ?? (this.waveManager ? this.waveManager.totalWaves : 12)
+    });
+  }
+
+  getInitialNetworkScrapShare() {
+    const hostShare = Math.floor(this.initialScrapTotal / 2);
+    return this.initialScrapTotal - hostShare;
+  }
+
+  sendScrapToPeer(amount) {
+    return this.net?.sendScrapToPeer?.(amount) || false;
+  }
+
   handleVictory(ctx, payload) {
+    if (this._victoryTriggered) return;
+    this._victoryTriggered = true;
     this.recordMapProgress(true, payload.wavesCompleted);
     AudioSys.playUISelect();
     ctx.addRunSouls(35);
@@ -324,27 +396,41 @@ export class CoreDefenseMode {
       });
     }
 
+    const isNetworkClient = !!(ctx.net?.isMatchActive && !ctx.net.isHost());
+    const playerTargets = (!isNetworkClient && ctx.net?.isMatchActive && typeof ctx.net.getPlayerTargets === 'function')
+      ? ctx.net.getPlayerTargets(playerGroup.position, playerAlive)
+      : null;
+
     const callbacks = {
       playerAlive,
+      playerTargets,
       coreMachine: this.coreMachine,
       extraStructures: this.extraStructures,
       pathSystem: this.pathSystem,
       vfxList: ctx.vfx,
       onScare: () => ctx.triggerScare(0.32),
       onDealDamage: attacker => {
-        if (playerAlive) ctx.dealDamageToPlayer(attacker.dmg);
+        // El Host no daña a avatares remotos: cada Cliente es autoritativo
+        // sobre el daño que recibe su propio jugador.
+        if (playerAlive && attacker.netTargetIsLocal !== false) ctx.dealDamageToPlayer(attacker.dmg);
       },
-      onBurnTick: (burningEnemy, burnDmg) => ctx.damageEnemy(burningEnemy, burnDmg, null, true),
-      onShootProjectile: (origin, dir, speed, dmg) => {
-        spawnEnemyProjectile(ctx.scene, bossProjectiles, origin, dir, speed, dmg);
-        AudioSys.play(380, 0.12, 'sawtooth', 0.05);
-      },
+      // `playerAlive` del callback se ajusta por enemigo en updateEnemies.
+      onBurnTick: (burningEnemy, burnDmg) => ctx.damageEnemy(
+        burningEnemy, burnDmg, null, true,
+        { visualOnly: isNetworkClient }
+      ),
       onEnemyEscaped: enemy => {
         this.handleEnemyLeak(enemy, ctx);
       },
-      onBossPhaseChange: () => ctx.onBossPhaseChange(),
-      onBossSpecial: (boss, atkType) => {
-        const targetPos = playerGroup.position;
+      onBossPhaseChange: () => ctx.onBossPhaseChange()
+    };
+
+    if (!isNetworkClient) {
+      callbacks.onShootProjectile = (origin, dir, speed, dmg) => {
+        spawnEnemyProjectile(ctx.scene, bossProjectiles, origin, dir, speed, dmg);
+        AudioSys.play(380, 0.12, 'sawtooth', 0.05);
+      };
+      callbacks.onBossSpecial = (boss, atkType, targetPos = playerGroup.position) => {
         triggerBossSpecialAttack(
           ctx.scene,
           boss,
@@ -355,12 +441,13 @@ export class CoreDefenseMode {
           bossProjectiles,
           count => {
             if (this.waveManager) {
-              this.waveManager.spawnBossMinions(boss, count, playerGroup.position, gameTime, camFwd);
+              this.waveManager.spawnBossMinions(boss, count, targetPos, gameTime, camFwd);
             }
           }
         );
-      }
-    };
+      };
+    }
+
     updateEnemies(enemyPool, dt, playerGroup.position, camFwd, camera.position, worldPhysics, callbacks);
   }
 
@@ -374,7 +461,8 @@ export class CoreDefenseMode {
       this.bossesDefeated++;
       this.activeBoss = null;
       ctx.addRunSouls(enemy.bossData.teethReward || 15);
-      ctx.spawnLorePickup(enemy.group.position, 'chest');
+      const chestDrop = ctx.spawnLorePickup(enemy.group.position, 'chest');
+      if (chestDrop) enemy._networkDrop = { type: 'chest', pickupNetId: chestDrop.pickupNetId };
 
       // Los bosses sueltan un caché de chatarra repartido alrededor
       const chunks = 5;
@@ -389,7 +477,8 @@ export class CoreDefenseMode {
       }
     } else {
       const isTooth = Math.random() < 0.28;
-      ctx.spawnLorePickup(enemy.group.position, isTooth ? 'tooth' : 'serum');
+      const drop = ctx.spawnLorePickup(enemy.group.position, isTooth ? 'tooth' : 'serum');
+      if (drop) enemy._networkDrop = { type: drop.type, pickupNetId: drop.pickupNetId };
 
       if (Math.random() < (scrapCfg.normalDropChance || 0)) {
         ctx.spawnLorePickup(enemy.group.position, 'scrap', scrapCfg.normalDropValue || 1);
@@ -401,8 +490,15 @@ export class CoreDefenseMode {
   // ECONOMÍA Y TORRETAS (CHATARRA)
   // --------------------------------------------------------------------------
 
-  addScrap(amount) {
+  addScrap(amount, options = {}) {
     if (!amount || amount <= 0) return;
+    // En co-op el Host reparte al 50% toda la chatarra generada por la partida.
+    // Los ingresos de red (transferencias, SCRAP_GAIN) y los reembolsos locales
+    // no pasan por el divisor.
+    if (this.isNetworked && !options.fromTransfer && !options.local) {
+      this.net?.handleScrapIncome?.(this, amount);
+      return;
+    }
     this.scrap += amount;
   }
 
@@ -456,9 +552,9 @@ export class CoreDefenseMode {
     return this.turretSystem.upgradeTurret(turretId, pathIndex);
   }
 
-  sellTurret(turretId) {
+  sellTurret(turretId, options = {}) {
     if (!this.turretSystem) return 0;
-    return this.turretSystem.sellTurret(turretId);
+    return this.turretSystem.sellTurret(turretId, options);
   }
 
   canSkipPrep() {
@@ -468,6 +564,7 @@ export class CoreDefenseMode {
   skipPrep() {
     if (!this.canSkipPrep()) return false;
     AudioSys.playUISelect();
+    GameEvents.emit('wave:skip_prep');
     return this.waveManager.skipPrep();
   }
 
@@ -498,7 +595,12 @@ export class CoreDefenseMode {
     // lo perseguían vuelven a la ruta hacia el Núcleo, y el Núcleo sufre una sobrecarga.
     this.playerDownTimer = policy.respawnDelaySec;
     if (this.coreMachine && !this.coreMachine.destroyed) {
-      this.coreMachine.takeDamage(policy.coreHpPenaltyOnRespawn, null);
+      if (this.isNetworked && !this.isNetworkHost) {
+        // El Cliente solicita la penalización; el Host es el dueño de mode.lives.
+        this.net?.requestCoreDamage?.(policy.coreHpPenaltyOnRespawn, 'player_death');
+      } else {
+        this.coreMachine.takeDamage(policy.coreHpPenaltyOnRespawn, null);
+      }
     }
     ctx.notifyPlayerEmergencyRespawn(policy.respawnDelaySec, policy.coreHpPenaltyOnRespawn);
     return false;
@@ -624,9 +726,12 @@ export class CoreDefenseMode {
     this.extraStructures.forEach(st => st.destroy());
     this.extraStructures.length = 0;
     this.scrap = 0;
+    this.initialScrapTotal = 0;
     this.waveManager = null;
     this.activeBoss = null;
     this.playerDownTimer = 0;
+    this._defeatTriggered = false;
+    this._victoryTriggered = false;
     this.spawnPoints = [];
     this.exitPoints = [];
     this.mapData = null;

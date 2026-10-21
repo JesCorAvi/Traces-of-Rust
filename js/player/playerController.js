@@ -44,6 +44,7 @@ export function updatePlayerWeaponsAndCombat({
   dealDamageToPlayer,
   addCamShake,
   triggerWeaponVisualAttack,
+  sendAutomaticAttack,
   cleanupVfxItem
 }) {
   const cdFactor = 1 / mods.atkSpeedMult;
@@ -110,6 +111,7 @@ export function updatePlayerWeaponsAndCombat({
           damageEnemy(e, dmg, null, true);
         }
       });
+      sendAutomaticAttack?.('aura', playerGroup.position.clone());
     }
   }
 
@@ -199,6 +201,11 @@ export function updatePlayerWeaponsAndCombat({
             vel: new THREE.Vector3((Math.random() - 0.5) * 4, 2.5, (Math.random() - 0.5) * 4),
             gravity: 15, floorY: playerGroup.position.y + 0.05
           });
+          sendAutomaticAttack?.(
+            'orbital',
+            e.group.position.clone().add(new THREE.Vector3(0, 1.1, 0)),
+            o.group.position.clone()
+          );
         }
       }
     });
@@ -234,6 +241,7 @@ export function updatePlayerWeaponsAndCombat({
           damageEnemy(e, dmg, knock);
         }
       });
+      sendAutomaticAttack?.('mine_blast', m.group.position.clone());
       scene.remove(m.group);
       minesList.splice(i, 1);
     }
@@ -310,7 +318,7 @@ export function updatePlayerWeaponsAndCombat({
     }
     if (p.life <= 0) {
       scene.remove(p.mesh);
-      if (p.mesh.material) p.mesh.material.dispose();
+      if (p.mesh.material && !p.sharedMat) p.mesh.material.dispose();
       bossProjectiles.splice(i, 1);
     }
   }

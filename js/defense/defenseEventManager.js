@@ -84,21 +84,31 @@ export class DefenseEventManager {
     };
   }
 
-  startEvent(type = 'repair') {
+  startEvent(type = 'repair', options = {}) {
     this.cleanupVisuals();
 
-    const locations = [
-      { x: 22, z: -16, name: 'SUBESTACIÓN ESTE', article: 'la' },
-      { x: -22, z: 14, name: 'GENERADOR OESTE', article: 'el' },
-      { x: 0, z: -26, name: 'CONSOLA NORTE', article: 'la' },
-      { x: 18, z: 22, name: 'RELÉ SUR', article: 'el' }
-    ];
-    const loc = locations[Math.floor(Math.random() * locations.length)];
-    const gy = this.worldPhysics ? this.worldPhysics.getGroundHeight(loc.x, loc.z, 0, true) : 0;
-    const targetPos = new THREE.Vector3(loc.x, gy, loc.z);
+    let loc;
+    let targetPos;
+    if (options.position && Number.isFinite(options.position.x)) {
+      targetPos = new THREE.Vector3(options.position.x, options.position.y, options.position.z);
+      loc = {
+        name: options.targetName || 'ZONA DE CONTENCIÓN',
+        article: options.article || 'la'
+      };
+    } else {
+      const locations = [
+        { x: 22, z: -16, name: 'SUBESTACIÓN ESTE', article: 'la' },
+        { x: -22, z: 14, name: 'GENERADOR OESTE', article: 'el' },
+        { x: 0, z: -26, name: 'CONSOLA NORTE', article: 'la' },
+        { x: 18, z: 22, name: 'RELÉ SUR', article: 'el' }
+      ];
+      loc = locations[Math.floor(Math.random() * locations.length)];
+      const gy = this.worldPhysics ? this.worldPhysics.getGroundHeight(loc.x, loc.z, 0, true) : 0;
+      targetPos = new THREE.Vector3(loc.x, gy, loc.z);
+    }
 
-    const duration = this.cfg.eventDurationSec || 120.0;
-    const radius = this.cfg.survivalRadius || 15.0;
+    const duration = Number.isFinite(options.duration) ? options.duration : (this.cfg.eventDurationSec || 120.0);
+    const radius = Number.isFinite(options.radius) ? options.radius : (this.cfg.survivalRadius || 15.0);
     const scrapReward = this.cfg.scrapReward || 30;
 
     this.activeEvent = {
@@ -109,14 +119,21 @@ export class DefenseEventManager {
       duration,
       radius,
       scrapReward,
-      elapsedSurvivalTime: 0,
-      progress: 0,
+      elapsedSurvivalTime: Number.isFinite(options.elapsed) ? options.elapsed : 0,
+      progress: Number.isFinite(options.progress) ? options.progress : 0,
       playerInRadius: false,
       distToPlayer: 999,
-      intensityPhase: 1,
+      intensityPhase: Number.isFinite(options.phase) ? options.phase : 1,
       warnedPhase2: false,
       warnedPhase3: false
     };
+
+    if (this.activeEvent.intensityPhase === 3) {
+      this.activateRedAtmosphere(this.lastCtx);
+      if (this.beamMesh) this.beamMesh.material.color.setHex(0xff2222);
+      if (this.diamondMesh) this.diamondMesh.material.color.setHex(0xff3333);
+      if (this.haloMesh) this.haloMesh.material.color.setHex(0xff3333);
+    }
 
     this.eventEnemies = [];
     this.spawnTimer = 0.5;
@@ -312,6 +329,13 @@ export class DefenseEventManager {
     const inZone = distToPlayer <= ev.radius;
     ev.playerInRadius = inZone;
 
+    // Cliente: el Host dicta temporizador, fase, spawns y final del evento.
+    // Solo se animan perímetro/balizas y se calcula la distancia para el HUD.
+    if (this.mode?.isNetworked && !this.mode?.isNetworkHost) {
+      this.eventEnemies = this.eventEnemies.filter(e => e.active && e.state !== 'dead');
+      return;
+    }
+
     if (inZone) {
       // El temporizador avanza mientras el jugador defiende el perímetro
       ev.elapsedSurvivalTime += dt;
@@ -492,8 +516,28 @@ export class DefenseEventManager {
     this.redAtmosphereActive = false;
   }
 
-  completeEvent() {
+  applyNetworkState(data) {
+    if (!this.activeEvent || !data) return;
+    const ev = this.activeEvent;
+    if (Number.isFinite(data.elapsed)) ev.elapsedSurvivalTime = Math.max(0, data.elapsed);
+    if (Number.isFinite(data.progress)) ev.progress = Math.max(0, Math.min(1, data.progress));
+    if (Number.isFinite(data.phase) && data.phase !== ev.intensityPhase) {
+      ev.intensityPhase = data.phase;
+      if (data.phase === 3) {
+        this.activateRedAtmosphere(this.lastCtx);
+        if (this.beamMesh) this.beamMesh.material.color.setHex(0xff2222);
+        if (this.diamondMesh) this.diamondMesh.material.color.setHex(0xff3333);
+        if (this.haloMesh) this.haloMesh.material.color.setHex(0xff3333);
+      } else {
+        this.deactivateRedAtmosphere();
+      }
+    }
+    this.eventEnemies = this.eventEnemies.filter(e => e.active && e.state !== 'dead');
+  }
+
+  completeEvent(options = {}) {
     if (!this.activeEvent) return;
+    const fromNetwork = !!options.fromNetwork;
 
     // Restaurar la atmósfera antes de concluir
     this.deactivateRedAtmosphere();
@@ -501,8 +545,8 @@ export class DefenseEventManager {
     const ev = this.activeEvent;
     const scrapReward = ev.scrapReward || 30;
 
-    // Otorgar chatarra extra de supervivencia
-    this.mode.addScrap(scrapReward);
+    // En el Cliente la recompensa ya viaja por SCRAP_GAIN desde el Host.
+    if (!fromNetwork) this.mode.addScrap(scrapReward);
 
     // Sonidos triunfales
     AudioSys.playUISelect();

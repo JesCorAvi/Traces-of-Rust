@@ -72,6 +72,11 @@ buildPlacementGhost(this);
   spawnShell(from, to, duration, arcHeight, onImpact) { return spawnShell(this, from, to, duration, arcHeight, onImpact); }
   spawnNapalm(pos, radius, dps, duration) { spawnNapalm(this, pos, radius, dps, duration); }
 
+  // En co-op solo el Host aplica daño real de torretas/tropas. El Cliente
+  // mantiene apuntado, trazadoras, fogonazos y animaciones.
+  isDamageAuthority() {
+    return !(this.ctx?.net?.isMatchActive && !this.ctx.net.isHost());
+  }
   damageEnemy(enemy, amount, source) { damageEnemy(this, enemy, amount, source); }
   damageArea(center, radius, amount, source) { damageArea(this, center, radius, amount, source); }
   inRadius(a, b, radius) { return inRadius(a, b, radius); }
@@ -128,12 +133,14 @@ GameEvents.emit('turret:upgraded', {
 return true;
   }
 
-  sellTurret(turretId) {
+  sellTurret(turretId, options = {}) {
 const turret = this.getTurretById(turretId);
 if (!turret) return 0;
 
 const refund = turret.getSellValue();
-this.mode.addScrap(refund);
+// Una venta remota elimina la torreta en el receptor pero NUNCA le abona
+// chatarra: el reembolso pertenece a quien ejecuta la venta.
+if (!options.remote) this.mode.addScrap(refund, { local: true });
 
 this.turrets.delete(turret.id);
 this.removeStructure(turret);

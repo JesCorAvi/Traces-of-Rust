@@ -28,7 +28,7 @@ for (let i = 0; i < shots; i++) {
   for (let h = 0; h < finalHits.length; h++) {
     const e = finalHits[h];
     turret.system.damageEnemy(e, dmg, turret);
-    if (turret.stats.burnDps > 0) {
+    if (turret.stats.burnDps > 0 && turret.system.isDamageAuthority?.()) {
       e.applyBurn(
         turret.stats.burnDps * turret.stats.burnDpsMult,
         turret.stats.burnDuration * turret.stats.burnDurationMult

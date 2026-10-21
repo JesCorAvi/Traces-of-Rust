@@ -57,9 +57,11 @@ export function getPlayerLoadoutSheet(skills = { slash: 1 }, activeHand = 'slash
   applyCleanSpriteOutlineRect(ctx, w, h);
 
   const tex = makeTexture(canvas);
-  tex.repeat.set(1 / cols, 1 / rows);
+  tex.repeat.set(1, 1);
+  tex.offset.set(0, 0);
   const glowTex = makeTexture(glowCanvas);
-  glowTex.repeat.set(1 / cols, 1 / rows);
+  glowTex.repeat.set(1, 1);
+  glowTex.offset.set(0, 0);
 
   const entry = { name: `player_8dir_${activeHand}_${cid}`, cols, rows, numDirs: 8, tex, glowTex, canvas };
   playerLoadoutCache.set(signature, entry);

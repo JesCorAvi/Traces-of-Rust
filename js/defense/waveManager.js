@@ -27,6 +27,14 @@ export class WaveManager {
     this.pendingBossCfg = null;
     this.activeRoutes = ['path_north'];
     this.wavesCompleted = 0;
+    this.totalQueuedAtStart = 0;
+
+    // En co-op online solo el Host decide transiciones de fase/oleada.
+    this.isAuthority = true;
+  }
+
+  setAuthority(isAuthority) {
+    this.isAuthority = !!isAuthority;
   }
 
   canSkipPrep() {
@@ -35,9 +43,11 @@ export class WaveManager {
 
   skipPrep() {
     if (!this.canSkipPrep()) return false;
+    // El cliente solicita el salto, pero el Host es quien arranca la oleada y
+    // difunde el nuevo estado. El cliente lo aplica al recibir WAVE_STATE.
+    if (!this.isAuthority) return true;
     this.prepTimer = 0;
     this.startNextWave();
-    this.totalQueuedAtStart = this.spawnQueue.length;
     return true;
   }
 
@@ -47,6 +57,9 @@ export class WaveManager {
 
   getRemainingHostilesCount() {
     const aliveInWorld = this.enemyPool.active.filter(e => e.active && e.state !== 'dead').length;
+    // En el Cliente la cola es solo informativa: los enemigos reales son los
+    // replicados por el Host, así que no se suma para no duplicar el contador.
+    if (!this.isAuthority) return aliveInWorld;
     const queuedCount = this.spawnQueue.length + (this.pendingBossCfg ? 1 : 0);
     return aliveInWorld + queuedCount;
   }
@@ -80,6 +93,8 @@ export class WaveManager {
   }
 
   startNextWave() {
+    // Solo el Host genera la cola (Math.random local) y avanza la oleada.
+    if (!this.isAuthority) return;
     this.currentWaveIndex++;
     const schedule = this.cfg.SCHEDULE;
     const waveCfg = schedule[Math.min(schedule.length - 1, this.currentWaveIndex - 1)];
@@ -95,6 +110,7 @@ export class WaveManager {
     } else {
       this.pendingBossCfg = null;
     }
+    this.totalQueuedAtStart = this.spawnQueue.length + (this.pendingBossCfg ? 1 : 0);
 
     AudioSys.play(165, 0.35, 'sawtooth', 0.08);
     AudioSys.play(220, 0.25, 'square', 0.06);
@@ -213,6 +229,10 @@ export class WaveManager {
   update(dt, playerPos, gameTime, playerFwd, onBossSpawned) {
     if (this.state === 'VICTORY') return;
 
+    // Cliente no autoritativo: no instancia enemigos ni avanza fases. Los
+    // enemigos llegan por ENEMY_SPAWN y el estado por WAVE_STATE del Host.
+    if (!this.isAuthority) return;
+
     if (this.state === 'PREP') {
       // En la primera ronda (currentWaveIndex === 0), la preparación no tiene límite de tiempo
       // para que el jugador explore libremente el mapa hasta que pulse [F].
@@ -223,7 +243,6 @@ export class WaveManager {
       this.prepTimer -= dt;
       if (this.prepTimer <= 0) {
         this.startNextWave();
-        this.totalQueuedAtStart = this.spawnQueue.length;
       }
       return;
     }
@@ -282,8 +301,66 @@ export class WaveManager {
   }
 
   completeSpecialEvent() {
+    // El cliente espera al WAVE_STATE del Host para salir del evento.
+    if (!this.isAuthority) return;
     this.state = 'PREP';
     this.prepTimer = this.cfg.betweenWavesRestSec;
     AudioSys.playUISelect();
+  }
+
+  // Snapshot autoritativo enviado por el Host. El cliente lo aplica sin
+  // generar oleadas por su cuenta (sin el antiguo fast-forward con while).
+  applyNetworkState(snap) {
+    if (!snap) return;
+
+    const prevWave = this.currentWaveIndex;
+    const prevCompleted = this.wavesCompleted;
+    const wasSpawning = this.state === 'SPAWNING';
+    if (Number.isFinite(snap.currentWaveIndex)) this.currentWaveIndex = snap.currentWaveIndex;
+    if (Number.isFinite(snap.wavesCompleted)) this.wavesCompleted = snap.wavesCompleted;
+    if (Number.isFinite(snap.prepTimer)) this.prepTimer = Math.max(0, snap.prepTimer);
+    if (Number.isFinite(snap.totalWaves)) this.totalWaves = snap.totalWaves;
+
+    // Espejo del anuncio de fin de oleada (HUD/audio). Los efectos económicos
+    // y el heal quedan bloqueados en el Cliente por la autoridad del Host.
+    if (this.wavesCompleted > prevCompleted) {
+      GameEvents.emit('wave:completed', {
+        wave: this.wavesCompleted,
+        totalWaves: this.totalWaves
+      });
+    }
+
+    const waveAdvanced = this.currentWaveIndex > prevWave;
+    const adoptingRunningWave = snap.state === 'SPAWNING' && !wasSpawning;
+
+    // La cola solo se adopta al entrar en una oleada nueva o al recuperar
+    // el estado en mitad de una oleada; los latidos no pisan el spawn local.
+    if (waveAdvanced || adoptingRunningWave) {
+      if (Array.isArray(snap.spawnQueue)) {
+        this.spawnQueue = snap.spawnQueue.map(item => ({ type: item.type, routeId: item.routeId }));
+      }
+      if (Number.isFinite(snap.spawnInterval)) this.spawnInterval = snap.spawnInterval;
+      if (Number.isFinite(snap.totalQueuedAtStart)) this.totalQueuedAtStart = snap.totalQueuedAtStart;
+      if (Array.isArray(snap.activeRoutes) && snap.activeRoutes.length > 0) {
+        this.activeRoutes = [...snap.activeRoutes];
+      }
+      this.pendingBossCfg = snap.pendingBossId
+        ? (CONFIG.BOSS_SCHEDULE.find(b => b.id === snap.pendingBossId) || null)
+        : null;
+      this.spawnTimer = 0.25;
+    }
+
+    if (snap.state) this.state = snap.state;
+
+    if (waveAdvanced) {
+      GameEvents.emit('wave:started', {
+        wave: this.currentWaveIndex,
+        totalWaves: this.totalWaves,
+        routes: this.activeRoutes,
+        hasBoss: !!this.pendingBossCfg,
+        bossName: this.pendingBossCfg ? this.pendingBossCfg.name : null,
+        totalEnemies: this.spawnQueue.length + (this.pendingBossCfg ? 1 : 0)
+      });
+    }
   }
 }

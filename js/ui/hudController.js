@@ -1,5 +1,6 @@
 // HUD: stats, núcleo, radar, inventario, avisos y prompts de torretas.
 // Exports: HUDController, SHORT_WEAPON_NAMES.
+import * as THREE from 'three';
 import { renderSpriteIconHTML } from '../spritesheets.js';
 import { updateStatsAndModeHUD, updateInventoryHUD } from './hud/stats.js';
 import { updateCoreDirectionIndicator, updateRadarHUD } from './hud/radar.js';
@@ -13,6 +14,7 @@ export class HUDController {
     this.bossHideHudTimeout = null;
     this.coreAlertTimeout = null;
     this.waveBannerTimeout = null;
+    this.scrapToastTimeout = null;
   }
 
   /**
@@ -45,6 +47,13 @@ export class HUDController {
     document.getElementById('boss-hud')?.classList.add('hidden');
     document.getElementById('core-attack-banner')?.classList.add('hidden');
 
+    const coopTransfer = document.getElementById('coop-scrap-transfer');
+    if (coopTransfer) {
+      coopTransfer.classList.toggle('hidden', !(isDefense && !!hudConfig.coopScrapTransfer));
+    }
+    const coopToast = document.getElementById('coop-scrap-toast');
+    if (coopToast && !isDefense) coopToast.classList.add('hidden');
+
     if (!isDefense) {
       document.getElementById('turret-interact-prompt')?.classList.add('hidden');
       document.getElementById('wave-prep-prompt')?.classList.add('hidden');
@@ -72,8 +81,8 @@ export class HUDController {
     updateCoreDirectionIndicator(camera, playerPos, corePos, coreRatio);
   }
 
-  updateRadarHUD(playerPos, yaw, activeEnemies, activeBoss, corePos = null) {
-    updateRadarHUD(playerPos, yaw, activeEnemies, activeBoss, corePos);
+  updateRadarHUD(playerPos, yaw, activeEnemies, activeBoss, corePos = null, coopPos = null) {
+    updateRadarHUD(playerPos, yaw, activeEnemies, activeBoss, corePos, coopPos);
   }
 
   showBossBanner(boss, bossCfg) {
@@ -149,6 +158,37 @@ export class HUDController {
     this.coreAlertTimeout = setTimeout(() => {
       banner.classList.add('hidden');
     }, 1850);
+  }
+
+  // Número de daño flotante proyectado desde el mundo (feedback del Cliente).
+  showDamageNumber(camera, worldPos, damage, isCrit = false) {
+    const container = document.getElementById('damage-numbers');
+    if (!container || !camera || !worldPos) return;
+    const projected = worldPos.clone().project(camera);
+    if (projected.z > 1 || projected.z < -1) return;
+    const x = (projected.x * 0.5 + 0.5) * window.innerWidth;
+    const y = (-projected.y * 0.5 + 0.5) * window.innerHeight;
+    if (x < -40 || y < -40 || x > window.innerWidth + 40 || y > window.innerHeight + 40) return;
+
+    const el = document.createElement('div');
+    el.className = `dmg-number${isCrit ? ' is-crit' : ''}`;
+    el.textContent = `${isCrit ? '¡' : ''}${Math.round(damage)}${isCrit ? '!' : ''}`;
+    el.style.left = `${x}px`;
+    el.style.top = `${y}px`;
+    container.appendChild(el);
+    setTimeout(() => el.remove(), 780);
+  }
+
+  showScrapTransferToast(text, tone = 'send') {
+    const el = document.getElementById('coop-scrap-toast');
+    if (!el) return;
+    el.textContent = text;
+    el.classList.remove('hidden', 'is-send', 'is-receive', 'is-error');
+    el.classList.add(tone === 'receive' ? 'is-receive' : (tone === 'error' ? 'is-error' : 'is-send'));
+    if (this.scrapToastTimeout) clearTimeout(this.scrapToastTimeout);
+    this.scrapToastTimeout = setTimeout(() => {
+      el.classList.add('hidden');
+    }, 1900);
   }
 
   showWaveAnnouncement(text) {
