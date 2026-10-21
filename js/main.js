@@ -33,6 +33,7 @@ import {
 } from './ui/menusAndShop.js';
 import { getSelectedCharacterId, getCharacterById } from './config/charactersConfig.js';
 import { setupSteamLobbyUI } from './online/steamLobbyUI.js';
+import { installWebRtcAdapter } from './online/webRtcAdapter.js';
 import { MultiplayerSync } from './online/multiplayerSync.js';
 import { presentRunResultsScreen } from './ui/resultsScreen.js';
 import { updatePlayerWeaponsAndCombat } from './player/playerController.js';
@@ -715,6 +716,9 @@ if (wavePrepPrompt) {
 setupCharacterSelectorUI();
 setupSettingsUI();
 applyStoredFullscreen();
+// En navegador (sin preload de Electron) instala el puente WebRTC antes de
+// que la UI online y MultiplayerSync consulten window.steamOnline.
+installWebRtcAdapter();
 setupSteamLobbyUI({
   startGame: (opts) => flowRuntime.startGame(opts)
 });
