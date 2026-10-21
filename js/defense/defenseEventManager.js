@@ -80,7 +80,13 @@ export class DefenseEventManager {
       badgeText,
       objectiveText: `${titlePrefix} [${timeStr}]`,
       subTaskText,
-      progress: ev.progress
+      progress: ev.progress,
+      phase: ev.intensityPhase || 1,
+      timeRemaining: remainingSec,
+      timeStr,
+      playerInRadius: !!ev.playerInRadius,
+      distOutside: Math.max(0, Math.round((ev.distToPlayer || 0) - ev.radius)),
+      aliveCount
     };
   }
 
@@ -130,6 +136,15 @@ export class DefenseEventManager {
 
     if (this.activeEvent.intensityPhase === 3) {
       this.activateRedAtmosphere(this.lastCtx);
+        AudioSys.playIndustrialSiren?.();
+        const networkHud = this.lastCtx?.hudController || this.mode?.net?.ctx?.hudController;
+        networkHud?.showKineticAlertBanner?.({
+          tag: '¡ALERTA MÁXIMA // CLÍMAX DE CONTENCIÓN!',
+          title: 'FASE 3: PURGA DE WEEPERS (ÚLTIMOS 40s)',
+          sub: 'HOSTILES EN MÁXIMA AGRESIVIDAD // SOBREVIVE',
+          theme: 'critical',
+          durationMs: 3800
+        });
       if (this.beamMesh) this.beamMesh.material.color.setHex(0xff2222);
       if (this.diamondMesh) this.diamondMesh.material.color.setHex(0xff3333);
       if (this.haloMesh) this.haloMesh.material.color.setHex(0xff3333);
@@ -143,6 +158,16 @@ export class DefenseEventManager {
     this.buildEventWorldVisuals(targetPos, type, radius);
 
     // Alarma inicial de evento de emergencia
+    AudioSys.playIndustrialSiren?.();
+    const eventLocationName = (options.targetName || loc.name || 'ZONA DE CONTENCIÓN').toUpperCase();
+    const hudCtrl = this.lastCtx?.hudController || this.mode?.net?.ctx?.hudController;
+    hudCtrl?.showKineticAlertBanner?.({
+      tag: 'ALERTA DE SECTOR // PROTOCOLO DE CONTENCIÓN',
+      title: '¡EVENTO ESPECIAL INICIADO! (120s)',
+      sub: `SOBREVIVE AL ASALTO EN ${eventLocationName}`,
+      theme: 'hazard',
+      durationMs: 3800
+    });
     AudioSys.play(140, 0.45, 'sawtooth', 0.12);
     AudioSys.play(210, 0.35, 'square', 0.08);
 
@@ -364,6 +389,14 @@ export class DefenseEventManager {
       if (!ev.warnedPhase3) {
         ev.warnedPhase3 = true;
         this.activateRedAtmosphere(ctx);
+        AudioSys.playIndustrialSiren?.();
+        ctx?.hudController?.showKineticAlertBanner?.({
+          tag: '¡ALERTA MÁXIMA // CLÍMAX DE CONTENCIÓN!',
+          title: 'FASE 3: PURGA DE WEEPERS (ÚLTIMOS 40s)',
+          sub: 'HOSTILES EN MÁXIMA AGRESIVIDAD // SOBREVIVE',
+          theme: 'critical',
+          durationMs: 3800
+        });
       }
       // En Fase 3, el haz y holograma reflejan el color de alerta roja apocalíptica
       if (this.beamMesh) this.beamMesh.material.color.setHex(0xff2222);
@@ -571,6 +604,15 @@ export class DefenseEventManager {
       type: ev.type,
       scrapReward,
       title: eventTitle
+    });
+
+    const completionHud = ctx?.hudController || this.lastCtx?.hudController || this.mode?.net?.ctx?.hudController;
+    completionHud?.showKineticAlertBanner?.({
+      tag: 'SECTOR ASEGURADO // RECOMPENSA OBTENIDA',
+      title: `¡EVENTO DE CONTENCIÓN SUPERADO! +${scrapReward} CHATARRA`,
+      sub: 'ZONA PACIFICADA // SISTEMAS DEFENSIVOS REFORZADOS',
+      theme: 'success',
+      durationMs: 3800
     });
 
     this.cleanupVisuals();

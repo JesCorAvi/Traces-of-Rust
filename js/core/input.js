@@ -13,11 +13,6 @@ window.addEventListener('keydown', e => {
     rt.debugOverlay.toggle();
     return;
   }
-  if (e.key === 'Tab') {
-    e.preventDefault();
-    return;
-  }
-
   const k = e.key.toLowerCase();
 
   // Transferencia rápida de chatarra en co-op: T envía +5, Shift+T envía +1.

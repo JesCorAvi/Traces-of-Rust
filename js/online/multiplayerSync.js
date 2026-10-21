@@ -177,12 +177,17 @@ class RemotePlayer {
     }
 
     const down = !!data.down;
+    const prevDown = this.isDown;
     const prevDownSec = Math.ceil(this.downTimer);
     if (data.downTimer !== undefined) this.downTimer = Math.max(0, data.downTimer);
     const downSecChanged = Math.ceil(this.downTimer) !== prevDownSec;
 
     if (down !== this.isDown) {
       this.setDownState(down, this.downTimer);
+      if (down && !prevDown) {
+        MultiplayerSync.ctx?.hudController?.showTeammateDownAlert?.('¡COMPAÑERO ABATIDO! -50 HP AL NÚCLEO');
+        AudioSys.playTacticalAlarm?.();
+      }
     } else if (hpChanged || (this.isDown && downSecChanged)) {
       // Redibuja solo cuando cambia HP, estado o el segundo del contador.
       this.nameplate.draw(this.hp, this.maxHp, this.isDown, this.downTimer);
@@ -360,6 +365,7 @@ const PRE_MATCH_PACKET_TYPES = new Set([
 ]);
 
 const BUFFERED_PACKET_TYPES = new Set([
+  'PEER_LEFT',
   'TURRET_BUILD',
   'TURRET_UPGRADE',
   'TURRET_SELL',
@@ -1086,9 +1092,15 @@ export const MultiplayerSync = {
 
   notifyMatchEnd() {
     if (!this.isMatchActive || this._endingFromRemote) return;
-    this.broadcast('MATCH_END', {
-      matchTimestamp: this._matchInfo?.timestamp || 0
-    }, true);
+    if (this.isHost()) {
+      this.broadcast('MATCH_END', {
+        matchTimestamp: this._matchInfo?.timestamp || 0
+      }, true);
+    } else {
+      this.broadcast('PEER_LEFT', {
+        matchTimestamp: this._matchInfo?.timestamp || 0
+      }, true);
+    }
   },
 
   sanitizeOutcome(outcome = {}) {
@@ -1640,17 +1652,69 @@ export const MultiplayerSync = {
     }
   },
 
+
+  removeRemotePlayer(peerId) {
+    if (!peerId) return;
+    const id = String(peerId);
+    const rp = this.remotePlayers.get(id);
+    if (rp) {
+      try {
+        rp.destroy();
+      } catch (e) {
+        console.warn('[MultiplayerSync] Error destruyendo RemotePlayer:', e);
+      }
+      this.remotePlayers.delete(id);
+    }
+    this.knownPeers.delete(id);
+    if (this.remotePlayers.size === 0) {
+      const coopDot = document.querySelector('.radar-dot.coop-approx');
+      if (coopDot) coopDot.style.display = 'none';
+    }
+  },
+
+  handlePeerLeft(peerId = null) {
+    console.log('[MultiplayerSync] Procesando salida de compañero:', peerId);
+    if (peerId) {
+      this.removeRemotePlayer(peerId);
+    } else {
+      for (const id of Array.from(this.remotePlayers.keys())) {
+        this.removeRemotePlayer(id);
+      }
+    }
+
+    // Toast y aviso claro en el HUD del Host
+    this.ctx?.hudController?.showScrapTransferToast?.('Compañero desconectado. Continuando misión en solitario.', 'error');
+    this.ctx?.hudController?.showWaveAnnouncement?.('COMPAÑERO DESCONECTADO // MISIÓN EN SOLITARIO');
+    AudioSys.playUIError?.();
+
+    // Ocultar botón y atajo de enviar chatarra (T)
+    const coopTransfer = document.getElementById('coop-scrap-transfer');
+    if (coopTransfer) coopTransfer.classList.add('hidden');
+    const coopDot = document.querySelector('.radar-dot.coop-approx');
+    if (coopDot) coopDot.style.display = 'none';
+
+    // Desactivar coopScrapTransfer en hudConfig del modo activo
+    const activeMode = ModeManager?.activeMode;
+    if (activeMode && activeMode.hudConfig) {
+      activeMode.hudConfig.coopScrapTransfer = false;
+    }
+  },
+
   handlePeerDisconnected(packet) {
     if (!this.isMatchActive) return;
-    if (packet?.steamId) {
-      const id = String(packet.steamId);
-      if (!this.knownPeers.has(id) && !this.remotePlayers.has(id)) return;
-    }
+    const id = packet?.steamId ? String(packet.steamId) : null;
+    if (id && !this.knownPeers.has(id) && !this.remotePlayers.has(id)) return;
     console.warn('[MultiplayerSync] Peer desconectado:', packet);
-    this.ctx?.hudController?.showScrapTransferToast?.('COMPAÑERO DESCONECTADO', 'error');
-    AudioSys.playUIError?.();
-    this._endingFromRemote = true;
-    this.ctx?.onMatchEnded?.();
+
+    if (this.isHost()) {
+      // Si somos Host, el cliente se desconectó. NO salimos de la partida.
+      this.handlePeerLeft(id);
+    } else {
+      // Si somos Cliente y el Host se cayó o desconectó, salimos al menú.
+      AudioSys.playUIError?.();
+      this._endingFromRemote = true;
+      this.ctx?.onMatchEnded?.('El Host ha finalizado la sesión.');
+    }
   },
 
   // Fin de la partida sin cerrar la sesión P2P: permite reiniciar en co-op y
@@ -1677,6 +1741,13 @@ export const MultiplayerSync = {
     if (!mode || !Number.isFinite(amount) || amount <= 0) return true;
     if (!this.isMatchActive) return false;
     if (!this.isHost()) return true; // el Cliente no genera ingresos propios
+
+    // Reajuste dinámico de Economía: Como ya no hay compañero conectado (remotePlayers.size === 0),
+    // handleScrapIncome() pasa automáticamente a darle el 100% de la chatarra generada al Host
+    if (this.remotePlayers.size === 0) {
+      mode.scrap += amount;
+      return true;
+    }
 
     let hostShare = Math.floor(amount / 2);
     let clientShare = amount - hostShare;
@@ -2187,12 +2258,24 @@ export const MultiplayerSync = {
           break;
         }
 
+        case 'PEER_LEFT': {
+          const senderSteamId = senderId ? String(senderId) : null;
+          this.handlePeerLeft(senderSteamId);
+          break;
+        }
+
         case 'MATCH_END': {
           if (!this.isMatchActive) break;
+          // Solo el Host puede emitir MATCH_END / cerrar la partida para ambos.
+          if (this.isHost()) {
+            console.warn('[MultiplayerSync] MATCH_END recibido en Host de un cliente. Tratándolo como PEER_LEFT.');
+            this.handlePeerLeft(senderId ? String(senderId) : null);
+            break;
+          }
           const ts = data.matchTimestamp;
           if (ts && this._matchInfo?.timestamp && ts !== this._matchInfo.timestamp) break;
           this._endingFromRemote = true;
-          this.ctx?.onMatchEnded?.();
+          this.ctx?.onMatchEnded?.('El Host ha finalizado la sesión.');
           break;
         }
 

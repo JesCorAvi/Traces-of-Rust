@@ -226,6 +226,18 @@ export class CoreDefenseMode {
     ctx.onCoreUnderAttackAlert?.(`¡FUGA DETECTADA! -${leakLives} ${leakLives === 1 ? 'VIDA' : 'VIDAS'}`);
     ctx.triggerScare?.(0.25);
 
+    const coreRatio = this.lives / Math.max(1, this.maxLives);
+    if (enemy.isBoss || leakLives >= 3 || coreRatio <= 0.25) {
+      ctx?.hudController?.showKineticAlertBanner?.({
+        tag: 'BRECHA EN EL NÚCLEO // FUGA DETECTADA',
+        title: `¡DAÑO CRÍTICO AL NÚCLEO! -${leakLives} ${leakLives === 1 ? 'VIDA' : 'VIDAS'}`,
+        sub: coreRatio <= 0.25 ? '¡INTEGRIDAD CRÍTICA DEL NÚCLEO! PROTOCOLO DE EMERGENCIA' : 'INVASIÓN DE CONTENCIÓN // CUBRE LAS ESCLUSAS',
+        theme: 'critical',
+        durationMs: 3500
+      });
+      AudioSys.playIndustrialSiren?.();
+    }
+
     // Solo el Host resta vidas. El Cliente recibe el HP real por CORE_SYNC.
     if (!this.isNetworked || this.isNetworkHost) {
       this.applyCoreDamage(leakLives, ctx, 'leak');
@@ -367,10 +379,12 @@ export class CoreDefenseMode {
     if (this.playerDownTimer > 0) {
       playerAlive = false;
       this.playerDownTimer -= dt;
+      ctx.hudController?.updatePlayerDownCountdown?.(this.playerDownTimer, CORE_DEFENSE_CONFIG.PLAYER_DEATH_POLICY.respawnDelaySec);
       if (this.playerDownTimer <= 0) {
         const startPos = this.mapData?.playerStartPos || { x: 0, y: 0, z: 0 };
         const gy = worldPhysics.getGroundHeight(startPos.x, startPos.z, 0);
         playerGroup.position.set(startPos.x, gy, startPos.z);
+        ctx.hudController?.hidePlayerDownOverlay?.();
         ctx.revivePlayerAfterPenalty(CORE_DEFENSE_CONFIG.PLAYER_DEATH_POLICY.respawnInvulnSec);
       }
     }
@@ -650,6 +664,15 @@ export class CoreDefenseMode {
       subTaskText,
       waveBadgeText: eventInfo ? `EVENTO // ${eventInfo.badgeText}` : (isFirstWavePrep ? 'EXPLORACIÓN // PREP. INICIAL' : (isPrep ? `PREPARACIÓN // OLEADA ${waveNum}/${totalW}` : `OLEADA ${waveNum} / ${totalW}`)),
       eventBadge: eventInfo ? eventInfo.badgeText : null,
+      eventTelemetry: eventInfo ? {
+        phase: eventInfo.phase,
+        phaseTitle: eventInfo.badgeText,
+        remainingSec: eventInfo.timeRemaining,
+        progress: eventInfo.progress,
+        inZone: eventInfo.playerInRadius,
+        distOutside: eventInfo.distOutside,
+        aliveCount: eventInfo.aliveCount
+      } : null,
       remainingEnemies: eventInfo ? eventAliveCount : remaining,
       waveNumber: waveNum,
       totalWaves: totalW,

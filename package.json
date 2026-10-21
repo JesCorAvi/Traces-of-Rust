@@ -5,7 +5,8 @@
   "main": "electron-main.cjs",
   "scripts": {
     "start": "electron .",
-    "build:win": "electron-packager . \"Traces of Rust\" --platform=win32 --arch=x64 --out=dist --overwrite --ignore=\"^/dist$\" && node scripts/postbuild-win.cjs"
+    "build:win": "electron-packager . \"Traces of Rust\" --platform=win32 --arch=x64 --out=dist --overwrite --ignore=\"^/dist$\" && node scripts/postbuild-win.cjs",
+    "validate:skills": "node scripts/validate-skills.mjs"
   },
   "keywords": [
     "horror",

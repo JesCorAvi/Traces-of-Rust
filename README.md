@@ -25,7 +25,6 @@ El juego combina un entorno industrial orgánico con relieve y colisiones 3D con
 * **ESPACIO:** Saltar a plataformas elevadas.
 * **SHIFT:** Esquiva brusca con rastro e invulnerabilidad temporal.
 * **RATÓN:** Apuntar linterna y disparar / atacar de forma independiente.
-* **TAB:** Abrir/cerrar el Inspector de Spritesheets en tiempo real.
 
 ---
 
@@ -50,7 +49,6 @@ The game blends an organic industrial 3D environment featuring height variations
 * **SPACE:** Jump onto elevated platforms.
 * **SHIFT:** Quick dash with temporary invulnerability.
 * **MOUSE:** Aim flashlight and shoot/attack independently.
-* **TAB:** Open/close the Real-time Spritesheet Inspector.
 
 ---
 

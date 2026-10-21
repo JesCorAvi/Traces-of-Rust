@@ -275,6 +275,14 @@ ipcMain.handle('steam:joinLobby', async (_, lobbyIdStr) => {
     const lobby = await steamClient.matchmaking.joinLobby(targetId);
     currentLobby = lobby;
 
+    // Comprobar si la sala ya ha finalizado
+    const lobbyStatus = lobby.getData ? lobby.getData('status') : '';
+    if (lobbyStatus === 'ENDED') {
+      try { lobby.leave(); } catch (e) {}
+      currentLobby = null;
+      return { success: false, error: 'Esta partida ya ha finalizado o la sala se ha cerrado.' };
+    }
+
     // Aceptar de inmediato sesión P2P con el Host y enviar paquete de enlace
     const owner = lobby.getOwner ? lobby.getOwner() : null;
     if (owner && owner.steamId64) {
@@ -333,6 +341,14 @@ ipcMain.handle('steam:setLobbyData', async (_, { key, value }) => {
 
 ipcMain.handle('steam:leaveLobby', async () => {
   if (currentLobby) {
+    try {
+      const myId = steamClient?.localplayer?.getSteamId?.()?.steamId64?.toString?.() || '';
+      const owner = currentLobby.getOwner ? currentLobby.getOwner() : null;
+      const ownerId = owner && owner.steamId64 ? owner.steamId64.toString() : '';
+      if (ownerId && ownerId === myId) {
+        currentLobby.setData('status', 'ENDED');
+      }
+    } catch (e) {}
     try { currentLobby.leave(); } catch (e) {}
     currentLobby = null;
   }

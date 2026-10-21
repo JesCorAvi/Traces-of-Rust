@@ -22,6 +22,28 @@
   <div id="crt-overlay"></div>
   <div id="grain-overlay"></div>
   <div id="vignette-overlay"></div>
+  <!-- Overlay a pantalla completa de operador abatido / reconstrucción (Modo Defensa) -->
+  <div id="player-down-overlay" class="player-down-overlay hidden">
+    <div class="player-down-vignette"></div>
+    <div class="player-down-noise"></div>
+    <div class="player-down-modal">
+      <div class="hazard-stripe-top"></div>
+      <div class="player-down-body">
+        <div class="player-down-tag">
+          <span class="ui-icon sm" data-ui-icon="warning"></span>
+          <span>SISTEMA CRÍTICO // FALLO VITAL</span>
+          <span class="ui-icon sm" data-ui-icon="warning"></span>
+        </div>
+        <h2 class="player-down-title">[ OPERADOR ABATIDO // SOBRECARGA DEL NÚCLEO -50 HP ]</h2>
+        <div class="player-down-sub">SEÑAL VITAL PERDIDA // PROTOCOLO DE RECONSTRUCCIÓN EN CURSO</div>
+        <div class="player-down-countdown" id="player-down-countdown">RECONSTRUYENDO EN 5.0s...</div>
+        <div class="player-down-bar-frame">
+          <div class="player-down-bar-fill" id="player-down-progress-bar"></div>
+        </div>
+      </div>
+      <div class="hazard-stripe-bottom"></div>
+    </div>
+  </div>
   <div id="damage-flash"></div>
   <div id="scare-flash"></div>
   <div id="damage-numbers" aria-hidden="true"></div>
@@ -38,23 +60,6 @@
         <option value="2" selected>x2</option>
         <option value="3">x3</option>
       </select>
-    </div>
-  </div>
-
-  <!-- Modal Inspector / Descargador de Spritesheets -->
-  <div id="sheets-modal" class="overlay hidden">
-    <div class="metal-plate wide-plate">
-      <div class="ui-decor crack-tl" data-ui-icon="crack_1"></div>
-      <div class="ui-decor stain-rust" data-ui-icon="stain_rust"></div>
-      <div class="plate-header">
-        <span class="tape-label">
-          <span class="ui-icon sm" data-ui-icon="atkSpd"></span>
-          <span>ATLAS MAESTRO DE UI &amp; SPRITESHEETS (.PNG)</span>
-        </span>
-        <button class="rust-btn sm" id="btn-close-sheets"><span>[X] CERRAR</span></button>
-      </div>
-      <p class="plate-sub">Atlas 512x512 con paneles 9-slice, botones, barras, iconos detallados, placas +1..+8 y cursores. Haz clic para descargar PNG.</p>
-      <div id="sheets-grid"></div>
     </div>
   </div>
 
@@ -104,6 +109,23 @@
         <div id="coop-scrap-toast" class="coop-scrap-toast hidden"></div>
       </div>
 
+      <!-- Indicador Persistente de Evento Especial (120s) -->
+      <div id="defense-event-hud" class="metal-plate defense-event-hud hidden">
+        <div class="event-hud-header">
+          <span class="event-hud-phase" id="event-hud-phase">FASE 1: ASALTO</span>
+          <span class="event-hud-timer" id="event-hud-timer">120s</span>
+        </div>
+        <div class="event-hud-containment" id="event-hud-containment">
+          <span class="event-containment-indicator in-zone" id="event-containment-indicator">
+            ● DENTRO DEL PERÍMETRO (RADIO 15M)
+          </span>
+        </div>
+        <div class="event-hud-bar-frame">
+          <div class="event-hud-bar-fill" id="event-hud-bar-fill"></div>
+        </div>
+      </div>
+
+
       <!-- Aviso y botón de salto para la pausa de construcción entre rondas -->
       <div id="wave-prep-prompt" class="metal-plate hidden" role="button" tabindex="0" title="Pulsa F o haz clic para comenzar la oleada de inmediato">
         <div class="prep-prompt-row">
@@ -149,6 +171,18 @@
       <span>¡NÚCLEO BAJO ATAQUE!</span>
       <span class="ui-icon sm" data-ui-icon="warning"></span>
     </div>
+
+    <!-- Banner Cinético de Alerta de Evento Especial y Crisis -->
+    <div id="kinetic-event-banner" class="kinetic-event-banner hidden">
+      <div class="hazard-stripe-top"></div>
+      <div class="kinetic-banner-body">
+        <div class="kinetic-banner-tag" id="kinetic-banner-tag">ALERTA DE SECTOR</div>
+        <div class="kinetic-banner-title" id="kinetic-banner-title">EVENTO DE CONTENCIÓN INICIADO</div>
+        <div class="kinetic-banner-sub" id="kinetic-banner-sub">SOBREVIVE AL ASALTO // 120S</div>
+      </div>
+      <div class="hazard-stripe-bottom"></div>
+    </div>
+
 
     <!-- Marcador direccional en pantalla hacia el Núcleo (Modo Defensa) -->
     <div id="core-direction-indicator" class="hidden" style="display: none;">
@@ -548,6 +582,8 @@
         </span>
         <span id="steam-status-badge" class="led-val" style="color:#55de3e;">INICIALIZANDO...</span>
       </div>
+      <div id="steam-lobby-notice" class="hidden" style="margin: 6px 0; padding: 6px 10px; background: rgba(50, 8, 8, 0.95); border: 1px solid #ff4444; color: #ff8888; font-family: 'Press Start 2P', monospace; font-size: 8px; text-align: center;"></div>
+
       <p class="plate-sub">Enlace multijugador P2P privado mediante Steamworks (Spacewar 480). Conexión exclusiva por código o invitación:</p>
 
       <!-- Panel de Identidad Steam -->

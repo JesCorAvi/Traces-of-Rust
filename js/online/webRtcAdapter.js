@@ -614,11 +614,15 @@ function handleControlMessage(record, message) {
     case 'LOBBY_STATE':
       handleLobbyState(record, message);
       break;
+    case 'LOBBY_CLOSED':
     case 'REJECT':
       if (currentRole === 'client') {
-        rejectPendingWelcome(message.reason === 'full'
-          ? 'La sala está llena (máximo 4 operadores).'
-          : 'El Host rechazó la conexión.');
+        const isEnded = message.type === 'LOBBY_CLOSED' || message.reason === 'ended';
+        const msg = isEnded
+          ? 'Esta partida ya ha finalizado o la sala se ha cerrado.'
+          : (message.reason === 'full' ? 'La sala está llena (máximo 4 operadores).' : 'El Host rechazó la conexión.');
+        rejectPendingWelcome(msg);
+        failJoin(msg);
       }
       break;
     case 'ROOM_CLOSED':
@@ -727,10 +731,13 @@ function handleIncomingConnection(conn) {
   const channelName = conn.metadata?.channel === 'unreliable' ? 'unreliable' : 'reliable';
   const record = getOrCreatePeerRecord(conn.peer);
 
-  if (channelName === 'reliable' && !record.helloReceived && hostMembers.size >= MAX_MEMBERS) {
+  const isEnded = lobbyData.status === 'ENDED';
+  if (channelName === 'reliable' && !record.helloReceived && (isEnded || hostMembers.size >= MAX_MEMBERS)) {
+    const rejectReason = isEnded ? 'ended' : 'full';
+    const rejectType = isEnded ? 'LOBBY_CLOSED' : 'REJECT';
     const rejectConnection = () => {
       try {
-        conn.send({ [CONTROL_KEY]: true, type: 'REJECT', reason: 'full' });
+        conn.send({ [CONTROL_KEY]: true, type: rejectType, reason: rejectReason });
       } catch (e) {}
       setTimeout(() => {
         try { conn.close(); } catch (e) {}
@@ -933,9 +940,10 @@ function leaveLobby(options = {}) {
   const wasHost = currentRole === 'host' && !!currentRoomCode;
 
   if (wasHost) {
+    lobbyData.status = 'ENDED';
     for (const record of records) {
       if (record.helloReceived) {
-        sendControl(record, { type: 'ROOM_CLOSED', reason: 'host-left' });
+        sendControl(record, { type: 'LOBBY_CLOSED', reason: 'ended' });
       }
     }
   }
@@ -946,18 +954,17 @@ function leaveLobby(options = {}) {
   }
   rejectPendingWelcome('Conexión cancelada.');
 
-  const closeAll = () => {
-    for (const record of records) {
-      if (record.closeTimer) clearTimeout(record.closeTimer);
-      try { record.reliableConn?.close(); } catch (e) {}
-      try { record.unreliableConn?.close(); } catch (e) {}
-    }
-    if (peer) {
-      try { peer.destroy(); } catch (e) {}
-    }
-  };
+  for (const record of records) {
+    if (record.closeTimer) clearTimeout(record.closeTimer);
+    try { record.reliableConn?.close(); } catch (e) {}
+    try { record.unreliableConn?.close(); } catch (e) {}
+  }
 
-  if (wasHost) setTimeout(closeAll, 90); else closeAll();
+  // Destruye el Peer del Host inmediatamente para que el ID traces-of-rust-room-CODIGO
+  // quede inmediatamente inexistente en el servidor de señalización de PeerJS
+  if (peer) {
+    try { peer.destroy(); } catch (e) {}
+  }
 
   resetSessionState();
   currentPeer = null;
@@ -1060,7 +1067,8 @@ export function installWebRtcAdapter() {
     onP2PPacket: (callback) => addListener('p2pPacket', callback),
     onPeerDisconnected: (callback) => addListener('peerDisconnected', callback),
     getLocalSteamId: () => localSteamId,
-    getRoomCode: () => currentRoomCode
+    getRoomCode: () => currentRoomCode,
+    showToast: (msg, tone) => showToast(msg, tone)
   };
 
   window.steamOnline = adapter;

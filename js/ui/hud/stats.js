@@ -95,6 +95,42 @@ if (typeof modeTelemetry.coreHp === 'number') {
     turretEl.textContent = `TORRETAS: ${modeTelemetry.turretCount || 0}/${modeTelemetry.turretMax || 0}`;
   }
 
+  
+  // Indicador persistente de evento especial de contención (120s)
+  const eventHud = document.getElementById('defense-event-hud');
+  if (eventHud) {
+    if (modeTelemetry && modeTelemetry.eventTelemetry) {
+      const et = modeTelemetry.eventTelemetry;
+      eventHud.classList.remove('hidden');
+      const phaseEl = document.getElementById('event-hud-phase');
+      const timerEl = document.getElementById('event-hud-timer');
+      const indEl = document.getElementById('event-containment-indicator');
+      const fillEl = document.getElementById('event-hud-bar-fill');
+
+      if (phaseEl) {
+        phaseEl.textContent = `FASE ${et.phase}: ${et.phaseTitle}`;
+      }
+      if (timerEl) {
+        timerEl.textContent = `${Math.ceil(et.remainingSec)}s`;
+      }
+      if (indEl) {
+        if (et.inZone) {
+          indEl.className = 'event-containment-indicator in-zone';
+          indEl.textContent = '● DENTRO DEL PERÍMETRO (RADIO 15M)';
+        } else {
+          indEl.className = 'event-containment-indicator out-zone';
+          indEl.textContent = `▲ FUERA DEL PERÍMETRO (A ${et.distOutside}m) - ¡REGRESA!`;
+        }
+      }
+      if (fillEl) {
+        const pct = Math.min(100, Math.max(0, (et.progress || 0) * 100));
+        fillEl.style.width = `${pct}%`;
+      }
+    } else {
+      eventHud.classList.add('hidden');
+    }
+  }
+
   const prepPrompt = document.getElementById('wave-prep-prompt');
   if (prepPrompt) {
     prepPrompt.classList.toggle('hidden', !modeTelemetry.isPrep);

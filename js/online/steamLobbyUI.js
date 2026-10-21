@@ -181,11 +181,22 @@ async function autoJoinFromUrl() {
   try {
     roomCode = normalizeRoomCode(new URLSearchParams(window.location.search).get('room') || '');
   } catch (e) {}
-  if (!roomCode) return;
 
+  // Limpia inmediatamente el parámetro ?room=CODIGO de la URL tras procesarlo para que no se reintente en bucle
+  if (typeof window !== 'undefined' && window.history && typeof window.history.replaceState === 'function') {
+    try {
+      window.history.replaceState({}, document.title, window.location.pathname);
+    } catch (e) {}
+  }
+
+  if (!roomCode) return;
   autoJoinAttempted = true;
+
   const input = document.getElementById('steam-join-input');
   if (input) input.value = roomCode;
+
+  // Un jugador que entra por URL SOLO intenta hacer joinLobby como Cliente;
+  // NUNCA debe iniciar partida por su cuenta ni convertirse en Host si la sala no existe.
   await openSteamOnlineModal();
   await joinLobbyDirect(roomCode);
 }
@@ -502,6 +513,7 @@ async function handleLeaveLobby() {
     lobbyPollTimer = null;
   }
   if (window.steamOnline) {
+    try { await window.steamOnline.setLobbyData?.('status', 'ENDED'); } catch (e) {}
     await window.steamOnline.leaveLobby();
   }
   MultiplayerSync.reset();
@@ -543,6 +555,20 @@ async function handleCopyLobbyId() {
   }
 }
 
+
+function showLobbyNotice(msg, tone = 'error') {
+  const noticeEl = document.getElementById('steam-lobby-notice');
+  if (noticeEl) {
+    noticeEl.textContent = msg;
+    noticeEl.style.color = tone === 'error' ? '#ff8a7a' : '#f0c954';
+    noticeEl.style.borderColor = tone === 'error' ? '#ff4444' : '#b89c46';
+    noticeEl.classList.remove('hidden');
+  }
+  if (window.steamOnline && typeof window.steamOnline.showToast === 'function') {
+    window.steamOnline.showToast(msg, tone);
+  }
+}
+
 async function joinLobbyDirect(lobbyId) {
   if (!window.steamOnline) return;
   try {
@@ -551,12 +577,33 @@ async function joinLobbyDirect(lobbyId) {
     if (res && res.success) {
       applyLobbyUpdate(res);
       const displayId = isWebRtcMode ? String(res.lobbyId || lobbyId).toUpperCase() : lobbyId.slice(-6);
+      const notice = document.getElementById('steam-lobby-notice');
+      if (notice) notice.classList.add('hidden');
       alert(`¡Conectado con éxito a la sala #${displayId}!`);
     } else {
-      alert('No se pudo conectar a la sala: ' + (res.error || 'La sala no existe o está llena.'));
+      await openSteamOnlineModal();
+      const err = res?.error || '';
+      const isClosedOrEnded = (
+        err.includes('finalizado') ||
+        err.includes('cerrado') ||
+        err.includes('peer-unavailable') ||
+        err.includes('no disponible') ||
+        err.includes('no existe') ||
+        err.includes('ended') ||
+        err.includes('cancelada')
+      );
+      const msg = isClosedOrEnded
+        ? 'Esta partida ya ha finalizado o la sala se ha cerrado.'
+        : ('No se pudo conectar a la sala: ' + (err || 'La sala no existe o está llena.'));
+
+      showLobbyNotice(msg, 'error');
+      alert(msg);
     }
   } catch (err) {
-    alert('Error al unirse a la sala: ' + err.message);
+    await openSteamOnlineModal();
+    const msg = 'Esta partida ya ha finalizado o la sala se ha cerrado.';
+    showLobbyNotice(msg, 'error');
+    alert(msg);
   }
 }
 

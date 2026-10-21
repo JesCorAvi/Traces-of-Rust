@@ -112,13 +112,24 @@ function finishRun(outcome, options = {}) {
   });
 }
 
-function returnToMainMenu() {
+function returnToMainMenu(reasonMsg = null) {
   rt.AudioSys.playUISelect();
   GameEvents.emit('game:menu');
-  // Avisa al compañero para que ambos salgan limpios (salvo si ya venimos
-  // de un MATCH_END remoto, para no rebotar el paquete).
+  // Avisa al compañero si somos Host (MATCH_END) o si somos Cliente (PEER_LEFT)
   MultiplayerSync?.notifyMatchEnd?.();
   MultiplayerSync?.reset?.();
+
+  // Cierre real de salas vacías o terminadas
+  if (typeof window !== 'undefined' && window.steamOnline) {
+    try { window.steamOnline.setLobbyData?.('status', 'ENDED'); } catch (e) {}
+    try { window.steamOnline.leaveLobby?.(); } catch (e) {}
+  }
+
+  // Ocultar overlays de abatido y hum si estaban activos
+  rt.hudController?.hidePlayerDownOverlay?.();
+  rt.hudController?.hideKineticAlertBanner?.();
+  rt.AudioSys?.stopPlayerDownHum?.();
+
   clearSharedRunState();
   rt.state = 'START';
   rt.playerGroup.position.set(0, 0, 0);
@@ -130,6 +141,17 @@ function returnToMainMenu() {
   rt.updateCareerDossierForSelectedMode(rt.careerByMode);
   rt.updateStartPlayButton?.(rt.ModeManager.getSelectedModeId(), localStorage.getItem('traces_td_difficulty') || 'normal');
   rt.renderShopUI(rt.save, rt.saveGame);
+
+  if (reasonMsg) {
+    if (typeof window.steamOnline?.showToast === 'function') {
+      window.steamOnline.showToast(reasonMsg, 'error');
+    }
+    const noticeEl = document.getElementById('steam-lobby-notice');
+    if (noticeEl) {
+      noticeEl.textContent = reasonMsg;
+      noticeEl.classList.remove('hidden');
+    }
+  }
 }
 
 function togglePauseGame() {
@@ -254,9 +276,6 @@ document.getElementById('btn-close-settings').onclick = () => {
   document.getElementById('settings-screen').classList.add('hidden');
   document.getElementById(rt.lastMenuScreen).classList.remove('hidden');
 };
-document.getElementById('btn-open-sheets')?.addEventListener('click', () => document.getElementById('sheets-modal')?.classList.remove('hidden'));
-document.getElementById('btn-close-sheets').onclick = () => document.getElementById('sheets-modal').classList.add('hidden');
-
 document.getElementById('btn-tutorial-yes').onclick = () => {
   localStorage.setItem(rt.CONFIG.CORE_DEFENSE.TUTORIAL.choiceKey, 'tutorial');
   document.getElementById('tutorial-prompt-screen').classList.add('hidden');

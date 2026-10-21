@@ -6,7 +6,6 @@
   display: flex; align-items: center; justify-content: center;
   z-index: 30; padding: 16px;
 }
-#sheets-modal { z-index: 100; }
 #shop-screen { z-index: 60; }
 #pause-screen { z-index: 55; }
 
@@ -478,10 +477,6 @@
 
 .stats-report .report-row { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px dashed #243022; padding: 5px 0; font-size: 20px; }
 .report-loadout { margin-top: 10px; padding-top: 8px; font-size: 19px; color: #e6dec8; }
-
-#sheets-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(195px, 1fr)); gap: 10px; margin-top: 10px; }
-.sheet-card { border-style: solid; border-width: 12px; border-image: var(--slice-slot_weapon) 7 fill / 12px stretch; padding: 6px; text-align: center; }
-.sheet-card-title { font-family: 'Press Start 2P', monospace; font-size: 10px; color: #f0c954; margin: 6px 0; }
 
 .wide-plate { width: min(820px, 94vw) !important; max-height: 96vh !important; overflow-y: auto !important; }
 .wide-plate .settings-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }

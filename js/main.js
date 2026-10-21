@@ -46,6 +46,9 @@ import { createPickupSystem } from './gameplay/pickups.js';
 import { keys, setupInput } from './core/input.js';
 import { setupGameFlow } from './core/gameFlow.js';
 
+// Aplica muteo y volúmenes persistidos antes de crear el audio contextual.
+AudioSys.applyGameSettings(gameSettings);
+
 // Escena 3D Industrial con Relieve y Física
 const { scene, ambientLight, propBillboards, ceilingLights, dust, worldPhysics } = createWorld();
 initCombatLight(scene);
@@ -258,14 +261,20 @@ function buildModeContext(camFwd = new THREE.Vector3(0, 0, -1)) {
     },
     notifyPlayerEmergencyRespawn: (delaySec, corePenalty) => {
       hudController.showWaveAnnouncement(`OPERARIO ABATIDO // SOBRECARGA AL NÚCLEO (-${corePenalty} HP)`);
+      hudController.showPlayerDownOverlay?.(delaySec, corePenalty);
+      AudioSys.playPlayerDowned?.();
+      AudioSys.startPlayerDownHum?.();
+      camShake = Math.max(camShake, 0.58);
       stats.hp = 1;
       invuln = delaySec + 1.0;
       refreshHUD();
     },
     revivePlayerAfterPenalty: invulnSec => {
+      hudController.hidePlayerDownOverlay?.();
+      AudioSys.stopPlayerDownHum?.();
+      AudioSys.playPlayerRevived?.();
       stats.hp = stats.maxHp;
       invuln = invulnSec;
-      AudioSys.playUISelect();
       refreshHUD();
     },
     triggerRunEnd: outcome => flowRuntime.finishRun(outcome),
@@ -746,7 +755,7 @@ MultiplayerSync.init({
     hudController.hideBossHUDDelayed?.();
     refreshHUD();
   },
-  onMatchEnded: () => flowRuntime.returnToMainMenu(),
+  onMatchEnded: (msg) => flowRuntime.returnToMainMenu(msg),
   onRemoteRunEnded: outcome => flowRuntime.finishRun(outcome, { fromRemote: true }),
   onNetworkKill: () => { kills++; refreshHUD(); },
   getStats: () => stats,

@@ -206,4 +206,80 @@ export class HUDController {
   /**
    * Actualiza el marcador/flecha direccional hacia el Núcleo cuando el jugador se aleja o no lo mira.
    */
+
+  showPlayerDownOverlay(totalDurationSec = 5, corePenalty = 50) {
+    const overlay = document.getElementById('player-down-overlay');
+    if (!overlay) return;
+    const titleEl = overlay.querySelector('.player-down-title');
+    if (titleEl) {
+      titleEl.textContent = `[ OPERADOR ABATIDO // SOBRECARGA DEL NÚCLEO -${corePenalty} HP ]`;
+    }
+    const cdEl = document.getElementById('player-down-countdown');
+    if (cdEl) {
+      cdEl.textContent = `RECONSTRUYENDO EN ${totalDurationSec.toFixed(1)}s...`;
+    }
+    const barEl = document.getElementById('player-down-progress-bar');
+    if (barEl) {
+      barEl.style.width = '0%';
+    }
+    overlay.classList.remove('hidden');
+  }
+
+  updatePlayerDownCountdown(remainingSec, totalDurationSec = 5) {
+    const cdEl = document.getElementById('player-down-countdown');
+    if (cdEl) {
+      cdEl.textContent = `RECONSTRUYENDO EN ${Math.max(0, remainingSec).toFixed(1)}s...`;
+    }
+    const barEl = document.getElementById('player-down-progress-bar');
+    if (barEl) {
+      const pct = Math.min(100, Math.max(0, (1 - (remainingSec / totalDurationSec)) * 100));
+      barEl.style.width = `${pct}%`;
+    }
+  }
+
+  hidePlayerDownOverlay() {
+    const overlay = document.getElementById('player-down-overlay');
+    if (overlay) overlay.classList.add('hidden');
+  }
+
+  showKineticAlertBanner({ tag = 'ALERTA DE SECTOR', title = 'EVENTO INICIADO', sub = '', theme = 'hazard', durationMs = 3500 } = {}) {
+    const banner = document.getElementById('kinetic-event-banner');
+    if (!banner) return;
+
+    banner.classList.remove('hidden', 'theme-critical', 'theme-success');
+    if (theme === 'critical') banner.classList.add('theme-critical');
+    else if (theme === 'success') banner.classList.add('theme-success');
+
+    const tagEl = document.getElementById('kinetic-banner-tag');
+    if (tagEl) tagEl.textContent = tag;
+    const titleEl = document.getElementById('kinetic-banner-title');
+    if (titleEl) titleEl.textContent = title;
+    const subEl = document.getElementById('kinetic-banner-sub');
+    if (subEl) subEl.textContent = sub;
+
+    if (this.kineticBannerTimeout) clearTimeout(this.kineticBannerTimeout);
+    this.kineticBannerTimeout = setTimeout(() => {
+      banner.classList.add('hidden');
+    }, durationMs);
+  }
+
+  hideKineticAlertBanner() {
+    const banner = document.getElementById('kinetic-event-banner');
+    if (banner) banner.classList.add('hidden');
+    if (this.kineticBannerTimeout) {
+      clearTimeout(this.kineticBannerTimeout);
+      this.kineticBannerTimeout = null;
+    }
+  }
+
+  showTeammateDownAlert(msg = '¡COMPAÑERO ABATIDO! -50 HP AL NÚCLEO') {
+    this.showKineticAlertBanner({
+      tag: '¡COMPAÑERO ABATIDO!',
+      title: msg,
+      sub: 'PENALIZACIÓN AL NÚCLEO // CUBRE SU POSICIÓN',
+      theme: 'critical',
+      durationMs: 3800
+    });
+  }
+
 }
