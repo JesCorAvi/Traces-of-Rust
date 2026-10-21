@@ -18,11 +18,11 @@ export const WAVES = {
     playerDamageMultiplierVsRoute: 0.45,
 
     // Eventos especiales de interrupción (cada 3 oleadas: tras ronda 3, 6, 9)
-    // Mini-modo supervivencia masivo estilo Megabonk en perímetro de 30m
+    // Mini-modo supervivencia masivo estilo Megabonk en perímetro de 100m
     EVENTS: {
       intervalWaves: 3,
       eventDurationSec: 120.0,       // 2 minutos de duración
-      survivalRadius: 15.0,          // Zona amplia de supervivencia (30m de diámetro)
+      survivalRadius: 50.0,          // Zona amplia de supervivencia (100m de diámetro, radio 50m)
       scrapReward: 35,               // Recompensa tras sobrevivir al enjambre
       maxEnemiesBase: 30,            // Enemigos concurrentes iniciales (Fase 1)
       maxEnemiesPeak: 65,            // Enemigos concurrentes en el clímax final (Fase 3)

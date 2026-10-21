@@ -58,6 +58,9 @@ export class HUDController {
       document.getElementById('turret-interact-prompt')?.classList.add('hidden');
       document.getElementById('wave-prep-prompt')?.classList.add('hidden');
     }
+
+    const turretsItem = document.getElementById('floating-turrets-item');
+    if (turretsItem) turretsItem.style.display = isDefense ? '' : 'none';
   }
 
 

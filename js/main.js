@@ -497,8 +497,6 @@ function animate() {
       spawnLandingDust(playerGroup.position);
     }
 
-    document.getElementById('elev-text').textContent = `COTA: ${playerGroup.position.y.toFixed(1)}M`;
-
     camera.position.copy(playerGroup.position)
       .add(camFwd.clone().multiplyScalar(-5.8 * Math.cos(pitch)))
       .add(new THREE.Vector3(0, Math.max(1.1, -Math.sin(pitch) * 5.2 + 2.1), 0));

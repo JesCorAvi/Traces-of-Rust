@@ -637,9 +637,9 @@ export class CoreDefenseMode {
     } else if (eventInfo) {
       subTaskText = eventInfo.subTaskText;
     } else if (isFirstWavePrep) {
-      subTaskText = 'EXPLORACIÓN LIBRE // [F] INICIAR OLEADA 1';
+      subTaskText = 'Despliega tus torretas iniciales';
     } else if (isPrep) {
-      subTaskText = `PRÓXIMA OLEADA EN: ${prepSeconds.toFixed(1)}S · [F] SALTAR`;
+      subTaskText = `Próxima oleada en: ${prepSeconds.toFixed(0)}s`;
     } else if (this.playerDownTimer > 0) {
       subTaskText = `RECONSTRUYENDO OPERARIO: ${this.playerDownTimer.toFixed(1)}S`;
     }
@@ -662,7 +662,7 @@ export class CoreDefenseMode {
       objectiveText: eventInfo ? `[!] ${eventInfo.objectiveText}` : `Contén la brecha (${diffMeta.name})`,
       objectiveCheck: (eventInfo || this.lives < this.maxLives * 0.4) ? '[!]' : '[ ]',
       subTaskText,
-      waveBadgeText: eventInfo ? `EVENTO // ${eventInfo.badgeText}` : (isFirstWavePrep ? 'EXPLORACIÓN // PREP. INICIAL' : (isPrep ? `PREPARACIÓN // OLEADA ${waveNum}/${totalW}` : `OLEADA ${waveNum} / ${totalW}`)),
+      waveBadgeText: eventInfo ? `EVENTO // ${eventInfo.badgeText}` : (isPrep ? 'PREPARACIÓN' : `OLEADA ${waveNum}/${totalW}`),
       eventBadge: eventInfo ? eventInfo.badgeText : null,
       eventTelemetry: eventInfo ? {
         phase: eventInfo.phase,

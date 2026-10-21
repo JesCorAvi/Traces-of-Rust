@@ -59,7 +59,7 @@ Cada entrada:
 {
   intervalWaves: 3,
   eventDurationSec: 120,
-  survivalRadius: 15,
+  survivalRadius: 50,
   scrapReward: 30,
   maxEnemiesBase: 8,
   maxEnemiesPeak: 18,
@@ -69,7 +69,7 @@ Cada entrada:
 ```
 
 - Se disparan tras las rondas 3, 6 y 9.
-- Mini-modo de 2 minutos, zona de 30 m de diámetro, escalado hasta 18 simultáneos.
+- Mini-modo de 2 minutos, zona de 100 m de diámetro (radio 50 m), escalado hasta 18 simultáneos.
 - Fase final con atmósfera roja, niebla densa y drone de subgraves.
 - Cambiar la duración/radio afecta a `defenseEventManager`, HUD y música.
 

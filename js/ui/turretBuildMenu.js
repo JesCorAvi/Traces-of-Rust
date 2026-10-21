@@ -102,13 +102,13 @@ export class TurretBuildMenu {
       return;
     }
 
-    const title = turret ? `TORRETA // ${turret.cfg.name}` : 'TERMINAL DE CONSTRUCCIÓN // TORRETAS';
-    const head = `
-      <div class="turret-panel-head">
-        <span class="tape-strip">${renderSpriteIconHTML(turret ? turret.cfg.icon : 'turret_gunner', 'sm')} ${title}</span>
-        <span class="turret-scrap-balance">${renderSpriteIconHTML('scrap', 'sm')} <b>${scrap}</b> CHATARRA</span>
-        ${this.mode.isNetworked ? '<button class="rust-btn sm" data-action="send-scrap" title="Envía 5 de chatarra a tu compañero (T)">ENVIAR +5</button>' : ''}
-      </div>`;
+    const title = turret ? `TORRETA // ${turret.cfg.name}` : 'TERMINAL DE EMPLAZAMIENTO // TORRETAS';
+    const titleEl = document.getElementById('turret-modal-title-text');
+    if (titleEl) titleEl.textContent = title;
+    const iconEl = document.getElementById('turret-modal-icon');
+    if (iconEl) iconEl.setAttribute('data-ui-icon', turret ? turret.cfg.icon : 'turret_gunner');
+    const scrapValEl = document.getElementById('turret-modal-scrap-val');
+    if (scrapValEl) scrapValEl.textContent = `${scrap}`;
 
     if (!turret) {
       const cards = Object.values(CORE_DEFENSE_CONFIG.TURRETS).map(cfg => {
@@ -128,7 +128,6 @@ export class TurretBuildMenu {
       }).join('');
 
       this.content.innerHTML = `
-        ${head}
         <p class="turret-panel-sub">Elige una torreta y colócala libremente. Al cerrar este panel podrás apuntar al suelo: <b>verde</b> = válido, <b>rojo</b> = bloqueado. Clic izquierdo o <b>E</b> para colocar; <b>ESC</b> para cancelar.</p>
         <div class="turret-shop-grid">${cards}</div>`;
     } else {
@@ -165,7 +164,6 @@ export class TurretBuildMenu {
       }).join('');
 
       this.content.innerHTML = `
-        ${head}
         <div class="turret-summary">
           <span class="turret-summary-title">${renderSpriteIconHTML(cfg.icon, 'sm')} ${cfg.name}</span>
           <span class="turret-summary-role">${cfg.role}</span>

@@ -1,179 +1,155 @@
 /* HUD por modo: objetivos, núcleo, radar, pasivas, boss y mira. */
 
-#hud-objective-tracker {
-  position: absolute;
-  top: 256px;
-  left: 14px;
-  min-width: 256px;
-  max-width: 330px;
-  width: fit-content;
-  z-index: 17;
-}
-
-.objective-note {
-  margin: 0;
-  padding: 6px 10px;
-  border-width: 10px;
-  border-image: var(--slice-panel_paper) 10 fill / 10px stretch;
-  background-color: rgba(10, 14, 10, 0.9);
-  box-shadow: 3px 3px 0 rgba(5, 6, 5, 0.9);
-}
-
-.objective-header {
-  display: flex;
+#hud-objective-tracker.objective-pill {
+  margin-top: 5px;
+  display: inline-flex;
   align-items: center;
   gap: 6px;
+  background: rgba(10, 14, 10, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+  padding: 3px 8px;
   font-family: 'Press Start 2P', monospace;
-  font-size: 8px;
+  font-size: 7.5px;
+  color: #f5ecd3;
+  text-shadow: 1px 1px 0 #000;
+  white-space: nowrap;
+  max-width: 270px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+}
+#hud-objective-tracker .checkbox-box {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 7.5px;
   color: #f0c954;
-  border-bottom: 1px dashed #364832;
-  padding-bottom: 4px;
-  margin-bottom: 5px;
-}
-
-.objective-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-family: 'VT323', monospace;
-  font-size: 19px;
-  line-height: 1.15;
-  color: #fff6e0;
-  text-shadow: 1px 1px 0 #050605;
-}
-
-.checkbox-box {
-  font-family: 'Press Start 2P', monospace;
-  font-size: 9px;
-  color: #b89c46;
   flex-shrink: 0;
 }
-
-.objective-sub-task,
-#next-boss-text {
+#objective-task-desc {
   font-family: 'Press Start 2P', monospace;
-  font-size: 8px;
-  line-height: 1.45;
-  color: #a8c499;
-  text-shadow: 1px 1px 0 #050605;
-  margin-top: 6px;
-  white-space: normal;
-  word-break: break-word;
+  font-size: 7.5px;
+  color: #f5ecd3;
+  letter-spacing: 0.2px;
 }
 
-/* Centro Superior: Cronómetro y Panel de Vida del Núcleo */
+/* Centro Superior: Cabecera compacta de Oleada y Reactor */
 #hud-top-center {
   position: absolute;
-  top: 20px;
+  top: 26px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 19;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
+  width: min(430px, 46vw);
 }
 
-#timer-text {
-  font-family: 'Press Start 2P', monospace;
-  font-size: 24px;
-  line-height: 1.15;
-  color: #f5ecd3;
-  text-shadow:
-    3px 3px 0 #050605,
-    -2px -2px 0 #050605,
-    2px -2px 0 #050605,
-    -2px 2px 0 #050605,
-    0 4px 0 #4a2518;
-  padding: 2px 8px;
-  white-space: nowrap;
+.core-compact-header {
+  width: 100%;
+  background: rgba(8, 11, 8, 0.78);
+  border: 1px solid rgba(217, 119, 36, 0.45);
+  border-radius: 4px;
+  padding: 5px 10px 6px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.8);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
-#timer-text.timer-secondary-mode {
-  font-size: 12px;
-  color: #a8c499;
-  opacity: 0.85;
-}
-
-/* Panel HUD de Integridad del Núcleo y Oleadas (Solo en Modo Defensa) */
-#core-defense-hud {
-  width: min(440px, 46vw);
-  padding: 6px 12px 8px;
-  background-color: rgba(8, 11, 8, 0.94);
-  box-shadow: var(--shadow-heavy-plate);
-  transition: box-shadow 0.25s ease, border-color 0.25s ease;
-}
-
-#core-defense-hud.is-critical {
-  animation: criticalAlarmPulse 0.45s ease-in-out infinite alternate;
-}
-
-.core-hud-header {
+.core-header-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  width: 100%;
   font-family: 'Press Start 2P', monospace;
-  font-size: 9px;
-  color: #f0c954;
-  text-shadow: 2px 2px 0 #050605;
-  margin-bottom: 4px;
-  gap: 8px;
-}
-
-.core-hud-title-left {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-
-#core-state-tag {
-  background: #1b2619;
-  color: #a8c499;
-  border: 1px solid #68863a;
-  padding: 2px 5px;
   font-size: 8px;
 }
-#core-state-tag.critical {
-  background: #6e1414;
-  color: #fff6e0;
+
+.core-wave-counter {
+  color: #f5ecd3;
+  text-shadow: 1px 1px 0 #000;
+  letter-spacing: 0.5px;
+}
+
+.core-state-tag {
+  color: #f0c954;
+  background: rgba(240, 201, 84, 0.15);
+  border: 1px solid rgba(240, 201, 84, 0.3);
+  border-radius: 3px;
+  padding: 1px 6px;
+  font-size: 7.5px;
+  text-shadow: 1px 1px 0 #000;
+}
+
+.core-state-tag.critical {
+  color: #ff5252;
+  background: rgba(255, 82, 82, 0.2);
   border-color: #ff5252;
   animation: alertStepPulse 0.4s steps(2) infinite;
 }
 
+.prep-skip-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(35, 65, 30, 0.85);
+  border: 1px solid #55de3e;
+  color: #a2f593;
+  padding: 2px 6px;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 7.5px;
+  font-family: 'Press Start 2P', monospace;
+  text-shadow: 1px 1px 0 #000;
+  transition: background 0.15s ease, transform 0.08s ease;
+}
+
+.prep-skip-pill:hover {
+  background: #3e7336;
+  transform: scale(1.04);
+}
+
+.prep-skip-pill .key-cap {
+  min-width: 14px;
+  height: 14px;
+  padding: 0 3px;
+  font-size: 7.5px;
+  background: #112011;
+  border: 1px solid #55de3e;
+  border-radius: 2px;
+  color: #fff;
+}
+
 .core-bar-frame {
   position: relative;
-  height: 22px;
-  background-color: #050605;
-  border-style: solid;
-  border-width: 4px;
-  border-image: var(--slice-bar_frame) 5 fill / 4px stretch;
+  height: 16px;
+  background-color: #060806;
+  border: 1px solid #6e3914;
+  border-radius: 2px;
   overflow: hidden;
-  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.95);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.9);
 }
 
 #core-hp-bar {
   position: absolute;
   top: 0;
   left: 0;
-  display: block;
-  width: 100%;
   height: 100%;
-  background-color: #d97724;
-  background-image: var(--bar-fill-core);
-  background-repeat: repeat-x;
-  background-size: auto 100%;
+  background-color: #d97724 !important;
+  background-image: none !important;
   z-index: 2;
   transition: width 0.08s ease-out;
 }
 
-.core-hud-subrow {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 4px;
+#core-hp-text.led-val {
+  color: #ffffff;
   font-family: 'Press Start 2P', monospace;
   font-size: 8px;
-  color: #e6dec8;
+  letter-spacing: 0.5px;
+  text-shadow: 2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000,
+               0 2px 0 #000, 0 -2px 0 #000, 2px 0 0 #000, -2px 0 0 #000;
 }
 
 /* Marcador direccional flotante hacia el Núcleo */
@@ -219,41 +195,66 @@
 /* Radar y Telemetría Derecha */
 #hud-top-right {
   position: absolute;
-  top: 52px; right: 16px;
+  top: 28px;
+  right: 28px;
   z-index: 18;
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
+  align-items: center;
 }
 
 .telemetry-compact {
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
-  gap: 6px;
+  align-items: center;
+  gap: 3px;
+}
+
+.radar-header-row {
+  width: 100%;
+  display: flex;
+  justify-content: center;
 }
 
 .ciclo-badge-compact, #level-text {
   font-family: 'Press Start 2P', monospace;
-  font-size: 16px;
+  font-size: 11px;
   color: #f5ecd3;
-  text-shadow: 3px 3px 0 #050605, 0 3px 0 #4a2518;
-  letter-spacing: 1px;
+  text-shadow: 2px 2px 0 #000;
+  letter-spacing: 0.5px;
 }
 
 .radar-scanner-plate {
   position: relative;
-  width: 146px; height: 146px;
+  width: 90px;
+  height: 90px;
   border-radius: 50%;
-  border: 4px solid #877a5c;
-  outline: 3px solid #050605;
+  border: 2px solid rgba(135, 122, 92, 0.65);
+  outline: none;
   border-image: none;
-  padding: 6px;
-  background: radial-gradient(circle at center, #101910 0%, #060906 68%, #040504 100%);
-  box-shadow: inset 0 0 18px rgba(0, 0, 0, 0.95), 4px 5px 0 rgba(5, 6, 5, 0.9);
-  display: flex; align-items: center; justify-content: center;
+  padding: 3px;
+  background: radial-gradient(circle at center, rgba(16, 25, 16, 0.75) 0%, rgba(4, 5, 4, 0.9) 100%);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 3px 0;
 }
 .radar-scanner-plate .screw { display: none; }
+
+.hostiles-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(10, 14, 10, 0.5);
+  border: 1px solid rgba(255, 82, 82, 0.35);
+  border-radius: 3px;
+  padding: 2px 8px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 7.5px;
+  color: #ff8888;
+  text-shadow: 1px 1px 0 #000;
+}
 
 .radar-display {
   position: relative;
@@ -352,56 +353,36 @@
   border: 1px solid #4a2518; padding: 3px 7px; white-space: nowrap;
 }
 
-/* Dock Inferior de Pasivas y Dash */
-#hud-bottom-slots-container {
-  position: absolute; bottom: 12px; left: 50%;
-  transform: translateX(-50%); z-index: 18;
+/* Indicador de Dash (micro-barra finita bajo los pies del personaje) */
+.dash-micro-tracker {
+  position: fixed;
+  top: 61%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 44px;
+  height: 4px;
+  background: rgba(0, 0, 0, 0.75);
+  border: 1px solid rgba(0, 0, 0, 0.9);
+  border-radius: 2px;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 15;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
 }
-.implants-tray {
-  border-width: 10px;
-  border-image: var(--slice-panel_metal) 12 fill / 10px stretch;
-  padding: 4px 12px 6px;
-  background-color: rgba(6, 9, 6, 0.85);
-  display: flex; flex-direction: column; align-items: center; gap: 4px;
+.dash-micro-tracker .stam-frame-compact {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  border: none;
+  background: transparent;
 }
-.implants-tray .screw, .implants-tray .ui-decor { display: none; }
-.slots-horizontal-label {
-  display: flex; justify-content: space-between; width: 100%;
-  font-family: 'Press Start 2P', monospace; font-size: 8px; color: #d8cfb8;
-}
-.slots-horizontal-row {
-  display: flex; flex-direction: row; align-items: center; gap: 10px;
-}
-#passives-bar .passive-slot {
-  width: 58px; height: 58px;
-  border-style: solid; border-width: 8px;
-  border-image: var(--slice-slot_passive) 7 fill / 8px stretch;
-  padding: 3px; display: flex; flex-direction: column;
-  align-items: center; justify-content: space-between; pointer-events: auto;
-}
-#passives-bar .passive-slot.empty {
-  border-image-source: var(--slice-slot_empty); opacity: 0.65;
-}
-.passive-dock-lvl {
-  font-family: 'Press Start 2P', monospace; font-size: 8px;
-  color: #f0c954; background: rgba(5, 6, 5, 0.9);
-  border: 1px solid #63533b; padding: 1px 4px;
-}
-
-#stamina-tracker-overlay {
-  position: absolute; bottom: 14px; left: 14px; width: 176px;
-  background: rgba(6, 8, 6, 0.84); border: 2px solid #4a2518;
-  outline: 2px solid #050605; padding: 5px 8px; z-index: 18;
-}
-.stamina-text-wrapper {
-  display: flex; align-items: center; gap: 5px;
-  font-family: 'Press Start 2P', monospace; font-size: 8px; color: #a8c499; margin-bottom: 4px;
-}
-.stam-frame-compact { height: 12px; margin: 0; border-width: 2px; }
 #stam-bar {
-  display: block !important; width: 100%; height: 100% !important;
-  background-color: #527848 !important; background-image: var(--bar-fill-stam) !important;
-  background-repeat: repeat-x !important; background-size: auto 100% !important;
+  display: block !important;
+  width: 100%;
+  height: 100% !important;
+  background-color: #55de3e !important;
+  background-image: none !important;
+  transition: width 0.05s linear;
 }
 
 /* Boss HUD y Alertas Superiores */

@@ -1,5 +1,5 @@
 // Gestor de eventos especiales de interrupción entre oleadas (cada 3 rondas).
-// Mini-modo supervivencia intenso de 2 minutos (120s) en una zona amplia de contención (radio 15m).
+// Mini-modo supervivencia intenso de 2 minutos (120s) en una zona amplia de contención (radio 50m, diámetro 100m).
 // Exports: DefenseEventManager.
 
 import * as THREE from 'three';
@@ -18,7 +18,7 @@ export class DefenseEventManager {
     this.cfg = CORE_DEFENSE_CONFIG.WAVES.EVENTS || {
       intervalWaves: 3,
       eventDurationSec: 120.0,
-      survivalRadius: 15.0,
+      survivalRadius: 50.0,
       scrapReward: 30,
       maxEnemiesBase: 8,
       maxEnemiesPeak: 18,
@@ -114,7 +114,7 @@ export class DefenseEventManager {
     }
 
     const duration = Number.isFinite(options.duration) ? options.duration : (this.cfg.eventDurationSec || 120.0);
-    const radius = Number.isFinite(options.radius) ? options.radius : (this.cfg.survivalRadius || 15.0);
+    const radius = Number.isFinite(options.radius) ? options.radius : (this.cfg.survivalRadius || 50.0);
     const scrapReward = this.cfg.scrapReward || 30;
     const waveIndex = Number.isFinite(options.waveIndex)
       ? options.waveIndex
@@ -236,8 +236,8 @@ export class DefenseEventManager {
     this.visualGroup.add(markerGroup);
     this.floatingMarker = markerGroup;
 
-    // 3. Anillo perimetral amplio en el suelo (radio 15m, diámetro 30m)
-    const ringGeo = new THREE.RingGeometry(radius - 0.25, radius, 48);
+    // 3. Anillo perimetral amplio en el suelo (radio 50m, diámetro 100m)
+    const ringGeo = new THREE.RingGeometry(radius - 0.45, radius, 80);
     const ringMat = new THREE.MeshBasicMaterial({
       color: mainColor,
       side: THREE.DoubleSide,
@@ -252,7 +252,7 @@ export class DefenseEventManager {
     this.pulseRing = ring;
 
     // Anillo interior sutil a mitad de radio
-    const innerRingGeo = new THREE.RingGeometry(radius * 0.5 - 0.15, radius * 0.5, 36);
+    const innerRingGeo = new THREE.RingGeometry(radius * 0.5 - 0.25, radius * 0.5, 60);
     const innerRingMat = new THREE.MeshBasicMaterial({
       color: mainColor,
       side: THREE.DoubleSide,
@@ -265,15 +265,16 @@ export class DefenseEventManager {
     innerRing.position.set(pos.x, pos.y + 0.06, pos.z);
     this.visualGroup.add(innerRing);
 
-    // 4. Balizas perimetrales en los bordes del área (6 postes delimitadores cada 60°)
+    // 4. Balizas perimetrales en los bordes del área (16 postes delimitadores cada 22.5°)
     const postGeo = new THREE.BoxGeometry(0.2, 0.9, 0.2);
     const postMat = new THREE.MeshStandardMaterial({ color: 0x221a14, roughness: 0.8 });
     const ledGeo = new THREE.BoxGeometry(0.25, 0.2, 0.25);
     const ledMat = new THREE.MeshBasicMaterial({ color: mainColor });
 
     this.boundaryLeds = [];
-    for (let i = 0; i < 6; i++) {
-      const ang = (i / 6) * Math.PI * 2;
+    const postCount = 16;
+    for (let i = 0; i < postCount; i++) {
+      const ang = (i / postCount) * Math.PI * 2;
       const bx = pos.x + Math.sin(ang) * radius;
       const bz = pos.z + Math.cos(ang) * radius;
       const by = this.worldPhysics ? this.worldPhysics.getGroundHeight(bx, bz, 0, true) : pos.y;
@@ -350,7 +351,7 @@ export class DefenseEventManager {
       this.floatingMarker.position.y = baseY + Math.sin(this.pulseTimer * 3.5) * 0.45;
     }
 
-    // Comprobación de distancia del jugador a la zona amplia (radio 15m)
+    // Comprobación de distancia del jugador a la zona amplia (radio 50m, diámetro 100m)
     const playerPos = ctx.playerGroup.position;
     const distToPlayer = Math.hypot(playerPos.x - ev.position.x, playerPos.z - ev.position.z);
     ev.distToPlayer = distToPlayer;
@@ -451,21 +452,42 @@ export class DefenseEventManager {
   }
 
   /**
-   * Spawnea enemigos de asalto en los bordes del perímetro de 15m
-   * dirigiéndose hacia el jugador para un asedio envolvente y activo.
+   * Spawnea enemigos de asalto distribuidos por todo el mapa (compuertas y sectores amplios)
+   * dirigiéndose hacia la posición del jugador, otorgando espacio táctico para maniobrar y esquivar.
    */
   spawnPerimeterAssaultWave(ctx, ev, hpMult, spdMult, dmgMult, maxAlive = 30) {
     const aliveCount = this.eventEnemies.length;
     const remainingSlots = Math.max(1, maxAlive - aliveCount);
     const burstSize = ev.intensityPhase === 3 ? Math.floor(4 + Math.random() * 3) : (ev.intensityPhase === 2 ? Math.floor(3 + Math.random() * 2) : Math.floor(2 + Math.random() * 2));
     const countToSpawn = Math.min(burstSize, remainingSlots);
+    const playerPos = ctx.playerGroup.position;
+    const mapSpawnPoints = this.mode?.spawnPointSystem ? this.mode.spawnPointSystem.getAllSpawnPoints() : [];
 
     for (let i = 0; i < countToSpawn; i++) {
-      const ang = Math.random() * Math.PI * 2;
-      // Spawnean alrededor del borde del perímetro (13m a 17m del centro)
-      const dist = ev.radius - 1.0 + Math.random() * 4.0;
-      const sx = ev.position.x + Math.sin(ang) * dist;
-      const sz = ev.position.z + Math.cos(ang) * dist;
+      let sx, sz;
+      // 35% de probabilidad de emerger de compuertas/portales del mapa; 65% dispersos por el mapa
+      if (mapSpawnPoints.length > 0 && Math.random() < 0.35) {
+        const sp = mapSpawnPoints[Math.floor(Math.random() * mapSpawnPoints.length)];
+        const jitterAng = Math.random() * Math.PI * 2;
+        const jitterDist = Math.random() * 5.0;
+        sx = sp.position.x + Math.sin(jitterAng) * jitterDist;
+        sz = sp.position.z + Math.cos(jitterAng) * jitterDist;
+      } else {
+        // Dispersos por todo el mapa en abanico 360°, a distancia amplia (38m a 72m)
+        const ang = Math.random() * Math.PI * 2;
+        const dist = 38.0 + Math.random() * 34.0;
+        sx = playerPos.x + Math.sin(ang) * dist;
+        sz = playerPos.z + Math.cos(ang) * dist;
+      }
+
+      // Margen de seguridad: asegurar que nunca spawneen a menos de 32m del jugador
+      const distToPlayer = Math.hypot(sx - playerPos.x, sz - playerPos.z);
+      if (distToPlayer < 32.0) {
+        const pushAng = Math.atan2(sx - playerPos.x, sz - playerPos.z) || (Math.random() * Math.PI * 2);
+        sx = playerPos.x + Math.sin(pushAng) * 42.0;
+        sz = playerPos.z + Math.cos(pushAng) * 42.0;
+      }
+
       const sy = this.worldPhysics ? this.worldPhysics.getGroundHeight(sx, sz, 0, true) : 0;
 
       // Composición de enemigos según la fase
@@ -482,13 +504,14 @@ export class DefenseEventManager {
 
       const enemy = this.enemyPool.spawn(
         type,
-        ctx.playerGroup.position,
+        playerPos,
         ctx.gameTime,
         ctx.camFwd,
         this.worldPhysics,
         null,
         {
-          isDefenseMode: false, // Atacan directamente al jugador en modo supervivencia
+          isDefenseMode: false, // Atacan directamente y convergen hacia el jugador
+          isEventEnemy: true,
           hpMult,
           dmgMult,
           spdMult

@@ -42,6 +42,10 @@ document.getElementById('stam-bar').style.width = `${stamPct}%`;
 document.getElementById('level-text').textContent = `CICLO ${String(stats.level).padStart(2, '0')}`;
 document.getElementById('kills-text').textContent = kills;
 document.getElementById('souls-hud').textContent = `${runSouls}`;
+if (!modeTelemetry || typeof modeTelemetry.coreHp !== 'number') {
+  const scrapEl = document.getElementById('core-scrap-counter');
+  if (scrapEl) scrapEl.textContent = `${runSouls}`;
+}
 
 const compactItems = document.querySelectorAll('.counters-row-compact .compact-indicator-item');
 if (compactItems.length >= 3) {
@@ -93,7 +97,7 @@ if (typeof modeTelemetry.coreHp === 'number') {
   }
   const coreHudBox = document.getElementById('core-defense-hud');
   if (coreHudBox) coreHudBox.classList.toggle('is-critical', corePct <= 25);
-  if (coreVal) coreVal.textContent = `${modeTelemetry.coreHp} / ${modeTelemetry.coreMaxHp} VIDAS`;
+  if (coreVal) coreVal.textContent = `${modeTelemetry.coreHp}/${modeTelemetry.coreMaxHp} INTEGRIDAD`;
   if (coreWave) {
     if (modeTelemetry.eventBadge) {
       coreWave.textContent = `EVENTO // ${modeTelemetry.eventBadge}`;
@@ -102,25 +106,31 @@ if (typeof modeTelemetry.coreHp === 'number') {
     }
   }
   if (coreRem) {
-    if (modeTelemetry.isFirstWavePrep) {
-      coreRem.textContent = 'EXPLORACIÓN LIBRE';
-    } else if (modeTelemetry.isPrep) {
-      coreRem.textContent = `PAUSA: ${Math.ceil(modeTelemetry.prepSeconds)}S`;
+    if (modeTelemetry.isFirstWavePrep || modeTelemetry.isPrep) {
+      coreRem.textContent = 'HOSTILES: 0';
     } else {
-      coreRem.textContent = `HOSTILES: ${modeTelemetry.remainingEnemies}`;
+      coreRem.textContent = `HOSTILES: ${modeTelemetry.remainingEnemies || 0}`;
     }
   }
   if (coreStatus) {
-    coreStatus.textContent = modeTelemetry.coreStateLabel || 'ESTABLE';
-    coreStatus.classList.toggle('critical', corePct < 45);
+    if (modeTelemetry.isFirstWavePrep) {
+      coreStatus.textContent = 'EXPLORACIÓN LIBRE';
+      coreStatus.classList.remove('critical');
+    } else if (modeTelemetry.isPrep) {
+      coreStatus.textContent = `PAUSA: ${Math.ceil(modeTelemetry.prepSeconds)}S`;
+      coreStatus.classList.remove('critical');
+    } else {
+      coreStatus.textContent = modeTelemetry.coreStateLabel || 'ESTABLE';
+      coreStatus.classList.toggle('critical', corePct < 45);
+    }
   }
 
   const scrapEl = document.getElementById('core-scrap-counter');
-  if (scrapEl) scrapEl.textContent = `CHATARRA: ${modeTelemetry.scrap || 0}`;
+  if (scrapEl) scrapEl.textContent = `${modeTelemetry.scrap || 0}`;
 
   const turretEl = document.getElementById('core-turret-counter');
   if (turretEl) {
-    turretEl.textContent = `TORRETAS: ${modeTelemetry.turretCount || 0}/${modeTelemetry.turretMax || 0}`;
+    turretEl.textContent = `${modeTelemetry.turretCount || 0}/${modeTelemetry.turretMax || 16}`;
   }
 
   
@@ -162,14 +172,9 @@ if (typeof modeTelemetry.coreHp === 'number') {
   const prepPrompt = document.getElementById('wave-prep-prompt');
   if (prepPrompt) {
     prepPrompt.classList.toggle('hidden', !modeTelemetry.isPrep);
-    const tagSpan = prepPrompt.querySelector('.prep-prompt-tag span:last-child');
-    const skipSpan = prepPrompt.querySelector('.prep-skip-pill span:last-child');
-    if (modeTelemetry.isFirstWavePrep) {
-      if (tagSpan) tagSpan.innerHTML = 'EXPLORACIÓN LIBRE: <b id="prep-timer-val">SIN LÍMITE</b>';
-      if (skipSpan) skipSpan.textContent = 'INICIAR OLEADA 1';
-    } else {
-      if (tagSpan) tagSpan.innerHTML = `PAUSA DE CONSTRUCCIÓN: <b id="prep-timer-val">${Math.ceil(modeTelemetry.prepSeconds)}s</b>`;
-      if (skipSpan) skipSpan.textContent = 'SALTAR PAUSA';
+    const skipSpan = document.getElementById('prep-skip-text') || prepPrompt.querySelector('.prep-skip-pill span:last-child');
+    if (skipSpan) {
+      skipSpan.textContent = modeTelemetry.isFirstWavePrep ? 'INICIAR OLEADA' : 'SALTAR PAUSA';
     }
   }
 
@@ -212,15 +217,12 @@ for (let i = 0; i < CONFIG.LIMITS.MAX_WEAPONS; i++) {
     const vibClass = lastUpgradedKey === k ? 'vibrate-up' : '';
     wHtml += `
       <div class="weapon-slot ${vibClass}" tabindex="0" title="${sk.name} (Nivel +${v}) — ${sk.desc}">
-        <span class="weapon-slot-name">${renderSpriteIconHTML(sk.icon, 'sm')} <span>${shortName}</span></span>
+        <span class="weapon-slot-name">${renderSpriteIconHTML(sk.icon, "sm")}</span>
         <span class="weapon-slot-lvl-text">NV.${v}</span>
       </div>`;
   } else {
     wHtml += `
-      <div class="weapon-slot empty" title="Ranura de arma disponible">
-        <span class="weapon-slot-name"><span>VACÍA</span></span>
-        <span class="weapon-slot-lvl-text">--</span>
-      </div>`;
+      <div class="weapon-slot empty" title="Ranura de arma disponible"></div>`;
   }
 }
 document.getElementById('skills-bar').innerHTML = wHtml;
@@ -238,18 +240,13 @@ for (let i = 0; i < CONFIG.LIMITS.MAX_PASSIVES; i++) {
     pHtml += `
       <div class="passive-slot ${vibClass}" tabindex="0" title="${p.name} (Nivel +${v}): ${p.format(v)} — ${p.desc}">
         <div class="passive-dock-icon-wrap">
-          ${renderSpriteIconHTML(p.icon)}
+          ${renderSpriteIconHTML(p.icon, 'sm')}
         </div>
         <span class="passive-dock-lvl">x${v}</span>
       </div>`;
   } else {
     pHtml += `
-      <div class="passive-slot empty" title="Ranura de implante pasivo disponible">
-        <div class="passive-dock-icon-wrap">
-          <span style="font-family:'Press Start 2P',monospace;font-size:8px;color:#6c7a65;">[ ]</span>
-        </div>
-        <span class="passive-dock-lvl">--</span>
-      </div>`;
+      <div class="passive-slot empty" title="Ranura de implante disponible"></div>`;
   }
 }
 document.getElementById('passives-bar').innerHTML = pHtml;

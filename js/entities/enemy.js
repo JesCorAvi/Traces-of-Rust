@@ -19,6 +19,7 @@ export class Enemy {
     this.active = false;
     this.isBoss = false;
     this.defenseAI = null;
+    this.isEventEnemy = false;
     this.netId = 0;
     this.isNetworkReplica = false;
     this.netTargetX = null;
@@ -43,6 +44,7 @@ export class Enemy {
     this.bossData = bossCfg;
     this.phase = 1;
     this.defenseAI = null;
+    this.isEventEnemy = !!defenseOpts?.isEventEnemy;
 
     const mins = gameTime / 60;
     let hpScale = defenseOpts?.hpMult ?? (1 + mins * CONFIG.DIFFICULTY.HP_SCALE_PER_MIN);
@@ -225,10 +227,12 @@ export class Enemy {
     }
 
     // En modo Supervivencia se mantiene el reposicionamiento si se quedan demasiado atrás
-    if (!isDef && !this.isBoss && horizDistPlayer > 48) {
+    const maxBehindDist = this.isEventEnemy ? 120 : 48;
+    const snapDist = this.isEventEnemy ? 65 : 27;
+    if (!isDef && !this.isBoss && horizDistPlayer > maxBehindDist) {
       const ang = Math.random() * Math.PI * 2;
-      this.group.position.x = playerPos.x + Math.sin(ang) * 27;
-      this.group.position.z = playerPos.z + Math.cos(ang) * 27;
+      this.group.position.x = playerPos.x + Math.sin(ang) * snapDist;
+      this.group.position.z = playerPos.z + Math.cos(ang) * snapDist;
       return false;
     }
 

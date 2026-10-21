@@ -57,44 +57,39 @@
 .coop-scrap-toast.is-receive { color: #8ef77b; border-left-color: #55de3e; }
 .coop-scrap-toast.is-error { color: #ff6b6b; border-left-color: #a32222; }
 
-#turret-interact-prompt {
+#turret-interact-prompt, .turret-prompt-pill {
   position: fixed;
   left: 50%;
-  bottom: 176px;
+  bottom: 64px;
   transform: translateX(-50%);
   z-index: 16;
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  background: rgba(8, 12, 8, 0.94);
-  border: 2px solid #f0c954;
-  clip-path: var(--chamfer-6px);
-  padding: 8px 16px;
-  font-family: 'Press Start 2P', monospace;
-  font-size: 10px;
-  color: #f0c954;
-  text-shadow: 2px 2px 0 #050605;
-  pointer-events: none;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.95), 0 0 16px rgba(240, 201, 84, 0.35);
-  animation: turretPromptBob 2.2s ease-in-out infinite;
-}
-#turret-interact-prompt.hidden { display: none !important; }
-
-@keyframes turretPromptBob {
-  0%, 100% { transform: translateX(-50%) translateY(0); }
-  50% { transform: translateX(-50%) translateY(-4px); }
-}
-.key-cap {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  min-width: 24px;
-  height: 24px;
-  padding: 0 6px;
-  background: #1b2619;
-  border: 2px solid #e6d7a5;
-  color: #fff6e0;
-  font-size: 11px;
+  gap: 6px;
+  background: rgba(8, 12, 8, 0.7);
+  border: 1px solid rgba(240, 201, 84, 0.5);
+  border-radius: 4px;
+  clip-path: none;
+  padding: 5px 12px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
+  color: #f0c954;
+  text-shadow: 1px 1px 0 #000;
+  pointer-events: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.85);
+  animation: turretPromptBob 2.2s ease-in-out infinite;
+}
+.turret-prompt-pill.hidden, #turret-interact-prompt.hidden { display: none !important; }
+
+.turret-prompt-pill .key-cap, #turret-interact-prompt .key-cap {
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  font-size: 8px;
+  background: rgba(27, 38, 25, 0.85);
+  border: 1px solid rgba(240, 201, 84, 0.6);
+  border-radius: 2px;
+  color: #fff;
 }
 
 #turret-build-screen { z-index: 62; }
@@ -105,13 +100,14 @@
   text-align: left;
   padding: 14px 18px;
 }
-.turret-panel-head {
+.turret-modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 12px;
-  flex-wrap: wrap;
   margin-bottom: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px dashed rgba(74, 99, 68, 0.6);
 }
 .turret-panel-head .tape-strip {
   width: auto;
@@ -123,10 +119,11 @@
   align-items: center;
   gap: 6px;
   font-family: 'Press Start 2P', monospace;
-  font-size: 10px;
+  font-size: 9px;
   color: #f0c954;
-  background: #050605;
-  border: 2px solid #4a2518;
+  background: rgba(10, 14, 10, 0.85);
+  border: 1px solid #63533b;
+  border-radius: 3px;
   padding: 4px 8px;
 }
 .turret-scrap-balance b { color: #e6d7a5; font-size: 12px; }
@@ -191,7 +188,13 @@
   font-size: 8px;
   color: #a8c499;
 }
-.turret-card-desc { color: #e6dec8; font-size: 17px; line-height: 1.2; }
+.turret-card-desc {
+  color: #e6dec8;
+  font-family: 'VT323', monospace;
+  font-size: 19px;
+  line-height: 1.25;
+  letter-spacing: 0.5px;
+}
 .turret-card-stats {
   color: #b89c46;
   font-family: 'Press Start 2P', monospace;

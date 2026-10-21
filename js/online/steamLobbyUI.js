@@ -39,11 +39,6 @@ export function setupSteamLobbyUI(runtime = {}) {
   isWebRtcMode = !!(window.steamOnline && window.steamOnline.isWebRtc);
   applyOnlineModeCopy();
 
-  const btnOpenTop = document.getElementById('btn-steam-online');
-  if (btnOpenTop) {
-    btnOpenTop.onclick = openSteamOnlineModal;
-  }
-
   const btnOpenSub = document.getElementById('btn-open-steam-modal');
   if (btnOpenSub) {
     btnOpenSub.onclick = openSteamOnlineModal;
@@ -135,25 +130,25 @@ function applyOnlineModeCopy() {
   if (!modal) return;
 
   const title = modal.querySelector('.plate-header .tape-label span:last-child');
-  if (title) title.textContent = 'SISTEMA DE ENLACE TÁCTICO // WEBRTC ONLINE';
+  if (title) title.textContent = 'TERMINAL MULTIJUGADOR // COOPERATIVO';
 
   const subtitle = modal.querySelector('.plate-sub');
   if (subtitle) {
-    subtitle.textContent = 'Enlace multijugador P2P privado mediante WebRTC. Comparte el código de 6 caracteres o el enlace de sala con tu compañero:';
+    subtitle.textContent = 'Comparte el código de 6 caracteres con tu compañero o invítalo vía Steam.';
   }
 
   const overlayBtn = document.getElementById('btn-steam-overlay');
   if (overlayBtn) overlayBtn.innerHTML = '<span>[ COPIAR ENLACE DE SALA ]</span>';
 
   const inviteBtn = document.getElementById('btn-invite-friends');
-  if (inviteBtn) inviteBtn.innerHTML = '<span>[ COPIAR CÓDIGO / ENLACE ]</span>';
+  if (inviteBtn) inviteBtn.innerHTML = '<span>[ COPIAR CÓDIGO ]</span>';
 
   const joinInput = document.getElementById('steam-join-input');
-  if (joinInput) joinInput.placeholder = 'Código de 6 caracteres (ej. A7K9X2) o enlace...';
+  if (joinInput) joinInput.placeholder = 'Código de 6 caracteres (ej. A7K9X2)...';
 
   const privateText = modal.querySelector('.steam-private-info-box p');
   if (privateText) {
-    privateText.textContent = 'Conexión directa entre navegadores (WebRTC + STUN público). Solo quien tenga el código o el enlace exacto de la sala puede entrar. Sin servidores TURN de pago.';
+    privateText.textContent = 'Partida cooperativa protegida. Solo quien tenga el código exacto de la sala puede ingresar.';
   }
 }
 
@@ -168,11 +163,6 @@ function resetLobbyView() {
   const activeLobbyView = document.getElementById('steam-active-lobby-view');
   if (noLobbyView) noLobbyView.classList.remove('hidden');
   if (activeLobbyView) activeLobbyView.classList.add('hidden');
-
-  if (isWebRtcMode) {
-    const topBtnText = document.getElementById('steam-online-btn-text');
-    if (topBtnText) topBtnText.textContent = 'WEBRTC: ONLINE';
-  }
 }
 
 async function autoJoinFromUrl() {
@@ -202,21 +192,13 @@ async function autoJoinFromUrl() {
 }
 
 async function checkInitialSteamStatus() {
-  const topBtnText = document.getElementById('steam-online-btn-text');
-  if (!window.steamOnline) {
-    if (topBtnText) topBtnText.textContent = 'ONLINE NO DISPONIBLE';
-    return;
-  }
+  if (!window.steamOnline) return;
 
   try {
     const status = await window.steamOnline.getStatus();
     if (status && status.connected) {
       localPlayerSteamId = status.steamId;
-      const webMode = !!(status.isWebRtc || status.mode === 'WEBRTC');
-      if (topBtnText) {
-        const name = String(status.playerName || 'OPERADOR').toUpperCase();
-        topBtnText.textContent = webMode ? `WEBRTC: ${name}` : `STEAM: ${name}`;
-      }
+      
     }
   } catch (e) {
     console.warn('[Steam UI] Error al consultar estado inicial:', e);
@@ -251,11 +233,11 @@ async function refreshSteamUserCard() {
 
   if (!window.steamOnline) {
     if (badgeEl) {
-      badgeEl.textContent = 'WEBRTC NO DISPONIBLE';
+      badgeEl.textContent = 'MODO SIN CONEXIÓN';
       badgeEl.style.color = '#e67828';
     }
-    if (nameEl) nameEl.textContent = 'Sin puente online';
-    if (idEl) idEl.textContent = 'Este navegador no soporta WebRTC. Usa la versión de Windows para Steamworks.';
+    if (nameEl) nameEl.textContent = 'Operador Local';
+    if (idEl) idEl.textContent = 'Inicia el juego con conexión para acceder a partidas cooperativas.';
     return;
   }
 
@@ -265,22 +247,20 @@ async function refreshSteamUserCard() {
       localPlayerSteamId = status.steamId;
       const webMode = !!(status.isWebRtc || status.mode === 'WEBRTC');
       if (badgeEl) {
-        badgeEl.textContent = webMode ? '● ENLACE WEBRTC P2P ACTIVO' : '● CONECTADO A STEAMWORKS (480)';
+        badgeEl.textContent = '● ENLACE CO-OP ACTIVO';
         badgeEl.style.color = '#55de3e';
       }
       if (nameEl) nameEl.textContent = status.playerName;
       if (idEl) {
-        idEl.textContent = webMode
-          ? `Sesión: ${status.steamId} // Salas P2P de 6 caracteres`
-          : `SteamID: ${status.steamId} // App: Spacewar (480)`;
+        idEl.textContent = 'Operador listo // Modo Cooperativo';
       }
     } else {
       if (badgeEl) {
-        badgeEl.textContent = 'STEAM NO DETECTADO';
+        badgeEl.textContent = 'SIN CONEXIÓN';
         badgeEl.style.color = '#ff6b6b';
       }
-      if (nameEl) nameEl.textContent = 'Cliente Steam no iniciado';
-      if (idEl) idEl.textContent = status.message || 'Abre Steam en tu PC antes de conectar.';
+      if (nameEl) nameEl.textContent = 'Operador Local';
+      if (idEl) idEl.textContent = status.message || 'Inicia la plataforma antes de conectar.';
     }
   } catch (err) {
     if (badgeEl) {
@@ -309,11 +289,6 @@ function applyLobbyUpdate(details) {
   const memberCount = details.memberCount || (details.members ? details.members.length : 1);
   const memberLimit = details.memberLimit || 4;
   if (countEl) countEl.textContent = `${memberCount} / ${memberLimit} Operadores`;
-
-  if (isWebRtcMode) {
-    const topBtnText = document.getElementById('steam-online-btn-text');
-    if (topBtnText && details.lobbyId) topBtnText.textContent = `WEBRTC: SALA ${details.lobbyId}`;
-  }
 
   // Renderizar la lista de operadores en la sala
   if (membersListEl) {

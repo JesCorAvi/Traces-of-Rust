@@ -48,18 +48,10 @@
   <div id="scare-flash"></div>
   <div id="damage-numbers" aria-hidden="true"></div>
 
-  <!-- Barra superior de diagnóstico, FPS, escala de UI y exportador PNG -->
+  <!-- Barra superior de diagnóstico, FPS y exportador PNG -->
   <div id="top-bar" class="hidden">
     <div id="fps-counter" class="scale-picker-box hidden" title="Fotogramas por segundo en tiempo real">
       <span>FPS: <b id="fps-val" style="color:#a8c499">60</b></span>
-    </div>
-    <div class="scale-picker-box" title="Escala entera de píxeles de la interfaz">
-      <span>ESCALA UI</span>
-      <select id="ui-scale-select" aria-label="Escala de la interfaz">
-        <option value="1">x1</option>
-        <option value="2" selected>x2</option>
-        <option value="3">x3</option>
-      </select>
     </div>
   </div>
 
@@ -74,39 +66,28 @@
       </div>
     </div>
 
-    <!-- SECTOR ARRIBA-CENTRO: CRONÓMETRO + PANEL DE INTEGRIDAD DEL NÚCLEO (Modo Defensa) -->
+    <!-- SECTOR ARRIBA-CENTRO: CABECERA MINIMALISTA DE OLEADA Y REACTOR (Modo Defensa) -->
     <div id="hud-top-center">
-      <div id="timer-text">00:00</div>
+      <span id="timer-text" class="hidden" style="display:none;">00:00</span>
 
-      <div id="core-defense-hud" class="metal-plate hidden">
-        <div class="core-hud-header">
-          <span class="core-hud-title-left">
-            <span class="ui-icon sm" data-ui-icon="core"></span>
-            <span>INTEGRIDAD DE CONTENCIÓN</span>
-          </span>
-          <span id="core-state-tag">ESTABLE</span>
+      <div id="core-defense-hud" class="core-compact-header hidden">
+        <div class="core-header-row">
+          <span id="core-wave-counter" class="core-wave-counter">OLEADA 1/12</span>
+          <span id="core-state-tag" class="core-state-tag">EXPLORACIÓN LIBRE</span>
+          <div id="wave-prep-prompt" class="prep-skip-pill" role="button" tabindex="0" title="Pulsa F o haz clic para comenzar la oleada de inmediato">
+            <span class="key-cap">F</span>
+            <span id="prep-skip-text">INICIAR OLEADA</span>
+            <span id="prep-timer-val" style="display:none"></span>
+          </div>
         </div>
         <div class="core-bar-frame">
           <div id="core-hp-bar-ghost" class="hp-ghost-bar"></div>
           <div id="core-hp-bar"></div>
           <div class="stat-label-row-compact">
-            <span id="core-hp-text" class="led-val">100 / 100 VIDAS</span>
+            <span id="core-hp-text" class="led-val">150/150 INTEGRIDAD</span>
           </div>
         </div>
-        <div class="core-hud-subrow">
-          <span id="core-wave-counter">OLEADA 1/12</span>
-          <span id="core-enemies-left">HOSTILES: 0</span>
-        </div>
-        <div class="core-hud-subrow core-hud-economy">
-          <span class="core-scrap-line">
-            <span class="ui-icon sm" data-ui-icon="scrap"></span>
-            <span id="core-scrap-counter">CHATARRA: 0</span>
-          </span>
-          <span id="core-turret-counter">TORRETAS: 0/12</span>
-          <span id="coop-scrap-transfer" class="coop-scrap-transfer hidden" role="button" tabindex="0" title="Enviar 5 de chatarra al compañero (T). Shift+T envía 1.">
-            <span class="key-cap">T</span><span>+5 AL COMPAÑERO</span>
-          </span>
-        </div>
+        <span id="coop-scrap-transfer" style="display:none"></span>
         <div id="coop-scrap-toast" class="coop-scrap-toast hidden"></div>
       </div>
 
@@ -123,21 +104,6 @@
         </div>
         <div class="event-hud-bar-frame">
           <div class="event-hud-bar-fill" id="event-hud-bar-fill"></div>
-        </div>
-      </div>
-
-
-      <!-- Aviso y botón de salto para la pausa de construcción entre rondas -->
-      <div id="wave-prep-prompt" class="metal-plate hidden" role="button" tabindex="0" title="Pulsa F o haz clic para comenzar la oleada de inmediato">
-        <div class="prep-prompt-row">
-          <span class="prep-prompt-tag">
-            <span class="ui-icon sm" data-ui-icon="turret_gunner"></span>
-            <span>PAUSA DE CONSTRUCCIÓN: <b id="prep-timer-val">60s</b></span>
-          </span>
-          <span class="prep-skip-pill">
-            <span class="key-cap">F</span>
-            <span>SALTAR PAUSA</span>
-          </span>
         </div>
       </div>
     </div>
@@ -192,48 +158,63 @@
       <span class="core-dir-dist">NÚCLEO 0M</span>
     </div>
 
-    <!-- SECTOR ARRIBA-IZQUIERDA: CONTADORES RÁPIDOS, VIDA DEL JUGADOR Y ARMAS -->
+    <!-- SECTOR ARRIBA-IZQUIERDA: RECURSOS FLOTANTES, VIDA, INVENTARIO Y OBJETIVO -->
     <div id="hud-top-left">
-      <div class="counters-row-compact">
-        <div class="compact-indicator-item" title="Tiempo de misión">
+      <!-- 1. Fila superior de iconos flotantes (sin caja de fondo) -->
+      <div class="counters-row-floating">
+        <div class="floating-counter-item" title="Tiempo de misión">
           <span class="ui-icon sm" data-ui-icon="clock"></span>
           <span id="compact-time-indicator">00:00</span>
         </div>
-        <div class="compact-indicator-item" title="Dientes extraídos (Moneda)">
-          <span class="ui-icon sm" data-ui-icon="tooth"></span>
-          <span id="souls-hud">0</span>
+        <div class="floating-counter-item" title="Chatarra">
+          <span class="ui-icon sm" data-ui-icon="scrap"></span>
+          <span id="core-scrap-counter">0</span>
         </div>
-        <div class="compact-indicator-item" title="Fusibles de actualización restantes">
-          <span class="ui-icon sm" data-ui-icon="reroll"></span>
-          <span>3</span>
-        </div>
-        <div class="compact-indicator-item" title="Bajas totales">
+        <div class="floating-counter-item" title="Bajas totales">
           <span class="ui-icon sm" data-ui-icon="skull"></span>
           <span id="kills-text">0</span>
         </div>
+        <div class="floating-counter-item" id="floating-turrets-item" title="Torretas activas">
+          <span class="ui-icon sm" data-ui-icon="turret_gunner"></span>
+          <span id="core-turret-counter">0/16</span>
+        </div>
+        <span id="souls-hud" style="display:none">0</span>
       </div>
 
-      <div class="metal-plate biometrics-plate-compact">
-        <div class="screw tl"></div><div class="screw tr"></div><div class="screw bl"></div><div class="screw br"></div>
-        <div class="stat-label-row-compact">
-          <span id="hp-text" class="led-val">100 / 100</span>
-        </div>
+      <!-- 2. Barra de salud sólida -->
+      <div class="health-bar-container">
         <div class="segmented-bar hp-frame-compact">
           <div id="hp-bar-ghost" class="hp-ghost-bar"></div>
           <div id="hp-bar"></div>
+          <div class="stat-label-row-compact">
+            <span id="hp-text" class="led-val">100/100</span>
+          </div>
         </div>
       </div>
 
-      <div class="slots-grid-compact" id="skills-bar"></div>
+      <!-- 3. Armas e Implantes en 2 filas compactas (36x36px) -->
+      <div class="inventory-compact-container">
+        <div class="slots-row-compact weapons-row" id="skills-bar"></div>
+        <div class="slots-row-compact passives-row" id="passives-bar"></div>
+        <span id="passives-count" style="display:none">0</span>
+      </div>
+
+      <!-- 4. Objetivo tipo Píldora de una sola línea -->
+      <div id="hud-objective-tracker" class="objective-pill">
+        <span class="checkbox-box">[ ]</span>
+        <span id="objective-task-desc">Contén la brecha</span>
+        <span id="next-boss-text" style="display:none"></span>
+      </div>
     </div>
 
-    <!-- SECTOR ARRIBA-DERECHA: TELEMETRÍA Y ESCÁNER DE AMENAZA -->
+    <!-- SECTOR ARRIBA-DERECHA: RADAR LIMPIO Y HOSTILES -->
     <div id="hud-top-right">
       <div class="telemetry-compact">
-        <div id="level-text" class="ciclo-badge-compact">CICLO 01</div>
+        <div class="radar-header-row">
+          <div id="level-text" class="ciclo-badge-compact">CICLO 01</div>
+        </div>
 
-        <div class="metal-plate radar-scanner-plate">
-          <div class="screw tl"></div><div class="screw tr"></div><div class="screw bl"></div><div class="screw br"></div>
+        <div class="radar-scanner-plate">
           <div class="radar-display">
             <div class="radar-sweeper"></div>
             <div class="radar-dot enemy-approx"></div>
@@ -241,58 +222,27 @@
             <div class="radar-dot core-approx" title="Posición del Núcleo"></div>
             <div class="radar-dot coop-approx" title="Compañero Co-Op"></div>
           </div>
-          <div id="radar-threat-label">SCANNER: OK</div>
         </div>
 
-        <div id="elev-container">
-          <span class="ui-icon sm" data-ui-icon="moveSpd"></span>
-          <span id="elev-text">COTA: 0.0M</span>
+        <div class="hostiles-pill">
+          <span id="core-enemies-left">HOSTILES: 0</span>
         </div>
+        <span id="radar-threat-label" style="display:none"></span>
       </div>
     </div>
 
-    <!-- SECTOR MEDIO-IZQUIERDA: PANEL DE OBJETIVOS -->
-    <div id="hud-objective-tracker">
-      <div class="paper-note objective-note">
-        <div class="objective-header">
-          <span class="ui-icon sm" data-ui-icon="warning"></span>
-          <span>OBJETIVO DE PLANTA</span>
-        </div>
-        <div class="objective-item">
-          <span class="checkbox-box">[ ]</span>
-          <span id="objective-task-desc">Encuentra y purga a los jefes de planta</span>
-        </div>
-        <div class="objective-sub-task" id="next-boss-text">Próximo Jefe: 03:00</div>
-      </div>
-    </div>
-
-    <!-- SECTOR MEDIO-DERECHA: NOTIFICACIONES DE BOSSES Y OLEADA -->
+    <!-- SECTOR MEDIO-DERECHA: NOTIFICACIONES DE BOSSES -->
     <div id="hud-alert-overlay-right">
       <div id="boss-killed-alert" class="hidden">
         <span class="ui-icon sm" data-ui-icon="boss_skull"></span>
         <span>JEFES: <b id="bosses-killed-hud">0/5</b> ABATIDOS</span>
       </div>
-      <div id="wave-text">AMENAZA: NIVEL 1</div>
+      <span id="wave-text" style="display:none"></span>
     </div>
 
-    <!-- SECTOR ABAJO-CENTRO: RANURAS DE IMPLANTES PASIVOS -->
-    <div id="hud-bottom-slots-container">
-      <div class="metal-plate implants-tray">
-        <div class="slots-horizontal-label">
-          <span>IMPLANTES PASIVOS EN CURSO</span>
-          <span>[<span id="passives-count">0</span>/4]</span>
-        </div>
-        <div id="passives-bar" class="slots-horizontal-row"></div>
-      </div>
-    </div>
-
-    <!-- Indicador de Dash -->
-    <div id="stamina-tracker-overlay">
-      <div class="stamina-text-wrapper">
-        <span class="ui-icon sm" data-ui-icon="moveSpd"></span>
-        <span>DASH [SHIFT]</span>
-      </div>
-      <div class="segmented-bar stam-frame-compact">
+    <!-- Indicador de Dash (micro-barra finita bajo los pies del personaje en el centro) -->
+    <div id="stamina-tracker-overlay" class="dash-micro-tracker">
+      <div class="stam-frame-compact">
         <div id="stam-bar"></div>
       </div>
     </div>
@@ -300,7 +250,7 @@
     <div id="crosshair"></div>
 
     <!-- Aviso contextual para construir/mejorar torretas -->
-    <div id="turret-interact-prompt" class="hidden">
+    <div id="turret-interact-prompt" class="turret-prompt-pill hidden">
       <span class="key-cap" id="turret-key-cap">E</span>
       <span id="turret-interact-text">CONSTRUIR TORRETA</span>
     </div>
@@ -327,17 +277,13 @@
 
   <!-- PANTALLA DE INICIO CON FONDO 3D DE LA FÁBRICA VISIBLE (ESTILO POKÉBONK / MEGABONK / VAMPIRE SURVIVORS) -->
   <div id="start-screen" class="overlay desktop-start-overlay">
-    <!-- BARRA SUPERIOR FLOTANTE CON MONEDAS, STEAM ONLINE Y AJUSTES -->
+    <!-- BARRA SUPERIOR FLOTANTE CON MONEDAS Y AJUSTES -->
     <header class="start-top-bar">
       <div class="start-top-right">
         <div class="start-souls-badge start-currency-pill" title="Dientes recolectados en planta">
           <span class="ui-icon sm" data-ui-icon="tooth"></span>
           <span>DIENTES: <b id="start-souls" style="color:#f0c954">0</b></span>
         </div>
-        <button type="button" class="rust-btn sm start-top-btn" id="btn-steam-online" style="border-color:#4e8a44; color:#a2f593;">
-          <span class="ui-icon sm" data-ui-icon="core"></span>
-          <span id="steam-online-btn-text">STEAM ONLINE</span>
-        </button>
         <button type="button" class="rust-btn sm start-top-btn" id="btn-open-settings">
           <span class="ui-icon sm" data-ui-icon="atkSpd"></span>
           <span>AJUSTES</span>
@@ -379,21 +325,21 @@
           </button>
         </div>
 
-        <!-- Botón de Tutorial de Defensa destacado -->
+        <!-- Botón de Tutorial destacado -->
         <button type="button" class="rust-btn desktop-menu-btn td-tutorial-banner-btn" id="btn-td-tutorial">
           <span class="ui-icon sm" data-ui-icon="level"></span>
-          <span>[ ¿PRIMERA VEZ? TUTORIAL DE DEFENSA ]</span>
+          <span>[ TUTORIAL ]</span>
         </button>
 
         <!-- Grilla de Acciones Secundarias (Estilo PC UI) -->
         <div class="desktop-sub-menu-grid">
           <button type="button" class="rust-btn desktop-sub-menu-btn btn-highlight-shop" id="btn-open-shop">
             <span class="ui-icon sm" data-ui-icon="tooth"></span>
-            <span>[ MEJORAS CIRUJANO ]</span>
+            <span>[ CLÍNICA / IMPLANTES ]</span>
           </button>
           <button type="button" class="rust-btn desktop-sub-menu-btn" id="btn-open-steam-modal" style="border-color:#3e6338;">
             <span class="ui-icon sm" data-ui-icon="core"></span>
-            <span>[ STEAM CO-OP (480) ]</span>
+            <span>[ MODO COOPERATIVO ]</span>
           </button>
           <button type="button" class="rust-btn desktop-sub-menu-btn" id="btn-open-manual">
             <span class="ui-icon sm" data-ui-icon="level"></span>
@@ -403,14 +349,13 @@
 
         <div class="desktop-version-footer">
           <span>BUILD DESKTOP-64 · TD EDITION</span>
-          <span id="gpu-status-badge" style="color:#a8c499;">● GPU ACTIVA</span>
         </div>
       </section>
 
       <!-- CENTRO ABIERTO: PERMITE ADMIRAR LA ESCENA 3D DE LA FÁBRICA EN ROTACIÓN -->
       <div class="start-center-spacer"></div>
 
-      <!-- COLUMNA DERECHA: EXPEDIENTE DE SERVICIO FLOTANTE (ESTILO POKÉBONK SEASON / DOSSIER) -->
+      <!-- COLUMNA DERECHA: EXPEDIENTE DE SERVICIO FLOTANTE -->
       <aside class="start-dossier-column">
         <div class="start-dossier-card">
           <div class="dossier-card-header">
@@ -439,20 +384,6 @@
               <span>IMPLANTES ADQUIRIDOS:</span>
               <b id="career-upgrades-count" style="color:#a8c499">0</b>
             </div>
-          </div>
-
-          <div id="dossier-directive-box" class="dossier-directive-box">
-            <b>DIRECTIVA TÁCTICA // TOWER DEFENSE:</b>
-            Protege el reactor biomecánico frente a 12 oleadas. Despliega torretas en las vías con [ESPACIO] o teclas [1-5]. El reactor tolera fugas limitadas. Cada 3 oleadas se activan eventos especiales.
-          </div>
-
-          <div class="desktop-quick-controls">
-            <span><b>WASD</b> MOVER</span>
-            <span><b>ESPACIO</b> TORRETAS</span>
-            <span><b>1-5</b> SELECCIÓN</span>
-            <span><b>SHIFT</b> DASH</span>
-            <span><b>F</b> OLEADA</span>
-            <span><b>P</b> PAUSA</span>
           </div>
         </div>
       </aside>
@@ -506,6 +437,14 @@
               <option value="0.44" selected>0.44x (ESTÁNDAR BUCKSHOT)</option>
               <option value="0.65">0.65x (ALTA DEFINICIÓN RETRO)</option>
               <option value="1.0">1.00x (NATIVA DE MONITOR)</option>
+            </select>
+          </div>
+          <div class="setting-row">
+            <label for="ui-scale-select">ESCALA DE INTERFAZ (UI):</label>
+            <select id="ui-scale-select" class="setting-select" aria-label="Escala de la interfaz">
+              <option value="1">x1 (COMPACTA)</option>
+              <option value="2" selected>x2 (ESTÁNDAR)</option>
+              <option value="3">x3 (GRANDE)</option>
             </select>
           </div>
           <div class="setting-row">
@@ -575,21 +514,21 @@
     </div>
   </div>
 
-  <!-- MODAL DE STEAM ONLINE / LOBBIES SPACEWAR (APPID 480) -->
+  <!-- MODAL DE ENLACE COOPERATIVO -->
   <div id="steam-online-modal" class="overlay hidden">
     <div class="metal-plate steam-modal-plate">
       <div class="plate-header">
         <span class="tape-label">
           <span class="ui-icon sm" data-ui-icon="core"></span>
-          <span>SISTEMA DE ENLACE TÁCTICO // STEAMWORKS ONLINE</span>
+          <span>TERMINAL MULTIJUGADOR // COOPERATIVO</span>
         </span>
         <span id="steam-status-badge" class="led-val" style="color:#55de3e;">INICIALIZANDO...</span>
       </div>
       <div id="steam-lobby-notice" class="hidden" style="margin: 6px 0; padding: 6px 10px; background: rgba(50, 8, 8, 0.95); border: 1px solid #ff4444; color: #ff8888; font-family: 'Press Start 2P', monospace; font-size: 8px; text-align: center;"></div>
 
-      <p class="plate-sub">Enlace multijugador P2P privado mediante Steamworks (Spacewar 480). Conexión exclusiva por código o invitación:</p>
+      <p class="plate-sub">Comparte el código de 6 caracteres con tu compañero o invítalo vía Steam.</p>
 
-      <!-- Panel de Identidad Steam -->
+      <!-- Panel de Identidad -->
       <div class="steam-user-card" id="steam-user-card">
         <div class="steam-user-left">
           <div class="steam-avatar-box">
@@ -597,7 +536,7 @@
           </div>
           <div class="steam-user-info">
             <span class="steam-player-name" id="steam-player-name">Detectando usuario...</span>
-            <span class="steam-player-id" id="steam-player-id">SteamID: ---</span>
+            <span class="steam-player-id" id="steam-player-id">Enlace cooperativo activo</span>
           </div>
         </div>
         <button type="button" class="rust-btn sm" id="btn-steam-overlay">
@@ -605,23 +544,23 @@
         </button>
       </div>
 
-      <!-- Sección de Host y Unirse por Código -->
+      <!-- Sección de Crear y Unirse -->
       <div class="steam-panels-row">
-        <!-- Columna Izquierda: Crear y Gestionar Sala Privada -->
+        <!-- Columna Izquierda: Crear Partida -->
         <div class="steam-box">
-          <h4 class="steam-box-title">★ CREAR SALA CO-OP (HOST)</h4>
-          <p class="steam-box-sub">Genera un canal privado. Comparte tu código de sala o invita directamente a tus amigos de Steam:</p>
+          <h4 class="steam-box-title">★ CREAR PARTIDA</h4>
+          <p class="steam-box-sub">Genera una sala privada. Comparte el código o invita directamente a tus amigos:</p>
           
           <div id="steam-no-lobby-view">
             <button type="button" class="rust-btn primary" id="btn-create-lobby" style="width:100%; margin-top:8px;">
-              <span>[ CREAR SALA PRIVADA ]</span>
+              <span>[ CREAR PARTIDA ]</span>
             </button>
           </div>
 
           <div id="steam-active-lobby-view" class="hidden">
             <div class="steam-active-card">
               <div class="steam-active-header">
-                <span style="color:#8ef77b; font-weight:bold;">● SALA ACTIVA (PRIVADA)</span>
+                <span style="color:#8ef77b; font-weight:bold;">● SALA ACTIVA</span>
                 <span id="steam-lobby-members-count" style="color:#f0c954;">1 / 4 Operadores</span>
               </div>
               <div class="steam-lobby-id-row">
@@ -645,7 +584,7 @@
                   <span>[ COPIAR CÓDIGO ]</span>
                 </button>
                 <button type="button" class="rust-btn sm primary" id="btn-invite-friends">
-                  <span>[ INVITAR AMIGOS ]</span>
+                  <span>[ INVITAR COMPAÑERO ]</span>
                 </button>
                 <button type="button" class="rust-btn sm" id="btn-leave-lobby" style="color:#ff6b6b; border-color:#8a2020;">
                   <span>[ SALIR ]</span>
@@ -657,29 +596,29 @@
 
         <!-- Columna Derecha: Unirse por Código Directo -->
         <div class="steam-box">
-          <h4 class="steam-box-title">★ UNIRSE POR CÓDIGO DIRECTO</h4>
-          <p class="steam-box-sub">Introduce el código de sala o Lobby ID facilitado por tu compañero:</p>
+          <h4 class="steam-box-title">★ UNIRSE A PARTIDA</h4>
+          <p class="steam-box-sub">Introduce el código facilitado por tu compañero:</p>
 
           <div class="steam-join-input-group" style="margin-top: 10px;">
             <input type="text" id="steam-join-input" class="steam-input" placeholder="Pegar código de sala aquí..." />
             <button type="button" class="rust-btn sm primary" id="btn-join-by-id">
-              <span>[ CONECTARSE ]</span>
+              <span>[ UNIRSE A PARTIDA ]</span>
             </button>
           </div>
 
           <div class="steam-private-info-box" style="margin-top: 16px; padding: 10px; background: #060a06; border: 1px solid #1c2b1c;">
             <div style="font-family: 'Press Start 2P', monospace; font-size: 7.5px; color: #f0c954; margin-bottom: 6px;">
-              🔒 MODO EXCLUSIVO PRIVADO
+              🔒 CANAL TÁCTICO PRIVADO
             </div>
             <p style="font-family: 'VT323', monospace; font-size: 15px; color: #8fa389; line-height: 1.25; margin: 0;">
-              El explorador de salas públicas de Spacewar ha sido desactivado. Solo los jugadores con el código exacto de sala o invitados directamente por Steam pueden ingresar.
+              Partida cooperativa protegida. Solo los jugadores con el código exacto de la sala o invitados directamente pueden ingresar.
             </p>
           </div>
         </div>
       </div>
 
       <div class="btn-group" style="margin-top:14px;">
-        <button class="rust-btn" id="btn-close-steam-modal"><span>[ CERRAR ENLACE ]</span></button>
+        <button class="rust-btn" id="btn-close-steam-modal"><span>[ VOLVER ]</span></button>
       </div>
     </div>
   </div>
@@ -824,12 +763,16 @@
   <!-- Panel de Construcción / Mejora de Torretas -->
   <div id="turret-build-screen" class="overlay hidden">
     <div class="metal-plate turret-build-plate">
-      <div class="plate-header">
-        <span class="tape-label">
-          <span class="ui-icon sm" data-ui-icon="turret_gunner"></span>
-          <span>TERMINAL DE EMPLAZAMIENTO // TORRETAS</span>
+      <div class="plate-header turret-modal-header">
+        <span class="tape-label" id="turret-modal-title-wrap">
+          <span class="ui-icon sm" data-ui-icon="turret_gunner" id="turret-modal-icon"></span>
+          <span id="turret-modal-title-text">TERMINAL DE EMPLAZAMIENTO // TORRETAS</span>
         </span>
         <div class="turret-build-header-actions">
+          <span class="turret-scrap-balance" id="turret-modal-scrap-pill">
+            <span class="ui-icon sm" data-ui-icon="scrap"></span>
+            <b><span id="turret-modal-scrap-val">0</span></b> CHATARRA
+          </span>
           <button class="rust-btn sm hidden" id="btn-skip-prep-build"><span>[ INICIAR OLEADA (F) ]</span></button>
           <button class="rust-btn sm" id="btn-close-turret-build"><span>[ CERRAR (E) ]</span></button>
         </div>

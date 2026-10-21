@@ -135,9 +135,7 @@ export function updateCareerDossierForSelectedMode(careerByMode) {
 
   const titleEl = document.getElementById('dossier-mode-label');
   if (titleEl) {
-    titleEl.textContent = modeId === 'core_defense'
-      ? 'EXPEDIENTE // TOWER DEFENSE (MODO PRINCIPAL)'
-      : 'EXPEDIENTE // SUPERVIVENCIA (SECUNDARIO)';
+    titleEl.textContent = modeId === 'core_defense' ? 'EXPEDIENTE // TOWER DEFENSE' : 'EXPEDIENTE // SUPERVIVENCIA';
   }
 
   const metricLabelEl = document.getElementById('career-best-metric-label');
@@ -168,19 +166,4 @@ export function updateCareerDossierForSelectedMode(careerByMode) {
 
   const upgsEl = document.getElementById('career-upgrades-count');
   if (upgsEl) upgsEl.textContent = data.totalUpgradesBought || 0;
-
-  const directiveEl = document.getElementById('dossier-directive-box');
-  if (directiveEl) {
-    if (modeId === 'core_defense') {
-      directiveEl.innerHTML = `
-        <b>DIRECTIVA TÁCTICA // TOWER DEFENSE:</b>
-        Protege el reactor biomecánico frente a 12 oleadas. Despliega torretas en las vías con [ESPACIO] o teclas [1-5]. El reactor tolera fugas limitadas. Cada 3 oleadas se activan eventos especiales de contención.
-      `;
-    } else {
-      directiveEl.innerHTML = `
-        <b>DIRECTIVA TÁCTICA // SUPERVIVENCIA ARCADE:</b>
-        Modo secundario sin torretas. Recoge suero de enemigos caídos para subir ciclos de implante. Cada 3 minutos emerge un jefe de planta. Sobrevive hasta la purga final.
-      `;
-    }
-  }
 }
