@@ -14,7 +14,7 @@ export function fireHarpoon(scene, playerPos, facingYaw, level, mods, enemies, v
 
   const baseDir = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), facingYaw);
 
-  AudioSys.play(150, 0.18, 'triangle', 0.08);
+  AudioSys.playHarpoon();
   const start = getDirectionalHandPos(playerPos, bodyYaw, 0.85, 0.36, 1.08);
   const dmg = cfg.baseDmg * mult * mods.dmgMult * (mods.harpoonDmgMult || 1.0);
   const maxPierce = 2 + level;

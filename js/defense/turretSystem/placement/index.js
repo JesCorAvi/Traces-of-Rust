@@ -87,8 +87,7 @@ system.turrets.set(turret.id, turret);
 
 system.spawnPulse(position, 1.6, cfg.color);
 system.spawnSparks(position.clone().add(new THREE.Vector3(0, 0.7, 0)), cfg.color);
-AudioSys.playUISelect();
-AudioSys.play(140, 0.16, 'sawtooth', 0.06);
+AudioSys.playBuildTurret();
 GameEvents.emit('turret:built', { turret, typeId: cfg.id });
 return turret;
 }

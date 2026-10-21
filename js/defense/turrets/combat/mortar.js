@@ -38,7 +38,7 @@ for (let i = 0; i < shells; i++) {
 }
 
 triggerCombatFlash(muzzle, turret.cfg.color, 80, 0.1);
-AudioSys.play(105, 0.12, 'sine', 0.05);
+AudioSys.playTurretShot(turret.cfg.id, turret.group.position);
 turret.firingFlash = 0.24;
 }
 
@@ -76,5 +76,5 @@ if (turret.stats.ignitionDamage > 0) {
   turret.system.damageArea(pos, radius, turret.stats.ignitionDamage, turret);
 }
 
-AudioSys.play(62, 0.18, 'sawtooth', 0.06);
+AudioSys.playMineExplode();
 }

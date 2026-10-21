@@ -108,13 +108,13 @@ export function createPickupSystem({ scene, worldPhysics, drops, net = null }) {
       ctx.showLevelUp();
     } else if (type === 'tooth') {
       ctx.onTooth();
-      AudioSys.play(640, 0.07, 'sine', 0.05);
+      AudioSys.playPickup('tooth');
     } else if (type === 'scrap') {
       ctx.onScrap(value || 1);
-      AudioSys.play(520, 0.07, 'square', 0.045);
+      AudioSys.playPickup('scrap');
     } else {
       ctx.stats.exp++;
-      AudioSys.play(420, 0.06, 'sine', 0.04);
+      AudioSys.playPickup('exp');
       if (ctx.stats.exp >= ctx.stats.maxExp) {
         ctx.stats.level++;
         ctx.stats.exp -= ctx.stats.maxExp;

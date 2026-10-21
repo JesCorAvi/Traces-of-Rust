@@ -63,7 +63,7 @@ export function createCombatRuntime(rt) {
       if (!isDoT) {
         en.state = 'hurt';
         en.stateTimer = 0.15;
-        rt.AudioSys.play(isCrit ? 290 : 145, 0.05, 'square', 0.035);
+        rt.AudioSys.playHit?.(isCrit);
         if (isCrit || appliedDmg >= 35) rt.addCamShake?.(isCrit ? 0.28 : 0.12);
         spawnHitFeedback(en, appliedDmg, isCrit);
       }
@@ -89,10 +89,10 @@ export function createCombatRuntime(rt) {
       en.state = 'hurt';
       en.stateTimer = 0.15;
       if (opts.fromRemote) {
-        rt.AudioSys.play(145, 0.04, 'square', 0.02);
+        rt.AudioSys.playHit?.(isCrit, { remote: true });
         spawnHitFeedback(en, appliedDmg, isCrit);
       } else {
-        rt.AudioSys.play(isCrit ? 290 : 145, 0.05, 'square', 0.035);
+        rt.AudioSys.playHit?.(isCrit);
         if (isCrit || appliedDmg >= 35) {
           rt.triggerHitstop?.(isCrit ? 0.08 : 0.04);
           rt.addCamShake?.(isCrit ? 0.28 : 0.12);
@@ -121,6 +121,9 @@ export function createCombatRuntime(rt) {
         rt.activeBoss = null;
         rt.hudController.hideBossHUDDelayed();
         rt.AudioSys.playBossHorn();
+        rt.AudioSys.setBossMusic?.(false);
+      } else {
+        rt.AudioSys.playEnemyDeath?.();
       }
       rt.ModeManager.onEnemyKilled(en, rt.buildModeContext());
       // El Host declara la muerte después de generar los drops, para incluir

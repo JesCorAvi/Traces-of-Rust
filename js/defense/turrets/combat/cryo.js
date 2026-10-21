@@ -49,7 +49,7 @@ for (let i = 0; i < inRange.length; i++) {
 
 turret.system.spawnPulse(center, radius, turret.cfg.color);
 if (inRange.length > 0) {
-  AudioSys.play(520, 0.07, 'sine', 0.025);
+  AudioSys.playTurretShot(turret.cfg.id, center);
   turret.firingFlash = 0.2;
 }
 }

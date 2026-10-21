@@ -158,6 +158,8 @@ export class CoreDefenseMode {
         this.handleCoreDestroyed(ctx);
       }),
       GameEvents.on('wave:started', payload => {
+        AudioSys.setMusicState('COMBAT');
+        AudioSys.setBossMusic(false);
         ctx.onWaveStarted(payload);
       }),
       GameEvents.on('wave:completed', payload => {
@@ -166,6 +168,8 @@ export class CoreDefenseMode {
           this.coreMachine.heal(healAmt);
         }
         this.addScrap(CORE_DEFENSE_CONFIG.SCRAP.waveCompletionBonus || 0);
+        AudioSys.setMusicState('PREP');
+        AudioSys.setBossMusic(false);
         ctx.onWaveCompleted(payload);
       }),
       GameEvents.on('defense:victory', payload => {
@@ -180,6 +184,7 @@ export class CoreDefenseMode {
       }),
       GameEvents.on('defense:event_completed', payload => {
         ctx.onCoreUnderAttackAlert?.(`¡${payload.title}! +${payload.scrapReward} CHATARRA`);
+        AudioSys.setMusicState('PREP');
         AudioSys.playUISelect();
       })
     );
@@ -215,8 +220,7 @@ export class CoreDefenseMode {
 
     if (this.isNetworkHost) this.net?.sendEnemyLeak?.(enemy);
 
-    AudioSys.play(180, 0.28, 'sawtooth', 0.12);
-    AudioSys.play(240, 0.22, 'square', 0.08);
+    AudioSys.playCoreLeak();
 
     const ep = this.exitPointSystem ? this.exitPointSystem.getExitPointByPath(enemy.defenseAI?.routeId) : null;
     if (ep && this.exitPointSystem) {
@@ -405,6 +409,7 @@ export class CoreDefenseMode {
       this.waveManager.update(dt, playerGroup.position, gameTime, camFwd, (boss, bossCfg) => {
         this.activeBoss = boss;
         AudioSys.playBossHorn();
+        AudioSys.setBossMusic(true);
         ctx.triggerScare(0.45);
         ctx.setActiveBoss(boss, bossCfg);
       });

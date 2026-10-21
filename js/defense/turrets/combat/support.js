@@ -20,7 +20,7 @@ for (let i = 0; i < turret.stats.alliesPerSpawn; i++) {
 if (spawned > 0) {
   turret.firingFlash = 0.35;
   turret.system.spawnPulse(turret.group.position, 2.2, turret.cfg.color);
-  AudioSys.play(260, 0.1, 'triangle', 0.04);
+  AudioSys.playTurretShot(turret.cfg.id, turret.group.position);
 }
 }
 
@@ -57,7 +57,7 @@ if (s.overclockBurst > 0) {
       turret.burstActive = s.overclockBurstDuration || 5;
       turret.burstCooldown = s.overclockBurstInterval || 20;
       turret.system.spawnPulse(turret.group.position, 4.5, turret.cfg.color);
-      AudioSys.play(380, 0.16, 'sawtooth', 0.05);
+      AudioSys.playElectric();
     }
   }
 }

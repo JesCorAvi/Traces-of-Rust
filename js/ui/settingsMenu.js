@@ -2,6 +2,7 @@
 // Exports: setupSettingsUI, applyStoredFullscreen, setFullscreen, toggleFullscreen, isFullscreen.
 
 import { gameSettings, saveGameSettings } from '../core/saveState.js';
+import { AudioSys } from '../audio.js';
 
 let initialized = false;
 
@@ -98,9 +99,64 @@ export async function applyStoredFullscreen() {
   }
 }
 
+const AUDIO_BINDINGS = [
+  { key: 'masterVol', input: 'set-master-vol', label: 'val-master-vol', fallback: 85 },
+  { key: 'sfxVol', input: 'set-sfx-vol', label: 'val-sfx-vol', fallback: 90 },
+  { key: 'musicVol', input: 'set-music-vol', label: 'val-music-vol', fallback: 70 },
+  { key: 'ambVol', input: 'set-amb-vol', label: 'val-amb-vol', fallback: 80 }
+];
+
+function setupAudioControls() {
+  for (const binding of AUDIO_BINDINGS) {
+    const input = document.getElementById(binding.input);
+    if (!input) continue;
+    const label = document.getElementById(binding.label);
+    const value = Math.max(0, Math.min(100, Number(gameSettings[binding.key] ?? binding.fallback)));
+    gameSettings[binding.key] = value;
+    input.value = String(value);
+    if (label) label.textContent = `${Math.round(value)}%`;
+
+    const apply = () => {
+      const next = Math.max(0, Math.min(100, Math.round(Number(input.value) || 0)));
+      gameSettings[binding.key] = next;
+      if (label) label.textContent = `${next}%`;
+      AudioSys.applyGameSettings(gameSettings);
+    };
+    input.addEventListener('input', apply);
+    input.addEventListener('change', () => {
+      apply();
+      saveGameSettings();
+      AudioSys.playUIClick?.();
+    });
+  }
+
+  const muteButton = document.getElementById('btn-toggle-mute');
+  if (muteButton) {
+    const syncMute = () => {
+      const muted = !!gameSettings.muted;
+      const text = muteButton.querySelector('span') || muteButton;
+      text.textContent = muted ? 'ACTIVADO' : 'DESACTIVADO';
+      muteButton.setAttribute('aria-pressed', String(muted));
+    };
+    muteButton.addEventListener('click', () => {
+      gameSettings.muted = !gameSettings.muted;
+      saveGameSettings();
+      AudioSys.applyGameSettings(gameSettings);
+      syncMute();
+      AudioSys.playUISelect?.();
+    });
+    syncMute();
+  }
+
+  // Reaplica los valores persistidos al abrir los ajustes.
+  AudioSys.applyGameSettings(gameSettings);
+}
+
 export function setupSettingsUI() {
   if (initialized) return;
   initialized = true;
+
+  setupAudioControls();
 
   const button = document.getElementById('btn-toggle-fullscreen');
   if (button) {

@@ -35,6 +35,8 @@ export class SurvivalMode {
     ctx.ambientLight.color.setHex(0x1e281d);
     document.body.classList.remove('endgame-mode');
     AudioSys.setEndgameDrone(false);
+    AudioSys.setBossMusic(false);
+    AudioSys.setMusicState('COMBAT');
   }
 
   getHudConfig() {
@@ -50,6 +52,7 @@ export class SurvivalMode {
 
   spawnScheduledBoss(bossCfg, camFwd, ctx) {
     AudioSys.playBossHorn();
+    AudioSys.setBossMusic(true);
     ctx.triggerScare(0.45);
     const boss = ctx.enemyPool.spawn(
       bossCfg.id,
@@ -71,6 +74,7 @@ export class SurvivalMode {
     ctx.scene.fog.density = 0.058;
     ctx.ambientLight.color.setHex(0x3a0808);
     AudioSys.setEndgameDrone(true);
+    AudioSys.setMusicState('CLIMAX');
     AudioSys.playBossHorn();
     GameEvents.emit('survival:endgame_started', {});
   }

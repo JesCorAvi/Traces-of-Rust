@@ -1231,10 +1231,12 @@ export const MultiplayerSync = {
           mode.activeBoss = null;
           mode.bossesDefeated = (mode.bossesDefeated || 0) + 1;
           this.ctx?.clearActiveBoss?.();
+          AudioSys.setBossMusic?.(false);
           AudioSys.playBossHorn?.();
+        } else {
+          AudioSys.playEnemyDeath?.();
         }
       }
-      AudioSys.play(120, 0.1, 'square', 0.04);
     } else if (Number.isFinite(data.x) && Number.isFinite(data.z)) {
       this.spawnRemoteBloodAt(data.x, 1.2, data.z, 4);
     }
@@ -1267,7 +1269,7 @@ export const MultiplayerSync = {
       const ep = mode.exitPointSystem.getExitPointByPath(data.routeId);
       if (ep) mode.exitPointSystem.triggerLeakEffect(ep.id);
     }
-    AudioSys.play(180, 0.2, 'sawtooth', 0.08);
+    AudioSys.playCoreLeak?.();
   },
 
   applyEnemyBatch(data) {
@@ -1806,7 +1808,7 @@ export const MultiplayerSync = {
       return false;
     }
     this.ctx?.hudController?.showScrapTransferToast?.(`-${value} CHATARRA ENVIADA`, 'send');
-    AudioSys.play(760, 0.14, 'triangle', 0.07);
+    AudioSys.playScrapTransfer?.(value >= 5);
     return true;
   },
 
@@ -2140,7 +2142,7 @@ export const MultiplayerSync = {
           if (mode && amount > 0 && amount <= 9999) {
             mode.addScrap(amount, { fromTransfer: true });
             this.ctx?.hudController?.showScrapTransferToast?.(`+${amount} CHATARRA RECIBIDA`, 'receive');
-            AudioSys.play(920, 0.16, 'triangle', 0.08);
+            AudioSys.playScrapTransfer?.(amount >= 5);
           }
           break;
         }

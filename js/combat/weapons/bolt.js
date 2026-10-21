@@ -15,7 +15,7 @@ export function fireDefibrillator(scene, playerPos, facingYaw, level, mods, enem
     .slice(0, maxTargets);
   if (!near.length) return null;
 
-  AudioSys.play(480, 0.14, 'sawtooth', 0.06);
+  AudioSys.playElectric();
   const pts = [getDirectionalHandPos(playerPos, facingYaw, 0.6, 0.3, 1.1)];
   const dmg = cfg.baseDmg * mult * mods.dmgMult;
 

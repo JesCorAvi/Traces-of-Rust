@@ -162,6 +162,7 @@ export class DefenseEventManager {
     this.buildEventWorldVisuals(targetPos, type, radius);
 
     // Alarma inicial de evento de emergencia
+    AudioSys.setMusicState?.('CLIMAX');
     AudioSys.playIndustrialSiren?.();
     const eventLocationName = (options.targetName || loc.name || 'ZONA DE CONTENCIÓN').toUpperCase();
     const hudCtrl = this.lastCtx?.hudController || this.mode?.net?.ctx?.hudController;
@@ -617,6 +618,7 @@ export class DefenseEventManager {
     if (!fromNetwork) this.mode.addScrap(scrapReward);
 
     // Sonidos triunfales
+    AudioSys.setMusicState?.('PREP');
     AudioSys.playUISelect();
     AudioSys.play(380, 0.25, 'triangle', 0.09);
     AudioSys.play(520, 0.35, 'sine', 0.1);
@@ -641,7 +643,7 @@ export class DefenseEventManager {
       title: eventTitle
     });
 
-    const completionHud = ctx?.hudController || this.lastCtx?.hudController || this.mode?.net?.ctx?.hudController;
+    const completionHud = this.lastCtx?.hudController || this.mode?.net?.ctx?.hudController;
     completionHud?.showKineticAlertBanner?.({
       tag: 'SECTOR ASEGURADO // RECOMPENSA OBTENIDA',
       title: `¡EVENTO DE CONTENCIÓN SUPERADO! +${scrapReward} CHATARRA`,

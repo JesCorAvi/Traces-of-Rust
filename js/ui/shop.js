@@ -37,10 +37,10 @@ export function renderShopUI(save, saveGameFn) {
       </button>
     `;
     const btn = row.querySelector('button');
-    btn.onmouseenter = () => AudioSys.playUIClick();
     btn.onclick = () => {
       if (canAfford) {
         AudioSys.playUISelect();
+        AudioSys.playScrapTransfer();
         save.souls -= cost;
         save[item.id] = lvl + 1;
         saveGameFn();

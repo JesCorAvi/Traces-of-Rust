@@ -61,6 +61,10 @@ function startGame(options = {}) {
   rt.syncPlayerVisualLoadout(startWp);
 
   rt.ModeManager.startActiveMode(rt.buildModeContext());
+  // Música de partida: preparación tensa en Defensa, combate directo en Supervivencia.
+  rt.AudioSys.setMenuFilter?.(false);
+  rt.AudioSys.setBossMusic?.(false);
+  rt.AudioSys.setMusicState?.(rt.ModeManager.getSelectedModeId() === 'core_defense' ? 'PREP' : 'COMBAT');
   rt.pendingTutorial = false;
   rt.hudController.applyModeLayout(rt.ModeManager.getHudConfig());
   rt.debugOverlay.rebuildStaticPaths(modeId, rt.worldPhysics);
@@ -96,6 +100,9 @@ function finishRun(outcome, options = {}) {
   rt.turretBuildMenu?.closeSilently?.();
   document.getElementById('pause-screen')?.classList.add('hidden');
   document.getElementById('level-up-screen')?.classList.add('hidden');
+  rt.AudioSys?.setMenuFilter?.(false);
+  rt.AudioSys?.setBossMusic?.(false);
+  rt.AudioSys?.setMusicState?.('MENU');
 
   rt.save.souls = (rt.save.souls || 0) + rt.runSouls;
   rt.saveGame();
@@ -131,6 +138,9 @@ function returnToMainMenu(reasonMsg = null) {
   rt.hudController?.hidePlayerDownOverlay?.();
   rt.hudController?.hideKineticAlertBanner?.();
   rt.AudioSys?.stopPlayerDownHum?.();
+  rt.AudioSys?.setMenuFilter?.(false);
+  rt.AudioSys?.setBossMusic?.(false);
+  rt.AudioSys?.setMusicState?.('MENU');
 
   clearSharedRunState();
   rt.state = 'START';
@@ -160,12 +170,14 @@ function togglePauseGame() {
   if (rt.state === 'PLAYING') {
     rt.state = 'PAUSED';
     rt.AudioSys.playPause();
+    rt.AudioSys.setMenuFilter?.(true);
     if (document.pointerLockElement) document.exitPointerLock();
     document.getElementById('pause-screen').classList.remove('hidden');
     document.getElementById('btn-resume')?.focus();
   } else if (rt.state === 'PAUSED') {
     rt.state = 'PLAYING';
     rt.AudioSys.playPause();
+    rt.AudioSys.setMenuFilter?.(false);
     document.getElementById('pause-screen').classList.add('hidden');
     document.body.requestPointerLock();
   }

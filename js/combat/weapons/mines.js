@@ -10,7 +10,7 @@ import { SHARED_GEO, SHARED_MAT } from '../shared.js';
 export function spawnShrapnelMine(scene, playerPos, level, mods, worldPhysics, minesList) {
   const cfg = CONFIG.SKILLS.mines;
   const count = 1 + (cfg.usesMultishot ? (mods.bonusProjectiles || 0) : 0);
-  AudioSys.play(420, 0.06, 'sine', 0.04);
+  AudioSys.playMinePlace();
 
   for (let i = 0; i < count; i++) {
     const group = new THREE.Group();

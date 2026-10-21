@@ -203,8 +203,7 @@ export class CoreMachine extends DefensiveStructure {
     this.shakeTimer = 0.28;
 
     // Sonido metálico pesado de impacto contra la carcasa del reactor
-    AudioSys.play(82, 0.19, 'sawtooth', 0.085);
-    AudioSys.play(210, 0.09, 'square', 0.06);
+    AudioSys.playCoreHit();
 
     triggerCombatFlash(
       this.group.position.clone().add(new THREE.Vector3(0, 2.5, 0)),
@@ -255,7 +254,7 @@ export class CoreMachine extends DefensiveStructure {
     });
 
     if (prevState.id !== this.currentDamageState.id) {
-      AudioSys.play(115, 0.45, 'sawtooth', 0.09);
+      AudioSys.playCoreLeak();
       GameEvents.emit('core:state_changed', {
         core: this,
         state: this.currentDamageState
@@ -276,7 +275,7 @@ export class CoreMachine extends DefensiveStructure {
   onDestroyed(attacker) {
     // Gran explosión industrial de colapso del reactor
     AudioSys.playBossHorn();
-    AudioSys.play(48, 0.95, 'sawtooth', 0.14);
+    AudioSys.playCoreDestroyed();
 
     if (this.vfx) {
       for (let i = 0; i < 28; i++) {

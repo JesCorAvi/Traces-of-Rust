@@ -2,7 +2,6 @@
 // Exports: renderLevelUpCardsUI.
 
 import { CONFIG } from '../config.js';
-import { AudioSys } from '../audio.js';
 import { renderSpriteIconHTML, renderSpriteBadgeHTML } from '../spritesheets.js';
 import { SHORT_WEAPON_NAMES } from './hudController.js';
 
@@ -138,7 +137,6 @@ export function renderLevelUpCardsUI(skills, passives, rerollsLeft, maxRerollsRu
       </div>
       ${opt.affectedHtml || ''}
     `;
-    card.onmouseenter = () => AudioSys.playUIClick();
     card.onclick = () => onSelectOption(card, opt);
     card.onkeydown = e => {
       if (e.key === 'Enter' || e.key === ' ') {

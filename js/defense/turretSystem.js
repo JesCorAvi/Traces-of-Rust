@@ -124,7 +124,7 @@ this.spawnSparks(
   turret.group.position.clone().add(new THREE.Vector3(0, turret.cfg.base.height * 0.7, 0)),
   turret.cfg.color
 );
-AudioSys.play(300, 0.12, 'triangle', 0.05);
+AudioSys.playUpgradeTurret();
 GameEvents.emit('turret:upgraded', {
   turret,
   pathIndex,
@@ -145,7 +145,7 @@ if (!options.remote) this.mode.addScrap(refund, { local: true });
 this.turrets.delete(turret.id);
 this.removeStructure(turret);
 this.spawnSparks(turret.group.position.clone(), 0xb89c46);
-AudioSys.play(200, 0.12, 'square', 0.045);
+AudioSys.playSellTurret();
 GameEvents.emit('turret:sold', { turret, refund });
 turret.destroy();
 return refund;
@@ -189,7 +189,7 @@ this.spawnSparks(
   turret.group.position.clone().add(new THREE.Vector3(0, 1.0, 0)),
   0xa54a2a
 );
-AudioSys.play(58, 0.3, 'sawtooth', 0.08);
+AudioSys.playTurretDestroyed();
 
 this.turrets.delete(turret.id);
 this.removeStructure(turret);

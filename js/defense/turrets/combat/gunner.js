@@ -50,7 +50,7 @@ for (let i = 0; i < shots; i++) {
 }
 
 triggerCombatFlash(muzzle, turret.cfg.color, 62, 0.06);
-AudioSys.play(turret.stats.burstCount > 0 ? 180 : 240, 0.05, 'square', 0.03);
+AudioSys.playTurretShot(turret.cfg.id, turret.group.position);
 turret.firingFlash = 0.16;
 }
 

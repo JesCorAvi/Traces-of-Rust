@@ -65,6 +65,7 @@ export class TurretBuildMenu {
     this.onClose = onClose;
     this.isOpen = true;
     this.overlay.classList.remove('hidden');
+    AudioSys.setMenuFilter?.(true);
     this.render();
   }
 
@@ -72,6 +73,7 @@ export class TurretBuildMenu {
     if (!this.isOpen) return;
     this.isOpen = false;
     if (this.overlay) this.overlay.classList.add('hidden');
+    AudioSys.setMenuFilter?.(false);
     const cb = this.onClose;
     this.onClose = null;
     if (cb) cb();
@@ -84,6 +86,7 @@ export class TurretBuildMenu {
     this.onClose = null;
     this.turretId = null;
     if (this.overlay) this.overlay.classList.add('hidden');
+    AudioSys.setMenuFilter?.(false);
   }
 
   render() {

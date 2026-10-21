@@ -12,7 +12,7 @@ export function fireFlamethrower(scene, playerPos, facingYaw, level, mods, enemi
   const nozzle = getDirectionalHandPos(playerPos, bodyYaw, 0.92, 0.36, 1.05);
   const range = (cfg.baseRange + level * 0.45) * mods.areaMult;
 
-  if (Math.random() < 0.45) AudioSys.play(110 + Math.random() * 40, 0.08, 'sawtooth', 0.03);
+  AudioSys.playFlamethrower();
 
   const particleCount = 3;
   const coneHalfAngle = 0.65 * mods.areaMult;

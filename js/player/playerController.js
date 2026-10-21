@@ -224,7 +224,7 @@ export function updatePlayerWeaponsAndCombat({
     if (triggered) {
       const blastRadius = (CONFIG.SKILLS.mines.baseRange + m.level * 0.3) * mods.areaMult;
       const dmg = CONFIG.SKILLS.mines.baseDmg * (1 + (m.level - 1) * 0.28) * mods.dmgMult * (mods.explosiveDmgMult || 1.0);
-      AudioSys.play(68, 0.28, 'sawtooth', 0.11);
+      AudioSys.playMineExplode();
       addCamShake(0.22 * mods.shakeMod);
 
       const blast = new THREE.Mesh(

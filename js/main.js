@@ -2,7 +2,7 @@
 // No exporta módulos; inicializa el juego al cargar.
 import * as THREE from 'three';
 import { CONFIG } from './config.js';
-import { AudioSys } from './audio.js';
+import { AudioSys, setupAudioUI } from './audio.js';
 import {
   SpriteSheets,
   initUISpritesCSS,
@@ -411,6 +411,7 @@ function animate() {
   requestAnimationFrame(animate);
   let dt = Math.min(clock.getDelta(), 0.1);
   updateCombatLight(dt);
+  AudioSys.updateListener(camera);
 
   if (gameSettings.fpsCounter) {
     fpsFrames++; fpsTimer += dt;
@@ -862,6 +863,7 @@ if (wavePrepPrompt) {
 
 setupCharacterSelectorUI();
 setupSettingsUI();
+setupAudioUI();
 applyStoredFullscreen();
 // En navegador (sin preload de Electron) instala el puente WebRTC antes de
 // que la UI online y MultiplayerSync consulten window.steamOnline.

@@ -44,7 +44,7 @@ return count;
 
 export function handleAllyDestroyed(system, ally) {
 system.spawnExplosion(ally.position.clone(), 0.9, 0x6e1414);
-AudioSys.play(120, 0.1, 'square', 0.035);
+AudioSys.playTurretShot('ally', ally.position);
 system.removeStructure(ally);
 const idx = system.allies.indexOf(ally);
 if (idx !== -1) system.allies.splice(idx, 1);

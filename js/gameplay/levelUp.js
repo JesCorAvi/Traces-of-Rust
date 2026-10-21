@@ -44,10 +44,12 @@ export function createLevelUpFlow(rt) {
     rt.renderLevelUpCardsUI(rt.skills, rt.passives, rt.rerollsLeft, rt.maxRerollsRun, (_card, opt) => {
       applyUpgradeOption(opt);
       document.getElementById('level-up-screen').classList.add('hidden');
+      rt.AudioSys.setMenuFilter?.(false);
       rt.state = 'PLAYING';
       document.body.requestPointerLock();
     });
     document.getElementById('level-up-screen').classList.remove('hidden');
+    rt.AudioSys.setMenuFilter?.(true);
     document.querySelector('#upgrade-container .upg-card')?.focus();
   }
 

@@ -112,8 +112,7 @@ export class WaveManager {
     }
     this.totalQueuedAtStart = this.spawnQueue.length + (this.pendingBossCfg ? 1 : 0);
 
-    AudioSys.play(165, 0.35, 'sawtooth', 0.08);
-    AudioSys.play(220, 0.25, 'square', 0.06);
+    AudioSys.playWaveStart();
 
     GameEvents.emit('wave:started', {
       wave: this.currentWaveIndex,
