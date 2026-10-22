@@ -1,3 +1,6 @@
+import { t } from './core/i18n.js';
+const _t = (k, fb) => (typeof t === 'function' ? t(k) : fb);
+
 // Configuración global CONFIG y reexport de las configuraciones de cada modo.
 // Exports: CONFIG, MODES_CONFIG, CORE_DEFENSE_CONFIG, BOSS_AI, ENEMY_TYPES, CHARACTERS.
 import { MODES_CONFIG } from './config/modesConfig.js';
@@ -210,157 +213,153 @@ export const CONFIG = {
   // Compatibilidad directa con referencias existentes del modo Supervivencia
   BOSS_SCHEDULE: MODES_CONFIG.SURVIVAL.BOSS_SCHEDULE,
   DIFFICULTY: MODES_CONFIG.SURVIVAL.DIFFICULTY,
-
   SKILLS: {
     slash: {
-      name: 'Sierra de Amputación', icon: 'slash',
+      get name() { return _t('weapon.slash.name', 'Sierra de Amputación'); }, icon: 'slash',
       baseDmg: 28, baseCd: 0.88, baseRange: 4.5, scalePerLvl: 0.25,
       usesMultishot: false,
-      desc: 'Arco de sierra dentada con estela de sangre, destello 3D y empuje. (No afectada por +Proyectiles).'
+      get desc() { return _t('weapon.slash.desc', 'Arco de sierra dentada con estela de sangre, destello 3D y empuje. (No afectada por +Proyectiles).'); }
     },
     shotgun: {
-      name: 'Escopeta Calibre 12', icon: 'shotgun',
+      get name() { return _t('weapon.shotgun.name', 'Escopeta Calibre 12'); }, icon: 'shotgun',
       baseDmg: 10.0, baseCd: 1.4, baseRange: 14.5, scalePerLvl: 0.24,
       usesMultishot: true,
-      desc: 'Abanico de postas físicas con fogonazo y expulsión de cartucho.'
+      get desc() { return _t('weapon.shotgun.desc', 'Abanico de postas físicas con fogonazo y expulsión de cartucho.'); }
     },
     flamethrower: {
-      name: 'Soplete Incinerador', icon: 'flamethrower',
+      get name() { return _t('weapon.flamethrower.name', 'Soplete Incinerador'); }, icon: 'flamethrower',
       baseDmg: 8.0, baseCd: 0.11, baseRange: 7.4, scalePerLvl: 0.25,
       usesMultishot: false,
-      desc: 'Cono continuo de fuego que ilumina y aplica Quemadura por segundo. (No afectada por +Proyectiles).'
+      get desc() { return _t('weapon.flamethrower.desc', 'Cono continuo de fuego que ilumina y aplica Quemadura por segundo. (No afectada por +Proyectiles).'); }
     },
     aura: {
-      name: 'Incensario de Bilis', icon: 'aura',
+      get name() { return _t('weapon.aura.name', 'Incensario de Bilis'); }, icon: 'aura',
       baseDmg: 15, baseCd: 0.34, baseRange: 3.5, scalePerLvl: 0.22,
       usesMultishot: false,
-      desc: 'Campo corrosivo alrededor del jugador que daña y frena a la horda. (No afectada por +Proyectiles).'
+      get desc() { return _t('weapon.aura.desc', 'Campo corrosivo alrededor del jugador que daña y frena a la horda. (No afectada por +Proyectiles).'); }
     },
     mines: {
-      name: 'Minas de Metralla', icon: 'mines',
+      get name() { return _t('weapon.mines.name', 'Minas de Metralla'); }, icon: 'mines',
       baseDmg: 55, baseCd: 2.4, baseRange: 3.3, scalePerLvl: 0.28,
       usesMultishot: true,
-      desc: 'Arroja minas con sensor rojo que detonan en área al pisarlas.'
+      get desc() { return _t('weapon.mines.desc', 'Arroja minas con sensor rojo que detonan en área al pisarlas.'); }
     },
     harpoon: {
-      name: 'Arpón Neumático', icon: 'harpoon',
+      get name() { return _t('weapon.harpoon.name', 'Arpón Neumático'); }, icon: 'harpoon',
       baseDmg: 44, baseCd: 1.55, baseRange: 18.0, scalePerLvl: 0.26,
       usesMultishot: true,
-      desc: 'Proyectil perforante que atraviesa en línea recta a múltiples enemigos.'
+      get desc() { return _t('weapon.harpoon.desc', 'Proyectil perforante que atraviesa en línea recta a múltiples enemigos.'); }
     },
     orbital: {
-      name: 'Jaula de Carnicero', icon: 'orbital',
+      get name() { return _t('weapon.orbital.name', 'Jaula de Carnicero'); }, icon: 'orbital',
       baseDmg: 26, baseCd: 0.2, baseRange: 3.3, scalePerLvl: 0.25,
       usesMultishot: true,
-      desc: 'Jaulas con cráneos y ganchos giran dejando estela y desgarrando.'
+      get desc() { return _t('weapon.orbital.desc', 'Jaulas con cráneos y ganchos giran dejando estela y desgarrando.'); }
     },
     bolt: {
-      name: 'Desfibrilador Roto', icon: 'bolt',
+      get name() { return _t('weapon.bolt.name', 'Desfibrilador Roto'); }, icon: 'bolt',
       baseDmg: 27, baseCd: 1.8, baseRange: 13.0, scalePerLvl: 0.25,
       usesMultishot: false,
-      desc: 'Descarga eléctrica de alto voltaje que salta entre varios cuerpos. (No afectada por +Proyectiles).'
+      get desc() { return _t('weapon.bolt.desc', 'Descarga eléctrica de alto voltaje que salta entre varios cuerpos. (No afectada por +Proyectiles).'); }
     },
     chakram: {
-      name: 'Bumerán de Chatarra', icon: 'chakram',
+      get name() { return _t('weapon.chakram.name', 'Bumerán de Chatarra'); }, icon: 'chakram',
       baseDmg: 24, baseCd: 1.15, baseRange: 9.0, scalePerLvl: 0.22,
       usesMultishot: true,
-      desc: 'Disco de sierra que sale, perfora y vuelve al operario dañando en ambos tramos.'
+      get desc() { return _t('weapon.chakram.desc', 'Disco de sierra que sale, perfora y vuelve al operario dañando en ambos tramos.'); }
     },
     welder: {
-      name: 'Soldador de Arco', icon: 'welder',
+      get name() { return _t('weapon.welder.name', 'Soldador de Arco'); }, icon: 'welder',
       baseDmg: 10, baseCd: 0.12, baseRange: 10.0, scalePerLvl: 0.18,
       chargeSec: 2.4, activeSec: 1.6, tickSec: 0.12, beamWidth: 1.2,
       usesMultishot: false,
-      desc: 'Se carga durante 2.4s y descarga un haz concentrado durante 1.6s hacia la mayor concentración de enemigos. Después vuelve a cargar. (No afectada por +Proyectiles).'
+      get desc() { return _t('weapon.welder.desc', 'Se carga durante 2.4s y descarga un haz concentrado durante 1.6s hacia la mayor concentración de enemigos. Después vuelve a cargar. (No afectada por +Proyectiles).'); }
     },
     grenade: {
-      name: 'Lanzagranadas de Peregrino', icon: 'grenade',
+      get name() { return _t('weapon.grenade.name', 'Lanzagranadas de Peregrino'); }, icon: 'grenade',
       baseDmg: 42, baseCd: 2.2, baseRange: 11.0, scalePerLvl: 0.26,
       usesMultishot: true,
-      desc: 'Granada balística que explota en área y se divide en submuniciones al mejorar.'
+      get desc() { return _t('weapon.grenade.desc', 'Granada balística que explota en área y se divide en submuniciones al mejorar.'); }
     },
     hammer: {
-      name: 'Martillo de Pistón', icon: 'hammer',
+      get name() { return _t('weapon.hammer.name', 'Martillo de Pistón'); }, icon: 'hammer',
       baseDmg: 38, baseCd: 1.7, baseRange: 3.8, scalePerLvl: 0.24,
       usesMultishot: false,
-      desc: 'Onda de presión radial con empuje fuerte y aturdimiento. (No afectada por +Proyectiles).'
+      get desc() { return _t('weapon.hammer.desc', 'Onda de presión radial con empuje fuerte y aturdimiento. (No afectada por +Proyectiles).'); }
     },
     acid: {
-      name: 'Frasco de Ácido', icon: 'acid',
+      get name() { return _t('weapon.acid.name', 'Frasco de Ácido'); }, icon: 'acid',
       baseDmg: 14, baseCd: 2.0, baseRange: 9.0, scalePerLvl: 0.20,
       usesMultishot: true,
-      desc: 'Frasco que estalla en una nube corrosiva persistente, quemando y frenando a los hostiles.'
+      get desc() { return _t('weapon.acid.desc', 'Frasco que estalla en una nube corrosiva persistente, quemando y frenando a los hostiles.'); }
     }
   },
-
   PASSIVES: {
     multishot: {
-      name: 'Recámara Modificada', icon: 'multishot', perLevel: 1,
+      get name() { return _t('passive.multishot.name', 'Recámara Modificada'); }, icon: 'multishot', perLevel: 1,
       targetType: 'multishot_weapons',
-      format: lvl => `+${lvl} PROY.`,
-      desc: 'Añade +1 proyectil a las armas que admiten proyectiles adicionales.'
+      format: lvl => _t('passive.format.multishot', '+{lvl} PROY.').replace('{lvl}', lvl),
+      get desc() { return _t('passive.multishot.desc', 'Añade +1 proyectil a las armas que admiten proyectiles adicionales.'); }
     },
     dmg: {
-      name: 'Pólvora Prensada', icon: 'dmg', perLevel: 0.15,
+      get name() { return _t('passive.dmg.name', 'Pólvora Prensada'); }, icon: 'dmg', perLevel: 0.15,
       targetType: 'all_weapons',
-      format: lvl => `+${Math.round(lvl * 15)}% DAÑO`,
-      desc: 'Aumenta el daño de todas las armas un +15% por nivel.'
+      format: lvl => _t('passive.format.dmg', '+{pct}% DAÑO').replace('{pct}', Math.round(lvl * 15)),
+      get desc() { return _t('passive.dmg.desc', 'Aumenta el daño de todas las armas un +15% por nivel.'); }
     },
     atkSpd: {
-      name: 'Servomotor Oxidado', icon: 'atkSpd', perLevel: 0.10,
+      get name() { return _t('passive.atkSpd.name', 'Servomotor Oxidado'); }, icon: 'atkSpd', perLevel: 0.10,
       targetType: 'all_weapons',
-      format: lvl => `+${Math.round(lvl * 10)}% CAD.`,
-      desc: 'Aumenta la velocidad de ataque y giro un +10% por nivel.'
+      format: lvl => _t('passive.format.atkSpd', '+{pct}% CAD.').replace('{pct}', Math.round(lvl * 10)),
+      get desc() { return _t('passive.atkSpd.desc', 'Aumenta la velocidad de ataque y giro un +10% por nivel.'); }
     },
     maxHp: {
-      name: 'Placas Quirúrgicas', icon: 'maxHp', perLevel: 25,
+      get name() { return _t('passive.maxHp.name', 'Placas Quirúrgicas'); }, icon: 'maxHp', perLevel: 25,
       targetType: 'player_stat',
-      format: lvl => `+${lvl * 25} PULSO`,
-      desc: 'Aumenta el Pulso máximo en +25 y los restaura al instante.'
+      format: lvl => _t('passive.format.maxHp', '+{hp} PULSO').replace('{hp}', lvl * 25),
+      get desc() { return _t('passive.maxHp.desc', 'Aumenta el Pulso máximo en +25 y los restaura al instante.'); }
     },
     regen: {
-      name: 'Goteo Intravenoso', icon: 'regen', perLevel: 0.9,
+      get name() { return _t('passive.regen.name', 'Goteo Intravenoso'); }, icon: 'regen', perLevel: 0.9,
       targetType: 'player_stat',
-      format: lvl => `+${(lvl * 0.9).toFixed(1)} HP/S`,
-      desc: 'Regenera +0.9 de Pulso por segundo de forma continua.'
+      format: lvl => _t('passive.format.regen', '+{val} HP/S').replace('{val}', (lvl * 0.9).toFixed(1)),
+      get desc() { return _t('passive.regen.desc', 'Regenera +0.9 de Pulso por segundo de forma continua.'); }
     },
     moveSpd: {
-      name: 'Efedrina Industrial', icon: 'moveSpd', perLevel: 0.08,
+      get name() { return _t('passive.moveSpd.name', 'Efedrina Industrial'); }, icon: 'moveSpd', perLevel: 0.08,
       targetType: 'player_stat',
-      format: lvl => `+${Math.round(lvl * 8)}% VEL.`,
-      desc: 'Aumenta la velocidad de movimiento un +8% por nivel.'
+      format: lvl => _t('passive.format.moveSpd', '+{pct}% VEL.').replace('{pct}', Math.round(lvl * 8)),
+      get desc() { return _t('passive.moveSpd.desc', 'Aumenta la velocidad de movimiento un +8% por nivel.'); }
     },
     area: {
-      name: 'Metralla Expandida', icon: 'area', perLevel: 0.12,
+      get name() { return _t('passive.area.name', 'Metralla Expandida'); }, icon: 'area', perLevel: 0.12,
       targetType: 'all_weapons',
-      format: lvl => `+${Math.round(lvl * 12)}% ÁREA`,
-      desc: 'Aumenta el tamaño y alcance de ataques un +12% por nivel.'
+      format: lvl => _t('passive.format.area', '+{pct}% ÁREA').replace('{pct}', Math.round(lvl * 12)),
+      get desc() { return _t('passive.area.desc', 'Aumenta el tamaño y alcance de ataques un +12% por nivel.'); }
     },
     crit: {
-      name: 'Lente de Carnicero', icon: 'crit', perLevel: 0.07,
+      get name() { return _t('passive.crit.name', 'Lente de Carnicero'); }, icon: 'crit', perLevel: 0.07,
       targetType: 'all_weapons',
-      format: lvl => `+${Math.round(lvl * 7)}% CRÍT.`,
-      desc: 'Añade +7% de probabilidad de infligir doble daño (x2).'
+      format: lvl => _t('passive.format.crit', '+{pct}% CRÍT.').replace('{pct}', Math.round(lvl * 7)),
+      get desc() { return _t('passive.crit.desc', 'Añade +7% de probabilidad de infligir doble daño (x2).'); }
     },
     magnet: {
-      name: 'Imán de Grúa', icon: 'magnet', perLevel: 1.6,
+      get name() { return _t('passive.magnet.name', 'Imán de Grúa'); }, icon: 'magnet', perLevel: 1.6,
       targetType: 'player_stat',
-      format: lvl => `+${(lvl * 1.6).toFixed(1)}M IMÁN`,
-      desc: 'Aumenta el radio de recogida de suero y dientes.'
+      format: lvl => _t('passive.format.magnet', '+{val}M IMÁN').replace('{val}', (lvl * 1.6).toFixed(1)),
+      get desc() { return _t('passive.magnet.desc', 'Aumenta el radio de recogida de suero y dientes.'); }
     }
   },
-
   FALLBACK_REWARDS: [
-    { id: 'heal_pack', name: 'Transfusión de Emergencia', icon: 'heal_pack', desc: 'Restaura +75 de Pulso inmediatamente.' },
-    { id: 'teeth_bag', name: 'Bolsa de Dientes Extraídos', icon: 'teeth_bag', desc: 'Obtienes +15 Dientes adicionales para la Mesa del Cirujano.' }
+    { id: 'heal_pack', get name() { return _t('reward.heal_pack.name', 'Transfusión de Emergencia'); }, icon: 'heal_pack', get desc() { return _t('reward.heal_pack.desc', 'Restaura +75 de Pulso inmediatamente.'); } },
+    { id: 'teeth_bag', get name() { return _t('reward.teeth_bag.name', 'Bolsa de Dientes Extraídos'); }, icon: 'teeth_bag', get desc() { return _t('reward.teeth_bag.desc', 'Obtienes +15 Dientes adicionales para la Mesa del Cirujano.'); } }
   ],
-
   SHOP: [
-    { id: 'dmg',    name: 'Pólvora Refinada',     icon: 'dmg',     perLevel: 0.03,  desc: '+3% Daño Base permanente por nivel',         cost: 6 },
-    { id: 'hp',     name: 'Puntos de Sutura',     icon: 'maxHp',   perLevel: 5,     desc: '+5 Pulso Máximo Base permanente por nivel',  cost: 5 },
-    { id: 'spd',    name: 'Microdosis Efedrina',  icon: 'moveSpd', perLevel: 0.02,  desc: '+2% Velocidad de Movimiento Base por nivel', cost: 6 },
-    { id: 'atkSpd', name: 'Aceite de Mecanismos', icon: 'atkSpd',  perLevel: 0.025, desc: '+2.5% Cadencia de Ataque Base por nivel',    cost: 7 },
-    { id: 'mag',    name: 'Pinzas de Extracción', icon: 'magnet',  perLevel: 0.35,  desc: '+0.35m Rango de Imán Base permanente',       cost: 5 },
-    { id: 'reroll', name: 'Soborno al Crupier',   icon: 'reroll',  perLevel: 1,     desc: '+1 Uso extra del botón Actualizar (Máx +3)', cost: 18, max: 3 }
+    { id: 'dmg',    get name() { return _t('shop.dmg.name', 'Pólvora Refinada'); },     icon: 'dmg',     perLevel: 0.03,  get desc() { return _t('shop.dmg.desc', '+3% Daño Base permanente por nivel'); },         cost: 6 },
+    { id: 'hp',     get name() { return _t('shop.hp.name', 'Puntos de Sutura'); },     icon: 'maxHp',   perLevel: 5,     get desc() { return _t('shop.hp.desc', '+5 Pulso Máximo Base permanente por nivel'); },  cost: 5 },
+    { id: 'spd',    get name() { return _t('shop.spd.name', 'Microdosis Efedrina'); },  icon: 'moveSpd', perLevel: 0.02,  get desc() { return _t('shop.spd.desc', '+2% Velocidad de Movimiento Base por nivel'); }, cost: 6 },
+    { id: 'atkSpd', get name() { return _t('shop.atkSpd.name', 'Aceite de Mecanismos'); }, icon: 'atkSpd',  perLevel: 0.025, get desc() { return _t('shop.atkSpd.desc', '+2.5% Cadencia de Ataque Base por nivel'); },    cost: 7 },
+    { id: 'mag',    get name() { return _t('shop.mag.name', 'Pinzas de Extracción'); }, icon: 'magnet',  perLevel: 0.35,  get desc() { return _t('shop.mag.desc', '+0.35m Rango de Imán Base permanente'); },       cost: 5 },
+    { id: 'reroll', get name() { return _t('shop.reroll.name', 'Soborno al Crupier'); },   icon: 'reroll',  perLevel: 1,     get desc() { return _t('shop.reroll.desc', '+1 Uso extra del botón Actualizar (Máx +3)'); }, cost: 18, max: 3 }
   ]
 };

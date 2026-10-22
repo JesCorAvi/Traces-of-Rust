@@ -2,10 +2,13 @@
 // Los valores de zombie/worm/weeper siguen en Enemy.init para no alterar el balance actual.
 // Exports: ENEMY_TYPES.
 
+import { t } from '../core/i18n.js';
+const _t = (k, fb) => (typeof t === 'function' ? t(k) : fb);
+
 export const ENEMY_TYPES = {
   runner: {
     id: 'runner',
-    name: 'CORREDOR DE VÍA',
+    get name() { return _t('enemy.runner.name', 'CORREDOR DE VÍA'); },
     hp: 16,
     dmg: 8,
     speed: 7.2,
@@ -17,7 +20,7 @@ export const ENEMY_TYPES = {
   },
   hulk: {
     id: 'hulk',
-    name: 'PRENSA DE CARNE',
+    get name() { return _t('enemy.hulk.name', 'PRENSA DE CARNE'); },
     hp: 150,
     dmg: 30,
     speed: 2.5,
@@ -30,7 +33,7 @@ export const ENEMY_TYPES = {
   },
   nest: {
     id: 'nest',
-    name: 'NIDO ANDANTE',
+    get name() { return _t('enemy.nest.name', 'NIDO ANDANTE'); },
     hp: 90,
     dmg: 12,
     speed: 2.8,
@@ -43,7 +46,7 @@ export const ENEMY_TYPES = {
   },
   regenerator: {
     id: 'regenerator',
-    name: 'SUTURADOR DE PLAGA',
+    get name() { return _t('enemy.regenerator.name', 'SUTURADOR DE PLAGA'); },
     hp: 110,
     dmg: 14,
     speed: 3.0,
@@ -56,7 +59,7 @@ export const ENEMY_TYPES = {
   },
   splitter: {
     id: 'splitter',
-    name: 'GEMELO DE CARNE',
+    get name() { return _t('enemy.splitter.name', 'GEMELO DE CARNE'); },
     hp: 85,
     dmg: 18,
     speed: 3.4,

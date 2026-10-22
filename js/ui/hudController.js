@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import { renderSpriteIconHTML } from '../spritesheets.js';
 import { updateStatsAndModeHUD, updateInventoryHUD } from './hud/stats.js';
 import { updateCoreDirectionIndicator, updateRadarHUD } from './hud/radar.js';
+import { t } from '../core/i18n.js';
 export { SHORT_WEAPON_NAMES } from './hud/stats.js';
 
 export class HUDController {
@@ -102,7 +103,7 @@ export class HUDController {
 
     const alertEl = document.getElementById('boss-alert');
     if (alertEl) {
-      alertEl.innerHTML = `${renderSpriteIconHTML('warning', 'sm')} <span>ALERTA: ${bossCfg.name} EN PLANTA</span> ${renderSpriteIconHTML('warning', 'sm')}`;
+      alertEl.innerHTML = `${renderSpriteIconHTML('warning', 'sm')} <span>${t('hud.boss.alert', { name: bossCfg.name })}</span> ${renderSpriteIconHTML('warning', 'sm')}`;
       alertEl.classList.remove('hidden');
       setTimeout(() => alertEl.classList.add('hidden'), 3800);
     }
@@ -116,7 +117,7 @@ export class HUDController {
 
     document.getElementById('boss-name').textContent = `// ${activeBoss.bossData.name}`;
     const phaseEl = document.getElementById('boss-phase');
-    phaseEl.textContent = activeBoss.phase === 2 ? 'FASE II // FRENESÍ' : 'FASE I';
+    phaseEl.textContent = activeBoss.phase === 2 ? t('hud.boss.phase2') : t('hud.boss.phase1');
     phaseEl.classList.toggle('p2', activeBoss.phase === 2);
 
     const pct = Math.min(100, Math.max(0, (activeBoss.hp / activeBoss.maxHp) * 100));
@@ -167,10 +168,11 @@ export class HUDController {
     }
   }
 
-  showCoreUnderAttackAlert(stateLabel = 'ALERTA') {
+  showCoreUnderAttackAlert(stateLabel = null) {
     const banner = document.getElementById('core-attack-banner');
     if (!banner) return;
-    banner.innerHTML = `${renderSpriteIconHTML('warning', 'sm')} <span>¡NÚCLEO BAJO ATAQUE! // ${stateLabel}</span> ${renderSpriteIconHTML('warning', 'sm')}`;
+    const resolvedState = stateLabel || t('hud.core.state_alert');
+    banner.innerHTML = `${renderSpriteIconHTML('warning', 'sm')} <span>${t('hud.core.under_attack', { state: resolvedState })}</span> ${renderSpriteIconHTML('warning', 'sm')}`;
     banner.classList.remove('hidden');
 
     if (this.coreAlertTimeout) clearTimeout(this.coreAlertTimeout);
@@ -231,11 +233,11 @@ export class HUDController {
     if (!overlay) return;
     const titleEl = overlay.querySelector('.player-down-title');
     if (titleEl) {
-      titleEl.textContent = `[ OPERADOR ABATIDO // SOBRECARGA DEL NÚCLEO -${corePenalty} VIDAS ]`;
+      titleEl.textContent = t('hud.player_down.title', { penalty: corePenalty });
     }
     const cdEl = document.getElementById('player-down-countdown');
     if (cdEl) {
-      cdEl.textContent = `RECONSTRUYENDO EN ${totalDurationSec.toFixed(1)}s...`;
+      cdEl.textContent = t('hud.player_down.countdown', { seconds: totalDurationSec.toFixed(1) });
     }
     const barEl = document.getElementById('player-down-progress-bar');
     if (barEl) {
@@ -247,7 +249,7 @@ export class HUDController {
   updatePlayerDownCountdown(remainingSec, totalDurationSec = 5) {
     const cdEl = document.getElementById('player-down-countdown');
     if (cdEl) {
-      cdEl.textContent = `RECONSTRUYENDO EN ${Math.max(0, remainingSec).toFixed(1)}s...`;
+      cdEl.textContent = t('hud.player_down.countdown', { seconds: Math.max(0, remainingSec).toFixed(1) });
     }
     const barEl = document.getElementById('player-down-progress-bar');
     if (barEl) {
@@ -261,7 +263,7 @@ export class HUDController {
     if (overlay) overlay.classList.add('hidden');
   }
 
-  showKineticAlertBanner({ tag = 'ALERTA DE SECTOR', title = 'EVENTO INICIADO', sub = '', theme = 'hazard', durationMs = 3500 } = {}) {
+  showKineticAlertBanner({ tag = null, title = null, sub = '', theme = 'hazard', durationMs = 3500 } = {}) {
     const banner = document.getElementById('kinetic-event-banner');
     if (!banner) return;
 
@@ -270,9 +272,9 @@ export class HUDController {
     else if (theme === 'success') banner.classList.add('theme-success');
 
     const tagEl = document.getElementById('kinetic-banner-tag');
-    if (tagEl) tagEl.textContent = tag;
+    if (tagEl) tagEl.textContent = tag || t('hud.kinetic.sector_alert');
     const titleEl = document.getElementById('kinetic-banner-title');
-    if (titleEl) titleEl.textContent = title;
+    if (titleEl) titleEl.textContent = title || t('hud.kinetic.event_started');
     const subEl = document.getElementById('kinetic-banner-sub');
     if (subEl) subEl.textContent = sub;
 
@@ -291,11 +293,11 @@ export class HUDController {
     }
   }
 
-  showTeammateDownAlert(msg = '¡COMPAÑERO ABATIDO! -10 VIDAS AL NÚCLEO') {
+  showTeammateDownAlert(msg = null) {
     this.showKineticAlertBanner({
-      tag: '¡COMPAÑERO ABATIDO!',
-      title: msg,
-      sub: 'PENALIZACIÓN AL NÚCLEO // CUBRE SU POSICIÓN',
+      tag: t('hud.teammate_down.tag'),
+      title: msg || t('hud.teammate_down.title'),
+      sub: t('hud.teammate_down.sub'),
       theme: 'critical',
       durationMs: 3800
     });

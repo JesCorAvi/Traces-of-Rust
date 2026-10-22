@@ -4,6 +4,9 @@
 // CONFIGURACIÓN DE MODOS DE JUEGO Y PARÁMETROS DEL MODO SUPERVIVENCIA
 // ============================================================================
 
+import { t } from '../core/i18n.js';
+const _t = (k, fb) => (typeof t === 'function' ? t(k) : fb);
+
 export const MODES_CONFIG = {
   DEFAULT_MODE: 'core_defense',
   CAREER_STORAGE_KEY: 'echoes_rust_career_modes_v2',
@@ -12,27 +15,27 @@ export const MODES_CONFIG = {
   CATALOG: {
     core_defense: {
       id: 'core_defense',
-      title: 'TOWER DEFENSE',
-      subtitle: 'DEFENDER EL NÚCLEO',
-      badge: '★ MODO PRINCIPAL // CAMPAÑA',
+      get title() { return _t('mode.core_defense.title', 'TOWER DEFENSE'); },
+      get subtitle() { return _t('mode.core_defense.subtitle', 'DEFENDER EL NÚCLEO'); },
+      get badge() { return _t('mode.core_defense.badge', '★ MODO PRINCIPAL // CAMPAÑA'); },
       isPrimary: true,
-      shortTitle: 'TOWER DEFENSE',
+      get shortTitle() { return _t('mode.core_defense.shortTitle', 'TOWER DEFENSE'); },
       icon: 'core',
-      tagline: 'Construye defensas en las vías industriales, sobrevive a 12 oleadas letales y protege el reactor biomecánico.',
-      objectiveTitle: 'PROTOCOLO DE DEFENSA',
-      objectiveDefault: 'Impide que las entidades alcancen la esclusa del Núcleo'
+      get tagline() { return _t('mode.core_defense.tagline', 'Construye defensas en las vías industriales, sobrevive a 12 oleadas letales y protege el reactor biomecánico.'); },
+      get objectiveTitle() { return _t('mode.core_defense.objectiveTitle', 'PROTOCOLO DE DEFENSA'); },
+      get objectiveDefault() { return _t('mode.core_defense.objectiveDefault', 'Impide que las entidades alcancen la esclusa del Núcleo'); }
     },
     survival: {
       id: 'survival',
-      title: 'SUPERVIVENCIA',
-      subtitle: 'HORDA INFINITA',
-      badge: 'MODO SECUNDARIO // ARCADE',
+      get title() { return _t('mode.survival.title', 'SUPERVIVENCIA'); },
+      get subtitle() { return _t('mode.survival.subtitle', 'HORDA INFINITA'); },
+      get badge() { return _t('mode.survival.badge', 'MODO SECUNDARIO // ARCADE'); },
       isPrimary: false,
-      shortTitle: 'SUPERVIVENCIA',
+      get shortTitle() { return _t('mode.survival.shortTitle', 'SUPERVIVENCIA'); },
       icon: 'skull',
-      tagline: 'Modo secundario de acción rápida: combate directo sin torretas, recoge suero y purga a los 5 jefes de planta.',
-      objectiveTitle: 'OBJETIVO DE PLANTA',
-      objectiveDefault: 'Encuentra y purga a los jefes de planta'
+      get tagline() { return _t('mode.survival.tagline', 'Modo secundario de acción rápida: combate directo sin torretas, recoge suero y purga a los 5 jefes de planta.'); },
+      get objectiveTitle() { return _t('mode.survival.objectiveTitle', 'OBJETIVO DE PLANTA'); },
+      get objectiveDefault() { return _t('mode.survival.objectiveDefault', 'Encuentra y purga a los jefes de planta'); }
     }
   },
 
@@ -66,7 +69,7 @@ export const MODES_CONFIG = {
       {
         time: 180,
         id: 'boss_butcher',
-        name: 'EL AMPUTADOR DE PLANTA',
+        get name() { return _t('boss.boss_butcher.name', 'EL AMPUTADOR DE PLANTA'); },
         hp: 850,
         dmg: 26,
         speed: 4.3,
@@ -77,7 +80,7 @@ export const MODES_CONFIG = {
       {
         time: 360,
         id: 'boss_siren',
-        name: 'LA MADRE DE ALAMBRE',
+        get name() { return _t('boss.boss_siren.name', 'LA MADRE DE ALAMBRE'); },
         hp: 1650,
         dmg: 32,
         speed: 4.6,
@@ -88,7 +91,7 @@ export const MODES_CONFIG = {
       {
         time: 540,
         id: 'boss_furnace',
-        name: 'AUTÓMATA CREMATORIO N.º 09',
+        get name() { return _t('boss.boss_furnace.name', 'AUTÓMATA CREMATORIO N.º 09'); },
         hp: 2800,
         dmg: 38,
         speed: 4.1,
@@ -99,7 +102,7 @@ export const MODES_CONFIG = {
       {
         time: 720,
         id: 'boss_apostle',
-        name: 'EL FALSO CIRUJANO',
+        get name() { return _t('boss.boss_apostle.name', 'EL FALSO CIRUJANO'); },
         hp: 4200,
         dmg: 45,
         speed: 5.0,
@@ -110,7 +113,7 @@ export const MODES_CONFIG = {
       {
         time: 900,
         id: 'boss_warden',
-        name: 'EL RECAUDADOR DEL ABISMO',
+        get name() { return _t('boss.boss_warden.name', 'EL RECAUDADOR DEL ABISMO'); },
         hp: 6500,
         dmg: 55,
         speed: 5.4,

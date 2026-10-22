@@ -6,6 +6,11 @@ import { AudioSys } from '../audio.js';
 import { renderSpriteIconHTML } from '../spritesheets.js';
 import { ModeManager } from '../modes/gameModeManager.js';
 import { DIFFICULTIES, getMapById, DEFAULT_MAP_IDS } from '../defense/mapGenerator.js';
+import { t } from '../core/i18n.js';
+import { GameEvents } from '../core/eventBus.js';
+
+let lastCareerByMode = null;
+let lastOnModeChanged = null;
 
 export function updateStartPlayButton(activeId, currentDiff = 'normal') {
   const startBtn = document.getElementById('btn-start');
@@ -15,22 +20,23 @@ export function updateStartPlayButton(activeId, currentDiff = 'normal') {
 
   if (activeId === 'core_defense') {
     startBtn.className = 'rust-btn primary play-hero-btn is-td-mode';
-    labelEl.textContent = '[ JUGAR : TOWER DEFENSE ]';
+    labelEl.textContent = t('ui.menu.play_td');
     const selectedMapId = localStorage.getItem('traces_td_selected_map') || DEFAULT_MAP_IDS[currentDiff];
     const mapObj = getMapById(selectedMapId);
     const mapDiff = mapObj?.difficulty || currentDiff;
     const diffMeta = DIFFICULTIES[mapDiff] || DIFFICULTIES.normal;
 
     if (subEl) {
-      const mapNameStr = mapObj ? ` // SECTOR: ${mapObj.name.toUpperCase()} (${diffMeta.name})` : '';
-      subEl.textContent = `★ CAMPAÑA PRINCIPAL${mapNameStr} // 12 OLEADAS`;
+      const diffName = t(`diff.${mapDiff}`) || diffMeta.name;
+      const mapNameStr = mapObj ? t('ui.mode.sector_tag', { name: mapObj.name.toUpperCase(), diff: diffName }) : '';
+      subEl.textContent = t('ui.mode.campaign_banner', { sector: mapNameStr });
       subEl.style.color = '#8ef77b';
     }
   } else {
     startBtn.className = 'rust-btn primary play-hero-btn is-survival-mode';
-    labelEl.textContent = '[ JUGAR : SUPERVIVENCIA ]';
+    labelEl.textContent = t('ui.menu.play_surv');
     if (subEl) {
-      subEl.textContent = 'MODO SECUNDARIO // ACCIÓN RÁPIDA · HORDA INFINITA';
+      subEl.textContent = t('ui.mode.arcade_banner');
       subEl.style.color = '#ff9e9e';
     }
   }
@@ -43,6 +49,9 @@ export function setupDefenseDifficultySelector() {
 }
 
 export function renderModeSelectorUI(careerByMode, onModeChanged) {
+  lastCareerByMode = careerByMode;
+  if (onModeChanged) lastOnModeChanged = onModeChanged;
+
   const container = document.getElementById('mode-selector-group');
   if (!container) return;
 
@@ -61,14 +70,14 @@ export function renderModeSelectorUI(careerByMode, onModeChanged) {
 
   tdCard.innerHTML = `
     <div class="mode-capsule-header">
-      <span class="mode-capsule-badge badge-primary">★ PRINCIPAL</span>
-      <span class="mode-capsule-status">${isTdActive ? '● ACTIVO' : '[ELEGIR]'}</span>
+      <span class="mode-capsule-badge badge-primary">${t('ui.mode.badge_primary')}</span>
+      <span class="mode-capsule-status">${isTdActive ? t('ui.mode.status_active') : t('ui.mode.status_choose')}</span>
     </div>
     <div class="mode-capsule-body">
       <div class="mode-capsule-icon">${renderSpriteIconHTML('core', 'sm')}</div>
       <div class="mode-capsule-text">
-        <div class="mode-capsule-title">TOWER DEFENSE</div>
-        <div class="mode-capsule-sub">12 OLEADAS // REACTOR</div>
+        <div class="mode-capsule-title">${t('mode.core_defense.shortTitle')}</div>
+        <div class="mode-capsule-sub">${t('ui.mode.td_sub')}</div>
       </div>
     </div>
   `;
@@ -95,14 +104,14 @@ export function renderModeSelectorUI(careerByMode, onModeChanged) {
 
   survCard.innerHTML = `
     <div class="mode-capsule-header">
-      <span class="mode-capsule-badge badge-secondary">MODO ARCADE</span>
-      <span class="mode-capsule-status">${isSurvActive ? '● ACTIVO' : '[ELEGIR]'}</span>
+      <span class="mode-capsule-badge badge-secondary">${t('ui.mode.badge_arcade')}</span>
+      <span class="mode-capsule-status">${isSurvActive ? t('ui.mode.status_active') : t('ui.mode.status_choose')}</span>
     </div>
     <div class="mode-capsule-body">
       <div class="mode-capsule-icon">${renderSpriteIconHTML('skull', 'sm')}</div>
       <div class="mode-capsule-text">
-        <div class="mode-capsule-title">SUPERVIVENCIA</div>
-        <div class="mode-capsule-sub">HORDA INFINITA</div>
+        <div class="mode-capsule-title">${t('mode.survival.shortTitle')}</div>
+        <div class="mode-capsule-sub">${t('ui.mode.surv_sub')}</div>
       </div>
     </div>
   `;
@@ -130,24 +139,25 @@ export function renderModeSelectorUI(careerByMode, onModeChanged) {
 }
 
 export function updateCareerDossierForSelectedMode(careerByMode) {
+  lastCareerByMode = careerByMode;
   const modeId = ModeManager.getSelectedModeId();
   const data = careerByMode[modeId] || careerByMode.core_defense || careerByMode.survival || {};
 
   const titleEl = document.getElementById('dossier-mode-label');
   if (titleEl) {
-    titleEl.textContent = modeId === 'core_defense' ? 'EXPEDIENTE // TOWER DEFENSE' : 'EXPEDIENTE // SUPERVIVENCIA';
+    titleEl.textContent = modeId === 'core_defense' ? t('ui.menu.dossier_mode_td') : t('ui.menu.dossier_mode_surv');
   }
 
   const metricLabelEl = document.getElementById('career-best-metric-label');
   const metricValEl = document.getElementById('career-best-time');
 
   if (modeId === 'core_defense') {
-    if (metricLabelEl) metricLabelEl.textContent = 'MEJOR OLEADA SUPERADA:';
+    if (metricLabelEl) metricLabelEl.textContent = t('ui.menu.dossier_metric_td');
     if (metricValEl) {
       metricValEl.textContent = `${data.bestMetric || 0} / ${CONFIG.CORE_DEFENSE.WAVES.totalWavesForVictory}`;
     }
   } else {
-    if (metricLabelEl) metricLabelEl.textContent = 'MEJOR TIEMPO EN PLANTA:';
+    if (metricLabelEl) metricLabelEl.textContent = t('ui.menu.dossier_metric_surv');
     if (metricValEl) {
       const m = String(Math.floor((data.bestMetric || 0) / 60)).padStart(2, '0');
       const s = String(Math.floor((data.bestMetric || 0) % 60)).padStart(2, '0');
@@ -167,3 +177,10 @@ export function updateCareerDossierForSelectedMode(careerByMode) {
   const upgsEl = document.getElementById('career-upgrades-count');
   if (upgsEl) upgsEl.textContent = data.totalUpgradesBought || 0;
 }
+
+GameEvents.on('i18n:change', () => {
+  if (lastCareerByMode) {
+    renderModeSelectorUI(lastCareerByMode, lastOnModeChanged);
+    updateCareerDossierForSelectedMode(lastCareerByMode);
+  }
+});

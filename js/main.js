@@ -53,6 +53,7 @@ import {
   nextFrame,
   delay
 } from './ui/loadingScreen.js';
+import { initI18n, t } from './core/i18n.js';
 
 // Aplica muteo y volúmenes persistidos antes de crear el audio contextual.
 AudioSys.applyGameSettings(gameSettings);
@@ -440,18 +441,18 @@ function buildModeContext(camFwd = new THREE.Vector3(0, 0, -1)) {
     },
     onWaveStarted: payload => {
       const msg = payload.hasBoss
-        ? `OLEADA ${payload.wave} // JEFE EN RUTA: ${payload.bossName}`
-        : `OLEADA ${payload.wave} / ${payload.totalWaves} EN CURSO`;
+        ? t('hud.wave.announcement_boss', { wave: payload.wave, boss: payload.bossName })
+        : t('hud.wave.announcement_progress', { wave: payload.wave, total: payload.totalWaves });
       hudController.showWaveAnnouncement(msg);
       refreshHUD();
     },
     onWaveCompleted: payload => {
-      hudController.showWaveAnnouncement(`OLEADA ${payload.wave} COMPLETADA`);
+      hudController.showWaveAnnouncement(t('hud.wave.announcement_completed', { wave: payload.wave }));
       refreshHUD();
     },
     notifyPlayerEmergencyRespawn: (delaySec, corePenalty) => {
       if (!isDead) markPlayerDead();
-      hudController.showWaveAnnouncement(`OPERARIO ABATIDO // SOBRECARGA AL NÚCLEO (-${corePenalty} VIDAS)`);
+      hudController.showWaveAnnouncement(t('hud.player_down.announcement', { penalty: corePenalty }));
       hudController.showPlayerDownOverlay?.(delaySec, corePenalty);
       AudioSys.playPlayerDowned?.();
       AudioSys.startPlayerDownHum?.();
@@ -1012,15 +1013,16 @@ syncPlayerVisualLoadout(initChar.weapon || 'slash', initChar.id);
 
 async function bootLoadingSequence() {
   try {
-    updateLoadingProgress(15, 'INICIALIZANDO MOTOR GRÁFICO Y ATLAS...');
+    await initI18n(gameSettings.language || null);
+    updateLoadingProgress(15, t('ui.loading.step_engine'));
     initUISpritesCSS();
     await nextFrame();
 
-    updateLoadingProgress(35, 'CONFIGURANDO RECURSOS Y OPERADORES...');
+    updateLoadingProgress(35, t('ui.loading.step_resources'));
     prewarmLoadoutSheets();
     await nextFrame();
 
-    updateLoadingProgress(60, 'COMPILANDO SHADERS Y BÚFERES GPU...');
+    updateLoadingProgress(60, t('ui.loading.step_shaders'));
     if (renderer && scene && camera) {
       try {
         renderer.compile(scene, camera);
@@ -1030,7 +1032,7 @@ async function bootLoadingSequence() {
     }
     await nextFrame();
 
-    updateLoadingProgress(80, 'PRECALEFACTANDO TEXTURAS EN VRAM...');
+    updateLoadingProgress(80, t('ui.loading.step_vram'));
     try {
       if (renderer?.initTexture) {
         if (SpriteSheets?.env?.ground?.tex) renderer.initTexture(SpriteSheets.env.ground.tex);
@@ -1047,7 +1049,7 @@ async function bootLoadingSequence() {
     }
     await nextFrame();
 
-    updateLoadingProgress(100, 'SISTEMAS OPERATIVOS // ENTRANDO A PLANTA');
+    updateLoadingProgress(100, t('ui.loading.step_ready'));
     await delay(250);
   } catch (err) {
     console.error('Error during loading sequence:', err);

@@ -12,6 +12,8 @@ import {
   DIFFICULTIES
 } from '../defense/mapGenerator.js';
 import { renderMapThumbnailCanvas } from '../defense/routeThumbnailRenderer.js';
+import { t } from '../core/i18n.js';
+import { GameEvents } from '../core/eventBus.js';
 
 let currentDiff = 'normal';
 let selectedMapId = null;
@@ -58,74 +60,116 @@ export function openMapSelector(preferredDiff = null, onLaunch = null) {
   // Actualizar tabs
   updateDiffTabsUI();
 
-  // Renderizar la rejilla 3x2 de tarjetas
-  renderMapCardsGrid(currentDiff);
+  // Renderizar las 6 tarjetas de mapas
+  renderMapCards();
 
-  // Actualizar el panel inferior de detalles
+  // Actualizar detalle inferior del mapa seleccionado
   updateSelectedMapDetails(selectedMapId);
 
-  // Mostrar la pantalla de selector
-  document.getElementById('start-screen')?.classList.add('hidden');
-  document.getElementById('shop-screen')?.classList.add('hidden');
-  document.getElementById('character-modal')?.classList.add('hidden');
+  // Mostrar overlay
   screen.classList.remove('hidden');
+  AudioSys.setMenuFilter?.(true);
+
+  // Foco en la tarjeta seleccionada para accesibilidad con mando/teclado
+  setTimeout(() => {
+    const activeCard = document.querySelector(`.map-card[data-map-id="${selectedMapId}"]`);
+    if (activeCard) activeCard.focus();
+  }, 50);
 }
 
 export function closeMapSelector() {
-  AudioSys.playUIClick();
   const screen = document.getElementById('map-select-screen');
   if (screen) screen.classList.add('hidden');
-  document.getElementById('character-modal')?.classList.add('hidden');
-  document.getElementById('start-screen')?.classList.remove('hidden');
+  AudioSys.setMenuFilter?.(false);
+  onLaunchCallback = null;
 }
 
-function updateDiffTabsUI() {
-  const tabs = document.querySelectorAll('#map-diff-tabs .map-diff-tab');
-  tabs.forEach(tab => {
-    const diff = tab.dataset.diff;
-    const isActive = diff === currentDiff;
-    tab.classList.toggle('is-active-tab', isActive);
-    tab.setAttribute('aria-selected', String(isActive));
+export function setupMapSelectorEvents() {
+  if (isEventsSetup) return;
+  isEventsSetup = true;
+
+  // Tabs de dificultad
+  const tabFacil = document.getElementById('tab-map-facil');
+  const tabNormal = document.getElementById('tab-map-normal');
+  const tabDificil = document.getElementById('tab-map-dificil');
+
+  if (tabFacil) tabFacil.onclick = () => switchDifficultyTab('facil');
+  if (tabNormal) tabNormal.onclick = () => switchDifficultyTab('normal');
+  if (tabDificil) tabDificil.onclick = () => switchDifficultyTab('dificil');
+
+  // Botón volver
+  const btnBack = document.getElementById('btn-map-back');
+  if (btnBack) {
+    btnBack.onclick = () => {
+      AudioSys.playUIClick();
+      closeMapSelector();
+    };
+  }
+
+  // Botón de Despliegue Hero
+  const btnLaunch = document.getElementById('btn-launch-map');
+  if (btnLaunch) {
+    btnLaunch.onclick = () => {
+      launchGameWithSelectedMap();
+    };
+  }
+
+  // Atajos de teclado: Escape para volver
+  document.addEventListener('keydown', (e) => {
+    const screen = document.getElementById('map-select-screen');
+    if (!screen || screen.classList.contains('hidden')) return;
+
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      closeMapSelector();
+    }
+  });
+
+  GameEvents.on('i18n:change', () => {
+    const screen = document.getElementById('map-select-screen');
+    if (screen && !screen.classList.contains('hidden')) {
+      renderMapCards();
+      if (selectedMapId) updateSelectedMapDetails(selectedMapId);
+    }
   });
 }
 
-function switchDiffTab(diffKey) {
+function switchDifficultyTab(diffKey) {
   if (currentDiff === diffKey) return;
-  AudioSys.playUISelect();
+  AudioSys.playUIClick();
   currentDiff = diffKey;
   localStorage.setItem('traces_td_difficulty', currentDiff);
 
-  // Seleccionar el mapa por defecto de esta dificultad
+  // Seleccionar automáticamente el mapa predeterminado de esa dificultad
   selectedMapId = DEFAULT_MAP_IDS[currentDiff] || 'easy_plaza';
   localStorage.setItem('traces_td_selected_map', selectedMapId);
 
   updateDiffTabsUI();
-  renderMapCardsGrid(currentDiff);
+  renderMapCards();
   updateSelectedMapDetails(selectedMapId);
 }
 
-function selectMapCard(mapId) {
-  AudioSys.playUIClick();
-  selectedMapId = mapId;
-  localStorage.setItem('traces_td_selected_map', selectedMapId);
+function updateDiffTabsUI() {
+  const tabs = [
+    { el: document.getElementById('tab-map-facil'), key: 'facil' },
+    { el: document.getElementById('tab-map-normal'), key: 'normal' },
+    { el: document.getElementById('tab-map-dificil'), key: 'dificil' }
+  ];
 
-  // Marcar visualmente la tarjeta activa
-  const cards = document.querySelectorAll('#map-grid-container .map-card');
-  cards.forEach(card => {
-    const isSelected = card.dataset.mapId === mapId;
-    card.classList.toggle('is-selected', isSelected);
-    card.setAttribute('aria-selected', String(isSelected));
+  tabs.forEach(({ el, key }) => {
+    if (!el) return;
+    const isActive = key === currentDiff;
+    el.classList.toggle('is-active-tab', isActive);
+    el.setAttribute('aria-selected', String(isActive));
   });
-
-  updateSelectedMapDetails(mapId);
 }
 
-function renderMapCardsGrid(diffKey) {
+function renderMapCards() {
   const container = document.getElementById('map-grid-container');
   if (!container) return;
-
   container.innerHTML = '';
-  const maps = getMapsByDifficulty(diffKey);
+
+  const maps = getMapsByDifficulty(currentDiff);
   const records = getMapRecords();
 
   maps.forEach(mapData => {
@@ -134,14 +178,16 @@ function renderMapCardsGrid(diffKey) {
 
     const card = document.createElement('div');
     card.className = `map-card ${isSelected ? 'is-selected' : ''}`;
-    card.dataset.mapId = mapData.id;
-    card.tabIndex = 0;
+    card.setAttribute('data-map-id', mapData.id);
     card.setAttribute('role', 'button');
-    card.setAttribute('aria-selected', String(isSelected));
+    card.setAttribute('tabindex', '0');
+    card.setAttribute('aria-label', `Mapa ${mapData.name}, ${mapData.badge}`);
 
-    // 1. Contenedor de la miniatura de la ruta
+    // 1. Contenedor de la miniatura de ruta 2D
     const thumbWrap = document.createElement('div');
     thumbWrap.className = 'map-card-thumb';
+
+    // Canvas procedural con la silueta de vías
     const canvas = renderMapThumbnailCanvas(mapData, 240, 110);
     thumbWrap.appendChild(canvas);
 
@@ -149,19 +195,19 @@ function renderMapCardsGrid(diffKey) {
     const medalBadge = document.createElement('div');
     medalBadge.className = `map-card-medal ${rec.completed ? 'is-completed' : (rec.bestWave > 0 ? 'is-in-progress' : 'is-unbeaten')}`;
     if (rec.completed) {
-      medalBadge.innerHTML = `<span class="ui-icon xs" data-ui-icon="star"></span> <span>SUPERADO</span>`;
+      medalBadge.innerHTML = `<span class="ui-icon xs" data-ui-icon="star"></span> <span>${t('ui.map_select.status_completed')}</span>`;
     } else if (rec.bestWave > 0) {
-      medalBadge.textContent = `REC: ${rec.bestWave}/12`;
+      medalBadge.textContent = t('ui.map_select.status_record', { bestWave: rec.bestWave });
     } else {
-      medalBadge.textContent = 'SIN DATOS';
+      medalBadge.textContent = t('ui.map_select.status_no_data');
     }
     thumbWrap.appendChild(medalBadge);
 
     // 3. Etiqueta de ruta (Entradas / Salidas)
     const routeTag = document.createElement('div');
     routeTag.className = 'map-card-routetag';
-    const entText = mapData.entrances === 1 ? '1 ENTRADA' : `${mapData.entrances} ENTRADAS`;
-    const exitText = mapData.exits === 1 ? '1 SALIDA' : `${mapData.exits} SALIDAS`;
+    const entText = t('ui.map_select.entrances', { count: mapData.entrances });
+    const exitText = t('ui.map_select.exits', { count: mapData.exits });
     routeTag.textContent = `${entText} · ${exitText}`;
     thumbWrap.appendChild(routeTag);
 
@@ -204,23 +250,23 @@ function updateSelectedMapDetails(mapId) {
   if (descEl) descEl.textContent = mapData.desc;
 
   if (statsEl) {
-    const diffMeta = DIFFICULTIES[mapData.difficulty] || DIFFICULTIES.normal;
+    const diffName = t(`diff.${mapData.difficulty}`);
     statsEl.innerHTML = `
       <div class="map-stat-chip">
-        <span class="chip-label">DIFICULTAD:</span>
-        <span class="chip-val ${mapData.difficulty}">${diffMeta.name}</span>
+        <span class="chip-label">${t('ui.map_select.diff_label')}</span>
+        <span class="chip-val ${mapData.difficulty}">${diffName}</span>
       </div>
       <div class="map-stat-chip">
-        <span class="chip-label">CONTENCIÓN BASE:</span>
-        <span class="chip-val lives">${mapData.maxLives} VIDAS</span>
+        <span class="chip-label">${t('ui.map_select.lives_label')}</span>
+        <span class="chip-val lives">${t('ui.map_select.lives_val', { count: mapData.maxLives })}</span>
       </div>
       <div class="map-stat-chip">
-        <span class="chip-label">SUMINISTRO:</span>
-        <span class="chip-val scrap">${mapData.startingScrap} CHATARRA</span>
+        <span class="chip-label">${t('ui.map_select.scrap_label')}</span>
+        <span class="chip-val scrap">${t('ui.map_select.scrap_val', { count: mapData.startingScrap })}</span>
       </div>
       <div class="map-stat-chip">
-        <span class="chip-label">DISPOSICIÓN:</span>
-        <span class="chip-val">${mapData.entrances} ENTRADA(S) / ${mapData.exits} SALIDA(S)</span>
+        <span class="chip-label">${t('ui.map_select.layout_label')}</span>
+        <span class="chip-val">${t('ui.map_select.layout_val', { entrances: mapData.entrances, exits: mapData.exits })}</span>
       </div>
     `;
   }
@@ -234,54 +280,28 @@ function launchGameWithSelectedMap() {
   localStorage.setItem('traces_td_selected_map', selectedMapId);
   localStorage.setItem('traces_td_difficulty', currentDiff);
 
-  // Cerrar selector
-  const screen = document.getElementById('map-select-screen');
-  if (screen) screen.classList.add('hidden');
+  const chosenMapId = selectedMapId;
+  const chosenDiff = currentDiff;
 
-  if (onLaunchCallback) {
-    onLaunchCallback(selectedMapId, currentDiff);
+  closeMapSelector();
+
+  // Si hay callback registrado por gameFlow, ejecutarlo
+  if (typeof onLaunchCallback === 'function') {
+    onLaunchCallback(chosenMapId, chosenDiff);
   }
 }
 
-export function setupMapSelectorEvents() {
-  if (isEventsSetup) return;
-  isEventsSetup = true;
+function selectMapCard(mapId) {
+  if (selectedMapId === mapId) return;
+  selectedMapId = mapId;
+  AudioSys.playUIClick();
 
-  // Botón Volver al menú
-  const backBtn = document.getElementById('btn-map-back');
-  if (backBtn) {
-    backBtn.onclick = closeMapSelector;
-  }
-
-  // Pestañas de dificultad
-  const tabFacil = document.getElementById('tab-map-facil');
-  const tabNormal = document.getElementById('tab-map-normal');
-  const tabDificil = document.getElementById('tab-map-dificil');
-
-  if (tabFacil) tabFacil.onclick = () => switchDiffTab('facil');
-  if (tabNormal) tabNormal.onclick = () => switchDiffTab('normal');
-  if (tabDificil) tabDificil.onclick = () => switchDiffTab('dificil');
-
-  // Botón Desplegar / Iniciar en este mapa
-  const launchBtn = document.getElementById('btn-launch-map');
-  if (launchBtn) {
-    launchBtn.onclick = launchGameWithSelectedMap;
-  }
-
-  // Atajos de teclado mientras esté abierto
-  window.addEventListener('keydown', (e) => {
-    const screen = document.getElementById('map-select-screen');
-    if (!screen || screen.classList.contains('hidden')) return;
-
-    if (e.key === 'Escape') {
-      e.preventDefault();
-      closeMapSelector();
-    } else if (e.key === 'Enter') {
-      // Si el foco no está en un botón o input
-      if (document.activeElement?.tagName !== 'BUTTON') {
-        e.preventDefault();
-        launchGameWithSelectedMap();
-      }
-    }
+  // Actualizar tarjetas activas
+  const cards = document.querySelectorAll('.map-card');
+  cards.forEach(card => {
+    const isThis = card.getAttribute('data-map-id') === mapId;
+    card.classList.toggle('is-selected', isThis);
   });
+
+  updateSelectedMapDetails(mapId);
 }

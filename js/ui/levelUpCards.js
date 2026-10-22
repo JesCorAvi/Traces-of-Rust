@@ -4,6 +4,10 @@
 import { CONFIG } from '../config.js';
 import { renderSpriteIconHTML, renderSpriteBadgeHTML } from '../spritesheets.js';
 import { SHORT_WEAPON_NAMES } from './hudController.js';
+import { t } from '../core/i18n.js';
+import { GameEvents } from '../core/eventBus.js';
+
+let lastLevelUpData = null;
 
 function getPassiveAffectedWeaponsHTML(passiveId, skills) {
   const pCfg = CONFIG.PASSIVES[passiveId];
@@ -12,9 +16,9 @@ function getPassiveAffectedWeaponsHTML(passiveId, skills) {
   if (pCfg.targetType === 'player_stat') {
     return `
       <div class="passive-affected-weapons">
-        <span class="passive-affected-label">AFECTA A:</span>
+        <span class="passive-affected-label">${t('ui.levelup.affects_label')}</span>
         <div class="passive-weapons-grid cols-1">
-          <span class="passive-weapon-pill" title="Mejora directa a las constantes del jugador">${renderSpriteIconHTML('suit', 'sm')} <span>TRAJE / JUGADOR</span></span>
+          <span class="passive-weapon-pill" title="${t('ui.levelup.affects_player')}">${renderSpriteIconHTML('suit', 'sm')} <span>${t('ui.levelup.affects_player')}</span></span>
         </div>
       </div>`;
   }
@@ -30,8 +34,8 @@ function getPassiveAffectedWeaponsHTML(passiveId, skills) {
   if (matching.length === 0) {
     return `
       <div class="passive-affected-weapons">
-        <span class="passive-affected-label">ARMAS AFECTADAS:</span>
-        <span class="passive-weapon-none">NINGUNA EQUIPADA COMPATIBLE</span>
+        <span class="passive-affected-label">${t('ui.levelup.affects_label')}</span>
+        <span class="passive-weapon-none">${t('ui.levelup.no_compatible_weapons')}</span>
       </div>`;
   }
 
@@ -40,13 +44,13 @@ function getPassiveAffectedWeaponsHTML(passiveId, skills) {
     .map(wId => {
       const fullName = CONFIG.SKILLS[wId].name;
       const shortName = SHORT_WEAPON_NAMES[wId] || fullName.split(' ')[0];
-      return `<span class="passive-weapon-pill" title="${fullName} (Nivel +${skills[wId]})">${renderSpriteIconHTML(CONFIG.SKILLS[wId].icon, 'sm')} <span>${shortName}</span></span>`;
+      return `<span class="passive-weapon-pill" title="${fullName} (+${skills[wId]})">${renderSpriteIconHTML(CONFIG.SKILLS[wId].icon, 'sm')} <span>${shortName}</span></span>`;
     })
     .join('');
 
   return `
     <div class="passive-affected-weapons">
-      <span class="passive-affected-label">ARMAS AFECTADAS (${matching.length}):</span>
+      <span class="passive-affected-label">${t('ui.levelup.affected_weapons', { count: matching.length })}</span>
       <div class="passive-weapons-grid ${colClass}">${pills}</div>
     </div>`;
 }
@@ -66,7 +70,7 @@ function buildAvailableUpgradePool(skills, passives) {
     pool.push({
       category: 'weapon', id, name: sk.name, icon: sk.icon,
       currentLvl: lvl, nextLvl: lvl + 1,
-      badge: lvl === 0 ? 'ARMA NUEVA' : 'MEJORA DE ARMA',
+      badge: lvl === 0 ? t('ui.levelup.new_weapon') : t('ui.levelup.upgrade_weapon'),
       badgeClass: 'badge-weapon', desc: sk.desc
     });
   });
@@ -79,7 +83,7 @@ function buildAvailableUpgradePool(skills, passives) {
     pool.push({
       category: 'passive', id, name: p.name, icon: p.icon,
       currentLvl: lvl, nextLvl: lvl + 1,
-      badge: lvl === 0 ? 'PASIVA NUEVA' : 'MEJORA PASIVA',
+      badge: lvl === 0 ? t('ui.levelup.new_passive') : t('ui.levelup.upgrade_passive'),
       badgeClass: 'badge-passive',
       desc: `${p.desc} (${p.format(lvl + 1)})`,
       affectedHtml: getPassiveAffectedWeaponsHTML(id, skills)
@@ -90,13 +94,20 @@ function buildAvailableUpgradePool(skills, passives) {
 }
 
 export function renderLevelUpCardsUI(skills, passives, rerollsLeft, maxRerollsRun, onSelectOption) {
+  lastLevelUpData = { skills, passives, rerollsLeft, maxRerollsRun, onSelectOption };
+
   const box = document.getElementById('upgrade-container');
   box.innerHTML = '';
 
   const wCount = Object.keys(skills).length;
   const pCount = Object.keys(passives).length;
   document.getElementById('lvlup-slots-info').textContent =
-    `ARMAS: ${wCount}/${CONFIG.LIMITS.MAX_WEAPONS} | PASIVAS: ${pCount}/${CONFIG.LIMITS.MAX_PASSIVES}`;
+    t('ui.levelup.slots', {
+      weapons: wCount,
+      maxWeapons: CONFIG.LIMITS.MAX_WEAPONS,
+      passives: pCount,
+      maxPassives: CONFIG.LIMITS.MAX_PASSIVES
+    });
 
   const pool = buildAvailableUpgradePool(skills, passives);
   let choices = [];
@@ -108,7 +119,7 @@ export function renderLevelUpCardsUI(skills, passives, rerollsLeft, maxRerollsRu
     choices = CONFIG.FALLBACK_REWARDS.map(fb => ({
       category: 'fallback', id: fb.id, name: fb.name, icon: fb.icon,
       currentLvl: 8, nextLvl: 8,
-      badge: 'SUMINISTRO DE EMERGENCIA', badgeClass: 'badge-fallback', desc: fb.desc
+      badge: t('ui.levelup.emergency_supply'), badgeClass: 'badge-fallback', desc: fb.desc
     }));
   }
 
@@ -118,12 +129,12 @@ export function renderLevelUpCardsUI(skills, passives, rerollsLeft, maxRerollsRu
     card.tabIndex = 0;
     card.setAttribute('role', 'button');
     card.setAttribute('aria-label', `${opt.badge}: ${opt.name}`);
-    card.title = `[Tecla ${idx + 1}] ${opt.name} — ${opt.desc}`;
+    card.title = `[${idx + 1}] ${opt.name} — ${opt.desc}`;
 
     const badgeContent = opt.category === 'fallback'
-      ? `<span>SUMINISTRO</span>`
+      ? `<span>${t('ui.levelup.supply_tag')}</span>`
       : (opt.currentLvl === 0
-          ? `<span>NUEVO</span> ${renderSpriteBadgeHTML(1)}`
+          ? `<span>${t('ui.levelup.new_tag')}</span> ${renderSpriteBadgeHTML(1)}`
           : `${renderSpriteBadgeHTML(opt.currentLvl)} <span>▸</span> ${renderSpriteBadgeHTML(opt.nextLvl)}`);
 
     card.innerHTML = `
@@ -159,13 +170,21 @@ export function renderLevelUpCardsUI(skills, passives, rerollsLeft, maxRerollsRu
 
   const rerollBtn = document.getElementById('btn-reroll');
   const restLabel = rerollsLeft === 0
-    ? '0 RESTANTES · AGOTADO'
-    : (rerollsLeft === 1 ? '1 RESTANTE' : `${rerollsLeft} RESTANTES`);
+    ? t('ui.levelup.rerolls_exhausted')
+    : t('ui.levelup.rerolls_remaining', { count: rerollsLeft });
 
   rerollBtn.innerHTML = `
     ${renderSpriteIconHTML('reroll', 'sm')}
-    <span>ACTUALIZAR OPCIONES</span>
+    <span>${t('ui.levelup.reroll_btn')}</span>
     <span class="reroll-count-pill">[<span id="reroll-count">${restLabel}</span>]</span>
   `;
   rerollBtn.disabled = rerollsLeft <= 0 || pool.length <= 1;
 }
+
+GameEvents.on('i18n:change', () => {
+  const lvlUpScreen = document.getElementById('level-up-screen');
+  if (lvlUpScreen && !lvlUpScreen.classList.contains('hidden') && lastLevelUpData) {
+    const { skills, passives, rerollsLeft, maxRerollsRun, onSelectOption } = lastLevelUpData;
+    renderLevelUpCardsUI(skills, passives, rerollsLeft, maxRerollsRun, onSelectOption);
+  }
+});

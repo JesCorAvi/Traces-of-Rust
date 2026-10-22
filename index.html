@@ -27,12 +27,12 @@
         <img id="loading-logo" src="assets/sandwish_studio.png" alt="Sandwish Studio" class="loading-logo-img">
       </div>
       <div class="loading-title-group">
-        <h1 id="loading-title" class="buckshot-title loading-main-title">Traces of Rust</h1>
-        <div id="loading-sub" class="loading-genre-tag">TACTICAL HORROR · CORE DEFENSE &amp; SURVIVAL</div>
+        <h1 id="loading-title" class="buckshot-title loading-main-title" data-i18n="ui.loading.title">Traces of Rust</h1>
+        <div id="loading-sub" class="loading-genre-tag" data-i18n="ui.loading.sub">TACTICAL HORROR · CORE DEFENSE &amp; SURVIVAL</div>
       </div>
       <div class="loading-progress-block">
         <div class="loading-bar-header">
-          <span id="loading-status" class="loading-status-text">INICIALIZANDO SISTEMAS...</span>
+          <span id="loading-status" class="loading-status-text" data-i18n="ui.loading.status_init">INICIALIZANDO SISTEMAS...</span>
           <span id="loading-percent" class="loading-percent-text">0%</span>
         </div>
         <div class="loading-bar-frame">
@@ -40,7 +40,7 @@
         </div>
         <div class="loading-footer-tip">
           <span class="loading-dot"></span>
-          <span>SECTOR INDUSTRIAL 07 // PROTOCOLO DE ARRANQUE EN CURSO</span>
+          <span data-i18n="ui.loading.tip">SECTOR INDUSTRIAL 07 // PROTOCOLO DE ARRANQUE EN CURSO</span>
         </div>
       </div>
     </div>
@@ -314,13 +314,13 @@
     <!-- BARRA SUPERIOR FLOTANTE CON MONEDAS Y AJUSTES -->
     <header class="start-top-bar">
       <div class="start-top-right">
-        <div class="start-souls-badge start-currency-pill" title="Dientes recolectados en planta">
+        <div class="start-souls-badge start-currency-pill" data-i18n-attr="title:ui.topbar.teeth_title" title="Dientes recolectados en planta">
           <span class="ui-icon sm" data-ui-icon="tooth"></span>
-          <span>DIENTES: <b id="start-souls" style="color:#f0c954">0</b></span>
+          <span><span data-i18n="ui.topbar.teeth">DIENTES:</span> <b id="start-souls" style="color:#f0c954">0</b></span>
         </div>
         <button type="button" class="rust-btn sm start-top-btn" id="btn-open-settings">
           <span class="ui-icon sm" data-ui-icon="atkSpd"></span>
-          <span>AJUSTES</span>
+          <span data-i18n="ui.topbar.settings">AJUSTES</span>
         </button>
       </div>
     </header>
@@ -331,7 +331,7 @@
       <section class="start-nav-column">
         <div class="launcher-header-group">
           <h1 class="buckshot-title desktop-main-title">Traces of Rust</h1>
-          <div class="launcher-genre-tag">TACTICAL HORROR · CORE DEFENSE &amp; SURVIVAL</div>
+          <div class="launcher-genre-tag" data-i18n="ui.loading.sub">TACTICAL HORROR · CORE DEFENSE &amp; SURVIVAL</div>
         </div>
 
         <!-- Selector de Modo Dual (PokéBonk Style: Tower Defense Principal + Supervivencia Arcade) -->
@@ -354,7 +354,7 @@
         <!-- BOTÓN GIGANTE PRINCIPAL DE JUGAR (PokéBonk JUGAR / Vampire Survivors COMENZAR / Megabonk PLAY) -->
         <div class="desktop-main-action-wrap">
           <button type="button" class="rust-btn primary play-hero-btn" id="btn-start">
-            <span class="play-btn-title" id="btn-start-label">[ JUGAR : TOWER DEFENSE ]</span>
+            <span class="play-btn-title" id="btn-start-label" data-i18n="ui.menu.play_td">[ JUGAR : TOWER DEFENSE ]</span>
             <span class="play-btn-sub" id="btn-start-sub">★ CAMPAÑA PRINCIPAL // 12 OLEADAS // DIFICULTAD NORMAL</span>
           </button>
         </div>
@@ -362,22 +362,22 @@
         <!-- Botón de Tutorial destacado -->
         <button type="button" class="rust-btn desktop-menu-btn td-tutorial-banner-btn" id="btn-td-tutorial">
           <span class="ui-icon sm" data-ui-icon="level"></span>
-          <span>[ TUTORIAL ]</span>
+          <span data-i18n="ui.menu.btn_tutorial">[ TUTORIAL ]</span>
         </button>
 
         <!-- Grilla de Acciones Secundarias (Estilo PC UI) -->
         <div class="desktop-sub-menu-grid">
           <button type="button" class="rust-btn desktop-sub-menu-btn btn-highlight-shop" id="btn-open-shop">
             <span class="ui-icon sm" data-ui-icon="tooth"></span>
-            <span>[ CLÍNICA / IMPLANTES ]</span>
+            <span data-i18n="ui.menu.btn_shop">[ CLÍNICA / IMPLANTES ]</span>
           </button>
           <button type="button" class="rust-btn desktop-sub-menu-btn" id="btn-open-steam-modal" style="border-color:#3e6338;">
             <span class="ui-icon sm" data-ui-icon="core"></span>
-            <span>[ MODO COOPERATIVO ]</span>
+            <span data-i18n="ui.menu.btn_coop">[ MODO COOPERATIVO ]</span>
           </button>
           <button type="button" class="rust-btn desktop-sub-menu-btn" id="btn-open-manual">
             <span class="ui-icon sm" data-ui-icon="level"></span>
-            <span>[ MANUAL Y CONTROLES ]</span>
+            <span data-i18n="ui.menu.btn_manual">[ MANUAL Y CONTROLES ]</span>
           </button>
         </div>
 
@@ -403,19 +403,19 @@
               <b id="career-best-time" style="color:#f0c954">0 / 12</b>
             </div>
             <div class="report-row">
-              <span>EXPEDICIONES TOTALES:</span>
+              <span data-i18n="ui.dossier.expeditions">EXPEDICIONES TOTALES:</span>
               <b id="career-runs" style="color:#f5ecd3">0</b>
             </div>
             <div class="report-row">
-              <span>ENTIDADES ELIMINADAS:</span>
+              <span data-i18n="ui.dossier.kills">ENTIDADES ELIMINADAS:</span>
               <b id="career-total-kills" style="color:#ff6b6b">0</b>
             </div>
             <div class="report-row">
-              <span>JEFES PURGADOS:</span>
+              <span data-i18n="ui.dossier.bosses">JEFES PURGADOS:</span>
               <b id="career-total-bosses" style="color:#f0c954">0</b>
             </div>
             <div class="report-row">
-              <span>IMPLANTES ADQUIRIDOS:</span>
+              <span data-i18n="ui.dossier.implants">IMPLANTES ADQUIRIDOS:</span>
               <b id="career-upgrades-count" style="color:#a8c499">0</b>
             </div>
           </div>
@@ -430,27 +430,27 @@
       <div class="plate-header">
         <span class="tape-label">
           <span class="ui-icon sm" data-ui-icon="atkSpd"></span>
-          <span>CONFIGURACIÓN Y AJUSTES DEL SISTEMA</span>
+          <span data-i18n="ui.settings.title">CONFIGURACIÓN Y AJUSTES DEL SISTEMA</span>
         </span>
-        <button class="rust-btn sm" id="btn-close-settings"><span>[ GUARDAR Y VOLVER ]</span></button>
+        <button class="rust-btn sm" id="btn-close-settings"><span data-i18n="ui.settings.save_return">[ GUARDAR Y VOLVER ]</span></button>
       </div>
 
       <div class="settings-grid">
         <div class="paper-note settings-section">
           <div class="settings-section-title">
             <span class="ui-icon sm" data-ui-icon="area"></span>
-            <span>SUBSISTEMA DE AUDIO</span>
+            <span data-i18n="ui.settings.audio_section">SUBSISTEMA DE AUDIO</span>
           </div>
           <div class="setting-row">
-            <label for="set-master-vol">VOLUMEN MAESTRO: <b id="val-master-vol">85%</b></label>
+            <label for="set-master-vol"><span data-i18n="ui.settings.master_vol">VOLUMEN MAESTRO:</span> <b id="val-master-vol">85%</b></label>
             <input type="range" id="set-master-vol" min="0" max="100" value="85">
           </div>
           <div class="setting-row">
-            <label for="set-sfx-vol">EFECTOS Y ARMAS (SFX): <b id="val-sfx-vol">90%</b></label>
+            <label for="set-sfx-vol"><span data-i18n="ui.settings.sfx_vol">EFECTOS Y ARMAS (SFX):</span> <b id="val-sfx-vol">90%</b></label>
             <input type="range" id="set-sfx-vol" min="0" max="100" value="90">
           </div>
           <div class="setting-row">
-            <label for="set-music-vol">MÚSICA ADAPTATIVA: <b id="val-music-vol">70%</b></label>
+            <label for="set-music-vol"><span data-i18n="ui.settings.music_vol">MÚSICA ADAPTATIVA:</span> <b id="val-music-vol">70%</b></label>
             <input type="range" id="set-music-vol" min="0" max="100" value="70">
           </div>
           <div class="setting-row">
@@ -458,51 +458,51 @@
             <input type="range" id="set-amb-vol" min="0" max="100" value="80">
           </div>
           <div class="setting-row">
-            <span>SILENCIAR AUDIO GLOBAL:</span>
-            <button class="rust-btn sm" id="btn-toggle-mute"><span>DESACTIVADO</span></button>
+            <span data-i18n="ui.settings.mute_global">SILENCIAR AUDIO GLOBAL:</span>
+            <button class="rust-btn sm" id="btn-toggle-mute"><span data-i18n="ui.common.disabled">DESACTIVADO</span></button>
           </div>
         </div>
 
         <div class="paper-note settings-section">
           <div class="settings-section-title">
             <span class="ui-icon sm" data-ui-icon="crit"></span>
-            <span>VÍDEO Y RENDERIZADO 3D</span>
+            <span data-i18n="ui.settings.video_section">VÍDEO Y RENDERIZADO 3D</span>
           </div>
           <div class="setting-row">
-            <label for="set-res-scale">RESOLUCIÓN PIXEL-ART 3D:</label>
+            <label for="set-res-scale" data-i18n="ui.settings.res_scale">RESOLUCIÓN PIXEL-ART 3D:</label>
             <select id="set-res-scale" class="setting-select">
-              <option value="0.3">0.30x (ULTRA LO-FI / MÁX FPS)</option>
-              <option value="0.44" selected>0.44x (ESTÁNDAR BUCKSHOT)</option>
-              <option value="0.65">0.65x (ALTA DEFINICIÓN RETRO)</option>
-              <option value="1.0">1.00x (NATIVA DE MONITOR)</option>
+              <option value="0.3" data-i18n="ui.settings.res_03">0.30x (ULTRA LO-FI / MÁX FPS)</option>
+              <option value="0.44" selected data-i18n="ui.settings.res_044">0.44x (ESTÁNDAR BUCKSHOT)</option>
+              <option value="0.65" data-i18n="ui.settings.res_065">0.65x (ALTA DEFINICIÓN RETRO)</option>
+              <option value="1.0" data-i18n="ui.settings.res_10">1.00x (NATIVA DE MONITOR)</option>
             </select>
           </div>
           <div class="setting-row">
-            <label for="ui-scale-select">ESCALA DE INTERFAZ (UI):</label>
+            <label for="ui-scale-select" data-i18n="ui.settings.ui_scale">ESCALA DE INTERFAZ (UI):</label>
             <select id="ui-scale-select" class="setting-select" aria-label="Escala de la interfaz">
-              <option value="1">x1 (COMPACTA)</option>
-              <option value="2" selected>x2 (ESTÁNDAR)</option>
-              <option value="3">x3 (GRANDE)</option>
+              <option value="1" data-i18n="ui.settings.ui_scale_1x">x1 (COMPACTA)</option>
+              <option value="2" selected data-i18n="ui.settings.ui_scale_2x">x2 (ESTÁNDAR)</option>
+              <option value="3" data-i18n="ui.settings.ui_scale_3x">x3 (GRANDE)</option>
             </select>
           </div>
           <div class="setting-row">
-            <label for="set-fov">CAMPO DE VISIÓN (FOV): <b id="val-fov">70°</b></label>
+            <label for="set-fov"><span data-i18n="ui.settings.fov">CAMPO DE VISIÓN (FOV):</span> <b id="val-fov">70°</b></label>
             <input type="range" id="set-fov" min="60" max="95" value="70">
           </div>
           <div class="setting-row">
-            <span>PANTALLA COMPLETA:</span>
+            <span data-i18n="ui.settings.fullscreen">PANTALLA COMPLETA:</span>
             <button class="rust-btn sm" id="btn-toggle-fullscreen" aria-pressed="true"><span id="fullscreen-state-text">ACTIVADA</span></button>
           </div>
           <div class="setting-row">
-            <span>SOMBRAS DINÁMICAS DE LINTERNA:</span>
+            <span data-i18n="ui.settings.shadows_lantern">SOMBRAS DINÁMICAS DE LINTERNA:</span>
             <button class="rust-btn sm" id="btn-toggle-shadows"><span>ACTIVADAS</span></button>
           </div>
           <div class="setting-row">
-            <span>FILTRO CRT Y GRANO DE PELÍCULA:</span>
+            <span data-i18n="ui.settings.crt_grain">FILTRO CRT Y GRANO DE PELÍCULA:</span>
             <button class="rust-btn sm" id="btn-toggle-crt"><span>ACTIVADOS</span></button>
           </div>
           <div class="setting-row">
-            <span>MOSTRAR CONTADOR DE FPS:</span>
+            <span data-i18n="ui.settings.fps">MOSTRAR CONTADOR DE FPS:</span>
             <button class="rust-btn sm" id="btn-toggle-fps"><span>OCULTO</span></button>
           </div>
         </div>
@@ -510,23 +510,23 @@
         <div class="paper-note settings-section settings-span-full">
           <div class="settings-section-title">
             <span class="ui-icon sm" data-ui-icon="suit"></span>
-            <span>CONTROLES, CÁMARA Y DATOS DE GUARDADO</span>
+            <span data-i18n="ui.settings.controls_section">CONTROLES, CÁMARA Y DATOS DE GUARDADO</span>
           </div>
           <div class="settings-two-cols">
             <div class="setting-row">
-              <label for="set-sens">SENSIBILIDAD DEL RATÓN: <b id="val-sens">1.0x</b></label>
+              <label for="set-sens"><span data-i18n="ui.settings.mouse_sens">SENSIBILIDAD DEL RATÓN:</span> <b id="val-sens">1.0x</b></label>
               <input type="range" id="set-sens" min="20" max="250" value="100">
             </div>
             <div class="setting-row">
-              <label for="set-shake">INTENSIDAD DE TEMBLOR DE CÁMARA: <b id="val-shake">100%</b></label>
+              <label for="set-shake"><span data-i18n="ui.settings.cam_shake">INTENSIDAD DE TEMBLOR DE CÁMARA:</span> <b id="val-shake">100%</b></label>
               <input type="range" id="set-shake" min="0" max="100" value="100">
             </div>
           </div>
           <div class="setting-row" style="margin-top:8px; padding-top:8px; border-top:1px dashed #364832;">
-            <span>RESTABLECER AJUSTES O BORRAR PARTIDA GUARDADA:</span>
+            <span data-i18n="ui.settings.reset_section">RESTABLECER AJUSTES O BORRAR PARTIDA GUARDADA:</span>
             <div style="display:flex; gap:8px; flex-wrap:wrap;">
-              <button class="rust-btn sm" id="btn-reset-defaults"><span>[ AJUSTES POR DEFECTO ]</span></button>
-              <button class="rust-btn primary sm" id="btn-wipe-save"><span>[ BORRAR PROGRESO Y DIENTES ]</span></button>
+              <button class="rust-btn sm" id="btn-reset-defaults"><span data-i18n="ui.settings.btn_reset_defaults">[ AJUSTES POR DEFECTO ]</span></button>
+              <button class="rust-btn primary sm" id="btn-wipe-save"><span data-i18n="ui.settings.btn_wipe_save">[ BORRAR PROGRESO Y DIENTES ]</span></button>
             </div>
           </div>
         </div>
@@ -671,9 +671,9 @@
       <div class="plate-header">
         <span class="tape-label">
           <span class="ui-icon sm" data-ui-icon="level"></span>
-          <span>MANUAL OPERATIVO // MODOS DE OPERACIÓN</span>
+          <span data-i18n="ui.manual.title">MANUAL OPERATIVO // MODOS DE OPERACIÓN</span>
         </span>
-        <button class="rust-btn sm" id="btn-close-manual"><span>[X] CERRAR</span></button>
+        <button class="rust-btn sm" id="btn-close-manual"><span data-i18n="ui.manual.close">[X] CERRAR</span></button>
       </div>
       <div class="paper-note" style="font-size:20px; line-height:1.45;">
         <b>1. CONTROLES Y MOVIMIENTO:</b><br>
@@ -694,15 +694,15 @@
         <span class="ui-icon sm" data-ui-icon="clock"></span>
         <span>PROTOCOLO DE PAUSA // PLANTA INDUSTRIAL</span>
       </div>
-      <h1 class="buckshot-title" style="font-size:22px;">JUEGO EN PAUSA</h1>
-      <p class="plate-sub">Sistemas de soporte vital congelados temporalmente.</p>
+      <h1 class="buckshot-title" style="font-size:22px;" data-i18n="ui.pause.title">JUEGO EN PAUSA</h1>
+      <p class="plate-sub" data-i18n="ui.pause.sub">Sistemas de soporte vital congelados temporalmente.</p>
       <div class="btn-group" style="flex-direction:column; gap:12px; margin-top:16px;">
-        <button class="rust-btn primary" id="btn-resume"><span>[ CONTINUAR MISIÓN ]</span></button>
+        <button class="rust-btn primary" id="btn-resume"><span data-i18n="ui.pause.resume">[ CONTINUAR MISIÓN ]</span></button>
         <button class="rust-btn" id="btn-pause-settings">
           <span class="ui-icon sm" data-ui-icon="atkSpd"></span>
-          <span>[ AJUSTES DEL SISTEMA ]</span>
+          <span data-i18n="ui.pause.settings">[ AJUSTES DEL SISTEMA ]</span>
         </button>
-        <button class="rust-btn" id="btn-pause-to-menu"><span>[ ABANDONAR A MENÚ PRINCIPAL ]</span></button>
+        <button class="rust-btn" id="btn-pause-to-menu"><span data-i18n="ui.pause.to_menu">[ ABANDONAR A MENÚ PRINCIPAL ]</span></button>
       </div>
     </div>
   </div>
@@ -718,31 +718,31 @@
         <div class="map-select-title-group">
           <span class="tape-label">
             <span class="ui-icon sm" data-ui-icon="core"></span>
-            <span>EXPEDIENTE TÁCTICO // SECTORES INDUSTRIALES</span>
+            <span data-i18n="ui.map_select.header_tape">EXPEDIENTE TÁCTICO // SECTORES INDUSTRIALES</span>
           </span>
-          <h2 class="buckshot-title map-screen-title">SELECCIÓN DE SECTOR DE DESPLIEGUE</h2>
+          <h2 class="buckshot-title map-screen-title" data-i18n="ui.map_select.title">SELECCIÓN DE SECTOR DE DESPLIEGUE</h2>
         </div>
-        <button type="button" class="rust-btn sm" id="btn-map-back" title="Volver al menú principal">
-          <span>[ ◄ VOLVER AL MENÚ ]</span>
+        <button type="button" class="rust-btn sm" id="btn-map-back" data-i18n-attr="title:ui.map_select.back" title="Volver al menú principal">
+          <span data-i18n="ui.map_select.back">[ ◄ VOLVER AL MENÚ ]</span>
         </button>
       </div>
 
       <!-- Pestañas de Dificultad (BTD6 Style) -->
       <div class="map-diff-bar" id="map-diff-tabs" role="tablist">
         <button type="button" class="map-diff-tab diff-easy" id="tab-map-facil" data-diff="facil" role="tab" aria-selected="false">
-          <span class="tab-badge">SECTOR APERTURA</span>
-          <span class="tab-name">FÁCIL</span>
-          <span class="tab-sub">150 VIDAS · 1 ENTRADA</span>
+          <span class="tab-badge" data-i18n="ui.map_select.tab_easy_badge">SECTOR APERTURA</span>
+          <span class="tab-name" data-i18n="ui.map_select.tab_easy">FÁCIL</span>
+          <span class="tab-sub" data-i18n="ui.map_select.tab_easy_sub">150 VIDAS · 1 ENTRADA</span>
         </button>
         <button type="button" class="map-diff-tab diff-normal is-active-tab" id="tab-map-normal" data-diff="normal" role="tab" aria-selected="true">
-          <span class="tab-badge">SECTOR ESTÁNDAR</span>
-          <span class="tab-name">NORMAL</span>
-          <span class="tab-sub">100 VIDAS · 2 ENTRADAS</span>
+          <span class="tab-badge" data-i18n="ui.map_select.tab_norm_badge">SECTOR ESTÁNDAR</span>
+          <span class="tab-name" data-i18n="ui.map_select.tab_norm">NORMAL</span>
+          <span class="tab-sub" data-i18n="ui.map_select.tab_norm_sub">100 VIDAS · 2 ENTRADAS</span>
         </button>
         <button type="button" class="map-diff-tab diff-hard" id="tab-map-dificil" data-diff="dificil" role="tab" aria-selected="false">
-          <span class="tab-badge">SECTOR CRÍTICO</span>
-          <span class="tab-name">DIFÍCIL</span>
-          <span class="tab-sub">75 VIDAS · 2 SALIDAS</span>
+          <span class="tab-badge" data-i18n="ui.map_select.tab_hard_badge">SECTOR CRÍTICO</span>
+          <span class="tab-name" data-i18n="ui.map_select.tab_hard">DIFÍCIL</span>
+          <span class="tab-sub" data-i18n="ui.map_select.tab_hard_sub">75 VIDAS · 2 SALIDAS</span>
         </button>
       </div>
 
@@ -770,8 +770,8 @@
         <div class="map-detail-right">
           <button type="button" class="rust-btn primary map-deploy-hero-btn" id="btn-launch-map">
             <div class="deploy-btn-inner">
-              <span class="deploy-main-txt">[ DESPLEGAR EN ESTE SECTOR ► ]</span>
-              <span class="deploy-sub-txt">INICIAR OPERACIÓN // 12 OLEADAS</span>
+              <span class="deploy-main-txt" data-i18n="ui.map_select.deploy_btn">[ DESPLEGAR EN ESTE SECTOR ► ]</span>
+              <span class="deploy-sub-txt" data-i18n="ui.map_select.deploy_sub">INICIAR OPERACIÓN // 12 OLEADAS</span>
             </div>
           </button>
         </div>
@@ -784,9 +784,9 @@
     <div class="metal-plate main-menu-plate" style="max-width:640px;">
       <div class="tape-strip">
         <span class="ui-icon sm" data-ui-icon="warning"></span>
-        <span>PROTOCOLO DE ADIESTRAMIENTO</span>
+        <span data-i18n="ui.tutorial_prompt.tape">PROTOCOLO DE ADIESTRAMIENTO</span>
       </div>
-      <h1 class="buckshot-title" style="font-size:22px;">¿EJECUTAR TUTORIAL?</h1>
+      <h1 class="buckshot-title" style="font-size:22px;" data-i18n="ui.tutorial_prompt.title">¿EJECUTAR TUTORIAL?</h1>
       <p class="plate-sub">
         Es tu primer contrato de defensa. Puedes realizar un tutorial interactivo:
         aprenderás a colocar torretas libremente, mejorarlas con rutas estilo BTD6,
@@ -796,8 +796,8 @@
         Esta elección solo se pregunta la primera vez. Después podrás repetirlo desde el menú principal.
       </p>
       <div class="btn-group" style="flex-direction:column; gap:12px; margin-top:16px;">
-        <button class="rust-btn primary" id="btn-tutorial-yes"><span>[ SÍ, INICIAR TUTORIAL INTERACTIVO ]</span></button>
-        <button class="rust-btn" id="btn-tutorial-no"><span>[ NO, JUGAR DIRECTO ]</span></button>
+        <button class="rust-btn primary" id="btn-tutorial-yes"><span data-i18n="ui.tutorial_prompt.yes">[ SÍ, INICIAR TUTORIAL INTERACTIVO ]</span></button>
+        <button class="rust-btn" id="btn-tutorial-no"><span data-i18n="ui.tutorial_prompt.no">[ NO, JUGAR DIRECTO ]</span></button>
       </div>
     </div>
   </div>
@@ -808,19 +808,19 @@
       <div class="plate-header turret-modal-header">
         <span class="tape-label" id="turret-modal-title-wrap">
           <span class="ui-icon sm" data-ui-icon="turret_gunner" id="turret-modal-icon"></span>
-          <span id="turret-modal-title-text">TERMINAL DE EMPLAZAMIENTO // TORRETAS</span>
+          <span id="turret-modal-title-text" data-i18n="ui.turret_modal.title_place">TERMINAL DE EMPLAZAMIENTO // TORRETAS</span>
         </span>
         <div class="turret-build-header-actions">
           <span class="turret-scrap-balance" id="turret-modal-scrap-pill">
             <span class="ui-icon sm" data-ui-icon="scrap"></span>
-            <b><span id="turret-modal-scrap-val">0</span></b> CHATARRA
+            <b><span id="turret-modal-scrap-val">0</span></b> <span data-i18n="ui.turret_modal.scrap_pill">CHATARRA</span>
           </span>
-          <button class="rust-btn sm hidden" id="btn-skip-prep-build"><span>[ INICIAR OLEADA (F) ]</span></button>
-          <button class="rust-btn sm" id="btn-close-turret-build"><span>[ CERRAR (E) ]</span></button>
+          <button class="rust-btn sm hidden" id="btn-skip-prep-build"><span data-i18n="ui.turret_modal.skip_prep">[ INICIAR OLEADA (F) ]</span></button>
+          <button class="rust-btn sm" id="btn-close-turret-build"><span data-i18n="ui.turret_modal.close">[ CERRAR (E) ]</span></button>
         </div>
       </div>
       <div id="turret-build-content"></div>
-      <div class="turret-build-footer">CONSTRUYE Y MEJORA CON LA CHATARRA RECOGIDA DE LOS HOSTILES. SOLO UNA RUTA DE MEJORA PUEDE SUPERAR EL NIVEL 2.</div>
+      <div class="turret-build-footer" data-i18n="ui.turret_modal.footer_tip">CONSTRUYE Y MEJORA CON LA CHATARRA RECOGIDA DE LOS HOSTILES. SOLO UNA RUTA DE MEJORA PUEDE SUPERAR EL NIVEL 2.</div>
     </div>
   </div>
 
@@ -830,18 +830,18 @@
       <div class="plate-header">
         <span class="tape-label">
           <span class="ui-icon sm" data-ui-icon="tooth"></span>
-          <span>MESA DEL CIRUJANO (MEJORAS PERMANENTES)</span>
+          <span data-i18n="ui.shop.title">MESA DEL CIRUJANO (MEJORAS PERMANENTES)</span>
         </span>
         <span class="led-val amber">
           <span class="ui-icon sm" data-ui-icon="tooth"></span>
-          <span>RESERVA: <span id="shop-souls">0</span></span>
+          <span><span data-i18n="ui.shop.reserve">RESERVA:</span> <span id="shop-souls">0</span></span>
         </span>
       </div>
-      <p class="plate-sub">Intercambia los dientes extraídos en tus partidas por implantes permanentes:</p>
+      <p class="plate-sub" data-i18n="ui.shop.sub">Intercambia los dientes extraídos en tus partidas por implantes permanentes:</p>
       <div id="shop-list" class="shop-container"></div>
       <div class="btn-group" style="margin-top:14px;">
-        <button class="rust-btn primary" id="btn-shop-play"><span>[ ENTRAR DIRECTO A PLANTA ]</span></button>
-        <button class="rust-btn" id="btn-close-shop"><span>[ VOLVER ]</span></button>
+        <button class="rust-btn primary" id="btn-shop-play"><span data-i18n="ui.shop.play_now">[ ENTRAR DIRECTO A PLANTA ]</span></button>
+        <button class="rust-btn" id="btn-close-shop"><span data-i18n="ui.shop.back">[ VOLVER ]</span></button>
       </div>
     </div>
   </div>
@@ -852,15 +852,15 @@
       <div class="plate-header">
         <span class="tape-label">
           <span class="ui-icon sm" data-ui-icon="level"></span>
-          <span>SELECCIONA MUTACIÓN, ARMA O IMPLANTE PASIVO</span>
+          <span data-i18n="ui.levelup.title">SELECCIONA MUTACIÓN, ARMA O IMPLANTE PASIVO</span>
         </span>
         <span id="lvlup-slots-info" class="led-val amber">ARMAS: 1/4 | PASIVAS: 0/4</span>
       </div>
-      <p class="plate-sub">Elige 1 de las siguientes opciones (Tope máximo por pieza: +8):</p>
+      <p class="plate-sub" data-i18n="ui.levelup.sub">Elige 1 de las siguientes opciones (Tope máximo por pieza: +8):</p>
       <div id="upgrade-container"></div>
       <div class="reroll-bar">
         <div class="reroll-charges-box">
-          <span>CARGAS:</span>
+          <span data-i18n="ui.levelup.charges">CARGAS:</span>
           <div id="reroll-charges" class="reroll-charges"></div>
         </div>
         <button class="rust-btn reroll-btn" id="btn-reroll">
@@ -876,26 +876,26 @@
     <div class="metal-plate gameover-plate">
       <div class="tape-strip">
         <span class="ui-icon sm" data-ui-icon="skull"></span>
-        <span>CERTIFICADO DE DEFUNCIÓN // EXPEDIENTE CERRADO</span>
+        <span data-i18n="ui.results.report_title_surv_defeat">CERTIFICADO DE DEFUNCIÓN // EXPEDIENTE CERRADO</span>
       </div>
-      <h1 class="buckshot-title dead-title">PACIENTE EXPIRADO</h1>
-      <p id="go-cause" class="plate-sub">CAUSA: DESMEMBRAMIENTO EN PLANTA INDUSTRIAL</p>
+      <h1 class="buckshot-title dead-title" data-i18n="ui.results.defeat_headline">PACIENTE EXPIRADO</h1>
+      <p id="go-cause" class="plate-sub" data-i18n="ui.results.cause_default">CAUSA: DESMEMBRAMIENTO EN PLANTA INDUSTRIAL</p>
 
       <div class="paper-note stats-report">
-        <div class="report-row"><span>TIEMPO EN PLANTA:</span><b id="go-time">00:00</b></div>
-        <div class="report-row"><span>JEFES DERROTADOS:</span><b id="go-bosses" style="color:#f0c954">0 / 5</b></div>
-        <div class="report-row"><span>ENEMIGOS ELIMINADOS:</span><b id="go-kills" style="color:#ff6b6b">0</b></div>
-        <div class="report-row"><span>DIENTES EXTRAÍDOS EN PARTIDA:</span><b id="go-souls" style="color:#f0c954">+0</b></div>
-        <div class="report-row"><span>RESERVA TOTAL DE DIENTES:</span><b id="go-total-souls" style="color:#f0c954">0</b></div>
-        <div class="report-row"><span>CICLO ALCANZADO:</span><b id="go-level">CICLO 1</b></div>
-        <div class="report-row"><span id="go-mode-extra-label">ESTADO DE FASE FINAL:</span><b id="go-endgame">NO ALCANZADA</b></div>
+        <div class="report-row"><span data-i18n="ui.results.time_label">TIEMPO EN PLANTA:</span><b id="go-time">00:00</b></div>
+        <div class="report-row"><span data-i18n="ui.results.bosses_label">JEFES DERROTADOS:</span><b id="go-bosses" style="color:#f0c954">0 / 5</b></div>
+        <div class="report-row"><span data-i18n="ui.results.kills_label">ENEMIGOS ELIMINADOS:</span><b id="go-kills" style="color:#ff6b6b">0</b></div>
+        <div class="report-row"><span data-i18n="ui.results.run_teeth_label">DIENTES EXTRAÍDOS EN PARTIDA:</span><b id="go-souls" style="color:#f0c954">+0</b></div>
+        <div class="report-row"><span data-i18n="ui.results.total_teeth_label">RESERVA TOTAL DE DIENTES:</span><b id="go-total-souls" style="color:#f0c954">0</b></div>
+        <div class="report-row"><span data-i18n="ui.results.cycle_label">CICLO ALCANZADO:</span><b id="go-level">CICLO 1</b></div>
+        <div class="report-row"><span id="go-mode-extra-label" data-i18n="ui.results.surv_status_label">ESTADO DE FASE FINAL:</span><b id="go-endgame" data-i18n="ui.results.surv_endgame_not_reached">NO ALCANZADA</b></div>
         <div class="report-loadout" id="go-loadout"></div>
       </div>
 
       <div class="btn-group">
-        <button class="rust-btn primary" id="btn-restart"><span>[ NUEVA PARTIDA ]</span></button>
-        <button class="rust-btn" id="btn-results-menu"><span>[ VOLVER AL MENÚ / CAMBIAR MODO ]</span></button>
-        <button class="rust-btn" id="btn-go-shop"><span>[ COMPRAR MEJORAS PERMANENTES ]</span></button>
+        <button class="rust-btn primary" id="btn-restart"><span data-i18n="ui.results.btn_restart">[ NUEVA PARTIDA ]</span></button>
+        <button class="rust-btn" id="btn-results-menu"><span data-i18n="ui.results.btn_menu">[ VOLVER AL MENÚ / CAMBIAR MODO ]</span></button>
+        <button class="rust-btn" id="btn-go-shop"><span data-i18n="ui.results.btn_shop">[ COMPRAR MEJORAS PERMANENTES ]</span></button>
       </div>
     </div>
   </div>

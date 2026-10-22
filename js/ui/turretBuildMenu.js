@@ -3,6 +3,8 @@
 import { CORE_DEFENSE_CONFIG } from '../config/coreDefenseConfig.js';
 import { AudioSys } from '../audio.js';
 import { renderSpriteIconHTML } from '../spritesheets.js';
+import { t } from '../core/i18n.js';
+import { GameEvents } from '../core/eventBus.js';
 
 // ============================================================================
 // PANEL DE CONSTRUCCIÓN, MEJORA Y VENTA DE TORRETAS (COLOCACIÓN LIBRE)
@@ -10,29 +12,45 @@ import { renderSpriteIconHTML } from '../spritesheets.js';
 
 function formatStats(cfg) {
   const b = cfg.base;
+  const dmg = t('turret.stat.damage');
+  const cad = t('turret.stat.fireRate');
+  const rng = t('turret.stat.range');
+  const aoe = t('turret.stat.aoe');
+  const rlt = t('turret.stat.slow');
+  const rad = t('turret.stat.radius');
+  const ally = t('turret.stat.allies');
+  const ev = t('turret.stat.every');
+  const bDmg = t('turret.stat.buffDamage');
+  const chn = t('turret.stat.chain');
+  const brn = t('turret.stat.burn');
+  const sgl = t('turret.stat.singleTarget');
+  const scr = t('turret.stat.scrapPerWave');
+  const psh = t('turret.stat.push');
+  const stn = t('turret.stat.stun');
+
   switch (cfg.id) {
     case 'gunner':
-      return `DAÑO ${b.damage} · CAD ${b.fireRate.toFixed(1)}/s · RANGO ${b.range}m`;
+      return `${dmg} ${b.damage} · ${cad} ${b.fireRate.toFixed(1)}/s · ${rng} ${b.range}m`;
     case 'mortar':
-      return `DAÑO ${b.damage} · ÁREA ${b.aoeRadius}m · CAD ${b.fireRate.toFixed(2)}/s`;
+      return `${dmg} ${b.damage} · ${aoe} ${b.aoeRadius}m · ${cad} ${b.fireRate.toFixed(2)}/s`;
     case 'cryo':
-      return `RALENT. ${Math.round((1 - b.slowFactor) * 100)}% · RADIO ${b.aoeRadius}m`;
+      return `${rlt} ${Math.round((1 - b.slowFactor) * 100)}% · ${rad} ${b.aoeRadius}m`;
     case 'barracks':
-      return `ALIADOS ${b.allyCap} · CADA ${b.spawnInterval}s`;
+      return `${ally} ${b.allyCap} · ${ev} ${b.spawnInterval}s`;
     case 'support':
-      return `BUFF DAÑO +${Math.round((b.buffDamage || 0.15) * 100)}% · CAD +${Math.round((b.buffFireRate || 0.15) * 100)}% · RADIO ${b.range}m`;
+      return `${bDmg} +${Math.round((b.buffDamage || 0.15) * 100)}% · ${cad} +${Math.round((b.buffFireRate || 0.15) * 100)}% · ${rad} ${b.range}m`;
     case 'tesla':
-      return `DAÑO ${b.damage} · CAD ${b.fireRate.toFixed(1)}/s · CADENA ${b.chainCount} · RANGO ${b.range}m`;
+      return `${dmg} ${b.damage} · ${cad} ${b.fireRate.toFixed(1)}/s · ${chn} ${b.chainCount} · ${rng} ${b.range}m`;
     case 'incinerator':
-      return `DAÑO ${b.damage} · QUEMA ${b.burnDps}/s · RANGO ${b.range}m`;
+      return `${dmg} ${b.damage} · ${brn} ${b.burnDps}/s · ${rng} ${b.range}m`;
     case 'railgun':
-      return `DAÑO ${b.damage} · RANGO ${b.range}m · OBJETIVO ÚNICO`;
+      return `${dmg} ${b.damage} · ${rng} ${b.range}m · ${sgl}`;
     case 'collector':
-      return `SCRAP +${b.scrapPerWave}/OLEADA · +${b.scrapAmount}/${b.scrapInterval}s`;
+      return `${scr} +${b.scrapPerWave} · +${b.scrapAmount}/${b.scrapInterval}s`;
     case 'press':
-      return `DAÑO ${b.damage} · ÁREA ${b.aoeRadius}m · STUN ${b.freezeDuration}s`;
+      return `${dmg} ${b.damage} · ${aoe} ${b.aoeRadius}m · ${stn} ${b.freezeDuration}s`;
     case 'ejector':
-      return `EMPUJE ${b.pushDistance}m · ÁREA ${b.aoeRadius}m · CAD ${b.fireRate.toFixed(1)}/s`;
+      return `${psh} ${b.pushDistance}m · ${aoe} ${b.aoeRadius}m · ${cad} ${b.fireRate.toFixed(1)}/s`;
     default:
       return '';
   }
@@ -50,6 +68,12 @@ export class TurretBuildMenu {
     this.turretId = null;
     this.onClose = null;
     this.isOpen = false;
+
+    GameEvents.on('i18n:change', () => {
+      if (this.isOpen) {
+        this.render();
+      }
+    });
   }
 
   ensureDom() {
@@ -117,7 +141,7 @@ export class TurretBuildMenu {
       return;
     }
 
-    const title = turret ? `TORRETA // ${turret.cfg.name}` : 'TERMINAL DE EMPLAZAMIENTO // TORRETAS';
+    const title = turret ? t('ui.turret_modal.title_turret', { name: turret.cfg.name }) : t('ui.turret_modal.title_place');
     const titleEl = document.getElementById('turret-modal-title-text');
     if (titleEl) titleEl.textContent = title;
     const iconEl = document.getElementById('turret-modal-icon');
@@ -143,7 +167,7 @@ export class TurretBuildMenu {
       }).join('');
 
       this.content.innerHTML = `
-        <p class="turret-panel-sub">Elige una torreta y colócala libremente. Al cerrar este panel podrás apuntar al suelo: <b>verde</b> = válido, <b>rojo</b> = bloqueado. Clic izquierdo o <b>E</b> para colocar; <b>ESC</b> para cancelar.</p>
+        <p class="turret-panel-sub">${t('ui.turret_modal.place_instructions_html')}</p>
         <div class="turret-shop-grid">${cards}</div>`;
     } else {
       const cfg = turret.cfg;
@@ -162,12 +186,12 @@ export class TurretBuildMenu {
             <div class="turret-next-name">${st.next.name}</div>
             <div class="turret-next-desc">${st.next.desc}</div>
             ${st.lockReason ? `<div class="turret-lock">${st.lockReason}</div>` : ''}
-            ${!st.lockReason && scrap < st.next.cost ? '<div class="turret-lock">CHATARRA INSUFICIENTE</div>' : ''}
+            ${!st.lockReason && scrap < st.next.cost ? `<div class="turret-lock">${t('ui.turret_modal.not_enough_scrap')}</div>` : ''}
             <button class="rust-btn sm" data-action="upgrade" data-path="${i}" ${can ? '' : 'disabled'}>
-              MEJORAR (${st.next.cost})
+              ${t('ui.turret_modal.upgrade_btn', { cost: st.next.cost })}
             </button>`;
         } else {
-          nextBlock = `<div class="turret-next-name">NIVEL MÁXIMO</div>`;
+          nextBlock = `<div class="turret-next-name">${t('ui.turret_modal.max_level')}</div>`;
         }
 
         return `
@@ -186,11 +210,11 @@ export class TurretBuildMenu {
         <div class="turret-summary-bar">
           <div class="turret-summary-hp" style="width:${hpPct}%"></div>
         </div>
-        <div class="turret-summary-sub">INTEGRIDAD ${Math.ceil(turret.hp)} / ${turret.maxHp}</div>
+        <div class="turret-summary-sub">${t('ui.turret_modal.integrity', { hp: Math.ceil(turret.hp), maxHp: turret.maxHp })}</div>
         <div class="turret-upgrade-grid">${paths}</div>
         <div class="turret-panel-actions">
-          <button class="rust-btn sm" data-action="switch-build">CONSTRUIR OTRA TORRETA</button>
-          <button class="rust-btn sm danger" data-action="sell">VENDER (+${turret.getSellValue()} CHATARRA)</button>
+          <button class="rust-btn sm" data-action="switch-build">${t('ui.turret_modal.btn_switch_build')}</button>
+          <button class="rust-btn sm danger" data-action="sell">${t('ui.turret_modal.btn_sell', { refund: turret.getSellValue() })}</button>
         </div>`;
     }
 
@@ -218,15 +242,15 @@ export class TurretBuildMenu {
       const turretId = btn.dataset.turret;
       if (this.mode.beginTurretPlacement(turretId)) {
         this.close();
-      } else {
-        AudioSys.playUIError();
       }
       return;
     }
 
     if (action === 'upgrade') {
-      const pathIndex = Number(btn.dataset.path);
-      if (this.mode.upgradeTurret(this.turretId, pathIndex)) {
+      const pathIdx = parseInt(btn.dataset.path, 10);
+      const turret = this.turretId ? this.mode.getTurretById(this.turretId) : null;
+      if (turret && this.mode.upgradeTurret(turret, pathIdx)) {
+        AudioSys.playUISelect();
         this.render();
       } else {
         AudioSys.playUIError();
@@ -235,12 +259,10 @@ export class TurretBuildMenu {
     }
 
     if (action === 'sell') {
-      const refund = this.mode.sellTurret(this.turretId);
-      if (refund > 0) {
-        AudioSys.playUISelect();
+      const turret = this.turretId ? this.mode.getTurretById(this.turretId) : null;
+      if (turret) {
+        this.mode.sellTurret(turret);
         this.close();
-      } else {
-        AudioSys.playUIError();
       }
     }
   }

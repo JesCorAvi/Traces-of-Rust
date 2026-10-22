@@ -3,8 +3,12 @@
 
 import { gameSettings, saveGameSettings } from '../core/saveState.js';
 import { AudioSys } from '../audio.js';
+import { t } from '../core/i18n.js';
+import { GameEvents } from '../core/eventBus.js';
 
 let initialized = false;
+let lastKnownFullscreen = true;
+let syncMuteFn = null;
 
 function getElectronBridge() {
   const direct = window.electronWindow;
@@ -15,8 +19,9 @@ function getElectronBridge() {
 }
 
 function updateToggleUI(isFullscreen) {
+  lastKnownFullscreen = isFullscreen;
   const label = document.getElementById('fullscreen-state-text');
-  if (label) label.textContent = isFullscreen ? 'ACTIVADA' : 'VENTANA';
+  if (label) label.textContent = isFullscreen ? t('ui.common.fullscreen_on') : t('ui.common.fullscreen_off');
   const button = document.getElementById('btn-toggle-fullscreen');
   if (button) button.setAttribute('aria-pressed', String(!!isFullscreen));
 }
@@ -135,9 +140,10 @@ function setupAudioControls() {
     const syncMute = () => {
       const muted = !!gameSettings.muted;
       const text = muteButton.querySelector('span') || muteButton;
-      text.textContent = muted ? 'ACTIVADO' : 'DESACTIVADO';
+      text.textContent = muted ? t('ui.common.enabled') : t('ui.common.disabled');
       muteButton.setAttribute('aria-pressed', String(muted));
     };
+    syncMuteFn = syncMute;
     muteButton.addEventListener('click', () => {
       gameSettings.muted = !gameSettings.muted;
       saveGameSettings();
@@ -184,6 +190,11 @@ export function setupSettingsUI() {
       isFullscreen().then(updateToggleUI);
     });
   }
+
+  GameEvents.on('i18n:change', () => {
+    updateToggleUI(lastKnownFullscreen);
+    if (syncMuteFn) syncMuteFn();
+  });
 
   updateToggleUI(gameSettings.fullscreen !== false);
 }

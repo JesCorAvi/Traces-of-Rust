@@ -1,13 +1,20 @@
-// Tienda permanente de la Mesa del Cirujano.
+// Tienda permanente (Mesa del Cirujano): compra de mejoras con dientes.
 // Exports: renderShopUI.
 
 import { CONFIG } from '../config.js';
 import { AudioSys } from '../audio.js';
 import { renderSpriteIconHTML } from '../spritesheets.js';
+import { t } from '../core/i18n.js';
+import { GameEvents } from '../core/eventBus.js';
+
+let lastShopState = null;
 
 export function renderShopUI(save, saveGameFn) {
-  document.getElementById('start-souls').textContent = save.souls || 0;
-  document.getElementById('shop-souls').textContent = save.souls || 0;
+  lastShopState = { save, saveGameFn };
+  const soulsEl = document.getElementById('start-souls');
+  if (soulsEl) soulsEl.textContent = save.souls || 0;
+  const shopSoulsEl = document.getElementById('shop-souls');
+  if (shopSoulsEl) shopSoulsEl.textContent = save.souls || 0;
   const goTotal = document.getElementById('go-total-souls');
   if (goTotal) goTotal.innerHTML = `${save.souls || 0} ${renderSpriteIconHTML('tooth', 'sm')}`;
 
@@ -23,16 +30,17 @@ export function renderShopUI(save, saveGameFn) {
 
     const row = document.createElement('div');
     row.className = 'shop-row';
+    const lvlStr = t('ui.shop.level_tag', { level: lvl });
     row.innerHTML = `
       <div class="shop-row-left">
         ${renderSpriteIconHTML(item.icon || 'dmg')}
         <div class="shop-row-info">
-          <b>${item.name} [NV. ${lvl}${item.max ? '/' + item.max : ''}]</b>
+          <b>${item.name} [${lvlStr}${item.max ? '/' + item.max : ''}]</b>
           <div class="shop-row-sub">${item.desc}</div>
         </div>
       </div>
       <button class="rust-btn sm" ${!canAfford ? 'disabled' : ''}>
-        <span>${isMaxed ? 'MÁXIMO' : `COMPRAR (${cost})`}</span>
+        <span>${isMaxed ? t('ui.shop.max') : t('ui.shop.buy', { cost })}</span>
         ${!isMaxed ? renderSpriteIconHTML('tooth', 'sm') : ''}
       </button>
     `;
@@ -52,3 +60,10 @@ export function renderShopUI(save, saveGameFn) {
     list.appendChild(row);
   });
 }
+
+GameEvents.on('i18n:change', () => {
+  const shopScreen = document.getElementById('shop-screen');
+  if (shopScreen && !shopScreen.classList.contains('hidden') && lastShopState) {
+    renderShopUI(lastShopState.save, lastShopState.saveGameFn);
+  }
+});

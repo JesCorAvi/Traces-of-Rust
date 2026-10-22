@@ -13,6 +13,8 @@ import {
   setCoopCharSelectionStatus
 } from '../ui/characterSelectorModal.js';
 import { getMapById } from '../defense/mapGenerator.js';
+import { t } from '../core/i18n.js';
+import { GameEvents } from '../core/eventBus.js';
 
 let modalEl = null;
 let currentLobbyData = null;
@@ -119,6 +121,13 @@ export function setupSteamLobbyUI(runtime = {}) {
   // Comprueba estado inicial silenciosamente
   checkInitialSteamStatus();
 
+  // Escuchar cambio dinámico de idioma para refrescar títulos y estados
+  GameEvents.on('i18n:change', () => {
+    applyOnlineModeCopy();
+    refreshSteamUserCard();
+    if (currentLobbyData) applyLobbyUpdate(currentLobbyData);
+  });
+
   // Enlace directo `?room=CODIGO` para partidas WebRTC compartidas por chat.
   if (isWebRtcMode) {
     setTimeout(() => { autoJoinFromUrl(); }, 0);
@@ -131,25 +140,25 @@ function applyOnlineModeCopy() {
   if (!modal) return;
 
   const title = modal.querySelector('.plate-header .tape-label span:last-child');
-  if (title) title.textContent = 'TERMINAL MULTIJUGADOR // COOPERATIVO';
+  if (title) title.textContent = t('ui.online.title');
 
   const subtitle = modal.querySelector('.plate-sub');
   if (subtitle) {
-    subtitle.textContent = 'Comparte el código de 6 caracteres con tu compañero o invítalo vía Steam.';
+    subtitle.textContent = t('ui.online.sub');
   }
 
   const overlayBtn = document.getElementById('btn-steam-overlay');
-  if (overlayBtn) overlayBtn.innerHTML = '<span>[ COPIAR ENLACE DE SALA ]</span>';
+  if (overlayBtn) overlayBtn.innerHTML = `<span>${t('ui.online.btn_copy_link')}</span>`;
 
   const copyBtn = document.getElementById('btn-copy-lobby-id');
-  if (copyBtn) copyBtn.innerHTML = '<span>[ COPIAR ENLACE ]</span>';
+  if (copyBtn) copyBtn.innerHTML = `<span>${t('ui.online.btn_copy_link')}</span>`;
 
   const joinInput = document.getElementById('steam-join-input');
-  if (joinInput) joinInput.placeholder = 'Código de 6 caracteres (ej. A7K9X2)...';
+  if (joinInput) joinInput.placeholder = t('ui.online.join_placeholder');
 
   const privateText = modal.querySelector('.steam-private-info-box p');
   if (privateText) {
-    privateText.textContent = 'Partida cooperativa protegida. Solo quien tenga el código exacto de la sala puede ingresar.';
+    privateText.textContent = t('ui.online.private_tip');
   }
 }
 
@@ -234,11 +243,11 @@ async function refreshSteamUserCard() {
 
   if (!window.steamOnline) {
     if (badgeEl) {
-      badgeEl.textContent = 'MODO SIN CONEXIÓN';
+      badgeEl.textContent = t('ui.online.status_offline');
       badgeEl.style.color = '#e67828';
     }
-    if (nameEl) nameEl.textContent = 'Operador Local';
-    if (idEl) idEl.textContent = 'Inicia el juego con conexión para acceder a partidas cooperativas.';
+    if (nameEl) nameEl.textContent = t('ui.online.local_operator');
+    if (idEl) idEl.textContent = t('ui.online.offline_tip');
     return;
   }
 
@@ -248,24 +257,24 @@ async function refreshSteamUserCard() {
       localPlayerSteamId = status.steamId;
       const webMode = !!(status.isWebRtc || status.mode === 'WEBRTC');
       if (badgeEl) {
-        badgeEl.textContent = '● ENLACE CO-OP ACTIVO';
+        badgeEl.textContent = t('ui.online.status_connected');
         badgeEl.style.color = '#55de3e';
       }
       if (nameEl) nameEl.textContent = status.playerName;
       if (idEl) {
-        idEl.textContent = 'Operador listo // Modo Cooperativo';
+        idEl.textContent = t('ui.online.ready_tip');
       }
     } else {
       if (badgeEl) {
-        badgeEl.textContent = 'SIN CONEXIÓN';
+        badgeEl.textContent = t('ui.online.status_offline');
         badgeEl.style.color = '#ff6b6b';
       }
-      if (nameEl) nameEl.textContent = 'Operador Local';
-      if (idEl) idEl.textContent = status.message || 'Inicia la plataforma antes de conectar.';
+      if (nameEl) nameEl.textContent = t('ui.online.local_operator');
+      if (idEl) idEl.textContent = status.message || t('ui.online.offline_tip');
     }
   } catch (err) {
     if (badgeEl) {
-      badgeEl.textContent = 'ERROR DE ENLACE';
+      badgeEl.textContent = t('ui.online.status_error');
       badgeEl.style.color = '#ff6b6b';
     }
   }
@@ -289,14 +298,14 @@ function applyLobbyUpdate(details) {
 
   const memberCount = details.memberCount || (details.members ? details.members.length : 1);
   const memberLimit = details.memberLimit || 4;
-  if (countEl) countEl.textContent = `${memberCount} / ${memberLimit} Operadores`;
+  if (countEl) countEl.textContent = t('ui.online.members_count', { count: memberCount, max: memberLimit });
 
   // Renderizar la lista de operadores en la sala
   if (membersListEl) {
     membersListEl.innerHTML = '';
     const members = details.members || [];
     if (members.length === 0) {
-      membersListEl.innerHTML = `<div style="font-size:11px; color:#888;">Operador local conectado. Esperando compañeros...</div>`;
+      membersListEl.innerHTML = `<div style="font-size:11px; color:#888;">${t('ui.online.waiting_coop')}</div>`;
     } else {
       members.forEach((m, idx) => {
         const row = document.createElement('div');
@@ -305,9 +314,9 @@ function applyLobbyUpdate(details) {
         const label = document.createElement('span');
         const roleSpan = document.createElement('span');
         if (m.isOwner) {
-          roleSpan.innerHTML = '<b style="color:#f0c954">[HOST]</b>';
+          roleSpan.innerHTML = `<b style="color:#f0c954">${t('ui.online.host_badge')}</b>`;
         } else {
-          roleSpan.innerHTML = '<span style="color:#8ef77b">[CLIENTE]</span>';
+          roleSpan.innerHTML = `<span style="color:#8ef77b">${t('ui.online.client_badge')}</span>`;
         }
         label.appendChild(roleSpan);
         label.appendChild(document.createTextNode(` ${m.playerName || `Operador #${idx + 1}`} `));
@@ -320,7 +329,7 @@ function applyLobbyUpdate(details) {
 
         const onlineEl = document.createElement('span');
         onlineEl.style.color = '#55de3e';
-        onlineEl.textContent = '● EN LÍNEA';
+        onlineEl.textContent = t('ui.online.online_indicator');
 
         row.appendChild(label);
         row.appendChild(onlineEl);
@@ -449,7 +458,7 @@ export function handleRemoteCancelStage() {
     coopMatchStage = null;
     closeCharacterSelectorModal();
     openSteamOnlineModal();
-    alert('Despliegue cancelado por el compañero.');
+    alert(t('ui.online.stage_cancelled'));
   }
 }
 
@@ -543,7 +552,7 @@ async function handleHostStartCoopMatch() {
   AudioSys.playUISelect();
 
   if (!currentLobbyData) {
-    alert('No hay ninguna sala activa.');
+    alert(t('ui.online.no_active_room'));
     return;
   }
 
@@ -573,7 +582,7 @@ async function handleCreateLobby() {
   AudioSys.play(440, 0.15, 'square', 0.08);
 
   if (!window.steamOnline) {
-    alert('Para crear salas reales de Steamworks, abre el juego desde el ejecutable de Windows con Steam abierto.');
+    alert(t('ui.online.err_need_steam_create'));
     return;
   }
 
@@ -611,7 +620,7 @@ async function handleCopyLobbyId() {
     const copyBtn = document.getElementById('btn-copy-lobby-id');
     if (copyBtn) {
       const orig = copyBtn.innerHTML;
-      copyBtn.innerHTML = '<span>[ ¡ENLACE COPIADO! ]</span>';
+      copyBtn.innerHTML = `<span>${t('ui.online.btn_link_copied')}</span>`;
       setTimeout(() => { copyBtn.innerHTML = orig; }, 1800);
     }
     return;
@@ -627,7 +636,7 @@ async function handleCopyLobbyId() {
       const copyBtn = document.getElementById('btn-copy-lobby-id');
       if (copyBtn) {
         const orig = copyBtn.innerHTML;
-        copyBtn.innerHTML = '<span>[ ¡ENLACE COPIADO! ]</span>';
+        copyBtn.innerHTML = `<span>${t('ui.online.btn_link_copied')}</span>`;
         setTimeout(() => { copyBtn.innerHTML = orig; }, 1800);
       }
     } catch (e) {
@@ -664,7 +673,7 @@ async function joinLobbyDirect(lobbyId) {
       const displayId = isWebRtcMode ? String(res.lobbyId || lobbyId).toUpperCase() : lobbyId.slice(-6);
       const notice = document.getElementById('steam-lobby-notice');
       if (notice) notice.classList.add('hidden');
-      alert(`¡Conectado con éxito a la sala #${displayId}!`);
+      alert(t('ui.online.connected_success', { id: displayId }));
     } else {
       await openSteamOnlineModal();
       const err = res?.error || '';
@@ -697,19 +706,19 @@ async function handleJoinById() {
   if (!input) return;
   let lobbyId = input.value.trim();
   if (!lobbyId) {
-    alert('Por favor introduce un Lobby ID válido.');
+    alert(t('ui.online.err_invalid_id'));
     return;
   }
 
   if (!window.steamOnline) {
-    alert('Debes ejecutar la versión empaquetada de Windows con Steam abierto para unirte a salas.');
+    alert(t('ui.online.err_need_steam'));
     return;
   }
 
   if (isWebRtcMode) {
     lobbyId = normalizeRoomCode(lobbyId);
     if (!lobbyId) {
-      alert('Código inválido. Introduce los 6 caracteres de la sala (ej. A7K9X2) o pega el enlace completo.');
+      alert(t('ui.online.err_invalid_code'));
       return;
     }
     input.value = lobbyId;

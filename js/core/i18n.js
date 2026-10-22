@@ -1,0 +1,265 @@
+// Gestor de Internacionalización y Localización para Traces of Rust.
+// Soporta 9 idiomas, carga bajo demanda, fallback en caliente a español,
+// interpolación de variables {param}, plurales CLDR con Intl.PluralRules y refresco del DOM.
+
+import esLocale from '../../locales/es.js';
+import { GameEvents } from './eventBus.js';
+
+export const SUPPORTED_LANGUAGES = [
+  { code: 'es', name: 'Español', nativeName: 'Español', flag: 'es' },
+  { code: 'en', name: 'English', nativeName: 'English', flag: 'en' },
+  { code: 'pt-BR', name: 'Português', nativeName: 'Português', flag: 'pt-BR' },
+  { code: 'fr', name: 'Français', nativeName: 'Français', flag: 'fr' },
+  { code: 'ja', name: 'Japanese', nativeName: '日本語', flag: 'ja' },
+  { code: 'zh-Hans', name: 'Simplified Chinese', nativeName: '简体中文', flag: 'zh-Hans' },
+  { code: 'zh-Hant', name: 'Traditional Chinese', nativeName: '繁體中文', flag: 'zh-Hant' },
+  { code: 'ko', name: 'Korean', nativeName: '한국어', flag: 'ko' },
+  { code: 'ru', name: 'Russian', nativeName: 'Русский', flag: 'ru' }
+];
+
+export const DEFAULT_LANGUAGE = 'es';
+
+const localesCache = new Map();
+localesCache.set('es', esLocale);
+
+const pluralRulesCache = new Map();
+
+function getPluralRules(lang) {
+  if (!pluralRulesCache.has(lang)) {
+    try {
+      pluralRulesCache.set(lang, new Intl.PluralRules(lang));
+    } catch (e) {
+      // Fallback a inglés/estándar si el runtime falla con algún tag
+      pluralRulesCache.set(lang, new Intl.PluralRules('en'));
+    }
+  }
+  return pluralRulesCache.get(lang);
+}
+
+let currentLanguage = DEFAULT_LANGUAGE;
+let isInitialized = false;
+
+/**
+ * Normaliza y detecta el idioma del sistema o navegador del jugador.
+ * Si coincide con uno soportado lo devuelve; de lo contrario devuelve 'en'.
+ */
+export function detectSystemLanguage() {
+  const browserLangs = (typeof navigator !== 'undefined')
+    ? (navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language || ''])
+    : ['en'];
+
+  for (const raw of browserLangs) {
+    if (!raw) continue;
+    const l = raw.toLowerCase().trim();
+
+    if (l.startsWith('es')) return 'es';
+    if (l === 'pt-br' || l.startsWith('pt')) return 'pt-BR';
+    if (l.startsWith('fr')) return 'fr';
+    if (l.startsWith('ja')) return 'ja';
+    if (l === 'zh-tw' || l === 'zh-hk' || l === 'zh-mo' || l.includes('hant')) return 'zh-Hant';
+    if (l.startsWith('zh')) return 'zh-Hans';
+    if (l.startsWith('ko')) return 'ko';
+    if (l.startsWith('ru') || l.startsWith('be') || l.startsWith('uk')) return 'ru';
+    if (l.startsWith('en')) return 'en';
+  }
+
+  return 'en';
+}
+
+/**
+ * Obtiene el idioma activo actualmente.
+ */
+export function getLanguage() {
+  return currentLanguage;
+}
+
+/**
+ * Carga un catálogo de idioma bajo demanda si no está cacheado.
+ */
+export async function loadLanguage(lang) {
+  if (!SUPPORTED_LANGUAGES.some(l => l.code === lang)) {
+    lang = DEFAULT_LANGUAGE;
+  }
+
+  if (localesCache.has(lang)) {
+    return localesCache.get(lang);
+  }
+
+  try {
+    const mod = await import(`../../locales/${lang}.js`);
+    const dict = mod.default || mod;
+    localesCache.set(lang, dict);
+    return dict;
+  } catch (err) {
+    console.warn(`[i18n] No se pudo cargar el archivo para el idioma "${lang}". Usando fallback español.`, err);
+    return localesCache.get('es');
+  }
+}
+
+/**
+ * Traduce una clave con soporte para parámetros {name} y plurales automáticos.
+ * Si falta en el idioma actual, realiza fallback transparente a español.
+ */
+export function t(key, params = null) {
+  if (!key) return '';
+
+  const activeDict = localesCache.get(currentLanguage) || localesCache.get('es') || {};
+  const fallbackDict = localesCache.get('es') || {};
+
+  let candidateKeys = [key];
+
+  // Si se incluye parámetro count numérico, resolver la categoría de plural CLDR (one, few, many, other)
+  if (params && typeof params.count === 'number') {
+    const pr = getPluralRules(currentLanguage);
+    const cat = pr.select(params.count);
+    candidateKeys = [
+      `${key}.${cat}`,
+      `${key}.other`,
+      key
+    ];
+  }
+
+  let text = null;
+
+  // 1. Buscar en diccionario activo
+  for (const k of candidateKeys) {
+    if (typeof activeDict[k] === 'string') {
+      text = activeDict[k];
+      break;
+    }
+  }
+
+  // 2. Si no se encontró, buscar en diccionario de fallback español
+  if (text === null) {
+    // Si fue plural en otro idioma (ej: ruso con 'few' o 'many'), el español busca con plural de 'es'
+    if (params && typeof params.count === 'number') {
+      const esPr = getPluralRules('es');
+      const esCat = esPr.select(params.count);
+      const esCandidateKeys = [
+        `${key}.${esCat}`,
+        `${key}.other`,
+        key
+      ];
+      for (const k of esCandidateKeys) {
+        if (typeof fallbackDict[k] === 'string') {
+          text = fallbackDict[k];
+          break;
+        }
+      }
+    } else {
+      for (const k of candidateKeys) {
+        if (typeof fallbackDict[k] === 'string') {
+          text = fallbackDict[k];
+          break;
+        }
+      }
+    }
+  }
+
+  // 3. Si la clave no existe en ningún diccionario, devolver la clave original
+  if (text === null) {
+    return key;
+  }
+
+  // 4. Interpolación de variables {param}
+  if (params && typeof params === 'object') {
+    return text.replace(/\{(\w+)\}/g, (match, pName) => {
+      if (params[pName] !== undefined && params[pName] !== null) {
+        return String(params[pName]);
+      }
+      return match;
+    });
+  }
+
+  return text;
+}
+
+/**
+ * Actualiza todos los elementos del DOM que utilicen atributos de traducción:
+ * - data-i18n: reemplaza el textContent
+ * - data-i18n-html: reemplaza el innerHTML
+ * - data-i18n-attr: reemplaza atributos específicos (ej: "title:clave|placeholder:clave")
+ */
+export function updateDOMTranslations(root = null) {
+  if (typeof document === 'undefined') return;
+  const targetRoot = root || document;
+
+  // Actualizar atributo lang en <html> para renderizado tipográfico CJK correcto
+  if (document.documentElement) {
+    document.documentElement.lang = currentLanguage;
+  }
+
+  // data-i18n
+  const textElements = targetRoot.querySelectorAll('[data-i18n]');
+  for (let i = 0; i < textElements.length; i++) {
+    const el = textElements[i];
+    const k = el.getAttribute('data-i18n');
+    if (k) {
+      el.textContent = t(k);
+    }
+  }
+
+  // data-i18n-html
+  const htmlElements = targetRoot.querySelectorAll('[data-i18n-html]');
+  for (let i = 0; i < htmlElements.length; i++) {
+    const el = htmlElements[i];
+    const k = el.getAttribute('data-i18n-html');
+    if (k) {
+      el.innerHTML = t(k);
+    }
+  }
+
+  // data-i18n-attr (ej: "title:ui.topbar.teeth_title|placeholder:ui.online.join_placeholder")
+  const attrElements = targetRoot.querySelectorAll('[data-i18n-attr]');
+  for (let i = 0; i < attrElements.length; i++) {
+    const el = attrElements[i];
+    const attrSpecs = el.getAttribute('data-i18n-attr');
+    if (!attrSpecs) continue;
+
+    const pairs = attrSpecs.split('|');
+    for (const pair of pairs) {
+      const idx = pair.indexOf(':');
+      if (idx > 0) {
+        const attrName = pair.substring(0, idx).trim();
+        const keyName = pair.substring(idx + 1).trim();
+        if (attrName && keyName) {
+          el.setAttribute(attrName, t(keyName));
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Cambia el idioma activo, cargándolo bajo demanda si es necesario,
+ * y refresca de inmediato toda la interfaz sin recargar la página.
+ */
+export async function setLanguage(lang) {
+  if (!SUPPORTED_LANGUAGES.some(l => l.code === lang)) {
+    lang = DEFAULT_LANGUAGE;
+  }
+
+  await loadLanguage(lang);
+  currentLanguage = lang;
+
+  updateDOMTranslations();
+
+  // Notificar a todos los módulos y pantallas reactivas
+  GameEvents.emit('i18n:change', { language: lang });
+
+  return lang;
+}
+
+/**
+ * Inicializa el sistema de localización con un idioma guardado o detectado.
+ */
+export async function initI18n(preferredLanguage = null) {
+  const target = preferredLanguage || DEFAULT_LANGUAGE;
+  await setLanguage(target);
+  isInitialized = true;
+  return currentLanguage;
+}
+
+export function isI18nReady() {
+  return isInitialized;
+}

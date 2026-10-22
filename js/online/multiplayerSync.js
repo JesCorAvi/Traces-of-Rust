@@ -14,6 +14,9 @@ import { AudioSys } from '../audio.js';
 import { spawnEnemyProjectile } from '../combat.js';
 import { ModeManager } from '../modes/gameModeManager.js';
 import { getCurrentLobbyData, getLocalPlayerSteamId, launchClientMatch, getLastLaunchedMatchTimestamp, setLastLaunchedMatchTimestamp, handleRemoteStageMatch, handleRemoteCharReady, handleRemoteCancelStage } from './steamLobbyUI.js';
+import { t } from '../core/i18n.js';
+
+const _t = (k, fb, params) => (typeof t === 'function' ? t(k, params) : fb);
 
 // Generador de etiquetas flotantes tácticas para jugadores remotos
 function createNameplateSprite(nameText) {
@@ -1830,8 +1833,8 @@ export const MultiplayerSync = {
     }
 
     // Toast y aviso claro en el HUD del Host
-    this.ctx?.hudController?.showScrapTransferToast?.('Compañero desconectado. Continuando misión en solitario.', 'error');
-    this.ctx?.hudController?.showWaveAnnouncement?.('COMPAÑERO DESCONECTADO // MISIÓN EN SOLITARIO');
+    this.ctx?.hudController?.showScrapTransferToast?.(_t('ui.online.peer_disconnected_toast', 'Compañero desconectado. Continuando misión en solitario.'), 'error');
+    this.ctx?.hudController?.showWaveAnnouncement?.(_t('ui.online.peer_disconnected_announcement', 'COMPAÑERO DESCONECTADO // MISIÓN EN SOLITARIO'));
     AudioSys.playUIError?.();
 
     // Ocultar botón y atajo de enviar chatarra (T)
@@ -1922,14 +1925,14 @@ export const MultiplayerSync = {
     const value = Math.floor(Number(amount) || 0);
     if (!this.isMatchActive || value <= 0) return false;
     if (!window.steamOnline?.sendP2P) {
-      this.ctx?.hudController?.showScrapTransferToast?.('STEAM P2P NO DISPONIBLE', 'error');
+      this.ctx?.hudController?.showScrapTransferToast?.(_t('ui.online.p2p_not_available', 'STEAM P2P NO DISPONIBLE'), 'error');
       return false;
     }
 
     const peerId = this.getPrimaryPeerId();
     const peerConnected = !!peerId && (this.remotePlayers.size > 0 || this.knownPeers.has(peerId));
     if (!peerConnected) {
-      this.ctx?.hudController?.showScrapTransferToast?.('SIN COMPAÑERO CONECTADO', 'error');
+      this.ctx?.hudController?.showScrapTransferToast?.(_t('ui.online.no_peer_connected', 'SIN COMPAÑERO CONECTADO'), 'error');
       AudioSys.playUIError?.();
       return false;
     }
@@ -1937,17 +1940,17 @@ export const MultiplayerSync = {
     const mode = ModeManager?.activeMode;
     if (!mode || typeof mode.spendScrap !== 'function') return false;
     if (mode.getScrap() < value || !mode.spendScrap(value)) {
-      this.ctx?.hudController?.showScrapTransferToast?.('CHATARRA INSUFICIENTE', 'error');
+      this.ctx?.hudController?.showScrapTransferToast?.(_t('ui.online.scrap_insufficient', 'CHATARRA INSUFICIENTE'), 'error');
       AudioSys.playUIError?.();
       return false;
     }
 
     if (!this.sendToPeer(peerId, 'SCRAP_TRANSFER', { amount: value }, true)) {
       mode.addScrap(value, { local: true }); // devolución si el envío falla
-      this.ctx?.hudController?.showScrapTransferToast?.('NO SE PUDO ENVIAR LA CHATARRA', 'error');
+      this.ctx?.hudController?.showScrapTransferToast?.(_t('ui.online.scrap_send_failed', 'NO SE PUDO ENVIAR LA CHATARRA'), 'error');
       return false;
     }
-    this.ctx?.hudController?.showScrapTransferToast?.(`-${value} CHATARRA ENVIADA`, 'send');
+    this.ctx?.hudController?.showScrapTransferToast?.(_t('ui.online.scrap_sent', '-{value} CHATARRA ENVIADA', { value }), 'send');
     AudioSys.playScrapTransfer?.(value >= 5);
     return true;
   },
@@ -2281,7 +2284,7 @@ export const MultiplayerSync = {
           const amount = Math.floor(Number(data.amount) || 0);
           if (mode && amount > 0 && amount <= 9999) {
             mode.addScrap(amount, { fromTransfer: true });
-            this.ctx?.hudController?.showScrapTransferToast?.(`+${amount} CHATARRA RECIBIDA`, 'receive');
+            this.ctx?.hudController?.showScrapTransferToast?.(_t('ui.online.scrap_received', '+{amount} CHATARRA RECIBIDA', { amount }), 'receive');
             AudioSys.playScrapTransfer?.(amount >= 5);
           }
           break;

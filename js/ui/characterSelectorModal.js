@@ -1,16 +1,24 @@
-// Modal y tarjeta de selección de operador táctico con retratos faciales e iconos de arma.
-// Exports: setupCharacterSelectorUI, updateCharacterSelectorCard, openCharacterSelectorModal, closeCharacterSelectorModal, setCoopCharSelectionStatus, onCharacterChange.
+// Modal temático de Selección de Operadores tácticos para Traces of Rust.
+// Exports: openCharacterSelectorModal, closeCharacterSelectorModal, setupCharacterSelectorUI,
+// updateCharacterSelectorCard, onCharacterChange, setCoopCharSelectionStatus.
 
-import { CHARACTERS, getSelectedCharacterId, setSelectedCharacterId, getCharacterById } from '../config/charactersConfig.js';
-import { AudioSys } from '../audio.js';
+import {
+  CHARACTERS,
+  getSelectedCharacterId,
+  setSelectedCharacterId,
+  getCharacterById
+} from '../config/charactersConfig.js';
 import { renderSpriteIconHTML, refreshStaticDOMIcons } from '../spritesheets.js';
 import { getCharacterPortraitURL } from '../sprites/player/portraits.js';
+import { AudioSys } from '../audio.js';
+import { t } from '../core/i18n.js';
+import { GameEvents } from '../core/eventBus.js';
 
 let modalEl = null;
 let cardEl = null;
-let characterChangeListeners = [];
 let currentOnConfirm = null;
 let currentOnClose = null;
+const characterChangeListeners = [];
 
 export function onCharacterChange(fn) {
   if (typeof fn === 'function') characterChangeListeners.push(fn);
@@ -37,7 +45,7 @@ export function updateCharacterSelectorCard() {
   const wpEl = document.getElementById('op-card-weapon');
   if (wpEl) {
     const wpTitle = (character.weaponTitle || character.weapon).toUpperCase();
-    wpEl.innerHTML = `${renderSpriteIconHTML(character.weapon, 'sm')} <span>ARMA: <b style="color:#ffffff">${wpTitle}</b></span>`;
+    wpEl.innerHTML = `${renderSpriteIconHTML(character.weapon, 'sm')} <span>${t('ui.char_modal.weapon', { name: wpTitle })}</span>`;
   }
 
   refreshStaticDOMIcons();
@@ -53,19 +61,19 @@ export function openCharacterSelectorModal(options = {}) {
 
   const titleEl = document.getElementById('char-modal-title');
   if (titleEl) {
-    titleEl.textContent = options.title || 'MESA DE ASIGNACIÓN // OPERADORES DE PLANTA';
+    titleEl.textContent = options.title || t('ui.char_modal.title');
   }
 
   const subEl = document.getElementById('char-modal-sub');
   if (subEl) {
-    subEl.textContent = options.sub || 'Selecciona tu superviviente. Cada operador está especializado en su arma insignia y cuenta con pasivas únicas de impacto y supervivencia:';
+    subEl.textContent = options.sub || t('ui.char_modal.sub');
   }
 
   const btnConfirm = document.getElementById('btn-confirm-character');
   if (btnConfirm) {
     btnConfirm.disabled = false;
     const span = btnConfirm.querySelector('span');
-    if (span) span.textContent = options.confirmText || '[ ASIGNAR OPERADOR Y CONTINUAR ]';
+    if (span) span.textContent = options.confirmText || t('ui.char_modal.confirm');
   }
 
   const statusBox = document.getElementById('char-coop-status-box');
@@ -101,12 +109,12 @@ export function setCoopCharSelectionStatus(state, message) {
       statusBox.classList.remove('is-ready');
     }
     if (msgEl) {
-      msgEl.textContent = message || 'El otro jugador aún está seleccionando personaje...';
+      msgEl.textContent = message || t('ui.char_modal.waiting_peer');
     }
     if (btnConfirm) {
       btnConfirm.disabled = true;
       const span = btnConfirm.querySelector('span');
-      if (span) span.textContent = '[ OPERADOR ASIGNADO // ESPERANDO ]';
+      if (span) span.textContent = t('ui.char_modal.assigned_waiting');
     }
   } else if (state === 'peer_ready') {
     if (statusBox) {
@@ -114,7 +122,7 @@ export function setCoopCharSelectionStatus(state, message) {
       statusBox.classList.add('is-ready');
     }
     if (msgEl) {
-      msgEl.textContent = message || '¡Compañero listo! Selecciona tu operador para comenzar.';
+      msgEl.textContent = message || t('ui.char_modal.peer_ready');
     }
   } else if (state === 'ready') {
     if (statusBox) {
@@ -122,19 +130,19 @@ export function setCoopCharSelectionStatus(state, message) {
       statusBox.classList.add('is-ready');
     }
     if (msgEl) {
-      msgEl.textContent = message || '¡AMBOS OPERADORES LISTOS! INICIANDO DESPLIEGUE...';
+      msgEl.textContent = message || t('ui.char_modal.all_ready');
     }
     if (btnConfirm) {
       btnConfirm.disabled = true;
       const span = btnConfirm.querySelector('span');
-      if (span) span.textContent = '[ ¡DESPLEGANDO! ]';
+      if (span) span.textContent = t('ui.char_modal.deploying');
     }
   } else {
     if (statusBox) statusBox.classList.add('hidden');
     if (btnConfirm) {
       btnConfirm.disabled = false;
       const span = btnConfirm.querySelector('span');
-      if (span) span.textContent = '[ ASIGNAR OPERADOR Y CONTINUAR ]';
+      if (span) span.textContent = t('ui.char_modal.confirm');
     }
   }
 }
@@ -164,7 +172,7 @@ function renderCharacterGrid() {
         <div class="char-header-titles">
           <div class="char-name-row">
             <span class="char-name" style="color:${char.color};">${char.title}</span>
-            ${isSelected ? '<span class="char-active-badge">ACTIVO</span>' : ''}
+            ${isSelected ? `<span class="char-active-badge">${t('ui.char_modal.active')}</span>` : ''}
           </div>
           <span class="char-role">// ${char.role.toUpperCase()}</span>
         </div>
@@ -173,7 +181,7 @@ function renderCharacterGrid() {
       <div class="char-card-body">
         <div class="char-weapon-line">
           ${renderSpriteIconHTML(char.weapon, 'sm')}
-          <span>ARMA: <b style="color:#ffffff">${(char.weaponTitle || char.weapon).toUpperCase()}</b></span>
+          <span>${t('ui.char_modal.weapon', { name: (char.weaponTitle || char.weapon).toUpperCase() })}</span>
         </div>
         <div class="char-passive-box" style="border-left-color:${char.color};">
           <span class="char-passive-title" style="color:${char.color};">★ ${char.passive.toUpperCase()}</span>
@@ -182,7 +190,7 @@ function renderCharacterGrid() {
       </div>
 
       <button type="button" class="rust-btn sm char-select-btn ${isSelected ? 'primary' : ''}">
-        <span>${isSelected ? '[ ASIGNADO ]' : '[ SELECCIONAR ]'}</span>
+        <span>${isSelected ? t('ui.char_modal.btn_assigned') : t('ui.char_modal.btn_select')}</span>
       </button>
     `;
 
@@ -256,6 +264,14 @@ export function setupCharacterSelectorUI() {
         e.preventDefault();
         closeCharacterSelectorModal();
       }
+    }
+  });
+
+  GameEvents.on('i18n:change', () => {
+    updateCharacterSelectorCard();
+    const modal = document.getElementById('character-modal');
+    if (modal && !modal.classList.contains('hidden')) {
+      renderCharacterGrid();
     }
   });
 

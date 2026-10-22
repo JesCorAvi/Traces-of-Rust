@@ -5,21 +5,24 @@ import { CONFIG } from '../../config.js';
 import { renderSpriteIconHTML } from '../../spritesheets.js';
 import { ModeManager } from '../../modes/gameModeManager.js';
 import { AudioSys } from '../../audio.js';
+import { t } from '../../core/i18n.js';
+
+const _t = (k, fb) => (typeof t === 'function' ? t(k) : fb);
 
 export const SHORT_WEAPON_NAMES = {
-  slash:        'Sierra',
-  shotgun:      'Escopeta',
-  flamethrower: 'Soplete',
-  aura:         'Incensario',
-  mines:        'Minas',
-  harpoon:      'Arpón',
-  orbital:      'Jaula',
-  bolt:         'Desfibril.',
-  chakram:      'Bumerán',
-  welder:       'Soldador',
-  grenade:      'Granadas',
-  hammer:       'Martillo',
-  acid:         'Ácido'
+  get slash()        { return _t('weapon.short.slash', 'Sierra'); },
+  get shotgun()      { return _t('weapon.short.shotgun', 'Escopeta'); },
+  get flamethrower() { return _t('weapon.short.flamethrower', 'Soplete'); },
+  get aura()         { return _t('weapon.short.aura', 'Incensario'); },
+  get mines()        { return _t('weapon.short.mines', 'Minas'); },
+  get harpoon()      { return _t('weapon.short.harpoon', 'Arpón'); },
+  get orbital()      { return _t('weapon.short.orbital', 'Jaula'); },
+  get bolt()         { return _t('weapon.short.bolt', 'Desfibril.'); },
+  get chakram()      { return _t('weapon.short.chakram', 'Bumerán'); },
+  get welder()       { return _t('weapon.short.welder', 'Soldador'); },
+  get grenade()      { return _t('weapon.short.grenade', 'Granadas'); },
+  get hammer()       { return _t('weapon.short.hammer', 'Martillo'); },
+  get acid()         { return _t('weapon.short.acid', 'Ácido'); }
 };
 
 export function updateStatsAndModeHUD(stats, kills, runSouls, rerollsLeft, activeBoss, modeTelemetry) {
@@ -46,7 +49,7 @@ if (bioPlate) bioPlate.classList.toggle('is-critical', hpPct <= 25);
 document.getElementById('hp-text').textContent = `${Math.ceil(Math.max(0, stats.hp))}/${stats.maxHp}`;
 document.getElementById('exp-bar').style.width = `${expPct}%`;
 document.getElementById('stam-bar').style.width = `${stamPct}%`;
-document.getElementById('level-text').textContent = `CICLO ${String(stats.level).padStart(2, '0')}`;
+document.getElementById('level-text').textContent = _t('ui.results.cycle_val', 'CICLO {level}').replace('{level}', String(stats.level).padStart(2, '0'));
 document.getElementById('kills-text').textContent = kills;
 document.getElementById('souls-hud').textContent = `${runSouls}`;
 if (!modeTelemetry || typeof modeTelemetry.coreHp !== 'number') {
@@ -107,31 +110,31 @@ if (typeof modeTelemetry.coreHp === 'number') {
   if (coreVal) {
     const displayHp = Math.ceil(Number(modeTelemetry.coreHp) || 0);
     const displayMax = Math.round(Number(modeTelemetry.coreMaxHp) || 100);
-    coreVal.textContent = `${displayHp}/${displayMax} INTEGRIDAD`;
+    coreVal.textContent = _t('hud.core.integrity', '{hp}/{max} INTEGRIDAD').replace('{hp}', displayHp).replace('{max}', displayMax);
   }
   if (coreWave) {
     if (modeTelemetry.eventBadge) {
-      coreWave.textContent = `EVENTO // ${modeTelemetry.eventBadge}`;
+      coreWave.textContent = _t('hud.wave.event_badge', 'EVENTO // {title}').replace('{title}', modeTelemetry.eventBadge);
     } else {
-      coreWave.textContent = `OLEADA ${modeTelemetry.waveNumber}/${modeTelemetry.totalWaves}`;
+      coreWave.textContent = _t('hud.wave.in_progress', 'OLEADA {current}/{total}').replace('{current}', modeTelemetry.waveNumber).replace('{total}', modeTelemetry.totalWaves);
     }
   }
   if (coreRem) {
     if (modeTelemetry.isFirstWavePrep || modeTelemetry.isPrep) {
-      coreRem.textContent = 'HOSTILES: 0';
+      coreRem.textContent = _t('hud.core.hostiles_counter', 'HOSTILES: {count}').replace('{count}', '0');
     } else {
-      coreRem.textContent = `HOSTILES: ${modeTelemetry.remainingEnemies || 0}`;
+      coreRem.textContent = _t('hud.core.hostiles_counter', 'HOSTILES: {count}').replace('{count}', modeTelemetry.remainingEnemies || 0);
     }
   }
   if (coreStatus) {
     if (modeTelemetry.isFirstWavePrep) {
-      coreStatus.textContent = 'EXPLORACIÓN LIBRE';
+      coreStatus.textContent = _t('hud.core.state_free_exploration', 'EXPLORACIÓN LIBRE');
       coreStatus.classList.remove('critical');
     } else if (modeTelemetry.isPrep) {
-      coreStatus.textContent = `PAUSA: ${Math.ceil(modeTelemetry.prepSeconds)}S`;
+      coreStatus.textContent = _t('hud.core.state_pause', 'PAUSA: {seconds}S').replace('{seconds}', Math.ceil(modeTelemetry.prepSeconds));
       coreStatus.classList.remove('critical');
     } else {
-      coreStatus.textContent = modeTelemetry.coreStateLabel || 'ESTABLE';
+      coreStatus.textContent = modeTelemetry.coreStateLabel || _t('hud.core.state_stable', 'ESTABLE');
       coreStatus.classList.toggle('critical', corePct < 45);
     }
   }
@@ -157,7 +160,7 @@ if (typeof modeTelemetry.coreHp === 'number') {
       const fillEl = document.getElementById('event-hud-bar-fill');
 
       if (phaseEl) {
-        phaseEl.textContent = `FASE ${et.phase}: ${et.phaseTitle}`;
+        phaseEl.textContent = _t('hud.event.phase_format', 'FASE {phase}: {title}').replace('{phase}', et.phase).replace('{title}', et.phaseTitle);
       }
       if (timerEl) {
         timerEl.textContent = `${Math.ceil(et.remainingSec)}s`;
@@ -165,10 +168,10 @@ if (typeof modeTelemetry.coreHp === 'number') {
       if (indEl) {
         if (et.inZone) {
           indEl.className = 'event-containment-indicator in-zone';
-          indEl.textContent = '● DENTRO DEL PERÍMETRO (RADIO 15M)';
+          indEl.textContent = _t('hud.event.inside_perimeter', '● DENTRO DEL PERÍMETRO (RADIO 15M)');
         } else {
           indEl.className = 'event-containment-indicator out-zone';
-          indEl.textContent = `▲ FUERA DEL PERÍMETRO (A ${et.distOutside}m) - ¡REGRESA!`;
+          indEl.textContent = _t('hud.event.outside_perimeter', '▲ FUERA DEL PERÍMETRO (A {dist}m) - ¡REGRESA!').replace('{dist}', et.distOutside);
         }
       }
       if (fillEl) {
@@ -207,7 +210,7 @@ if (typeof modeTelemetry.coreHp === 'number') {
     prepPrompt.classList.toggle('hidden', !modeTelemetry.isPrep);
     const skipSpan = document.getElementById('prep-skip-text') || prepPrompt.querySelector('.prep-skip-pill span:last-child');
     if (skipSpan) {
-      skipSpan.textContent = modeTelemetry.isFirstWavePrep ? 'INICIAR OLEADA' : 'SALTAR PAUSA';
+      skipSpan.textContent = modeTelemetry.isFirstWavePrep ? _t('hud.wave.start_wave', 'INICIAR OLEADA') : _t('hud.wave.skip_pause', 'SALTAR PAUSA');
     }
     if (!prepPrompt.dataset.bound) {
       prepPrompt.dataset.bound = 'true';
@@ -240,15 +243,15 @@ if (typeof modeTelemetry.coreHp === 'number') {
       if (keyCap) keyCap.textContent = 'LMB';
       if (promptText) {
         promptText.textContent = placement.valid
-          ? `COLOCAR ${placement.typeName} · ${placement.cost} CHATARRA · [ESC] CANCELAR`
-          : `${placement.reason} · [ESC] CANCELAR`;
+          ? _t('hud.turret.place_valid', 'COLOCAR {name} · {cost} CHATARRA · [ESC] CANCELAR').replace('{name}', placement.typeName).replace('{cost}', placement.cost)
+          : _t('hud.turret.place_invalid', '{reason} · [ESC] CANCELAR').replace('{reason}', placement.reason);
       }
     } else if (nearby) {
       if (keyCap) keyCap.textContent = 'E';
-      if (promptText) promptText.textContent = `MEJORAR / VENDER · ${nearby.name}`;
+      if (promptText) promptText.textContent = _t('hud.turret.upgrade_sell', 'MEJORAR / VENDER · {name}').replace('{name}', nearby.name);
     } else {
       if (keyCap) keyCap.textContent = 'E';
-      if (promptText) promptText.textContent = 'CONSTRUIR TORRETA';
+      if (promptText) promptText.textContent = _t('hud.turret.build_turret', 'CONSTRUIR TORRETA');
     }
   }
 }
@@ -263,14 +266,19 @@ for (let i = 0; i < CONFIG.LIMITS.MAX_WEAPONS; i++) {
     const sk = CONFIG.SKILLS[k];
     const shortName = SHORT_WEAPON_NAMES[k] || sk.name.split(' ')[0];
     const vibClass = lastUpgradedKey === k ? 'vibrate-up' : '';
+    const titleStr = _t('hud.slot.weapon_title', '{name} (Nivel +{lvl}) — {desc}')
+      .replace('{name}', sk.name)
+      .replace('{lvl}', v)
+      .replace('{desc}', sk.desc);
+    const lvlStr = _t('hud.slot.level_short', 'NV.{lvl}').replace('{lvl}', v);
     wHtml += `
-      <div class="weapon-slot ${vibClass}" tabindex="0" title="${sk.name} (Nivel +${v}) — ${sk.desc}">
+      <div class="weapon-slot ${vibClass}" tabindex="0" title="${titleStr}">
         <span class="weapon-slot-name">${renderSpriteIconHTML(sk.icon, "sm")}</span>
-        <span class="weapon-slot-lvl-text">NV.${v}</span>
+        <span class="weapon-slot-lvl-text">${lvlStr}</span>
       </div>`;
   } else {
     wHtml += `
-      <div class="weapon-slot empty" title="Ranura de arma disponible"></div>`;
+      <div class="weapon-slot empty" title="${_t('hud.slot.weapon_empty', 'Ranura de arma disponible')}"></div>`;
   }
 }
 document.getElementById('skills-bar').innerHTML = wHtml;
@@ -285,8 +293,13 @@ for (let i = 0; i < CONFIG.LIMITS.MAX_PASSIVES; i++) {
     const [k, v] = pEntries[i];
     const p = CONFIG.PASSIVES[k];
     const vibClass = lastUpgradedKey === k ? 'vibrate-up' : '';
+    const titleStr = _t('hud.slot.passive_title', '{name} (Nivel +{lvl}): {stat} — {desc}')
+      .replace('{name}', p.name)
+      .replace('{lvl}', v)
+      .replace('{stat}', p.format(v))
+      .replace('{desc}', p.desc);
     pHtml += `
-      <div class="passive-slot ${vibClass}" tabindex="0" title="${p.name} (Nivel +${v}): ${p.format(v)} — ${p.desc}">
+      <div class="passive-slot ${vibClass}" tabindex="0" title="${titleStr}">
         <div class="passive-dock-icon-wrap">
           ${renderSpriteIconHTML(p.icon, 'sm')}
         </div>
@@ -294,7 +307,7 @@ for (let i = 0; i < CONFIG.LIMITS.MAX_PASSIVES; i++) {
       </div>`;
   } else {
     pHtml += `
-      <div class="passive-slot empty" title="Ranura de implante disponible"></div>`;
+      <div class="passive-slot empty" title="${_t('hud.slot.passive_empty', 'Ranura de implante disponible')}"></div>`;
   }
 }
 document.getElementById('passives-bar').innerHTML = pHtml;
