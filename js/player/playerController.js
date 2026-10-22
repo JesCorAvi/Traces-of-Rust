@@ -465,6 +465,7 @@ export function updatePlayerWeaponsAndCombat({
   // 12. Partículas y VFX
   for (let i = vfx.length - 1; i >= 0; i--) {
     const v = vfx[i];
+    if (v.customUpdate) v.customUpdate(dt);
     v.life -= dt;
     if (v.uvTotalFrames && v.maxLife && v.mesh.geometry) {
       const progress = 1 - Math.max(0, v.life / v.maxLife);
@@ -480,7 +481,10 @@ export function updatePlayerWeaponsAndCombat({
         v.vel.y *= -0.4; v.vel.x *= 0.6; v.vel.z *= 0.6;
       }
     }
-    if (v.scaleSpeed) v.mesh.scale.addScalar(v.scaleSpeed * dt);
+    if (v.scaleSpeed) {
+      const s = Math.max(0.001, v.mesh.scale.x + v.scaleSpeed * dt);
+      v.mesh.scale.set(s, s, s);
+    }
     if (v.spin) { v.mesh.rotation.x += v.spin.x * dt; v.mesh.rotation.z += v.spin.z * dt; }
     if (v.billboard) v.mesh.rotation.y = camAngle;
     if (v.fade && v.mesh.material && v.maxLife) {

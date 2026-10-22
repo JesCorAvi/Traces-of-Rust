@@ -2,10 +2,44 @@
 // Exports: createCombatRuntime.
 
 import * as THREE from 'three';
-import { SHARED_GEO, SHARED_MAT } from '../combat.js';
+import { SHARED_GEO, SHARED_MAT, spawnHitBlood } from '../combat.js';
 
 export function createCombatRuntime(rt) {
-  function spawnHitFeedback(en, damage, isCrit) {
+  function spawnHitFeedback(en, damage, isCrit, knockback = null) {
+    const scene = rt.scene;
+    const vfx = rt.vfx;
+    if (!scene || !vfx || !en?.group) return;
+    const now = performance.now();
+    if (en._lastHitFeedbackAt && now - en._lastHitFeedbackAt < 50) return;
+    en._lastHitFeedbackAt = now;
+    const base = en.group.position;
+    const hitPos = base.clone().add(new THREE.Vector3(0, 1.0, 0));
+
+    let hitDir = null;
+    if (knockback && (knockback.x !== 0 || knockback.z !== 0)) {
+      hitDir = knockback.clone().setY(0).normalize();
+    } else if (rt.playerGroup) {
+      hitDir = new THREE.Vector3().subVectors(base, rt.playerGroup.position).setY(0).normalize();
+    }
+
+    spawnHitBlood(scene, vfx, hitPos, {
+      isCrit,
+      damage,
+      hitDir,
+      floorY: base.y
+    });
+
+    en.onHitFeedback?.(damage, isCrit, hitDir);
+
+    rt.hudController?.showDamageNumber?.(
+      rt.camera,
+      base.clone().add(new THREE.Vector3(0, 1.5, 0)),
+      damage,
+      isCrit
+    );
+  }
+
+  function _oldSpawnHitFeedback() { if (false) {
     const scene = rt.scene;
     const vfx = rt.vfx;
     if (!scene || !vfx || !en?.group) return;
@@ -31,7 +65,7 @@ export function createCombatRuntime(rt) {
         floorY: base.y + 0.05
       });
     }
-    rt.hudController?.showDamageNumber?.(rt.camera, base.clone().add(new THREE.Vector3(0, 1.55, 0)), damage, isCrit);
+    rt.hudController?.showDamageNumber?.(rt.camera, base.clone().add(new THREE.Vector3(0, 1.55, 0)), damage, isCrit); }
   }
 
   function damageEnemy(en, amount, knockback, isDoT = false, opts = {}) {
@@ -72,7 +106,7 @@ export function createCombatRuntime(rt) {
         en.stateTimer = 0.15;
         rt.AudioSys.playHit?.(isCrit);
         if (isCrit || appliedDmg >= 35) rt.addCamShake?.(isCrit ? 0.28 : 0.12);
-        spawnHitFeedback(en, appliedDmg, isCrit);
+        spawnHitFeedback(en, appliedDmg, isCrit, kb);
       }
       if (kb && !en.isBoss) {
         if (mods.knockbackMult && mods.knockbackMult !== 1.0) kb.multiplyScalar(mods.knockbackMult);
@@ -104,12 +138,15 @@ export function createCombatRuntime(rt) {
       en.stateTimer = 0.15;
       if (opts.fromRemote) {
         rt.AudioSys.playHit?.(isCrit, { remote: true });
-        spawnHitFeedback(en, appliedDmg, isCrit);
+        spawnHitFeedback(en, appliedDmg, isCrit, kb);
       } else {
         rt.AudioSys.playHit?.(isCrit);
         if (isCrit || appliedDmg >= 35) {
           rt.triggerHitstop?.(isCrit ? 0.08 : 0.04);
           rt.addCamShake?.(isCrit ? 0.28 : 0.12);
+        }
+        spawnHitFeedback(en, appliedDmg, isCrit, kb);
+        if (false) {
         }
       }
     }
@@ -139,14 +176,17 @@ export function createCombatRuntime(rt) {
       en.bossAI?.markDead?.();
       en.state = 'dead';
       en.stateTimer = 0;
+      en.lastHitDir = kb ? kb.clone().setY(0).normalize() : (rt.playerGroup ? new THREE.Vector3().subVectors(en.group.position, rt.playerGroup.position).setY(0).normalize() : null);
       rt.kills++;
       if (en.isBoss) {
         rt.activeBoss = null;
         rt.hudController.hideBossHUDDelayed();
         rt.AudioSys.playBossHorn();
         rt.AudioSys.setBossMusic?.(false);
+        rt.addCamShake?.(0.45);
       } else {
         rt.AudioSys.playEnemyDeath?.();
+        if (isCrit || appliedDmg >= 35) rt.addCamShake?.(0.12);
       }
       rt.ModeManager.onEnemyKilled(en, rt.buildModeContext());
       // El Host declara la muerte después de generar los drops, para incluir

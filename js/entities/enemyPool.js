@@ -66,6 +66,7 @@ export class EnemyPool {
     enemy.bossAI = null;
     enemy.defenseAI = null;
     enemy.group.visible = false;
+    enemy.resetVisuals?.();
     if (enemy.netId !== undefined) this.enemiesById.delete(enemy.netId);
     this.active.splice(index, 1);
     this.pool.push(enemy);

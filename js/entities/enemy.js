@@ -6,6 +6,7 @@ import { CONFIG } from '../config.js';
 import { AudioSys } from '../audio.js';
 import { createBillboardSprite } from './billboard.js';
 import { BossController } from './bossController.js';
+import { spawnEnemyDeathGore, spawnDissolveAshWisp } from '../combat.js';
 import {
   initEnemyDefenseState,
   evaluateEnemyTarget,
@@ -35,6 +36,13 @@ export class Enemy {
     this.jumpTargetY = 0;
     this.jumpCooldown = 0;
     this.landingSquashTimer = 0;
+    this.hitFlashTimer = 0;
+    this.hitFlinchTimer = 0;
+    this._hitFlinchTilt = 0;
+    this.lastHitDir = null;
+    this._deathGoreSpawned = false;
+    this._deathAshTimer = 0;
+    this._deathTiltDir = 0;
     this.group.visible = false;
     scene.add(this.group);
   }
@@ -42,6 +50,7 @@ export class Enemy {
   init(type, playerPos, gameTime, playerFwd, worldPhysics, bossCfg = null, defenseOpts = null) {
     this.bossAI?.destroy();
     this.bossAI = null;
+    this.resetVisuals();
     this.type = type;
     this.active = true;
     this.group.visible = true;
@@ -167,6 +176,13 @@ export class Enemy {
     this.jumpTargetY = 0;
     this.jumpCooldown = 0.2 + Math.random() * 0.3;
     this.landingSquashTimer = 0;
+    this.hitFlashTimer = 0;
+    this.hitFlinchTimer = 0;
+    this._hitFlinchTilt = 0;
+    this.lastHitDir = null;
+    this._deathGoreSpawned = false;
+    this._deathAshTimer = 0;
+    this._deathTiltDir = 0;
     this.billboard.mesh.material.emissive.setHex(0x000000);
 
     if (defenseOpts && defenseOpts.isDefenseMode) {
@@ -212,15 +228,108 @@ export class Enemy {
     this.bossAI?.onPlayerAlive();
   }
 
+  onHitFeedback(damage, isCrit, hitDir) {
+    this.hitFlashTimer = isCrit ? 0.12 : 0.09;
+    this.hitFlinchTimer = isCrit ? 0.16 : 0.12;
+    this._hitFlinchTilt = (Math.random() < 0.5 ? -1 : 1) * (isCrit ? 0.22 : 0.14);
+    if (hitDir) this.lastHitDir = hitDir;
+  }
+
+  resetVisuals() {
+    if (this.billboard?.mesh?.material) {
+      this.billboard.mesh.material.opacity = 1.0;
+      this.billboard.mesh.material.alphaTest = 0.5;
+      this.billboard.mesh.material.emissive.setHex(0x000000);
+    }
+    if (this.billboard?.glowMesh?.material) {
+      this.billboard.glowMesh.material.opacity = 1.0;
+      this.billboard.glowMesh.material.alphaTest = 0.5;
+    }
+    this.billboard?.applyJuiceTransforms(1.0, 1.0, 0, 0, 1.0);
+    this.hitFlashTimer = 0;
+    this.hitFlinchTimer = 0;
+    this._hitFlinchTilt = 0;
+    this._deathGoreSpawned = false;
+    this._deathAshTimer = 0;
+    this._deathTiltDir = 0;
+    this.lastHitDir = null;
+  }
+
   update(dt, playerPos, playerFwd, camPos, worldPhysics, callbacks) {
     if (!this.active) return false;
     this.billboard.faceCamera(camPos);
 
     if (this.state === 'dead') {
       this.stateTimer += dt;
+      const deathDuration = this.isBoss ? 1.6 : 0.65;
+      const progress = Math.min(1, this.stateTimer / deathDuration);
+
+      if (!this._deathGoreSpawned) {
+        this._deathGoreSpawned = true;
+        this._deathTiltDir = (Math.random() < 0.5 ? -1 : 1) * (0.35 + Math.random() * 0.3);
+        const vfxList = callbacks?.vfxList || callbacks?.vfx;
+        if (vfxList && this.scene) {
+          spawnEnemyDeathGore(this.scene, vfxList, this.group.position, {
+            isBoss: this.isBoss,
+            hitDir: this.lastHitDir,
+            size: this.billboard.baseSize || 2.0
+          });
+        }
+      }
+
+      const frame = Math.min(3, Math.floor(progress * 4));
+      this.billboard.setDirectionalFrame(this.billboard.dirRow, 3, frame);
+
+      const squashY = Math.max(0.1, 1.0 - progress * 0.9);
+      const squashX = 1.0 + progress * 0.22;
+      const tilt = this._deathTiltDir * Math.min(1, progress * 1.5);
+      const sinkY = -progress * 0.32 * ((this.billboard.baseSize || 2.0) / 2.0);
+      const shadowScale = Math.max(0, 1.0 - progress);
+      this.billboard.applyJuiceTransforms(squashX, squashY, tilt, sinkY, shadowScale);
+
+      this._deathAshTimer = (this._deathAshTimer || 0) + dt;
+      if (this._deathAshTimer >= 0.08 && progress < 0.85) {
+        this._deathAshTimer = 0;
+        const vfxList = callbacks?.vfxList || callbacks?.vfx;
+        if (vfxList && this.scene) {
+          spawnDissolveAshWisp(this.scene, vfxList, this.group.position, {
+            height: (this.billboard.baseSize || 2.0) * 0.4 * (1 - progress),
+            isBoss: this.isBoss
+          });
+        }
+      }
+
+      if (progress < 0.45) {
+        const pulse = 1 - (progress / 0.45);
+        this.billboard.mesh.material.emissive.setHex(pulse > 0.5 ? 0x6e1414 : 0x3d1a10);
+      } else {
+        this.billboard.mesh.material.emissive.setHex(0x000000);
+      }
+
+      if (progress >= 0.35) {
+        const fadeP = (progress - 0.35) / 0.65;
+        const alpha = Math.max(0, 1.0 - fadeP);
+        this.billboard.mesh.material.transparent = true;
+        this.billboard.mesh.material.alphaTest = 0.02;
+        this.billboard.mesh.material.opacity = alpha;
+        if (this.billboard.glowMesh?.material) {
+          this.billboard.glowMesh.material.transparent = true;
+          this.billboard.glowMesh.material.alphaTest = 0.02;
+          this.billboard.glowMesh.material.opacity = alpha;
+        }
+      }
+
+      if (this.stateTimer >= deathDuration) {
+        this.resetVisuals();
+        return true;
+      }
+      return false;
+    }
+    if (false) {
+      this.stateTimer += dt;
       const frame = Math.min(3, Math.floor(this.stateTimer * 8));
       this.billboard.setDirectionalFrame(this.billboard.dirRow, 3, frame);
-      return this.stateTimer > 0.5;
+      return false;
     }
 
     // Corrección suave de las réplicas del Cliente hacia la última posición
@@ -239,7 +348,10 @@ export class Enemy {
       if (this.state === 'dead') return false;
     }
 
-    if (this.isBoss && this.bossAI?.hitFlashTimer > 0) {
+    if (this.hitFlashTimer > 0) {
+      this.hitFlashTimer -= dt;
+      this.billboard.mesh.material.emissive.setHex(0xffffff);
+    } else if (this.isBoss && this.bossAI?.hitFlashTimer > 0) {
       this.billboard.mesh.material.emissive.setHex(0xff5533);
     } else if (this.burnTimer > 0) {
       this.billboard.mesh.material.emissive.setHex(0x662200);
@@ -280,7 +392,12 @@ export class Enemy {
     const GRAVITY = 23.0;
     this.jumpCooldown = Math.max(0, (this.jumpCooldown || 0) - dt);
 
-    if (this.landingSquashTimer > 0) {
+    if (this.hitFlinchTimer > 0) {
+      this.hitFlinchTimer -= dt;
+      const t = Math.max(0, this.hitFlinchTimer / 0.14);
+      const tilt = (this._hitFlinchTilt || 0.12) * t;
+      this.billboard.applyJuiceTransforms(1 + t * 0.18, 1 - t * 0.14, tilt, 0);
+    } else if (this.landingSquashTimer > 0) {
       this.landingSquashTimer -= dt;
       const t = Math.max(0, this.landingSquashTimer / 0.12);
       this.billboard.applyJuiceTransforms(1 + t * 0.22, 1 - t * 0.18, 0, 0);

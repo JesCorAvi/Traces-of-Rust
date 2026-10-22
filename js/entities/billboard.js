@@ -155,7 +155,7 @@ export function createBillboardSprite(sheetKey, size = 2.0) {
       this.applyJuiceTransforms(this.squashX, this.squashY, this.tiltAngle, this.extraOffsetY);
     },
 
-    applyJuiceTransforms(squashX = 1.0, squashY = 1.0, tiltZ = 0.0, extraY = 0.0) {
+    applyJuiceTransforms(squashX = 1.0, squashY = 1.0, tiltZ = 0.0, extraY = 0.0, shadowMult = 1.0) {
       this.squashX = squashX;
       this.squashY = squashY;
       this.tiltAngle = tiltZ;
@@ -169,7 +169,8 @@ export function createBillboardSprite(sheetKey, size = 2.0) {
       this.glowMesh.position.set(0, halfH + extraY, 0);
       this.mesh.rotation.z = tiltZ;
       this.glowMesh.rotation.z = tiltZ;
-      this.shadowDisc.scale.set(baseRatio * squashX, baseRatio * squashX, 1);
+      const sh = Math.max(0.001, baseRatio * squashX * shadowMult);
+      this.shadowDisc.scale.set(sh, sh, 1);
     },
 
     setDirectionalFrame(dirRow, stateIdx, frameInState) {

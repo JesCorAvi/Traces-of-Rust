@@ -11,7 +11,7 @@ import { GameEvents } from '../core/eventBus.js';
 import { CORE_DEFENSE_CONFIG } from '../config/coreDefenseConfig.js';
 import { CONFIG } from '../config.js';
 import { AudioSys } from '../audio.js';
-import { spawnEnemyProjectile } from '../combat.js';
+import { spawnEnemyProjectile, spawnHitBlood } from '../combat.js';
 import { ModeManager } from '../modes/gameModeManager.js';
 import { getCurrentLobbyData, getLocalPlayerSteamId, launchClientMatch, getLastLaunchedMatchTimestamp, setLastLaunchedMatchTimestamp, handleRemoteStageMatch, handleRemoteCharReady, handleRemoteCancelStage } from './steamLobbyUI.js';
 import { t } from '../core/i18n.js';
@@ -1778,28 +1778,7 @@ export const MultiplayerSync = {
     const scene = this.ctx?.scene;
     const vfx = this.ctx?.vfx;
     if (!scene || !vfx) return;
-    for (let i = 0; i < count; i++) {
-      const mesh = new THREE.Mesh(
-        new THREE.BoxGeometry(0.18, 0.18, 0.18),
-        new THREE.MeshBasicMaterial({ color: 0xa52020 })
-      );
-      mesh.position.set(x, y, z);
-      scene.add(mesh);
-      vfx.push({
-        mesh,
-        disposeGeo: true,
-        disposeMat: true,
-        life: 0.22,
-        maxLife: 0.22,
-        vel: new THREE.Vector3(
-          (Math.random() - 0.5) * 5,
-          2 + Math.random() * 3,
-          (Math.random() - 0.5) * 5
-        ),
-        gravity: 15,
-        floorY: y - 0.5
-      });
-    }
+    spawnHitBlood(scene, vfx, new THREE.Vector3(x, y, z), { count });
   },
 
 

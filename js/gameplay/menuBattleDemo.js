@@ -10,7 +10,7 @@ import { executeSawSlash } from '../combat/weapons/saw.js';
 import { fireBuckshot } from '../combat/weapons/shotgun.js';
 import { updateEnemies } from '../modes/enemyLoop.js';
 import { setPlaneFrameUV } from '../entities.js';
-import { triggerCombatFlash, SHARED_GEO, SHARED_MAT } from '../combat/shared.js';
+import { triggerCombatFlash, SHARED_GEO, SHARED_MAT, spawnHitBlood } from '../combat/shared.js';
 import { PathSystem } from '../defense/pathSystem.js';
 import { TurretSystem } from '../defense/turretSystem.js';
 import { Turret } from '../defense/turret.js';
@@ -294,6 +294,12 @@ export function updateMenuBattleDemo(ctx) {
     en.hp -= amount;
     en.state = 'hurt';
     en.stateTimer = 0.15;
+    en.onHitFeedback?.(amount, false, kb);
+    spawnHitBlood(scene, vfx, en.group.position.clone().add(new THREE.Vector3(0, 0.9, 0)), {
+      hitDir: kb ? kb.clone().setY(0).normalize() : null,
+      damage: amount,
+      floorY: 0.05
+    });
     if (kb) {
       en.group.position.add(kb);
       if (worldPhysics) {
@@ -304,6 +310,7 @@ export function updateMenuBattleDemo(ctx) {
       en.hp = 0;
       en.state = 'dead';
       en.stateTimer = 0;
+      en.lastHitDir = kb ? kb.clone().setY(0).normalize() : null;
       camShake = Math.max(camShake, 0.18);
 
       for (let p = 0; p < 4; p++) {
@@ -497,6 +504,7 @@ export function updateMenuBattleDemo(ctx) {
   const camFwd = new THREE.Vector3().subVectors(playerGroup.position, camera.position).setY(0).normalize();
   updateEnemies(enemyPool, dt, playerGroup.position, camFwd, camera.position, worldPhysics, {
     playerAlive: true,
+    vfxList: vfx,
     pathSystem: isTD ? defensePathSystem : null,
     coreMachine: isTD ? defenseCore : null,
     onDealDamage: attacker => {
@@ -520,6 +528,7 @@ export function updateMenuBattleDemo(ctx) {
   // Actualización de VFX
   for (let i = vfx.length - 1; i >= 0; i--) {
     const v = vfx[i];
+    if (v.customUpdate) v.customUpdate(dt);
     v.life -= dt;
     if (v.uvTotalFrames && v.maxLife && v.mesh.geometry) {
       const progress = 1 - Math.max(0, v.life / v.maxLife);
@@ -537,7 +546,10 @@ export function updateMenuBattleDemo(ctx) {
         v.vel.z *= 0.6;
       }
     }
-    if (v.scaleSpeed) v.mesh.scale.addScalar(v.scaleSpeed * dt);
+    if (v.scaleSpeed) {
+      const s = Math.max(0.001, v.mesh.scale.x + v.scaleSpeed * dt);
+      v.mesh.scale.set(s, s, s);
+    }
     if (v.spin) {
       v.mesh.rotation.x += v.spin.x * dt;
       v.mesh.rotation.z += v.spin.z * dt;

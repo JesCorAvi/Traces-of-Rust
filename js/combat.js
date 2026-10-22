@@ -1,7 +1,7 @@
 // Armas, proyectiles, VFX y recursos compartidos de combate.
-// Exports: SHARED_GEO, SHARED_MAT, initCombatLight, triggerCombatFlash, updateCombatLight, executeSawSlash, createOrbitalUnit, fireBuckshot, fireFlamethrower, spawnShrapnelMine, fireHarpoon, fireDefibrillator, fireChakram, throwGrenade, throwAcidFlask, updateWelder, resetWelderState, slamHammer, updatePlayerProjectiles, clearPlayerProjectiles, triggerBossSpecialAttack, spawnBossAttackTelegraph, spawnBossAttackDust.
+// Exports: SHARED_GEO, SHARED_MAT, initCombatLight, triggerCombatFlash, updateCombatLight, executeSawSlash, createOrbitalUnit, fireBuckshot, fireFlamethrower, spawnShrapnelMine, fireHarpoon, fireDefibrillator, fireChakram, throwGrenade, throwAcidFlask, updateWelder, resetWelderState, slamHammer, updatePlayerProjectiles, clearPlayerProjectiles, triggerBossSpecialAttack, spawnBossAttackTelegraph, spawnBossAttackDust, spawnHitBlood, spawnEnemyDeathGore, spawnDissolveAshWisp.
 
-export { SHARED_GEO, SHARED_MAT, initCombatLight, triggerCombatFlash, updateCombatLight, spawnEnemyProjectile } from './combat/shared.js';
+export { SHARED_GEO, SHARED_MAT, initCombatLight, triggerCombatFlash, updateCombatLight, spawnEnemyProjectile, spawnHitBlood, spawnEnemyDeathGore, spawnDissolveAshWisp } from './combat/shared.js';
 export { executeSawSlash } from './combat/weapons/saw.js';
 export { createOrbitalUnit } from './combat/weapons/orbital.js';
 export { fireBuckshot } from './combat/weapons/shotgun.js';
