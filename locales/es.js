@@ -659,7 +659,7 @@ export default {
   "ui.settings.video_section": "VÍDEO Y RENDERIZADO 3D",
   "ui.settings.res_scale": "RESOLUCIÓN PIXEL-ART 3D:",
   "ui.settings.res_03": "0.30x (ULTRA LO-FI / MÁX FPS)",
-  "ui.settings.res_044": "0.44x (ESTÁNDAR BUCKSHOT)",
+  "ui.settings.res_044": "0.44x (ESTÁNDAR RECOMENDADO)",
   "ui.settings.res_065": "0.65x (ALTA DEFINICIÓN RETRO)",
   "ui.settings.res_10": "1.00x (NATIVA DE MONITOR)",
   "ui.settings.ui_scale": "ESCALA DE INTERFAZ (UI):",
