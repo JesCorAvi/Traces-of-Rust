@@ -35,28 +35,42 @@ const INTERACT_RADIUS = 3.5;
 
 export class TurretSystem {
   constructor(scene, worldPhysics, extraStructures, mode) {
-this.scene = scene;
-this.worldPhysics = worldPhysics;
-this.extraStructures = extraStructures;
-this.mode = mode;
-this.cfg = CORE_DEFENSE_CONFIG;
-this.placementCfg = CORE_DEFENSE_CONFIG.PLACEMENT;
+    this.scene = scene;
+    this.worldPhysics = worldPhysics;
+    this.extraStructures = extraStructures;
+    this.mode = mode;
+    this.cfg = CORE_DEFENSE_CONFIG;
+    this.placementCfg = CORE_DEFENSE_CONFIG.PLACEMENT;
 
-this.turrets = new Map();
-this.allies = [];
-this.fx = [];
-this.hazards = [];
-this.nextTurretId = 1;
-this.elapsed = 0;
-this.ctx = null;
+    this.turrets = new Map();
+    this.allies = [];
+    this.fx = [];
+    this.hazards = [];
+    this.nextTurretId = 1;
+    this.elapsed = 0;
+    this.ctx = null;
 
-this.placingType = null;
-this.placementState = null;
-this.placementGhost = null;
+    this.placingType = null;
+    this.placementState = null;
+    this.placementGhost = null;
+    this.areRangesVisible = false;
 
-buildPlacementGhost(this);
+    buildPlacementGhost(this);
   }
 
+  toggleTurretRanges(forceState = null) {
+    if (typeof forceState === 'boolean') {
+      this.areRangesVisible = forceState;
+    } else {
+      this.areRangesVisible = !this.areRangesVisible;
+    }
+    for (const turret of this.turrets.values()) {
+      if (turret.rangeIndicatorGroup) {
+        turret.rangeIndicatorGroup.visible = this.areRangesVisible;
+      }
+    }
+    return this.areRangesVisible;
+  }
 
   beginPlacement(typeId) { return beginPlacement(this, typeId); }
   cancelPlacement() { cancelPlacement(this); }
@@ -89,155 +103,155 @@ buildPlacementGhost(this);
   handleAllyDestroyed(ally) { handleAllyDestroyed(this, ally); }
 
   getTurretById(turretId) {
-return this.turrets.get(turretId) || null;
+    return this.turrets.get(turretId) || null;
   }
 
   getTurrets() {
-return Array.from(this.turrets.values());
+    return Array.from(this.turrets.values());
   }
 
   findNearbyTurret(playerPos) {
-let best = null;
-let bestDist = INTERACT_RADIUS;
-for (const turret of this.turrets.values()) {
-  if (turret.destroyed) continue;
-  const d = horizontalDistance(playerPos, turret.group.position);
-  if (d <= bestDist) {
-    best = turret;
-    bestDist = d;
-  }
-}
-return best;
+    let best = null;
+    let bestDist = INTERACT_RADIUS;
+    for (const turret of this.turrets.values()) {
+      if (turret.destroyed) continue;
+      const d = horizontalDistance(playerPos, turret.group.position);
+      if (d <= bestDist) {
+        best = turret;
+        bestDist = d;
+      }
+    }
+    return best;
   }
 
   upgradeTurret(turretId, pathIndex) {
-const turret = this.getTurretById(turretId);
-if (!turret) return false;
+    const turret = this.getTurretById(turretId);
+    if (!turret) return false;
 
-const state = turret.getUpgradeState(pathIndex);
-if (!state || !state.next || !state.canBuy) return false;
-if (!this.mode.spendScrap(state.next.cost)) return false;
-if (!turret.upgrade(pathIndex)) return false;
+    const state = turret.getUpgradeState(pathIndex);
+    if (!state || !state.next || !state.canBuy) return false;
+    if (!this.mode.spendScrap(state.next.cost)) return false;
+    if (!turret.upgrade(pathIndex)) return false;
 
-this.spawnPulse(turret.group.position, 1.8, turret.cfg.color);
-this.spawnSparks(
-  turret.group.position.clone().add(new THREE.Vector3(0, turret.cfg.base.height * 0.7, 0)),
-  turret.cfg.color
-);
-AudioSys.playUpgradeTurret();
-GameEvents.emit('turret:upgraded', {
-  turret,
-  pathIndex,
-  level: turret.levels[pathIndex]
-});
-return true;
+    this.spawnPulse(turret.group.position, 1.8, turret.cfg.color);
+    this.spawnSparks(
+      turret.group.position.clone().add(new THREE.Vector3(0, turret.cfg.base.height * 0.7, 0)),
+      turret.cfg.color
+    );
+    AudioSys.playUpgradeTurret();
+    GameEvents.emit('turret:upgraded', {
+      turret,
+      pathIndex,
+      level: turret.levels[pathIndex]
+    });
+    return true;
   }
 
   sellTurret(turretId, options = {}) {
-const turret = this.getTurretById(turretId);
-if (!turret) return 0;
+    const turret = this.getTurretById(turretId);
+    if (!turret) return 0;
 
-const refund = turret.getSellValue();
-// Una venta remota elimina la torreta en el receptor pero NUNCA le abona
-// chatarra: el reembolso pertenece a quien ejecuta la venta.
-if (!options.remote) this.mode.addScrap(refund, { local: true });
+    const refund = turret.getSellValue();
+    // Una venta remota elimina la torreta en el receptor pero NUNCA le abona
+    // chatarra: el reembolso pertenece a quien ejecuta la venta.
+    if (!options.remote) this.mode.addScrap(refund, { local: true });
 
-this.turrets.delete(turret.id);
-this.removeStructure(turret);
-this.spawnSparks(turret.group.position.clone(), 0xb89c46);
-AudioSys.playSellTurret();
-GameEvents.emit('turret:sold', { turret, refund });
-turret.destroy();
-return refund;
+    this.turrets.delete(turret.id);
+    this.removeStructure(turret);
+    this.spawnSparks(turret.group.position.clone(), 0xb89c46);
+    AudioSys.playSellTurret();
+    GameEvents.emit('turret:sold', { turret, refund });
+    turret.destroy();
+    return refund;
   }
 
   getTurretCount() {
-return this.turrets.size;
+    return this.turrets.size;
   }
 
   getMaxTurretCount() {
-return this.placementCfg.maxTurrets;
+    return this.placementCfg.maxTurrets;
   }
 
   update(dt, ctx) {
-this.ctx = ctx;
-this.elapsed += dt;
+    this.ctx = ctx;
+    this.elapsed += dt;
 
-updatePlacement(this, dt, ctx);
-applySupportBuffs(this, ctx);
+    updatePlacement(this, dt, ctx);
+    applySupportBuffs(this, ctx);
 
-this.turrets.forEach(turret => {
-  if (!turret.destroyed) turret.update(dt, ctx);
-});
+    this.turrets.forEach(turret => {
+      if (!turret.destroyed) turret.update(dt, ctx);
+    });
 
-for (let i = this.allies.length - 1; i >= 0; i--) {
-  const ally = this.allies[i];
-  if (ally.destroyed) {
-    this.allies.splice(i, 1);
-    continue;
-  }
-  ally.update(dt, ctx.enemyPool.active, ctx.worldPhysics, ctx.camera.position, this);
-}
+    for (let i = this.allies.length - 1; i >= 0; i--) {
+      const ally = this.allies[i];
+      if (ally.destroyed) {
+        this.allies.splice(i, 1);
+        continue;
+      }
+      ally.update(dt, ctx.enemyPool.active, ctx.worldPhysics, ctx.camera.position, this);
+    }
 
-updateFx(this, dt);
-updateHazards(this, dt, ctx);
+    updateFx(this, dt);
+    updateHazards(this, dt, ctx);
   }
 
   handleTurretDestroyed(turret) {
-this.spawnExplosion(turret.group.position.clone(), 2.4, turret.cfg.color);
-this.spawnSparks(
-  turret.group.position.clone().add(new THREE.Vector3(0, 1.0, 0)),
-  0xa54a2a
-);
-AudioSys.playTurretDestroyed();
+    this.spawnExplosion(turret.group.position.clone(), 2.4, turret.cfg.color);
+    this.spawnSparks(
+      turret.group.position.clone().add(new THREE.Vector3(0, 1.0, 0)),
+      0xa54a2a
+    );
+    AudioSys.playTurretDestroyed();
 
-this.turrets.delete(turret.id);
-this.removeStructure(turret);
-GameEvents.emit('turret:destroyed', { turret, typeId: turret.cfg.id });
-turret.destroy();
+    this.turrets.delete(turret.id);
+    this.removeStructure(turret);
+    GameEvents.emit('turret:destroyed', { turret, typeId: turret.cfg.id });
+    turret.destroy();
   }
 
   removeStructure(structure) {
-const idx = this.extraStructures.indexOf(structure);
-if (idx !== -1) this.extraStructures.splice(idx, 1);
+    const idx = this.extraStructures.indexOf(structure);
+    if (idx !== -1) this.extraStructures.splice(idx, 1);
   }
 
   destroy() {
-cancelPlacement(this);
+    cancelPlacement(this);
 
-for (const turret of Array.from(this.turrets.values())) {
-  turret.destroy();
-}
-this.turrets.clear();
+    for (const turret of Array.from(this.turrets.values())) {
+      turret.destroy();
+    }
+    this.turrets.clear();
 
-for (const ally of this.allies) {
-  ally.destroy();
-}
-this.allies.length = 0;
+    for (const ally of this.allies) {
+      ally.destroy();
+    }
+    this.allies.length = 0;
 
-for (const item of this.fx) {
-  this.scene.remove(item.mesh);
-  if (!item.shared) {
-    if (item.mesh.geometry) item.mesh.geometry.dispose();
-    if (item.mat) item.mat.dispose();
-    else if (item.mesh.material) item.mesh.material.dispose();
-  }
-}
-this.fx.length = 0;
+    for (const item of this.fx) {
+      this.scene.remove(item.mesh);
+      if (!item.shared) {
+        if (item.mesh.geometry) item.mesh.geometry.dispose();
+        if (item.mat) item.mat.dispose();
+        else if (item.mesh.material) item.mesh.material.dispose();
+      }
+    }
+    this.fx.length = 0;
 
-for (const h of this.hazards) {
-  this.scene.remove(h.mesh);
-  h.mesh.geometry.dispose();
-  h.mat.dispose();
-}
-this.hazards.length = 0;
+    for (const h of this.hazards) {
+      this.scene.remove(h.mesh);
+      h.mesh.geometry.dispose();
+      h.mat.dispose();
+    }
+    this.hazards.length = 0;
 
-if (this.placementGhost) {
-  this.scene.remove(this.placementGhost);
-  disposeObject3D(this.placementGhost);
-  this.placementGhost = null;
-}
+    if (this.placementGhost) {
+      this.scene.remove(this.placementGhost);
+      disposeObject3D(this.placementGhost);
+      this.placementGhost = null;
+    }
 
-this.extraStructures.length = 0;
+    this.extraStructures.length = 0;
   }
 }

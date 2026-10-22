@@ -96,7 +96,8 @@ export class CoreDefenseMode {
       },
       heal: amt => {
         if (this.isNetworked && !this.isNetworkHost) return;
-        this.lives = Math.min(this.maxLives, this.lives + amt);
+        const cleanHeal = Math.max(0, Math.round(amt || 0));
+        this.lives = Math.min(this.maxLives, Math.round(this.lives + cleanHeal));
         if (this.coreMachine) {
           this.coreMachine.hp = this.lives;
           this.coreMachine.currentDamageState = { label: this.getDamageStateLabel() };
@@ -280,7 +281,7 @@ export class CoreDefenseMode {
       currentWave: this.waveManager ? this.waveManager.currentWaveNumber : 1,
       totalWaves: this.waveManager ? this.waveManager.totalWaves : 12,
       coreHpLeft: 0,
-      coreMaxHp: this.maxLives,
+      coreMaxHp: Math.round(this.maxLives),
       bossesDefeated: this.bossesDefeated
     });
   }
@@ -301,13 +302,14 @@ export class CoreDefenseMode {
     // El Cliente nunca modifica mode.lives por su cuenta: espera CORE_SYNC.
     if (this.isNetworked && !this.isNetworkHost) return;
     if (!Number.isFinite(amount) || amount <= 0 || this._defeatTriggered) return;
-    this.lives = Math.max(0, this.lives - amount);
+    const cleanDmg = Math.max(1, Math.round(amount));
+    this.lives = Math.max(0, Math.round(this.lives - cleanDmg));
     this.syncCoreFields();
     GameEvents.emit('core:damaged', {
       currentHp: this.lives,
       hp: this.lives,
       maxHp: this.maxLives,
-      dmg: amount,
+      dmg: cleanDmg,
       reason
     });
     if (this.lives <= 0) this.handleBreachDefeat(ctx || this._ctx);
@@ -317,8 +319,8 @@ export class CoreDefenseMode {
   applyRemoteCoreState(hp, maxHp) {
     if (!Number.isFinite(hp)) return;
     const prevHp = this.lives;
-    if (Number.isFinite(maxHp) && maxHp > 0) this.maxLives = maxHp;
-    this.lives = Math.max(0, Math.min(this.maxLives, hp));
+    if (Number.isFinite(maxHp) && maxHp > 0) this.maxLives = Math.round(maxHp);
+    this.lives = Math.max(0, Math.min(this.maxLives, Math.round(hp)));
     this.syncCoreFields();
     if (this.lives !== prevHp) {
       this._ctx?.onCoreDamaged?.({ hp: this.lives, maxHp: this.maxLives, dmg: Math.max(0, prevHp - this.lives) });
@@ -361,7 +363,7 @@ export class CoreDefenseMode {
       currentWave: payload.wavesCompleted,
       totalWaves: payload.totalWaves,
       coreHpLeft: this.lives,
-      coreMaxHp: this.maxLives,
+      coreMaxHp: Math.round(this.maxLives),
       bossesDefeated: this.bossesDefeated
     });
   }
@@ -587,6 +589,14 @@ export class CoreDefenseMode {
     return this.waveManager.skipPrep();
   }
 
+  toggleTurretRanges(forceState = null) {
+    return this.turretSystem ? this.turretSystem.toggleTurretRanges(forceState) : false;
+  }
+
+  areTurretRangesVisible() {
+    return !!(this.turretSystem && this.turretSystem.areRangesVisible);
+  }
+
   handleTutorialKey(key) {
     if (!this.tutorial || !this.tutorialActive) return false;
     return this.tutorial.handleKey(key);
@@ -685,8 +695,9 @@ export class CoreDefenseMode {
       isFirstWavePrep: isFirstWavePrep && !eventInfo,
       prepSeconds,
       canSkipPrep: isPrep && !eventInfo,
-      coreHp: this.lives,
-      coreMaxHp: this.maxLives,
+      coreHp: Math.ceil(this.lives),
+      coreMaxHp: Math.round(this.maxLives),
+      turretRangesVisible: this.areTurretRangesVisible(),
       coreRatio: this.lives / Math.max(1, this.maxLives),
       coreStateLabel: stateLabel,
       corePosition: null,

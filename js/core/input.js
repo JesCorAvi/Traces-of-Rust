@@ -26,6 +26,14 @@ window.addEventListener('keydown', e => {
   }
 
   if (rt.state === 'BUILD') {
+    if (k === 'v' && !e.repeat) {
+      e.preventDefault();
+      const visible = rt.ModeManager.activeMode?.toggleTurretRanges?.();
+      AudioSys.playUIClick?.();
+      const btn = document.getElementById('btn-toggle-turret-ranges');
+      if (btn) btn.classList.toggle('is-active', !!visible);
+      return;
+    }
     if (k === 'e' || k === 'escape') {
       e.preventDefault();
       rt.turretBuildMenu.close();
@@ -44,6 +52,14 @@ window.addEventListener('keydown', e => {
     const mode = rt.ModeManager.activeMode;
     if (mode?.handleTutorialKey?.(k)) {
       e.preventDefault();
+      return;
+    }
+    if (k === 'v' && !e.repeat) {
+      e.preventDefault();
+      const visible = mode?.toggleTurretRanges?.();
+      AudioSys.playUIClick?.();
+      const btn = document.getElementById('btn-toggle-turret-ranges');
+      if (btn) btn.classList.toggle('is-active', !!visible);
       return;
     }
     if (mode?.isTurretPlacementActive?.()) {

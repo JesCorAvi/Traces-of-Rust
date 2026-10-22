@@ -24,6 +24,11 @@ import {
 import { updateCombat } from './turrets/combat/update.js';
 import { updateBarracks, updateSupport } from './turrets/combat/support.js';
 
+const SHARED_RANGE_FILL_GEO = new THREE.CircleGeometry(1, 48);
+SHARED_RANGE_FILL_GEO.userData.sharedGeo = true;
+const SHARED_RANGE_RING_GEO = new THREE.RingGeometry(0.97, 1.0, 48);
+SHARED_RANGE_RING_GEO.userData.sharedGeo = true;
+
 export class Turret extends DefensiveStructure {
   constructor(scene, worldPhysics, position, cfg, system, facingYaw = 0, turretId = null) {
     super(scene, worldPhysics, {
@@ -81,6 +86,49 @@ export class Turret extends DefensiveStructure {
     buildMuzzleFlash(this);
     buildHealthBar(this);
     applyUpgradeVisuals(this);
+    this.buildRangeIndicator();
+  }
+
+  buildRangeIndicator() {
+    this.rangeIndicatorGroup = new THREE.Group();
+    const fillMat = new THREE.MeshBasicMaterial({
+      color: this.cfg.color,
+      transparent: true,
+      opacity: 0.12,
+      side: THREE.DoubleSide,
+      depthWrite: false
+    });
+    const ringMat = new THREE.MeshBasicMaterial({
+      color: this.cfg.color,
+      transparent: true,
+      opacity: 0.55,
+      side: THREE.DoubleSide,
+      depthWrite: false
+    });
+
+    const fillMesh = new THREE.Mesh(SHARED_RANGE_FILL_GEO, fillMat);
+    fillMesh.rotation.x = -Math.PI / 2;
+    fillMesh.position.y = 0.02;
+
+    const ringMesh = new THREE.Mesh(SHARED_RANGE_RING_GEO, ringMat);
+    ringMesh.rotation.x = -Math.PI / 2;
+    ringMesh.position.y = 0.025;
+
+    this.rangeIndicatorGroup.add(fillMesh, ringMesh);
+    this.updateRangeIndicator();
+    this.rangeIndicatorGroup.visible = !!this.system?.areRangesVisible;
+    this.baseRoot.add(this.rangeIndicatorGroup);
+  }
+
+  getEffectiveRange() {
+    const baseR = this.stats?.range || this.base.range || 10;
+    return baseR * (1 + (this.supportRangeBonus || 0));
+  }
+
+  updateRangeIndicator() {
+    if (!this.rangeIndicatorGroup) return;
+    const r = this.getEffectiveRange();
+    this.rangeIndicatorGroup.scale.set(r, 1, r);
   }
 
   addBasePart(geo, mat, x = 0, y = 0, z = 0, rx = 0, ry = 0, rz = 0) {
@@ -112,7 +160,10 @@ export class Turret extends DefensiveStructure {
     return mesh;
   }
 
-  recomputeStats() { recomputeStats(this); }
+  recomputeStats() {
+    recomputeStats(this);
+    this.updateRangeIndicator();
+  }
   applyUpgradeVisuals() { applyUpgradeVisuals(this); }
   getUpgradeState(pathIndex) { return getUpgradeState(this, pathIndex); }
   upgrade(pathIndex) { return upgrade(this, pathIndex); }

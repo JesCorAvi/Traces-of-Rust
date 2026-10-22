@@ -57,6 +57,9 @@ export class HUDController {
     if (!isDefense) {
       document.getElementById('turret-interact-prompt')?.classList.add('hidden');
       document.getElementById('wave-prep-prompt')?.classList.add('hidden');
+      document.getElementById('btn-toggle-turret-ranges')?.classList.add('hidden');
+    } else {
+      document.getElementById('btn-toggle-turret-ranges')?.classList.remove('hidden');
     }
 
     const turretsItem = document.getElementById('floating-turrets-item');

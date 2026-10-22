@@ -379,7 +379,7 @@ export class Enemy {
       if (this.defenseAI.coreAttackTimer >= atkInterval) {
         this.defenseAI.coreAttackTimer = 0;
         const coreDmg = this.defenseAI.profile.coreDamage || this.dmg;
-        targetStructure.takeDamage(coreDmg, this);
+        targetStructure.takeDamage(Math.round(coreDmg), this);
       }
     }
 

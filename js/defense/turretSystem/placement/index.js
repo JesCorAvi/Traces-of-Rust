@@ -24,6 +24,10 @@ system.placementState = {
   valid: false,
   reason: 'APUNTA AL SUELO'
 };
+if (system.ghostRangeGroup) {
+  const r = cfg.base?.range || 10;
+  system.ghostRangeGroup.scale.set(r, 1, r);
+}
 system.placementGhost.visible = true;
 AudioSys.playUIClick();
 return true;
@@ -87,7 +91,8 @@ system.turrets.set(turret.id, turret);
 
 system.spawnPulse(position, 1.6, cfg.color);
 system.spawnSparks(position.clone().add(new THREE.Vector3(0, 0.7, 0)), cfg.color);
-AudioSys.playBuildTurret();
+if (AudioSys.playTurretBuild) AudioSys.playTurretBuild();
+else AudioSys.play(140, 0.16, 'sawtooth', 0.06);
 GameEvents.emit('turret:built', { turret, typeId: cfg.id });
 return turret;
 }
@@ -129,4 +134,15 @@ system.ghostBodyMat.color.setHex(color);
 system.ghostBeamMat.color.setHex(color);
 system.ghostRingMat.opacity = result.valid ? 0.75 : 0.5;
 system.ghostBodyMat.opacity = result.valid ? 0.18 : 0.12;
+
+if (system.ghostRangeFillMat) {
+  const rangeColor = result.valid ? (system.placingType.color || 0x9caf6b) : 0xa52020;
+  system.ghostRangeFillMat.color.setHex(rangeColor);
+  system.ghostRangeFillMat.opacity = result.valid ? 0.16 : 0.08;
+}
+if (system.ghostRangeRingMat) {
+  const rangeColor = result.valid ? (system.placingType.color || 0x9caf6b) : 0xa52020;
+  system.ghostRangeRingMat.color.setHex(rangeColor);
+  system.ghostRangeRingMat.opacity = result.valid ? 0.7 : 0.4;
+}
 }

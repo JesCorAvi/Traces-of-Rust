@@ -275,7 +275,7 @@ export function updatePlayerWeaponsAndCombat({
           dealDamageToPlayer(h.dmg);
         }
         if (coreMachine && coreMachine.active && !coreMachine.destroyed && coreMachine.position.distanceTo(h.center) <= h.radius + coreMachine.collisionRadius) {
-          coreMachine.takeDamage(h.dmg * 0.75, h.boss || null);
+          coreMachine.takeDamage(Math.round(h.dmg * 0.75), h.boss || null);
         }
       } else if (h.type === 'cone') {
         AudioSys.play(82, 0.25, 'square', 0.1);
@@ -287,7 +287,7 @@ export function updatePlayerWeaponsAndCombat({
         if (coreMachine && coreMachine.active && !coreMachine.destroyed) {
           const toC = new THREE.Vector3().subVectors(coreMachine.position, h.origin).setY(0);
           if (toC.length() <= h.radius + coreMachine.collisionRadius && h.dir.angleTo(toC.clone().normalize()) <= h.arc) {
-            coreMachine.takeDamage(h.dmg * 0.85, h.boss || null);
+            coreMachine.takeDamage(Math.round(h.dmg * 0.85), h.boss || null);
           }
         }
       }
@@ -312,7 +312,7 @@ export function updatePlayerWeaponsAndCombat({
     } else if (coreMachine && coreMachine.active && !coreMachine.destroyed) {
       const dCore = Math.hypot(p.mesh.position.x - coreMachine.position.x, p.mesh.position.z - coreMachine.position.z);
       if (dCore < coreMachine.collisionRadius + 0.35) {
-        coreMachine.takeDamage(p.dmg * 0.65, null);
+        coreMachine.takeDamage(Math.round(p.dmg * 0.65), null);
         p.life = 0;
       }
     }

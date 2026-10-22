@@ -35,7 +35,7 @@
 /* Centro Superior: Cabecera compacta de Oleada y Reactor */
 #hud-top-center {
   position: absolute;
-  top: 26px;
+  top: 10px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 19;
@@ -43,19 +43,21 @@
   flex-direction: column;
   align-items: center;
   gap: 4px;
-  width: min(430px, 46vw);
+  width: min(540px, 60vw);
+  max-width: 560px;
 }
 
 .core-compact-header {
   width: 100%;
-  background: rgba(8, 11, 8, 0.78);
+  background: rgba(8, 11, 8, 0.82);
   border: 1px solid rgba(217, 119, 36, 0.45);
   border-radius: 4px;
-  padding: 5px 10px 6px;
+  padding: 4px 8px 5px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.8);
   display: flex;
   flex-direction: column;
   gap: 4px;
+  box-sizing: border-box;
 }
 
 .core-header-row {
@@ -64,13 +66,20 @@
   align-items: center;
   width: 100%;
   font-family: 'Press Start 2P', monospace;
-  font-size: 8px;
+  font-size: 7.5px;
+  line-height: 1;
+  gap: 8px;
+  white-space: nowrap;
 }
 
 .core-wave-counter {
   color: #f5ecd3;
   text-shadow: 1px 1px 0 #000;
   letter-spacing: 0.5px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  font-size: 7.5px;
+  line-height: 1;
 }
 
 .core-state-tag {
@@ -78,9 +87,12 @@
   background: rgba(240, 201, 84, 0.15);
   border: 1px solid rgba(240, 201, 84, 0.3);
   border-radius: 3px;
-  padding: 1px 6px;
-  font-size: 7.5px;
+  padding: 2px 6px;
+  font-size: 7px;
+  line-height: 1;
   text-shadow: 1px 1px 0 #000;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .core-state-tag.critical {
@@ -88,6 +100,65 @@
   background: rgba(255, 82, 82, 0.2);
   border-color: #ff5252;
   animation: alertStepPulse 0.4s steps(2) infinite;
+}
+
+.core-header-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+}
+
+.range-toggle-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(18, 32, 46, 0.85);
+  border: 1px solid #38bdf8;
+  color: #7dd3fc;
+  padding: 2px 6px;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 7px;
+  font-family: 'Press Start 2P', monospace;
+  text-shadow: 1px 1px 0 #000;
+  white-space: nowrap;
+  flex-shrink: 0;
+  user-select: none;
+  transition: background 0.15s ease, transform 0.08s ease, border-color 0.15s ease;
+}
+
+.range-toggle-pill:hover {
+  background: #1e4566;
+  border-color: #7dd3fc;
+  transform: scale(1.04);
+}
+
+.range-toggle-pill .key-cap {
+  min-width: 12px;
+  height: 12px;
+  padding: 0 2px;
+  font-size: 7px;
+  background: #09131d;
+  border: 1px solid #38bdf8;
+  border-radius: 2px;
+  color: #e0f2fe;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.range-toggle-pill.is-active {
+  background: rgba(14, 116, 144, 0.75);
+  border-color: #00f0ff;
+  color: #ffffff;
+  box-shadow: 0 0 8px rgba(0, 240, 255, 0.55);
+}
+
+.range-toggle-pill.is-active .key-cap {
+  border-color: #00f0ff;
+  color: #00f0ff;
 }
 
 .prep-skip-pill {
@@ -100,9 +171,12 @@
   padding: 2px 6px;
   border-radius: 3px;
   cursor: pointer;
-  font-size: 7.5px;
+  font-size: 7px;
   font-family: 'Press Start 2P', monospace;
   text-shadow: 1px 1px 0 #000;
+  white-space: nowrap;
+  flex-shrink: 0;
+  user-select: none;
   transition: background 0.15s ease, transform 0.08s ease;
 }
 
@@ -112,24 +186,36 @@
 }
 
 .prep-skip-pill .key-cap {
-  min-width: 14px;
-  height: 14px;
-  padding: 0 3px;
-  font-size: 7.5px;
+  min-width: 12px;
+  height: 12px;
+  padding: 0 2px;
+  font-size: 7px;
   background: #112011;
   border: 1px solid #55de3e;
   border-radius: 2px;
   color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.prep-skip-pill.hidden,
+#wave-prep-prompt.hidden,
+#btn-toggle-turret-ranges.hidden {
+  display: none !important;
 }
 
 .core-bar-frame {
   position: relative;
-  height: 16px;
+  width: 100%;
+  height: 15px;
   background-color: #060806;
   border: 1px solid #6e3914;
   border-radius: 2px;
   overflow: hidden;
   box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.9);
+  box-sizing: border-box;
 }
 
 #core-hp-bar {

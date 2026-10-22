@@ -3,6 +3,8 @@
 
 import { CONFIG } from '../../config.js';
 import { renderSpriteIconHTML } from '../../spritesheets.js';
+import { ModeManager } from '../../modes/gameModeManager.js';
+import { AudioSys } from '../../audio.js';
 
 export const SHORT_WEAPON_NAMES = {
   slash:        'Sierra',
@@ -97,7 +99,11 @@ if (typeof modeTelemetry.coreHp === 'number') {
   }
   const coreHudBox = document.getElementById('core-defense-hud');
   if (coreHudBox) coreHudBox.classList.toggle('is-critical', corePct <= 25);
-  if (coreVal) coreVal.textContent = `${modeTelemetry.coreHp}/${modeTelemetry.coreMaxHp} INTEGRIDAD`;
+  if (coreVal) {
+    const displayHp = Math.ceil(Number(modeTelemetry.coreHp) || 0);
+    const displayMax = Math.round(Number(modeTelemetry.coreMaxHp) || 100);
+    coreVal.textContent = `${displayHp}/${displayMax} INTEGRIDAD`;
+  }
   if (coreWave) {
     if (modeTelemetry.eventBadge) {
       coreWave.textContent = `EVENTO // ${modeTelemetry.eventBadge}`;
@@ -169,12 +175,49 @@ if (typeof modeTelemetry.coreHp === 'number') {
     }
   }
 
+  const btnRanges = document.getElementById('btn-toggle-turret-ranges');
+  if (btnRanges) {
+    btnRanges.classList.toggle('is-active', !!modeTelemetry.turretRangesVisible);
+    if (!btnRanges.dataset.bound) {
+      btnRanges.dataset.bound = 'true';
+      const toggle = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const mode = ModeManager.activeMode;
+        if (mode?.toggleTurretRanges) {
+          const visible = mode.toggleTurretRanges();
+          btnRanges.classList.toggle('is-active', !!visible);
+          AudioSys.playUIClick?.();
+        }
+      };
+      btnRanges.addEventListener('click', toggle);
+      btnRanges.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') toggle(e);
+      });
+    }
+  }
+
   const prepPrompt = document.getElementById('wave-prep-prompt');
   if (prepPrompt) {
     prepPrompt.classList.toggle('hidden', !modeTelemetry.isPrep);
     const skipSpan = document.getElementById('prep-skip-text') || prepPrompt.querySelector('.prep-skip-pill span:last-child');
     if (skipSpan) {
       skipSpan.textContent = modeTelemetry.isFirstWavePrep ? 'INICIAR OLEADA' : 'SALTAR PAUSA';
+    }
+    if (!prepPrompt.dataset.bound) {
+      prepPrompt.dataset.bound = 'true';
+      const skip = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const mode = ModeManager.activeMode;
+        if (mode?.canSkipPrep?.()) {
+          mode.skipPrep();
+        }
+      };
+      prepPrompt.addEventListener('click', skip);
+      prepPrompt.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') skip(e);
+      });
     }
   }
 
