@@ -654,7 +654,7 @@ export default {
   "ui.settings.master_vol": "VOLUMEN MAESTRO:",
   "ui.settings.sfx_vol": "EFECTOS Y ARMAS (SFX):",
   "ui.settings.music_vol": "MÚSICA ADAPTATIVA:",
-  "ui.settings.amb_vol": "AMBIENTE DE PLANTA:",
+  "ui.settings.amb_vol": "SONIDO AMBIENTE:",
   "ui.settings.mute_global": "SILENCIAR AUDIO GLOBAL:",
   "ui.settings.video_section": "VÍDEO Y RENDERIZADO 3D",
   "ui.settings.res_scale": "RESOLUCIÓN PIXEL-ART 3D:",
