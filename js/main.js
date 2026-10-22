@@ -713,6 +713,7 @@ function animate() {
   } else if (state === 'START') {
     updateMenuBattleDemo({
       dt,
+      selectedMode: ModeManager.getSelectedModeId(),
       scene,
       camera,
       playerGroup,

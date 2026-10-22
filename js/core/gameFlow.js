@@ -26,6 +26,7 @@ function clearSharedRunState() {
 function startGame(options = {}) {
   rt.pendingTutorial = !!options.tutorial;
   rt.AudioSys.init();
+  if (rt.AudioSys) rt.AudioSys.isDemoSilent = false;
 
   // El Host impone modo, mapa y dificultad; el Cliente ignora su selección
   // local y carga exactamente el matchData recibido por lobby/P2P.
@@ -104,6 +105,7 @@ function finishRun(outcome, options = {}) {
   rt.AudioSys?.setMenuFilter?.(false);
   rt.AudioSys?.setBossMusic?.(false);
   rt.AudioSys?.setMusicState?.('MENU');
+  if (rt.AudioSys) rt.AudioSys.isDemoSilent = true;
 
   rt.save.souls = (rt.save.souls || 0) + rt.runSouls;
   rt.saveGame();
@@ -142,6 +144,7 @@ function returnToMainMenu(reasonMsg = null) {
   rt.AudioSys?.setMenuFilter?.(false);
   rt.AudioSys?.setBossMusic?.(false);
   rt.AudioSys?.setMusicState?.('MENU');
+  if (rt.AudioSys) rt.AudioSys.isDemoSilent = true;
 
   clearSharedRunState();
   rt.state = 'START';
@@ -285,7 +288,8 @@ document.getElementById('btn-pause-to-menu').onclick = () => returnToMainMenu();
 document.getElementById('btn-resume').onclick = () => togglePauseGame();
 
 document.getElementById('btn-open-shop').onclick = () => {
-  rt.AudioSys.init(); rt.AudioSys.playUISelect(); rt.lastMenuScreen = 'start-screen';
+  rt.AudioSys.init();
+  rt.AudioSys.playUISelect(); rt.lastMenuScreen = 'start-screen';
   rt.renderShopUI(rt.save, rt.saveGame);
   document.getElementById('start-screen').classList.add('hidden');
   document.getElementById('shop-screen').classList.remove('hidden');

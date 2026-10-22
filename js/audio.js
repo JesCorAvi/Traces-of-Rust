@@ -52,6 +52,7 @@ export const AudioSys = {
   ambVol: 0.8,
   musicVol: 0.7,
   muted: false,
+  isDemoSilent: true,
   isEndgameActive: false,
   musicState: MUSIC_STATES.MENU,
   menuFiltered: false,
@@ -374,6 +375,7 @@ export const AudioSys = {
 
   _allow(key, cooldownMs = 0) {
     if (!this.ctx || this.ctx.state === 'closed' || this.muted || this.masterVol <= 0) return false;
+    if (this.isDemoSilent && !key.startsWith('ui:')) return false;
     if (this._activeVoices.size >= this.maxVoices) return false;
     if (cooldownMs > 0) {
       const now = this.ctx.currentTime;
