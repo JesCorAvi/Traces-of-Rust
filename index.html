@@ -18,6 +18,34 @@
 <body>
   <div id="game-container"></div>
 
+  <!-- Pantalla de Carga Inicial // Sandwish Studio // Reducción de Freezes y Precalentamiento WebGL -->
+  <div id="loading-screen" class="loading-screen">
+    <div class="loading-scanlines"></div>
+    <div class="loading-vignette"></div>
+    <div class="loading-content">
+      <div class="loading-logo-wrap">
+        <img id="loading-logo" src="assets/sandwish_studio.png" alt="Sandwish Studio" class="loading-logo-img">
+      </div>
+      <div class="loading-title-group">
+        <h1 id="loading-title" class="buckshot-title loading-main-title">Traces of Rust</h1>
+        <div id="loading-sub" class="loading-genre-tag">TACTICAL HORROR · CORE DEFENSE &amp; SURVIVAL</div>
+      </div>
+      <div class="loading-progress-block">
+        <div class="loading-bar-header">
+          <span id="loading-status" class="loading-status-text">INICIALIZANDO SISTEMAS...</span>
+          <span id="loading-percent" class="loading-percent-text">0%</span>
+        </div>
+        <div class="loading-bar-frame">
+          <div id="loading-bar-fill" class="loading-bar-fill"></div>
+        </div>
+        <div class="loading-footer-tip">
+          <span class="loading-dot"></span>
+          <span>SECTOR INDUSTRIAL 07 // PROTOCOLO DE ARRANQUE EN CURSO</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Capas de Post-Procesado estilo Buckshot Roulette -->
   <div id="crt-overlay"></div>
   <div id="grain-overlay"></div>

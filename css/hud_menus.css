@@ -1594,3 +1594,203 @@
   text-align: center;
   padding: 8px 4px;
 }
+
+/* ==========================================================================
+   PANTALLA DE CARGA INICIAL (SANDWISH STUDIO / TRACES OF RUST)
+   ========================================================================== */
+.loading-screen {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 99999;
+  background: #12131b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #f5ecd3;
+  user-select: none;
+  pointer-events: auto;
+  opacity: 1;
+  transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.5s;
+}
+
+.loading-screen.fade-out {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.loading-screen.hidden {
+  display: none !important;
+}
+
+.loading-scanlines {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(rgba(18, 19, 27, 0) 50%, rgba(0, 0, 0, 0.25) 50%);
+  background-size: 100% 4px;
+  opacity: 0.25;
+  z-index: 1;
+}
+
+.loading-vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(circle at center, transparent 60%, rgba(9, 10, 15, 0.45) 100%);
+  z-index: 2;
+}
+
+.loading-content {
+  position: relative;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  max-width: 600px;
+  width: 90%;
+  padding: 24px;
+  text-align: center;
+  animation: loadingFadeIn 0.35s ease-out;
+}
+
+@keyframes loadingFadeIn {
+  from { opacity: 0; transform: scale(0.97); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.loading-logo-wrap {
+  margin-bottom: 22px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.loading-logo-img {
+  width: 250px;
+  max-width: 75vw;
+  height: auto;
+  display: block;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  /* Suavizado en los bordes para eliminar cualquier corte o borde cuadrado */
+  -webkit-mask-image: radial-gradient(ellipse 75% 75% at 50% 50%, #000 50%, transparent 95%);
+  mask-image: radial-gradient(ellipse 75% 75% at 50% 50%, #000 50%, transparent 95%);
+}
+
+.loading-title-group {
+  margin-bottom: 26px;
+}
+
+.loading-main-title {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 26px;
+  color: #f0c954;
+  text-shadow: 3px 3px 0 #050605, 0 0 18px rgba(240, 201, 84, 0.38);
+  margin: 0 0 8px 0;
+  letter-spacing: 2px;
+}
+
+.loading-genre-tag {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
+  color: #a8c499;
+  letter-spacing: 2px;
+  opacity: 0.88;
+  text-shadow: 1px 1px 0 #050605;
+}
+
+.loading-progress-block {
+  width: 100%;
+  max-width: 460px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.loading-bar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
+}
+
+.loading-status-text {
+  color: #a8c499;
+  letter-spacing: 1px;
+  text-shadow: 1px 1px 0 #000;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 82%;
+  text-align: left;
+}
+
+.loading-percent-text {
+  color: #f0c954;
+  font-weight: bold;
+  text-shadow: 1px 1px 0 #000;
+}
+
+.loading-bar-frame {
+  position: relative;
+  width: 100%;
+  height: 18px;
+  background: #0c0d15;
+  border: 2px solid #262a3a;
+  box-shadow: inset 0 2px 6px #000, 0 2px 8px rgba(0, 0, 0, 0.5);
+  padding: 2px;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.loading-bar-fill {
+  height: 100%;
+  width: 0%;
+  background: repeating-linear-gradient(
+    -45deg,
+    #cf9527,
+    #cf9527 10px,
+    #f0c954 10px,
+    #f0c954 20px
+  );
+  background-size: 28px 28px;
+  animation: hazardStripesMove 0.8s linear infinite;
+  box-shadow: 0 0 10px rgba(240, 201, 84, 0.5);
+  transition: width 0.15s ease-out;
+}
+
+@keyframes hazardStripesMove {
+  0% { background-position: 0 0; }
+  100% { background-position: 28px 0; }
+}
+
+.loading-footer-tip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 7px;
+  color: #6a7a66;
+  letter-spacing: 1px;
+  margin-top: 6px;
+}
+
+.loading-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #a8c499;
+  box-shadow: 0 0 6px #a8c499;
+  animation: loadingDotBlink 1s infinite alternate;
+}
+
+@keyframes loadingDotBlink {
+  0% { opacity: 0.3; }
+  100% { opacity: 1; }
+}

@@ -47,6 +47,12 @@ import { createPickupSystem } from './gameplay/pickups.js';
 import { keys, clearMovementKeys, setupInput } from './core/input.js';
 import { setupGameFlow } from './core/gameFlow.js';
 import { updateMenuBattleDemo, resetMenuBattleDemo } from './gameplay/menuBattleDemo.js';
+import {
+  updateLoadingProgress,
+  dismissLoadingScreen,
+  nextFrame,
+  delay
+} from './ui/loadingScreen.js';
 
 // Aplica muteo y volúmenes persistidos antes de crear el audio contextual.
 AudioSys.applyGameSettings(gameSettings);
@@ -1003,4 +1009,52 @@ const initChar = getCharacterById(getSelectedCharacterId());
 skills = { [initChar.weapon]: 1 };
 currentHandWeapon = initChar.weapon;
 syncPlayerVisualLoadout(initChar.weapon || 'slash', initChar.id);
-animate();
+
+async function bootLoadingSequence() {
+  try {
+    updateLoadingProgress(15, 'INICIALIZANDO MOTOR GRÁFICO Y ATLAS...');
+    initUISpritesCSS();
+    await nextFrame();
+
+    updateLoadingProgress(35, 'CONFIGURANDO RECURSOS Y OPERADORES...');
+    prewarmLoadoutSheets();
+    await nextFrame();
+
+    updateLoadingProgress(60, 'COMPILANDO SHADERS Y BÚFERES GPU...');
+    if (renderer && scene && camera) {
+      try {
+        renderer.compile(scene, camera);
+      } catch (e) {
+        console.warn('Compile non-critical warn:', e);
+      }
+    }
+    await nextFrame();
+
+    updateLoadingProgress(80, 'PRECALEFACTANDO TEXTURAS EN VRAM...');
+    try {
+      if (renderer?.initTexture) {
+        if (SpriteSheets?.env?.ground?.tex) renderer.initTexture(SpriteSheets.env.ground.tex);
+        if (SpriteSheets?.env?.metal?.tex) renderer.initTexture(SpriteSheets.env.metal.tex);
+        if (SpriteSheets?.env?.crate?.tex) renderer.initTexture(SpriteSheets.env.crate.tex);
+        if (SpriteSheets?.env?.pillar?.tex) renderer.initTexture(SpriteSheets.env.pillar.tex);
+        if (SpriteSheets?.zombie?.tex) renderer.initTexture(SpriteSheets.zombie.tex);
+        if (SpriteSheets?.weeper?.tex) renderer.initTexture(SpriteSheets.weeper.tex);
+        if (playerBillboard?.tex) renderer.initTexture(playerBillboard.tex);
+      }
+      renderer.render(scene, camera);
+    } catch (e) {
+      console.warn('Warmup render non-critical warn:', e);
+    }
+    await nextFrame();
+
+    updateLoadingProgress(100, 'SISTEMAS OPERATIVOS // ENTRANDO A PLANTA');
+    await delay(250);
+  } catch (err) {
+    console.error('Error during loading sequence:', err);
+  } finally {
+    dismissLoadingScreen();
+    animate();
+  }
+}
+
+bootLoadingSequence();
