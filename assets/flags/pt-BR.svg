@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 480" width="640" height="480">
+<svg shape-rendering="crispEdges" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 480" width="640" height="480">
   <rect width="640" height="480" fill="#009739"/>
   <!-- Rombo amarillo -->
   <polygon points="320,40 592,240 320,440 48,240" fill="#FEDD00"/>

@@ -40,30 +40,79 @@ let currentLanguage = DEFAULT_LANGUAGE;
 let isInitialized = false;
 
 /**
- * Normaliza y detecta el idioma del sistema o navegador del jugador.
- * Si coincide con uno soportado lo devuelve; de lo contrario devuelve 'en'.
+ * Normaliza una cadena de locale a uno de los códigos soportados del juego.
+ * @param {string} raw
+ * @returns {string|null}
+ */
+function mapLocaleToSupported(raw) {
+  if (!raw || typeof raw !== 'string') return null;
+  const l = raw.toLowerCase().trim();
+
+  if (l.startsWith('es')) return 'es';
+  if (l === 'pt-br' || l.startsWith('pt')) return 'pt-BR';
+  if (l.startsWith('fr')) return 'fr';
+  if (l.startsWith('ja')) return 'ja';
+  if (l === 'zh-tw' || l === 'zh-hk' || l === 'zh-mo' || l.includes('hant')) return 'zh-Hant';
+  if (l.startsWith('zh')) return 'zh-Hans';
+  if (l.startsWith('ko')) return 'ko';
+  if (l.startsWith('ru') || l.startsWith('be') || l.startsWith('uk')) return 'ru';
+  if (l.startsWith('en')) return 'en';
+  return null;
+}
+
+/**
+ * Normaliza y detecta el idioma real del sistema o navegador del jugador.
+ * Prioriza la configuración regional del sistema operativo (Intl API) y
+ * los idiomas preferidos del usuario, evitando falsos positivos de 'en-US'
+ * causados por la configuración de interfaz por defecto de Chromium/Electron.
  */
 export function detectSystemLanguage() {
-  const browserLangs = (typeof navigator !== 'undefined')
-    ? (navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language || ''])
-    : ['en'];
+  const candidates = [];
 
-  for (const raw of browserLangs) {
-    if (!raw) continue;
-    const l = raw.toLowerCase().trim();
+  // 1. Intl API (refleja la configuración regional y de fecha real del SO Windows/macOS/Linux)
+  try {
+    if (typeof Intl !== 'undefined') {
+      const dt = typeof Intl.DateTimeFormat === 'function' ? Intl.DateTimeFormat().resolvedOptions?.()?.locale : null;
+      if (dt) candidates.push(dt);
+      const pr = typeof Intl.PluralRules === 'function' ? (new Intl.PluralRules()).resolvedOptions?.()?.locale : null;
+      if (pr) candidates.push(pr);
+      const nf = typeof Intl.NumberFormat === 'function' ? Intl.NumberFormat().resolvedOptions?.()?.locale : null;
+      if (nf) candidates.push(nf);
+    }
+  } catch (e) {}
 
-    if (l.startsWith('es')) return 'es';
-    if (l === 'pt-br' || l.startsWith('pt')) return 'pt-BR';
-    if (l.startsWith('fr')) return 'fr';
-    if (l.startsWith('ja')) return 'ja';
-    if (l === 'zh-tw' || l === 'zh-hk' || l === 'zh-mo' || l.includes('hant')) return 'zh-Hant';
-    if (l.startsWith('zh')) return 'zh-Hans';
-    if (l.startsWith('ko')) return 'ko';
-    if (l.startsWith('ru') || l.startsWith('be') || l.startsWith('uk')) return 'ru';
-    if (l.startsWith('en')) return 'en';
+  // 2. Navigator API (idiomas configurados en el navegador o Electron)
+  if (typeof navigator !== 'undefined') {
+    if (Array.isArray(navigator.languages)) {
+      for (const lang of navigator.languages) {
+        if (lang) candidates.push(lang);
+      }
+    }
+    if (navigator.language) candidates.push(navigator.language);
+    if (navigator.userLanguage) candidates.push(navigator.userLanguage);
+    if (navigator.systemLanguage) candidates.push(navigator.systemLanguage);
   }
 
-  return 'en';
+  // Pase 1: Buscar si el sistema o navegador contiene algún idioma soportado no-inglés
+  // (ej. si Windows está en español pero Chromium arranca con interfaz en inglés,
+  // el usuario desea jugar en su idioma nativo).
+  for (const raw of candidates) {
+    const code = mapLocaleToSupported(raw);
+    if (code && code !== 'en') {
+      return code;
+    }
+  }
+
+  // Pase 2: Si no hay idioma alternativo soportado pero sí inglés
+  for (const raw of candidates) {
+    const code = mapLocaleToSupported(raw);
+    if (code === 'en') {
+      return 'en';
+    }
+  }
+
+  // Fallback por defecto si no coincide ningún candidato (idioma original del juego)
+  return 'es';
 }
 
 /**
