@@ -20,6 +20,7 @@ function clearSharedRunState() {
   rt.activeBoss = null;
   rt.auraMesh.visible = false;
   rt.debugOverlay.clearDynamicMeshes();
+  rt.resetMenuBattleDemo?.();
 }
 
 function startGame(options = {}) {

@@ -45,6 +45,7 @@ import { createLevelUpFlow } from './gameplay/levelUp.js';
 import { createPickupSystem } from './gameplay/pickups.js';
 import { keys, setupInput } from './core/input.js';
 import { setupGameFlow } from './core/gameFlow.js';
+import { updateMenuBattleDemo, resetMenuBattleDemo } from './gameplay/menuBattleDemo.js';
 
 // Aplica muteo y volúmenes persistidos antes de crear el audio contextual.
 AudioSys.applyGameSettings(gameSettings);
@@ -710,17 +711,22 @@ function animate() {
     const coopPos = MultiplayerSync.getPrimaryRemotePlayerPos();
     hudController.updateRadarHUD(playerGroup.position, yaw, enemyPool.active, activeBoss, corePos, coopPos);
   } else if (state === 'START') {
-    const t = performance.now() * 0.00032;
-    camera.position.set(Math.sin(t) * 12.5, 3.8 + Math.sin(t * 0.6) * 0.35, Math.cos(t) * 12.5);
-    camera.lookAt(0, 1.2, 0);
-    playerBillboard.facingYaw = 0;
-    playerBillboard.faceCamera(camera.position);
-    playerBillboard.animTimer += dt * CONFIG.DIRECTIONAL.ANIM_FPS.IDLE;
-    playerBillboard.setDirectionalFrame(playerBillboard.dirRow, 0, Math.floor(playerBillboard.animTimer) % 4);
-    const camAngle = Math.atan2(camera.position.x, camera.position.z);
-    propBillboards.forEach(p => { p.rotation.y = camAngle; });
-    dust.position.set(0, 0, 0);
-    playerLanternLight.position.set(Math.sin(t) * 2.8, 2.2, Math.cos(t) * 2.8);
+    updateMenuBattleDemo({
+      dt,
+      scene,
+      camera,
+      playerGroup,
+      playerBillboard,
+      flashlight,
+      playerLanternLight,
+      propBillboards,
+      dust,
+      enemyPool,
+      worldPhysics,
+      vfx,
+      cleanupVfxItem,
+      syncPlayerVisualLoadout
+    });
   }
 
   renderer.render(scene, camera);
@@ -809,7 +815,8 @@ const flowRuntime = {
   refreshHUD, refreshStaticDOMIcons, presentRunResultsScreen,
   getSelectedCharacterId, getCharacterById,
   renderModeSelectorUI, updateCareerDossierForSelectedMode, updateStartPlayButton, renderShopUI,
-  cleanupVfxItem, initUISpritesCSS
+  cleanupVfxItem, initUISpritesCSS,
+  resetMenuBattleDemo: () => resetMenuBattleDemo(enemyPool, vfx, cleanupVfxItem, scene, playerGroup, playerBillboard)
 };
 setupGameFlow(flowRuntime);
 
