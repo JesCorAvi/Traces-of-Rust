@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 480" width="640" height="480">
+  <rect width="640" height="480" fill="#009739"/>
+  <!-- Rombo amarillo -->
+  <polygon points="320,40 592,240 320,440 48,240" fill="#FEDD00"/>
+  <!-- Globo azul -->
+  <circle cx="320" cy="240" r="105" fill="#012169"/>
+  <!-- Franja blanca curva (Ordem e Progresso) -->
+  <clipPath id="br-circle">
+    <circle cx="320" cy="240" r="105"/>
+  </clipPath>
+  <g clip-path="url(#br-circle)">
+    <path d="M 180,240 Q 320,310 460,250" fill="none" stroke="#FFFFFF" stroke-width="16"/>
+    <!-- Estrellas representativas -->
+    <circle cx="320" cy="210" r="3" fill="#FFFFFF"/>
+    <circle cx="300" cy="270" r="3" fill="#FFFFFF"/>
+    <circle cx="340" cy="280" r="3" fill="#FFFFFF"/>
+    <circle cx="320" cy="290" r="4" fill="#FFFFFF"/>
+    <circle cx="310" cy="305" r="2.5" fill="#FFFFFF"/>
+    <circle cx="335" cy="310" r="3" fill="#FFFFFF"/>
+  </g>
+</svg>

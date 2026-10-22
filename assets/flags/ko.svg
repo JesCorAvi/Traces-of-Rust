@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 480" width="640" height="480">
+  <defs>
+    <!-- Barra continua de trigrama -->
+    <rect id="bar" x="-26" y="-4" width="52" height="8" fill="#111111"/>
+    <!-- Barra dividida de trigrama -->
+    <g id="split-bar">
+      <rect x="-26" y="-4" width="23" height="8" fill="#111111"/>
+      <rect x="3" y="-4" width="23" height="8" fill="#111111"/>
+    </g>
+  </defs>
+  <rect width="640" height="480" fill="#FFFFFF"/>
+  <!-- Taegeuk central -->
+  <g transform="translate(320, 240) rotate(-33.7)">
+    <!-- Mitad superior roja -->
+    <path d="M -100,0 A 100,100 0 0,1 100,0 A 50,50 0 0,1 0,0 A 50,50 0 0,0 -100,0 Z" fill="#CD2E3A"/>
+    <!-- Mitad inferior azul -->
+    <path d="M -100,0 A 100,100 0 0,0 100,0 A 50,50 0 0,1 0,0 A 50,50 0 0,0 -100,0 Z" fill="#0047A0"/>
+  </g>
+  <!-- Trigrama 건 (Geon: 3 continuas) en arriba-izquierda -->
+  <g transform="translate(180, 135) rotate(-33.7)">
+    <use href="#bar" y="-14"/>
+    <use href="#bar" y="0"/>
+    <use href="#bar" y="14"/>
+  </g>
+  <!-- Trigrama 감 (Gam: split, bar, split) en arriba-derecha -->
+  <g transform="translate(460, 135) rotate(33.7)">
+    <use href="#split-bar" y="-14"/>
+    <use href="#bar" y="0"/>
+    <use href="#split-bar" y="14"/>
+  </g>
+  <!-- Trigrama 이 (Ri: bar, split, bar) en abajo-izquierda -->
+  <g transform="translate(180, 345) rotate(33.7)">
+    <use href="#bar" y="-14"/>
+    <use href="#split-bar" y="0"/>
+    <use href="#bar" y="14"/>
+  </g>
+  <!-- Trigrama 곤 (Gon: 3 split) en abajo-derecha -->
+  <g transform="translate(460, 345) rotate(-33.7)">
+    <use href="#split-bar" y="-14"/>
+    <use href="#split-bar" y="0"/>
+    <use href="#split-bar" y="14"/>
+  </g>
+</svg>

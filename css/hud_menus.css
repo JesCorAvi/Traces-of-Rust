@@ -1794,3 +1794,150 @@
   0% { opacity: 0.3; }
   100% { opacity: 1; }
 }
+
+/* ==========================================================================
+   PANTALLA DE SELECCIÓN DE IDIOMA EN PRIMER ARRANQUE Y COMPONENTE SELECTOR
+   ========================================================================== */
+#first-boot-lang-screen {
+  z-index: 90;
+  background: radial-gradient(ellipse at center, rgba(3, 6, 4, 0.94) 0%, rgba(1, 2, 1, 0.98) 100%) !important;
+  backdrop-filter: blur(4px);
+}
+
+.lang-select-plate {
+  width: min(720px, 94vw) !important;
+  max-width: 720px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 14px;
+  padding: 18px 22px !important;
+  text-align: center;
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.95), 0 0 15px rgba(240, 201, 84, 0.15);
+}
+
+.lang-screen-prompt {
+  font-family: var(--font-retro, 'Press Start 2P', monospace);
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: #a8c499;
+  text-transform: uppercase;
+  margin: 4px 0 10px;
+}
+
+.lang-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  width: 100%;
+}
+
+.lang-card-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: #111a14;
+  border: 2px solid #283a2d;
+  color: #e6dec8;
+  cursor: pointer;
+  outline: none;
+  transition: transform 0.1s ease, border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+  user-select: none;
+  position: relative;
+  text-align: left;
+}
+
+.lang-card-btn:hover,
+.lang-card-btn:focus-visible {
+  border-color: #f0c954;
+  background: #1a2a1e;
+  box-shadow: 0 0 12px rgba(240, 201, 84, 0.35);
+  transform: translateY(-2px);
+}
+
+.lang-card-btn.selected {
+  border-color: #8cf074;
+  background: #162c1d;
+  box-shadow: 0 0 14px rgba(140, 240, 116, 0.4);
+}
+
+.lang-card-btn:focus-visible {
+  outline: 2px solid #f0c954;
+  outline-offset: 2px;
+}
+
+.lang-flag-wrapper {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 28px;
+  flex-shrink: 0;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
+  background: #000;
+}
+
+.lang-flag-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.lang-native-name {
+  font-family: var(--font-body, 'VT323', monospace);
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1;
+  color: #f5ecd3;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.lang-card-btn.selected .lang-native-name {
+  color: #8cf074;
+}
+
+.lang-badge-active {
+  font-family: var(--font-retro, 'Press Start 2P', monospace);
+  font-size: 11px;
+  color: #8cf074;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.lang-screen-footer {
+  margin-top: 6px;
+  padding-top: 10px;
+  border-top: 1px dashed #364832;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lang-screen-hint {
+  font-family: var(--font-retro, 'Press Start 2P', monospace);
+  font-size: 8px;
+  color: #7d9674;
+  letter-spacing: 0.5px;
+}
+
+@media (max-width: 680px) {
+  .lang-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 440px) {
+  .lang-grid {
+    grid-template-columns: 1fr;
+  }
+  .lang-card-btn {
+    padding: 8px 10px;
+  }
+}

@@ -54,6 +54,7 @@ import {
   delay
 } from './ui/loadingScreen.js';
 import { initI18n, t } from './core/i18n.js';
+import { initFirstBootLanguageFlow, isFirstBootLanguagePending } from './ui/languageSelector.js';
 
 // Aplica muteo y volúmenes persistidos antes de crear el audio contextual.
 AudioSys.applyGameSettings(gameSettings);
@@ -1056,6 +1057,9 @@ async function bootLoadingSequence() {
   } finally {
     dismissLoadingScreen();
     animate();
+    if (isFirstBootLanguagePending()) {
+      initFirstBootLanguageFlow();
+    }
   }
 }
 

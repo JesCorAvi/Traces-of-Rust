@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 480" width="640" height="480">
+  <rect width="640" height="120" fill="#AA151B"/>
+  <rect y="120" width="640" height="240" fill="#F1BF00"/>
+  <rect y="360" width="640" height="120" fill="#AA151B"/>
+  <!-- Escudo simplificado -->
+  <g transform="translate(140, 160)">
+    <!-- Corona -->
+    <path d="M20,10 L30,25 L45,15 L60,25 L70,10 L65,35 L25,35 Z" fill="#AA151B" stroke="#B8860B" stroke-width="3"/>
+    <circle cx="45" cy="8" r="4" fill="#F1BF00"/>
+    <!-- Columnas Hércules -->
+    <rect x="0" y="45" width="8" height="65" fill="#FFFFFF" stroke="#666666" stroke-width="2"/>
+    <rect x="82" y="45" width="8" height="65" fill="#FFFFFF" stroke="#666666" stroke-width="2"/>
+    <!-- Escudo central cuartelado -->
+    <path d="M18,40 h54 v45 a27,27 0 0,1 -54,0 z" fill="#AA151B" stroke="#B8860B" stroke-width="3"/>
+    <path d="M45,40 v58 M18,68 h54" stroke="#F1BF00" stroke-width="3"/>
+    <rect x="22" y="44" width="20" height="21" fill="#AA151B"/>
+    <rect x="48" y="44" width="20" height="21" fill="#FFFFFF"/>
+    <rect x="22" y="71" width="20" height="21" fill="#F1BF00"/>
+    <rect x="48" y="71" width="20" height="21" fill="#AA151B"/>
+    <!-- Granada / flor de lis central -->
+    <circle cx="45" cy="68" r="5" fill="#0038A8"/>
+  </g>
+</svg>

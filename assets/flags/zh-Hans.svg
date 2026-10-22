@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 480" width="640" height="480">
+  <defs>
+    <polygon id="star" points="0,-1 0.5878,0.809 -0.9511,-0.309 0.9511,-0.309 -0.5878,0.809" fill="#FFDE00"/>
+  </defs>
+  <rect width="640" height="480" fill="#DE2910"/>
+  <!-- Gran estrella -->
+  <use href="#star" transform="translate(106.6, 120) scale(72)"/>
+  <!-- 4 pequeñas estrellas orientadas -->
+  <use href="#star" transform="translate(213.3, 48) scale(24) rotate(108.4)"/>
+  <use href="#star" transform="translate(256, 96) scale(24) rotate(126.9)"/>
+  <use href="#star" transform="translate(256, 168) scale(24) rotate(164.1)"/>
+  <use href="#star" transform="translate(213.3, 216) scale(24) rotate(198.4)"/>
+</svg>
