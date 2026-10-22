@@ -19,6 +19,13 @@ app.commandLine.appendSwitch('disable-direct-composition');
 app.commandLine.appendSwitch('enable-gpu-rasterization');
 app.commandLine.appendSwitch('enable-zero-copy');
 app.commandLine.appendSwitch('ignore-gpu-blocklist');
+// Sincronizar el locale de Chromium con el sistema operativo
+try {
+  const sysLocale = app.getSystemLocale ? app.getSystemLocale() : (app.getLocale ? app.getLocale() : null);
+  if (sysLocale) {
+    app.commandLine.appendSwitch('lang', sysLocale);
+  }
+} catch (e) {}
 // Mantener la simulación y el render activos con la ventana minimizada/ocluida
 // (Alt+Tab, Overlay de Steam). Sin esto, rAF se congela y el cliente se desincroniza.
 app.commandLine.appendSwitch('disable-background-timer-throttling');

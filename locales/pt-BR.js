@@ -855,7 +855,7 @@ export default {
   "ui.online.scrap_send_failed": "FALHA AO ENVIAR SUCATA",
   "ui.online.scrap_sent": "-{value} SUCATA ENVIADA",
   "ui.online.scrap_received": "+{amount} SUCATA RECEBIDA",
-  "ui.lang_screen.title": "SELECIONE SEU IDIOMA",
+  "ui.lang_screen.title": "SELECT YOUR LANGUAGE",
   "ui.lang_screen.subtitle": "SELECT YOUR LANGUAGE",
   "ui.lang_screen.confirm": "[ CONTINUAR ]",
   "ui.menu.btn_tutorial": "[ TUTORIAL ]",

@@ -856,7 +856,7 @@ export default {
   "ui.online.scrap_sent": "-{value} SCRAP SENT",
   "ui.online.scrap_received": "+{amount} SCRAP RECEIVED",
   "ui.lang_screen.title": "SELECT YOUR LANGUAGE",
-  "ui.lang_screen.subtitle": "SELECCIONA TU IDIOMA",
+  "ui.lang_screen.subtitle": "SELECT YOUR LANGUAGE",
   "ui.lang_screen.confirm": "[ CONTINUE ]",
   "ui.menu.btn_tutorial": "[ TUTORIAL ]",
   "ui.menu.btn_shop": "[ CLINIC / IMPLANTS ]",

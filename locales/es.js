@@ -855,7 +855,7 @@ export default {
   "ui.online.scrap_send_failed": "NO SE PUDO ENVIAR LA CHATARRA",
   "ui.online.scrap_sent": "-{value} CHATARRA ENVIADA",
   "ui.online.scrap_received": "+{amount} CHATARRA RECIBIDA",
-  "ui.lang_screen.title": "SELECCIONA TU IDIOMA",
+  "ui.lang_screen.title": "SELECT YOUR LANGUAGE",
   "ui.lang_screen.subtitle": "SELECT YOUR LANGUAGE",
   "ui.lang_screen.confirm": "[ CONTINUAR // CONTINUE ]",
   "ui.menu.btn_tutorial": "[ TUTORIAL ]",

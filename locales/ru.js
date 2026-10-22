@@ -855,7 +855,7 @@ export default {
   "ui.online.scrap_send_failed": "НЕ УДАЛОСЬ ОТПРАВИТЬ ЛОМ",
   "ui.online.scrap_sent": "-{value} ЛОМА ОТПРАВЛЕНО",
   "ui.online.scrap_received": "+{amount} ЛОМА ПОЛУЧЕНО",
-  "ui.lang_screen.title": "ВЫБЕРИТЕ ЯЗЫК",
+  "ui.lang_screen.title": "SELECT YOUR LANGUAGE",
   "ui.lang_screen.subtitle": "SELECT YOUR LANGUAGE",
   "ui.lang_screen.confirm": "[ ПРОДОЛЖИТЬ ]",
   "ui.menu.btn_tutorial": "[ ОБУЧЕНИЕ ]",

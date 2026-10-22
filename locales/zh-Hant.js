@@ -855,7 +855,7 @@ export default {
   "ui.online.scrap_send_failed": "廢料發送失敗",
   "ui.online.scrap_sent": "-{value} 廢料已發送",
   "ui.online.scrap_received": "+{amount} 廢料已接收",
-  "ui.lang_screen.title": "請選擇您的偏好語言",
+  "ui.lang_screen.title": "SELECT YOUR LANGUAGE",
   "ui.lang_screen.subtitle": "SELECT YOUR LANGUAGE",
   "ui.lang_screen.confirm": "[ 確認選擇並繼續 ]",
   "ui.menu.btn_tutorial": "[ 基礎教學 ]",

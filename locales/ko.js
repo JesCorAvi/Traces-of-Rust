@@ -855,7 +855,7 @@ export default {
   "ui.online.scrap_send_failed": "고철 전송 실패",
   "ui.online.scrap_sent": "-{value} 고철 전송됨",
   "ui.online.scrap_received": "+{amount} 고철 수령됨",
-  "ui.lang_screen.title": "언어를 선택하십시오",
+  "ui.lang_screen.title": "SELECT YOUR LANGUAGE",
   "ui.lang_screen.subtitle": "SELECT YOUR LANGUAGE",
   "ui.lang_screen.confirm": "[ 결정하고 계속하기 ]",
   "ui.menu.btn_tutorial": "[ 튜토리얼 ]",

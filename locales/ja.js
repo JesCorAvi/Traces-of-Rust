@@ -855,7 +855,7 @@ export default {
   "ui.online.scrap_send_failed": "スクラップの送信に失敗",
   "ui.online.scrap_sent": "-{value} スクラップを転送",
   "ui.online.scrap_received": "+{amount} スクラップを受信",
-  "ui.lang_screen.title": "言語を選択してください",
+  "ui.lang_screen.title": "SELECT YOUR LANGUAGE",
   "ui.lang_screen.subtitle": "SELECT YOUR LANGUAGE",
   "ui.lang_screen.confirm": "[ 決定して次へ ]",
   "ui.menu.btn_tutorial": "[ チュートリアル ]",
