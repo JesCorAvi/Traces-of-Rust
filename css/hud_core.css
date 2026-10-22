@@ -774,7 +774,7 @@
   letter-spacing: 0.4px;
 }
 
-/* Indicador Persistente de Evento de Defensa (120s) */
+/* Indicador Persistente de Evento de Defensa (75s por defecto) */
 #defense-event-hud {
   width: min(440px, 46vw);
   padding: 6px 10px;

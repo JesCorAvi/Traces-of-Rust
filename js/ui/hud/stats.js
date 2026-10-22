@@ -14,7 +14,12 @@ export const SHORT_WEAPON_NAMES = {
   mines:        'Minas',
   harpoon:      'Arpón',
   orbital:      'Jaula',
-  bolt:         'Desfibril.'
+  bolt:         'Desfibril.',
+  chakram:      'Bumerán',
+  welder:       'Soldador',
+  grenade:      'Granadas',
+  hammer:       'Martillo',
+  acid:         'Ácido'
 };
 
 export function updateStatsAndModeHUD(stats, kills, runSouls, rerollsLeft, activeBoss, modeTelemetry) {
@@ -140,7 +145,7 @@ if (typeof modeTelemetry.coreHp === 'number') {
   }
 
   
-  // Indicador persistente de evento especial de contención (120s)
+  // Indicador persistente de evento especial de contención (75s por defecto)
   const eventHud = document.getElementById('defense-event-hud');
   if (eventHud) {
     if (modeTelemetry && modeTelemetry.eventTelemetry) {

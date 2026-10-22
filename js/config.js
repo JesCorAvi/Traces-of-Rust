@@ -1,15 +1,17 @@
 // Configuración global CONFIG y reexport de las configuraciones de cada modo.
-// Exports: CONFIG, MODES_CONFIG, CORE_DEFENSE_CONFIG, BOSS_AI, CHARACTERS.
+// Exports: CONFIG, MODES_CONFIG, CORE_DEFENSE_CONFIG, BOSS_AI, ENEMY_TYPES, CHARACTERS.
 import { MODES_CONFIG } from './config/modesConfig.js';
 import { CORE_DEFENSE_CONFIG } from './config/coreDefenseConfig.js';
 import { BOSS_AI } from './config/bossAI.js';
+import { ENEMY_TYPES } from './config/enemiesConfig.js';
 import { CHARACTERS, DEFAULT_CHARACTER_ID, getSelectedCharacterId, setSelectedCharacterId, getCharacterById } from './config/charactersConfig.js';
 
-export { MODES_CONFIG, CORE_DEFENSE_CONFIG, BOSS_AI, CHARACTERS, DEFAULT_CHARACTER_ID, getSelectedCharacterId, setSelectedCharacterId, getCharacterById };
+export { MODES_CONFIG, CORE_DEFENSE_CONFIG, BOSS_AI, ENEMY_TYPES, CHARACTERS, DEFAULT_CHARACTER_ID, getSelectedCharacterId, setSelectedCharacterId, getCharacterById };
 
 export const CONFIG = {
   CHARACTERS,
   BOSS_AI,
+  ENEMY_TYPES,
   SAVE_KEY: 'echoes_rust_buckshot_save_v4',
   PIXEL_SCALE: 0.44,
   FRAME_SIZE: 64,
@@ -88,11 +90,24 @@ export const CONFIG = {
       bolt:         { col: 7, row: 0 },
 
       // Torretas del modo Defensa (Fila 0, columnas libres)
-      turret_gunner:   { col: 8,  row: 0 },
-      turret_mortar:   { col: 9,  row: 0 },
-      turret_cryo:     { col: 10, row: 0 },
-      turret_barracks: { col: 11, row: 0 },
-      turret_support:  { col: 12, row: 0 },
+      turret_gunner:      { col: 8,  row: 0 },
+      turret_mortar:      { col: 9,  row: 0 },
+      turret_cryo:        { col: 10, row: 0 },
+      turret_barracks:    { col: 11, row: 0 },
+      turret_support:     { col: 12, row: 0 },
+      turret_tesla:       { col: 13, row: 0 },
+      turret_incinerator: { col: 14, row: 0 },
+      turret_railgun:     { col: 15, row: 0 },
+      turret_collector:   { col: 16, row: 0 },
+      turret_press:       { col: 17, row: 0 },
+      turret_ejector:     { col: 18, row: 0 },
+
+      // Armas nuevas (Fila 0, columnas libres)
+      chakram:      { col: 19, row: 0 },
+      welder:       { col: 20, row: 0 },
+      grenade:      { col: 21, row: 0 },
+      hammer:       { col: 22, row: 0 },
+      acid:         { col: 23, row: 0 },
 
       // 9 Pasivas (Fila 1)
       multishot:    { col: 0, row: 1 },
@@ -171,6 +186,11 @@ export const CONFIG = {
       zombie: 4,
       weeper: 4,
       worm: 1,
+      runner: 4,
+      hulk: 4,
+      nest: 4,
+      regenerator: 4,
+      splitter: 4,
       boss_butcher: 8,
       boss_siren: 4,
       boss_furnace: 4,
@@ -239,6 +259,37 @@ export const CONFIG = {
       baseDmg: 27, baseCd: 1.8, baseRange: 13.0, scalePerLvl: 0.25,
       usesMultishot: false,
       desc: 'Descarga eléctrica de alto voltaje que salta entre varios cuerpos. (No afectada por +Proyectiles).'
+    },
+    chakram: {
+      name: 'Bumerán de Chatarra', icon: 'chakram',
+      baseDmg: 24, baseCd: 1.15, baseRange: 9.0, scalePerLvl: 0.22,
+      usesMultishot: true,
+      desc: 'Disco de sierra que sale, perfora y vuelve al operario dañando en ambos tramos.'
+    },
+    welder: {
+      name: 'Soldador de Arco', icon: 'welder',
+      baseDmg: 10, baseCd: 0.12, baseRange: 10.0, scalePerLvl: 0.18,
+      chargeSec: 2.4, activeSec: 1.6, tickSec: 0.12, beamWidth: 1.2,
+      usesMultishot: false,
+      desc: 'Se carga durante 2.4s y descarga un haz concentrado durante 1.6s hacia la mayor concentración de enemigos. Después vuelve a cargar. (No afectada por +Proyectiles).'
+    },
+    grenade: {
+      name: 'Lanzagranadas de Peregrino', icon: 'grenade',
+      baseDmg: 42, baseCd: 2.2, baseRange: 11.0, scalePerLvl: 0.26,
+      usesMultishot: true,
+      desc: 'Granada balística que explota en área y se divide en submuniciones al mejorar.'
+    },
+    hammer: {
+      name: 'Martillo de Pistón', icon: 'hammer',
+      baseDmg: 38, baseCd: 1.7, baseRange: 3.8, scalePerLvl: 0.24,
+      usesMultishot: false,
+      desc: 'Onda de presión radial con empuje fuerte y aturdimiento. (No afectada por +Proyectiles).'
+    },
+    acid: {
+      name: 'Frasco de Ácido', icon: 'acid',
+      baseDmg: 14, baseCd: 2.0, baseRange: 9.0, scalePerLvl: 0.20,
+      usesMultishot: true,
+      desc: 'Frasco que estalla en una nube corrosiva persistente, quemando y frenando a los hostiles.'
     }
   },
 
@@ -247,7 +298,7 @@ export const CONFIG = {
       name: 'Recámara Modificada', icon: 'multishot', perLevel: 1,
       targetType: 'multishot_weapons',
       format: lvl => `+${lvl} PROY.`,
-      desc: 'Añade +1 proyectil a Escopeta, Minas, Arpón y Jaula Orbital.'
+      desc: 'Añade +1 proyectil a las armas que admiten proyectiles adicionales.'
     },
     dmg: {
       name: 'Pólvora Prensada', icon: 'dmg', perLevel: 0.15,

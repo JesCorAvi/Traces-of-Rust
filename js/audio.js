@@ -794,10 +794,23 @@ export const AudioSys = {
         this._osc('sine', 600, t + 0.02, 0.08, 0.02 * g, { endFreq: 640, bus: 'sfx', pan });
         break;
       case 'rail':
+      case 'railgun':
       case 'tesla':
         this._osc('square', 1300 * p, t, 0.07, 0.08 * g, { endFreq: 260, attack: 0.001, bus: 'sfx', pan });
         this._noise(t, 0.08, 0.06 * g, { filter: 'highpass', freq: 2400, pan });
         this._osc('sine', 70, t + 0.015, 0.18, 0.07 * g, { endFreq: 35, bus: 'sfx', pan });
+        break;
+      case 'incinerator':
+        this._noise(t, 0.2, 0.07 * g, { pink: true, filter: 'lowpass', freq: 900, endFreq: 260, pan });
+        this._osc('sawtooth', 105 * p, t, 0.18, 0.04 * g, { endFreq: 62, bus: 'sfx', pan });
+        break;
+      case 'press':
+        this._osc('sine', 82 * p, t, 0.2, 0.12 * g, { endFreq: 32, bus: 'sfx', pan });
+        this._noise(t, 0.14, 0.08 * g, { pink: true, filter: 'lowpass', freq: 700, endFreq: 120, pan });
+        break;
+      case 'ejector':
+        this._noise(t, 0.18, 0.08 * g, { filter: 'bandpass', freq: 620, endFreq: 140, q: 1.4, pan });
+        this._osc('sawtooth', 180 * p, t, 0.16, 0.045 * g, { endFreq: 72, bus: 'sfx', pan });
         break;
       case 'ally':
         this._osc('square', 250 * p, t, 0.055, 0.035 * g, { endFreq: 150, bus: 'sfx', pan });

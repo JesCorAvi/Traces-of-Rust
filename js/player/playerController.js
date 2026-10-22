@@ -13,13 +13,22 @@ import {
   spawnShrapnelMine,
   fireHarpoon,
   fireDefibrillator,
-  spawnBossAttackDust
+  spawnBossAttackDust,
+  fireChakram,
+  throwGrenade,
+  throwAcidFlask,
+  updateWelder,
+  resetWelderState,
+  slamHammer,
+  updatePlayerProjectiles,
+  clearPlayerProjectiles
 } from '../combat.js';
 
 // ============================================================================
 // CONTROLADOR COMPARTIDO DE ARMAMENTO, MINAS, ORBITALES, HAZARDS Y VFX
 // Reutilizado idénticamente en Supervivencia y en Defensa del Núcleo
 // ============================================================================
+
 
 export function updatePlayerWeaponsAndCombat({
   dt,
@@ -35,6 +44,7 @@ export function updatePlayerWeaponsAndCombat({
   auraMesh,
   orbitals,
   minesList,
+  playerProjectiles,
   bossHazards,
   bossProjectiles,
   vfx,
@@ -47,12 +57,24 @@ export function updatePlayerWeaponsAndCombat({
   triggerWeaponVisualAttack,
   sendAutomaticAttack,
   cleanupVfxItem,
-  isDead = false
+  isDead = false,
+  combatEnabled = true
 }) {
   const cdFactor = 1 / mods.atkSpeedMult;
+  // Entre oleadas de Defensa el operario baja las armas: nada de cargas,
+  // proyectiles ni daño automático hasta que empiece la siguiente ronda.
+  const canAttack = !isDead && combatEnabled;
+
+  if (!canAttack || !skills.welder) {
+    resetWelderState();
+  }
+  if (!canAttack) {
+    Object.keys(weaponTimers).forEach(key => { weaponTimers[key] = 0; });
+    if (Array.isArray(playerProjectiles)) clearPlayerProjectiles(scene, playerProjectiles);
+  }
 
   // 1. Sierra de Amputación
-  if (!isDead && skills.slash) {
+  if (canAttack && skills.slash) {
     weaponTimers.slash += dt;
     const cd = Math.max(0.26, (CONFIG.SKILLS.slash.baseCd - skills.slash * 0.06) * cdFactor);
     if (weaponTimers.slash >= cd) {
@@ -67,7 +89,7 @@ export function updatePlayerWeaponsAndCombat({
   }
 
   // 2. Escopeta Calibre 12
-  if (!isDead && skills.shotgun) {
+  if (canAttack && skills.shotgun) {
     weaponTimers.shotgun += dt;
     const cd = Math.max(0.4, (CONFIG.SKILLS.shotgun.baseCd - skills.shotgun * 0.08) * cdFactor);
     if (weaponTimers.shotgun >= cd) {
@@ -83,7 +105,7 @@ export function updatePlayerWeaponsAndCombat({
   }
 
   // 3. Soplete Incinerador
-  if (!isDead && skills.flamethrower) {
+  if (canAttack && skills.flamethrower) {
     weaponTimers.flamethrower += dt;
     if (weaponTimers.flamethrower >= CONFIG.SKILLS.flamethrower.baseCd * cdFactor) {
       weaponTimers.flamethrower = 0;
@@ -96,7 +118,7 @@ export function updatePlayerWeaponsAndCombat({
   }
 
   // 4. Incensario de Bilis (Aura)
-  if (isDead) {
+  if (!canAttack) {
     auraMesh.visible = false;
   } else if (skills.aura) {
     auraMesh.visible = true;
@@ -120,7 +142,7 @@ export function updatePlayerWeaponsAndCombat({
   }
 
   // 5. Minas de Metralla
-  if (!isDead && skills.mines) {
+  if (canAttack && skills.mines) {
     weaponTimers.mines += dt;
     const cd = Math.max(0.85, (CONFIG.SKILLS.mines.baseCd - skills.mines * 0.16) * cdFactor);
     const maxMines = 10 + mods.bonusProjectiles * 4;
@@ -132,7 +154,7 @@ export function updatePlayerWeaponsAndCombat({
   }
 
   // 6. Arpón Neumático
-  if (!isDead && skills.harpoon) {
+  if (canAttack && skills.harpoon) {
     weaponTimers.harpoon += dt;
     const cd = Math.max(0.5, (CONFIG.SKILLS.harpoon.baseCd - skills.harpoon * 0.1) * cdFactor);
     if (weaponTimers.harpoon >= cd) {
@@ -146,7 +168,7 @@ export function updatePlayerWeaponsAndCombat({
   }
 
   // 7. Desfibrilador Roto
-  if (!isDead && skills.bolt) {
+  if (canAttack && skills.bolt) {
     weaponTimers.bolt += dt;
     const cd = Math.max(0.5, (CONFIG.SKILLS.bolt.baseCd - skills.bolt * 0.12) * cdFactor);
     if (weaponTimers.bolt >= cd) {
@@ -161,7 +183,83 @@ export function updatePlayerWeaponsAndCombat({
     }
   }
 
-  // 8. Jaulas de Carnicero Orbitales
+  // 8. Bumerán de Chatarra
+  if (canAttack && skills.chakram) {
+    weaponTimers.chakram += dt;
+    const cd = Math.max(0.6, (CONFIG.SKILLS.chakram.baseCd - skills.chakram * 0.05) * cdFactor);
+    if (weaponTimers.chakram >= cd) {
+      weaponTimers.chakram = 0;
+      fireChakram(
+        scene, playerGroup.position, yaw, skills.chakram, mods,
+        playerProjectiles, vfx, playerFacingYaw
+      );
+      triggerWeaponVisualAttack('chakram', yaw, 0.22);
+    }
+  }
+
+  // 9. Soldador de Arco: carga -> haz concentrado -> recarga.
+  if (canAttack && skills.welder) {
+    updateWelder({
+      dt,
+      scene,
+      playerPos: playerGroup.position,
+      facingYaw: yaw,
+      bodyYaw: playerFacingYaw,
+      level: skills.welder,
+      mods,
+      enemies: activeEnemies,
+      vfx,
+      onDamage: damageEnemy,
+      onDischarge: info => {
+        addCamShake(0.24 * mods.shakeMod);
+        triggerWeaponVisualAttack('welder', info.yaw, 0.35, false, info.hitPoint, info.origin);
+      }
+    });
+  }
+
+  // 10. Lanzagranadas de Peregrino
+  if (canAttack && skills.grenade) {
+    weaponTimers.grenade += dt;
+    const cd = Math.max(1.1, (CONFIG.SKILLS.grenade.baseCd - skills.grenade * 0.08) * cdFactor);
+    if (weaponTimers.grenade >= cd) {
+      weaponTimers.grenade = 0;
+      throwGrenade(
+        scene, playerGroup.position, yaw, skills.grenade, mods,
+        playerProjectiles, playerFacingYaw
+      );
+      triggerWeaponVisualAttack('grenade', yaw, 0.24);
+    }
+  }
+
+  // 11. Martillo de Pistón
+  if (canAttack && skills.hammer) {
+    weaponTimers.hammer += dt;
+    const cd = Math.max(0.8, (CONFIG.SKILLS.hammer.baseCd - skills.hammer * 0.06) * cdFactor);
+    if (weaponTimers.hammer >= cd) {
+      weaponTimers.hammer = 0;
+      slamHammer(
+        scene, playerGroup.position, skills.hammer, mods,
+        activeEnemies, vfx, damageEnemy, addCamShake
+      );
+      triggerWeaponVisualAttack('hammer', playerFacingYaw, 0.3);
+    }
+  }
+
+  // 12. Frasco de Ácido
+  if (canAttack && skills.acid) {
+    weaponTimers.acid += dt;
+    const cd = Math.max(1.0, (CONFIG.SKILLS.acid.baseCd - skills.acid * 0.06) * cdFactor);
+    if (weaponTimers.acid >= cd) {
+      weaponTimers.acid = 0;
+      throwAcidFlask(
+        scene, playerGroup.position, yaw, skills.acid, mods,
+        playerProjectiles, playerFacingYaw
+      );
+      triggerWeaponVisualAttack('acid', yaw, 0.22);
+    }
+  }
+
+  // 13. Jaulas de Carnicero Orbitales
   orbitals.forEach(o => {
     const lvl = skills.orbital || 1;
     o.angle += dt * (2.7 + lvl * 0.38) * mods.atkSpeedMult;
@@ -189,8 +287,8 @@ export function updatePlayerWeaponsAndCombat({
     }
 
     if (o.hitCd > 0) o.hitCd -= dt;
-    // Las jaulas siguen orbitando al morir, pero no aplican colisiones de daño.
-    if (!isDead) {
+    // Las jaulas siguen orbitando, pero no aplican daño fuera de combate.
+    if (canAttack) {
       activeEnemies.forEach(e => {
         if (e.state !== 'dead' && e.group.position.distanceTo(o.group.position) < 1.45) {
           const mult = 1 + (lvl - 1) * CONFIG.SKILLS.orbital.scalePerLvl;
@@ -225,7 +323,7 @@ export function updatePlayerWeaponsAndCombat({
     m.led.visible = Math.floor(gameTime * 8) % 2 === 0;
 
     let triggered = m.life <= 0;
-    if (!isDead && m.armTimer <= 0) {
+    if (canAttack && m.armTimer <= 0) {
       triggered = activeEnemies.some(e => e.state !== 'dead' && e.group.position.distanceTo(m.group.position) < 1.65);
     }
     if (triggered) {
@@ -242,7 +340,7 @@ export function updatePlayerWeaponsAndCombat({
       scene.add(blast);
       vfx.push({ mesh: blast, disposeGeo: true, disposeMat: true, life: 0.2, maxLife: 0.2, billboard: true, fade: true });
 
-      if (!isDead) {
+      if (canAttack) {
         activeEnemies.forEach(e => {
           if (e.state !== 'dead' && e.group.position.distanceTo(m.group.position) < blastRadius) {
             const knock = new THREE.Vector3().subVectors(e.group.position, m.group.position).setY(0).normalize().multiplyScalar(2.4);
@@ -256,7 +354,23 @@ export function updatePlayerWeaponsAndCombat({
     }
   }
 
-  // 10. Zonas telegrafiadas de Bosses (Pueden dañar al jugador y, en modo Defensa, también al Núcleo)
+  // 10. Proyectiles y zonas de las armas nuevas (bumerán, granada, ácido)
+  if (canAttack && Array.isArray(playerProjectiles)) {
+    updatePlayerProjectiles(dt, {
+      scene,
+      projectiles: playerProjectiles,
+      vfx,
+      activeEnemies,
+      playerGroup,
+      worldPhysics,
+      damageEnemy,
+      sendAutomaticAttack,
+      addCamShake,
+      isDead
+    });
+  }
+
+  // 11. Zonas telegrafiadas de Bosses (Pueden dañar al jugador y, en modo Defensa, también al Núcleo)
   for (let i = bossHazards.length - 1; i >= 0; i--) {
     const h = bossHazards[i];
     h.timer -= dt;
@@ -292,7 +406,10 @@ export function updatePlayerWeaponsAndCombat({
         if (playerGroup.position.distanceTo(h.center) <= h.radius) {
           dealDamageToPlayer(h.dmg);
         }
-        if (coreMachine && coreMachine.active && !coreMachine.destroyed && coreMachine.position.distanceTo(h.center) <= h.radius + coreMachine.collisionRadius) {
+        // En Defensa el núcleo es una abstracción de vidas (hasPhysicalCore:false):
+        // los hazards del jefe no deben restar 20-40 vidas de golpe. La amenaza
+        // del jefe es llegar a la salida y filtrar sus leakLives.
+        if (coreMachine && coreMachine.hasPhysicalCore !== false && coreMachine.active && !coreMachine.destroyed && coreMachine.position.distanceTo(h.center) <= h.radius + coreMachine.collisionRadius) {
           coreMachine.takeDamage(Math.round(h.dmg * 0.75), h.boss || null);
         }
       } else if (h.type === 'cone') {
@@ -306,7 +423,7 @@ export function updatePlayerWeaponsAndCombat({
         if (toP.length() <= h.radius && h.dir.angleTo(toP.clone().normalize()) <= h.arc) {
           dealDamageToPlayer(h.dmg);
         }
-        if (coreMachine && coreMachine.active && !coreMachine.destroyed) {
+        if (coreMachine && coreMachine.hasPhysicalCore !== false && coreMachine.active && !coreMachine.destroyed) {
           const toC = new THREE.Vector3().subVectors(coreMachine.position, h.origin).setY(0);
           if (toC.length() <= h.radius + coreMachine.collisionRadius && h.dir.angleTo(toC.clone().normalize()) <= h.arc) {
             coreMachine.takeDamage(Math.round(h.dmg * 0.85), h.boss || null);
@@ -331,7 +448,7 @@ export function updatePlayerWeaponsAndCombat({
     if (p.mesh.position.distanceTo(playerGroup.position.clone().add(new THREE.Vector3(0, 1.0, 0))) < 0.95) {
       dealDamageToPlayer(p.dmg);
       p.life = 0;
-    } else if (coreMachine && coreMachine.active && !coreMachine.destroyed) {
+    } else if (coreMachine && coreMachine.hasPhysicalCore !== false && coreMachine.active && !coreMachine.destroyed) {
       const dCore = Math.hypot(p.mesh.position.x - coreMachine.position.x, p.mesh.position.z - coreMachine.position.z);
       if (dCore < coreMachine.collisionRadius + 0.35) {
         coreMachine.takeDamage(Math.round(p.dmg * 0.65), null);

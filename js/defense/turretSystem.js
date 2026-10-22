@@ -30,6 +30,7 @@ import {
 } from './turretSystem/fx.js';
 import { damageEnemy, damageArea, inRadius } from './turretSystem/combat.js';
 import { spawnAlly, countAlliesFor, handleAllyDestroyed } from './turretSystem/allies.js';
+import { awardCollectorWave } from './turrets/collector.js';
 
 const INTERACT_RADIUS = 3.5;
 
@@ -101,6 +102,14 @@ export class TurretSystem {
   spawnAlly(turret) { return spawnAlly(this, turret); }
   countAlliesFor(turret) { return countAlliesFor(this, turret); }
   handleAllyDestroyed(ally) { handleAllyDestroyed(this, ally); }
+
+  awardCollectorWave() {
+    let total = 0;
+    for (const turret of this.turrets.values()) {
+      if (turret.cfg.id === 'collector') total += awardCollectorWave(turret);
+    }
+    return total;
+  }
 
   getTurretById(turretId) {
     return this.turrets.get(turretId) || null;

@@ -10,11 +10,13 @@ Fuente: `js/config/coreDefense/waves.js`.
   initialPrepTimeSec: 60,
   betweenWavesRestSec: 60,
   enableEndgameSwarmAfterVictory: false,
-  coreHealPerWaveCompleted: 65,
-  tdBaseHpMult: 2.8,
-  hpMultiplierPerWave: 0.28,
-  dmgMultiplierPerWave: 0.14,
+  coreHealPerWaveCompleted: 25,
+  tdBaseHpMult: 1.0,
+  hpMultiplierPerWave: 0.22,
+  dmgMultiplierPerWave: 0.07,
   speedMultiplierPerWave: 0.025,
+  tdBossHpMult: 1.1,
+  bossHpMultiplierPerWave: 0.18,
   playerDamageMultiplierVsRoute: 0.45,
   EVENTS: { ... },
   SCHEDULE: [ ... ]
@@ -25,14 +27,16 @@ Fuente: `js/config/coreDefense/waves.js`.
 
 - La **primera** preparación no tiene límite: `waveManager` ignora el timer mientras `currentWaveIndex === 0`. El jugador explora hasta `[F]`.
 - Entre oleadas hay `betweenWavesRestSec` (60 s), saltable con `[F]`.
-- Al completar una oleada, el núcleo cura `coreHealPerWaveCompleted` (65 HP).
+- Al completar una oleada, el núcleo cura `coreHealPerWaveCompleted` (25 vidas).
 - `totalWavesForVictory` debe seguir siendo 12; HUD, victoria, récords y red lo asumen.
+- La curva de `count` va de 10 a 120; la oleada 1 debe poder limpiarse con la torreta inicial de 10 de chatarra. No subir la oleada 1 por encima de ~12 sin revisar la economía inicial.
 
 ### Escalado
 
-- HP: `tdBaseHpMult` y `hpMultiplierPerWave`.
-- Daño: `dmgMultiplierPerWave`.
-- Velocidad: `speedMultiplierPerWave`.
+- HP de la horda: `tdBaseHpMult` (1.0) y `hpMultiplierPerWave` (0.22). La oleada 12 queda en x3.42.
+- HP de jefes: `tdBossHpMult` (1.1) y `bossHpMultiplierPerWave` (0.18). El jefe ya trae HP base alto; no debe usar el multiplicador completo de la horda.
+- Daño: `dmgMultiplierPerWave` (0.07); mantiene el daño a jugador/jefe bajo control.
+- Velocidad: `speedMultiplierPerWave` (0.025).
 - Daño del jugador en ruta: `playerDamageMultiplierVsRoute: 0.45` (45%). Las torretas siguen siendo la fuente principal.
 
 ### `SCHEDULE`
@@ -47,9 +51,10 @@ Cada entrada:
 
 - `count` debe ser positivo.
 - `interval` es el tiempo entre spawns.
-- `composition` son pesos acumulativos: primero `worm`, luego `weeper`; deben sumar ~1.
+- `composition` son pesos ponderados por tipo (`zombie`, `worm`, `weeper`, `runner`, `hulk`, `nest`, `regenerator`, `splitter`); deben sumar ~1 y todas las claves deben existir en `ENEMY_TYPES` o en los tipos base.
 - `routes` es **fallback**. Si el mapa tiene rutas en `PathSystem`, `getActiveRoutes()` usa todas las del mapa y reparte los spawns; los IDs del schedule no tienen que coincidir con los del catálogo.
 - `bossId` debe existir en `CONFIG.BOSS_SCHEDULE`; si no, cae al primer jefe.
+- En Supervivencia, `MODES_CONFIG.SURVIVAL.EXTRA_ENEMY_SPAWNS` añade una capa de spawns TD sobre la horda base con `EXTRA_SPAWN_CHANCE` y `ENDGAME_EXTRA_SPAWN_CHANCE`.
 
 ### Eventos
 
@@ -58,18 +63,20 @@ Cada entrada:
 ```js
 {
   intervalWaves: 3,
-  eventDurationSec: 120,
+  eventDurationSec: 75,
   survivalRadius: 50,
-  scrapReward: 30,
-  maxEnemiesBase: 8,
-  maxEnemiesPeak: 18,
-  spawnIntervalStart: 2.2,
-  spawnIntervalEnd: 1.1
+  scrapReward: 45,
+  maxEnemiesBase: 10,
+  maxEnemiesPeak: 24,
+  spawnIntervalStart: 1.5,
+  spawnIntervalEnd: 0.65,
+  hpScalingPerWave: 0.10,
+  dmgScalingPerWave: 0.05
 }
 ```
 
 - Se disparan tras las rondas 3, 6 y 9.
-- Mini-modo de 2 minutos, zona de 100 m de diámetro (radio 50 m), escalado hasta 18 simultáneos.
+- Asalto de 75 s, zona de 100 m de diámetro (radio 50 m), escalado hasta 24 simultáneos.
 - Fase final con atmósfera roja, niebla densa y drone de subgraves.
 - Cambiar la duración/radio afecta a `defenseEventManager`, HUD y música.
 
@@ -80,19 +87,20 @@ Fuente: `js/config/coreDefense/economy.js`.
 ```js
 {
   startingScrap: 10,
-  normalDropChance: 0.32,
-  normalDropValue: 1,
-  bossDropValue: 18,
-  waveCompletionBonus: 6,
-  maxActivePickups: 40
+  normalDropChance: 0.45,
+  normalDropValue: 2,
+  bossDropValue: 35,
+  waveCompletionBonus: 20,
+  maxActivePickups: 80
 }
 ```
 
 - Chatarra inicial: 10 en todas las dificultades.
 - La chatarra de Defensa no se convierte en Dientes permanentes.
+- Ingreso esperado: ~1 chatarra por baja (45% × 2), +20 por oleada y +35 por jefe. Con 12 oleadas debe alcanzar para 10-14 torretas con mejoras, no para 16 torretas máximas desde la ronda 3.
 - Online: **toda** ganancia pasa por `MultiplayerSync.handleScrapIncome(mode, amount)`. Reparto 50/50 con residuo alternado; si no hay compañero, 100% al Host.
 - La venta remota no abona chatarra al receptor.
-- `maxActivePickups` limita el número de botines en el suelo.
+- `maxActivePickups` limita el número de botines en el suelo. Con 80 se evita que la horda tarde en soltar chatarra durante la oleada 12.
 
 ## `PLACEMENT`
 
@@ -118,8 +126,8 @@ Cambiar estos valores afecta a la UX de construcción y a la validez de todos lo
 `js/config/coreDefense/core.js`:
 
 - `CORE.maxHp: 1500`, radio 2.35, altura 6.2, posición central.
-- `PLAYER_DEATH_POLICY`: `respawn_with_penalty`, `respawnDelaySec: 5.0`, `coreHpPenaltyOnRespawn: 50`, `respawnInvulnSec: 2.5`.
-- Al morir, el núcleo sufre −50 HP y el jugador revive a los 5 s.
+- `PLAYER_DEATH_POLICY`: `respawn_with_penalty`, `respawnDelaySec: 5.0`, `coreHpPenaltyOnRespawn: 10`, `respawnInvulnSec: 3.0`.
+- Al morir, el núcleo pierde 10 vidas y el jugador revive a los 5 s. Morir debe doler, pero no sentenciar la partida en Normal (100 vidas).
 - Los estados visuales del núcleo (`DAMAGE_STATES`) dependen de porcentajes; no cambies HP sin revisar umbrales.
 
 ## Supervivencia
@@ -158,7 +166,7 @@ Cambiar estos valores afecta a la UX de construcción y a la validez de todos lo
 
 - [ ] La primera oleada no tiene timer y `[F]` arranca.
 - [ ] La oleada 12 se alcanza y la victoria se dispara una sola vez.
-- [ ] Los eventos aparecen tras 3, 6 y 9; duran 120 s y recompensan 30.
+- [ ] Los eventos aparecen tras 3, 6 y 9; duran 75 s y recompensan 45.
 - [ ] Una ruta llega a nivel 4; las otras se bloquean al pasar de nivel 2.
 - [ ] La venta devuelve el 50% redondeado hacia abajo.
 - [ ] Sin chatarra, la compra falla con sonido de error.

@@ -155,6 +155,17 @@ Cualquier clave no listada se ignora con `default: break`.
 | `continuousHeal` | booleano | Curación continua |
 | `barrier` | booleano | Barrera |
 
+### Cadenas, empuje y economía
+
+| Clave | Operación | Efecto |
+|---|---|---|
+| `chainCount` | máximo | Objetivos totales de la cadena eléctrica |
+| `chainRangeMult` | multiplica | Radio de salto de la cadena |
+| `pushDistance` | suma | Metros de empuje hacia atrás |
+| `scrapPerWave` | suma | Chatarra extra al completar oleada |
+| `scrapInterval` | mínimo | Segundos entre ciclos del recolector |
+| `scrapAmount` | suma | Chatarra por ciclo del recolector |
+
 ## Cómo Añadir un Efecto
 
 1. Añade el `case` en `recomputeStats` (`js/defense/turrets/stats.js`).

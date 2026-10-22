@@ -175,6 +175,50 @@ export function getTurretDecalTexture(type) {
       px(ctx, 30, cy, 4, 3, '#e6d7a5');
       px(ctx, 34, cy, 8, 3, '#68863a');
     }
+  } else if (type === 'tesla') {
+    px(ctx, 8, 5, 48, 3, '#6fa8c8');
+    px(ctx, 30, 10, 4, 8, '#3fe0f5');
+    px(ctx, 26, 15, 8, 3, '#3fe0f5');
+    px(ctx, 32, 18, 5, 8, '#e6d7a5');
+    px(ctx, 22, 12, 3, 8, '#b89c46');
+    px(ctx, 40, 12, 3, 8, '#b89c46');
+  } else if (type === 'incinerator') {
+    px(ctx, 8, 5, 48, 3, '#a54a2a');
+    px(ctx, 28, 12, 8, 12, '#ff7711');
+    px(ctx, 30, 8, 4, 6, '#ffcc33');
+    px(ctx, 24, 18, 16, 5, '#050605');
+    px(ctx, 26, 17, 4, 3, '#e6d7a5');
+    px(ctx, 34, 17, 4, 3, '#e6d7a5');
+  } else if (type === 'railgun') {
+    px(ctx, 8, 5, 48, 3, '#9fc3c9');
+    px(ctx, 12, 13, 40, 3, '#c8c2ac');
+    px(ctx, 12, 20, 40, 3, '#c8c2ac');
+    px(ctx, 30, 11, 6, 14, '#050605');
+    px(ctx, 32, 13, 2, 10, '#3fe0f5');
+    px(ctx, 18, 10, 5, 5, '#b89c46');
+    px(ctx, 41, 10, 5, 5, '#b89c46');
+  } else if (type === 'collector') {
+    px(ctx, 8, 5, 48, 3, '#b89c46');
+    px(ctx, 20, 11, 24, 14, '#050605');
+    px(ctx, 22, 13, 20, 10, '#743718');
+    px(ctx, 26, 15, 12, 6, '#b89c46');
+    px(ctx, 29, 8, 6, 3, '#877a5c');
+    px(ctx, 31, 6, 2, 3, '#e6d7a5');
+  } else if (type === 'press') {
+    px(ctx, 8, 5, 48, 3, '#d8b45a');
+    px(ctx, 28, 9, 8, 4, '#c8c2ac');
+    px(ctx, 30, 13, 4, 8, '#b89c46');
+    px(ctx, 22, 21, 20, 4, '#a52020');
+    px(ctx, 18, 23, 4, 2, '#e6d7a5');
+    px(ctx, 42, 23, 4, 2, '#e6d7a5');
+  } else if (type === 'ejector') {
+    px(ctx, 8, 5, 48, 3, '#6f8f9c');
+    px(ctx, 14, 14, 14, 6, '#050605');
+    px(ctx, 16, 15, 10, 4, '#55c8e0');
+    px(ctx, 30, 12, 4, 10, '#b89c46');
+    px(ctx, 36, 14, 10, 2, '#55c8e0');
+    px(ctx, 36, 19, 10, 2, '#55c8e0');
+    px(ctx, 26, 17, 4, 2, '#e6d7a5');
   } else {
     // Support: Rayo de alto voltaje
     px(ctx, 8, 5, 48, 3, '#b89c46');

@@ -35,7 +35,8 @@ export class EnemyPool {
       if (bossCfg) {
         const idx = this.active.findIndex(e => !e.isBoss);
         if (idx !== -1) {
-          enemy = this.active.splice(idx, 1)[0];
+          this.release(idx);
+          enemy = this.pool.pop();
         }
       }
       if (!enemy) return null;

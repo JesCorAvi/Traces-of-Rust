@@ -13,7 +13,8 @@ import { createBillboardSprite, EnemyPool } from './entities.js';
 import {
   initCombatLight,
   updateCombatLight,
-  createOrbitalUnit
+  createOrbitalUnit,
+  clearPlayerProjectiles
 } from './combat.js';
 import { ModeManager } from './modes/gameModeManager.js';
 import { DebugOverlay } from './debug/debugOverlay.js';
@@ -150,6 +151,7 @@ function markPlayerDead() {
   invuln = Math.max(invuln, 999);
   auraMesh.visible = false;
   Object.keys(weaponTimers).forEach(key => { weaponTimers[key] = 0; });
+  clearPlayerProjectiles(scene, playerProjectiles);
 
   // En co-op, si otro peer sigue vivo, los jefes deben continuar contra él.
   if (!hasLivingRemotePlayer()) {
@@ -188,6 +190,7 @@ function resetPlayerDeathState() {
   auraMesh.visible = false;
   clearMovementKeys();
   Object.keys(weaponTimers).forEach(key => { weaponTimers[key] = 0; });
+  clearPlayerProjectiles(scene, playerProjectiles);
 }
 let fpsFrames = 0, fpsTimer = 0;
 let hitstopTimer = 0;
@@ -345,8 +348,11 @@ function spawnDashSparksAndDust(pos, dir) {
   }
 }
 
-const weaponTimers = { slash: 0, shotgun: 0, flamethrower: 0, aura: 0, mines: 0, harpoon: 0, bolt: 0 };
-const drops = [], orbitals = [], minesList = [], vfx = [], bossHazards = [], bossProjectiles = [];
+const weaponTimers = {
+  slash: 0, shotgun: 0, flamethrower: 0, aura: 0, mines: 0, harpoon: 0, bolt: 0,
+  chakram: 0, welder: 0, grenade: 0, hammer: 0, acid: 0
+};
+const drops = [], orbitals = [], minesList = [], playerProjectiles = [], vfx = [], bossHazards = [], bossProjectiles = [];
 
 const pickupSystem = createPickupSystem({ scene, worldPhysics, drops, net: MultiplayerSync });
 const spawnLorePickup = pickupSystem.spawnLorePickup;
@@ -366,11 +372,14 @@ function syncOrbitalsCount() {
   orbitals.forEach((o, idx) => { o.angle = (idx / orbitals.length) * Math.PI * 2; });
 }
 
-function triggerWeaponVisualAttack(weaponId, _targetYaw = null, animDuration = 0.24, onlyIfIdle = false, hitOverride = null, originOverride = null) {
+function triggerWeaponVisualAttack(weaponId, targetYaw = null, animDuration = 0.24, onlyIfIdle = false, hitOverride = null, originOverride = null) {
   if (onlyIfIdle && atkAnimTimer > 0.05) return;
   atkAnimTimer = animDuration;
   syncPlayerVisualLoadout(weaponId);
-  const atkDir = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), playerFacingYaw);
+  // El yaw de puntería manda sobre la orientación del cuerpo: el rayo debe
+  // replicarse en la dirección real del disparo (Soldador, escopeta, arpón...).
+  const aimYaw = Number.isFinite(targetYaw) ? targetYaw : playerFacingYaw;
+  const atkDir = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), aimYaw);
   const hit = hitOverride || lastAttackHit;
   MultiplayerSync.sendAttack(weaponId, originOverride || playerGroup.position, atkDir, hit);
   lastAttackHit = null;
@@ -436,7 +445,7 @@ function buildModeContext(camFwd = new THREE.Vector3(0, 0, -1)) {
     },
     notifyPlayerEmergencyRespawn: (delaySec, corePenalty) => {
       if (!isDead) markPlayerDead();
-      hudController.showWaveAnnouncement(`OPERARIO ABATIDO // SOBRECARGA AL NÚCLEO (-${corePenalty} HP)`);
+      hudController.showWaveAnnouncement(`OPERARIO ABATIDO // SOBRECARGA AL NÚCLEO (-${corePenalty} VIDAS)`);
       hudController.showPlayerDownOverlay?.(delaySec, corePenalty);
       AudioSys.playPlayerDowned?.();
       AudioSys.startPlayerDownHum?.();
@@ -686,13 +695,14 @@ function animate() {
     });
 
     const activeCore = ModeManager.activeMode?.coreMachine || null;
+    const combatEnabled = ModeManager.activeMode?.isPlayerCombatActive?.() ?? true;
     updatePlayerWeaponsAndCombat({
       dt, gameTime, scene, playerGroup, yaw, playerFacingYaw, camAngle,
-      skills, mods, weaponTimers, auraMesh, orbitals, minesList,
+      skills, mods, weaponTimers, auraMesh, orbitals, minesList, playerProjectiles,
       bossHazards, bossProjectiles, vfx, activeEnemies: enemyPool.active,
       worldPhysics, coreMachine: activeCore, damageEnemy: networkDamageEnemy, dealDamageToPlayer,
       addCamShake: s => { camShake = Math.max(camShake, s); },
-      triggerWeaponVisualAttack, sendAutomaticAttack, cleanupVfxItem, isDead
+      triggerWeaponVisualAttack, sendAutomaticAttack, cleanupVfxItem, isDead, combatEnabled
     });
 
     pickupSystem.updateDrops(dt, {
@@ -829,7 +839,7 @@ const { damageEnemy, dealDamageToPlayer } = combatRuntime;
 
 // Registra el primer impacto real de un arma para replicar ATTACK con hit.
 const networkDamageEnemy = (en, amount, knockback, isDoT = false, opts = {}) => {
-  if (!isDoT && en?.group) {
+  if (!isDoT && !opts.fromProjectile && en?.group) {
     lastAttackHit = en.group.position.clone().add(new THREE.Vector3(0, 1.1, 0));
   }
   return damageEnemy(en, amount, knockback, isDoT, opts);
@@ -876,8 +886,9 @@ const flowRuntime = {
   get rerollsLeft() { return rerollsLeft; }, set rerollsLeft(v) { rerollsLeft = v; },
   get activeBoss() { return activeBoss; }, set activeBoss(v) { activeBoss = v; },
   get lastMenuScreen() { return lastMenuScreen; }, set lastMenuScreen(v) { lastMenuScreen = v; },
-  scene, playerGroup, worldPhysics, enemyPool, drops, orbitals, minesList, vfx,
+  scene, playerGroup, worldPhysics, enemyPool, drops, orbitals, minesList, playerProjectiles, vfx,
   bossHazards, bossProjectiles, auraMesh, weaponTimers,
+  clearPlayerProjectiles: () => clearPlayerProjectiles(scene, playerProjectiles),
   hudController, debugOverlay, turretBuildMenu, ModeManager, AudioSys, CONFIG,
   save, saveGame, careerByMode, saveCareer,
   buildModeContext, prewarmLoadoutSheets, syncPlayerVisualLoadout,

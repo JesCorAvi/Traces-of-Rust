@@ -1,5 +1,5 @@
 // Gestor de eventos especiales de interrupción entre oleadas (cada 3 rondas).
-// Mini-modo supervivencia intenso de 2 minutos (120s) en una zona amplia de contención (radio 50m, diámetro 100m).
+// Asalto de contención de 75s en una zona amplia (radio 50m, diámetro 100m).
 // Exports: DefenseEventManager.
 
 import * as THREE from 'three';
@@ -17,13 +17,13 @@ export class DefenseEventManager {
     this.ambientLight = ambientLight;
     this.cfg = CORE_DEFENSE_CONFIG.WAVES.EVENTS || {
       intervalWaves: 3,
-      eventDurationSec: 120.0,
+      eventDurationSec: 75.0,
       survivalRadius: 50.0,
-      scrapReward: 30,
-      maxEnemiesBase: 8,
-      maxEnemiesPeak: 18,
-      spawnIntervalStart: 2.2,
-      spawnIntervalEnd: 1.1
+      scrapReward: 45,
+      maxEnemiesBase: 10,
+      maxEnemiesPeak: 24,
+      spawnIntervalStart: 1.5,
+      spawnIntervalEnd: 0.65
     };
 
     this.activeEvent = null;
@@ -113,9 +113,9 @@ export class DefenseEventManager {
       targetPos = new THREE.Vector3(loc.x, gy, loc.z);
     }
 
-    const duration = Number.isFinite(options.duration) ? options.duration : (this.cfg.eventDurationSec || 120.0);
+    const duration = Number.isFinite(options.duration) ? options.duration : (this.cfg.eventDurationSec || 75.0);
     const radius = Number.isFinite(options.radius) ? options.radius : (this.cfg.survivalRadius || 50.0);
-    const scrapReward = this.cfg.scrapReward || 30;
+    const scrapReward = this.cfg.scrapReward || 45;
     const waveIndex = Number.isFinite(options.waveIndex)
       ? options.waveIndex
       : (this.mode?.waveManager?.currentWaveIndex || 1);
@@ -168,7 +168,7 @@ export class DefenseEventManager {
     const hudCtrl = this.lastCtx?.hudController || this.mode?.net?.ctx?.hudController;
     hudCtrl?.showKineticAlertBanner?.({
       tag: 'ALERTA DE SECTOR // PROTOCOLO DE CONTENCIÓN',
-      title: '¡EVENTO ESPECIAL INICIADO! (120s)',
+      title: `¡EVENTO ESPECIAL INICIADO! (${Math.round(duration)}s)`,
       sub: `SOBREVIVE AL ASALTO EN ${eventLocationName}`,
       theme: 'hazard',
       durationMs: 3800
@@ -380,7 +380,7 @@ export class DefenseEventManager {
       }
     }
 
-    // Gestión de Fases de Intensidad a lo largo de los 2 minutos (120s)
+    // Gestión de Fases de Intensidad a lo largo del asalto (75s por defecto)
     if (ev.elapsedSurvivalTime < 40) {
       ev.intensityPhase = 1;
     } else if (ev.elapsedSurvivalTime < 80) {
@@ -413,24 +413,24 @@ export class DefenseEventManager {
     // Parámetros dinámicos según la fase de supervivencia y oleada alcanzada
     const waveIdx = ev.waveIndex || 1;
     const waveProgress = Math.max(0, waveIdx - 1);
-    const waveHpMult = 1 + waveProgress * (this.cfg.hpScalingPerWave || 0.16);
-    const waveDmgMult = 1 + waveProgress * (this.cfg.dmgScalingPerWave || 0.08);
+    const waveHpMult = 1 + waveProgress * (this.cfg.hpScalingPerWave || 0.10);
+    const waveDmgMult = 1 + waveProgress * (this.cfg.dmgScalingPerWave || 0.05);
 
-    let maxAlive = this.cfg.maxEnemiesBase || 30;
-    let spawnInterval = this.cfg.spawnIntervalStart || 0.65;
+    let maxAlive = this.cfg.maxEnemiesBase || 10;
+    let spawnInterval = this.cfg.spawnIntervalStart || 1.5;
     let hpMult = waveHpMult;
     let spdMult = 1.0;
     let dmgMult = waveDmgMult;
 
     if (ev.intensityPhase === 2) {
-      maxAlive = Math.round(((this.cfg.maxEnemiesBase || 30) + (this.cfg.maxEnemiesPeak || 65)) * 0.5);
-      spawnInterval = ((this.cfg.spawnIntervalStart || 0.65) + (this.cfg.spawnIntervalEnd || 0.22)) * 0.5;
+      maxAlive = Math.round(((this.cfg.maxEnemiesBase || 10) + (this.cfg.maxEnemiesPeak || 24)) * 0.5);
+      spawnInterval = ((this.cfg.spawnIntervalStart || 1.5) + (this.cfg.spawnIntervalEnd || 0.65)) * 0.5;
       hpMult = waveHpMult * 1.1;
       spdMult = 1.12;
       dmgMult = waveDmgMult * 1.1;
     } else if (ev.intensityPhase === 3) {
-      maxAlive = this.cfg.maxEnemiesPeak || 65;
-      spawnInterval = this.cfg.spawnIntervalEnd || 0.22;
+      maxAlive = this.cfg.maxEnemiesPeak || 24;
+      spawnInterval = this.cfg.spawnIntervalEnd || 0.65;
       hpMult = waveHpMult * 1.25;
       spdMult = 1.2;
       dmgMult = waveDmgMult * 1.2;
@@ -446,7 +446,7 @@ export class DefenseEventManager {
       this.spawnPerimeterAssaultWave(ctx, ev, hpMult, spdMult, dmgMult, maxAlive);
     }
 
-    // Si ha completado los 2 minutos (120 segundos) en el perímetro
+    // Si ha completado la duración del asalto en el perímetro
     if (ev.progress >= 1.0) {
       this.completeEvent();
     }
@@ -456,7 +456,7 @@ export class DefenseEventManager {
    * Spawnea enemigos de asalto distribuidos por todo el mapa (compuertas y sectores amplios)
    * dirigiéndose hacia la posición del jugador, otorgando espacio táctico para maniobrar y esquivar.
    */
-  spawnPerimeterAssaultWave(ctx, ev, hpMult, spdMult, dmgMult, maxAlive = 30) {
+  spawnPerimeterAssaultWave(ctx, ev, hpMult, spdMult, dmgMult, maxAlive = 10) {
     const aliveCount = this.eventEnemies.length;
     const remainingSlots = Math.max(1, maxAlive - aliveCount);
     const burstSize = ev.intensityPhase === 3 ? Math.floor(4 + Math.random() * 3) : (ev.intensityPhase === 2 ? Math.floor(3 + Math.random() * 2) : Math.floor(2 + Math.random() * 2));
@@ -492,15 +492,19 @@ export class DefenseEventManager {
       const sy = this.worldPhysics ? this.worldPhysics.getGroundHeight(sx, sz, 0, true) : 0;
 
       // Composición de enemigos según la fase
+      const weights = ev.intensityPhase === 1
+        ? { zombie: 0.55, worm: 0.25, runner: 0.20 }
+        : ev.intensityPhase === 2
+          ? { zombie: 0.35, worm: 0.25, weeper: 0.10, runner: 0.15, splitter: 0.10, hulk: 0.05 }
+          : { zombie: 0.20, worm: 0.15, weeper: 0.15, runner: 0.20, splitter: 0.10, hulk: 0.10, nest: 0.05, regenerator: 0.05 };
       let type = 'zombie';
-      const roll = Math.random();
-      if (ev.intensityPhase === 1) {
-        type = roll < 0.7 ? 'zombie' : 'worm';
-      } else if (ev.intensityPhase === 2) {
-        type = roll < 0.5 ? 'zombie' : (roll < 0.75 ? 'worm' : 'weeper');
-      } else {
-        // En Fase 3 (Clímax): alta presencia de Weepers (disparan a distancia) y zombis de choque
-        type = roll < 0.4 ? 'zombie' : (roll < 0.7 ? 'weeper' : 'worm');
+      let roll = Math.random();
+      for (const [candidate, weight] of Object.entries(weights)) {
+        roll -= weight;
+        if (roll <= 0) {
+          type = candidate;
+          break;
+        }
       }
 
       const enemy = this.enemyPool.spawn(
@@ -612,7 +616,7 @@ export class DefenseEventManager {
     this.deactivateRedAtmosphere();
 
     const ev = this.activeEvent;
-    const scrapReward = ev.scrapReward || 30;
+    const scrapReward = ev.scrapReward || 45;
 
     // En el Cliente la recompensa ya viaja por SCRAP_GAIN desde el Host.
     if (!fromNetwork) this.mode.addScrap(scrapReward);

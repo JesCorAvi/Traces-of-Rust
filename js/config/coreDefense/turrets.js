@@ -242,5 +242,281 @@ export const TURRETS = {
           ]
         }
       ]
+    },
+
+    tesla: {
+      id: 'tesla',
+      name: 'BOBINA DE TESLA',
+      role: 'CADENA ELÉCTRICA',
+      icon: 'turret_tesla',
+      spriteKey: 'turret_tesla',
+      description: 'Descarga arcos entre varios hostiles. Excelente contra grupos compactos.',
+      cost: 28,
+      color: 0x6fa8c8,
+      spriteSize: 1.6,
+      base: {
+        damage: 12, range: 8, fireRate: 1.6, hp: 240,
+        chainCount: 2, chainRange: 4,
+        collisionRadius: 0.55, height: 1.7, attackStopDistance: 1.7
+      },
+      paths: [
+        {
+          id: 'chain', name: 'CADENA', color: 0x6fa8c8,
+          upgrades: [
+            { cost: 10, name: 'Bobina doble', desc: '+1 salto de cadena.', effects: { chainCount: 3 } },
+            { cost: 20, name: 'Conductores largos', desc: '+25% de radio de cadena y +1 salto.', effects: { chainRangeMult: 1.25, chainCount: 4 }, visual: 'tesla_arcs' },
+            { cost: 34, name: 'Red de arcos', desc: '+1 salto adicional.', effects: { chainCount: 5 } },
+            { cost: 58, name: 'Tormenta de enlaces', desc: '+35% de radio y +2 saltos.', effects: { chainRangeMult: 1.35, chainCount: 7 }, visual: 'tesla_crown' }
+          ]
+        },
+        {
+          id: 'voltage', name: 'VOLTAJE', color: 0xd8b45a,
+          upgrades: [
+            { cost: 10, name: 'Núcleo de cobre', desc: '+4 de daño.', effects: { damageFlat: 4 } },
+            { cost: 20, name: 'Sobretensión', desc: '+30% de daño.', effects: { damageMult: 1.3 } },
+            { cost: 34, name: 'Arco paralizante', desc: 'Los impactos aturden brevemente.', effects: { freezeDuration: 0.25 }, visual: 'tesla_capacitor' },
+            { cost: 58, name: 'Descarga industrial', desc: '+50% de daño y aturdimiento mayor.', effects: { damageMult: 1.5, freezeDuration: 0.35 } }
+          ]
+        },
+        {
+          id: 'overcharge', name: 'SOBRECARGA', color: 0xa8f044,
+          upgrades: [
+            { cost: 10, name: 'Condensador rápido', desc: '+25% de cadencia.', effects: { fireRateMult: 1.25 } },
+            { cost: 20, name: 'Chispa múltiple', desc: '+1 salto y +10% de alcance.', effects: { chainCount: 3, rangeMult: 1.1 } },
+            { cost: 34, name: 'Descarga continua', desc: '+30% de cadencia.', effects: { fireRateMult: 1.3 } },
+            { cost: 58, name: 'Reactor de arco', desc: '+40% de radio de cadena y +1 salto.', effects: { chainRangeMult: 1.4, chainCount: 4 }, visual: 'tesla_overload' }
+          ]
+        }
+      ]
+    },
+
+    incinerator: {
+      id: 'incinerator',
+      name: 'SOPLETE DE FOSO',
+      role: 'ÁREA INCENDIARIA',
+      icon: 'turret_incinerator',
+      spriteKey: 'turret_incinerator',
+      description: 'Cono de fuego a corta distancia. La quemadura compensa su alcance limitado.',
+      cost: 24,
+      color: 0xa54a2a,
+      spriteSize: 1.55,
+      base: {
+        damage: 6, range: 5.5, fireRate: 8, hp: 260,
+        burnDps: 8, burnDuration: 2.5,
+        collisionRadius: 0.55, height: 1.7, attackStopDistance: 1.7
+      },
+      paths: [
+        {
+          id: 'fuel', name: 'COMBUSTIBLE', color: 0xa54a2a,
+          upgrades: [
+            { cost: 9, name: 'Mezcla densa', desc: '+4 DPS de quemadura.', effects: { burnDps: 4 } },
+            { cost: 18, name: 'Válvula abierta', desc: '+50% de DPS de quemadura.', effects: { burnDpsMult: 1.5 }, visual: 'fuel_tank' },
+            { cost: 30, name: 'Combustible gelatinoso', desc: '+1s de quemadura.', effects: { burnDuration: 1 } },
+            { cost: 54, name: 'Fuego de foso', desc: '+60% de DPS y +2s de quemadura.', effects: { burnDpsMult: 1.6, burnDuration: 2 } }
+          ]
+        },
+        {
+          id: 'pressure', name: 'PRESIÓN', color: 0xd8b45a,
+          upgrades: [
+            { cost: 9, name: 'Boquilla amplia', desc: '+15% de alcance.', effects: { rangeMult: 1.15 } },
+            { cost: 18, name: 'Bomba auxiliar', desc: '+25% de cadencia.', effects: { fireRateMult: 1.25 }, visual: 'pressure_valve' },
+            { cost: 30, name: 'Turbina de presión', desc: '+20% de alcance.', effects: { rangeMult: 1.2 } },
+            { cost: 54, name: 'Sobrepresión', desc: '+30% de cadencia.', effects: { fireRateMult: 1.3 } }
+          ]
+        },
+        {
+          id: 'napalm', name: 'NAPALM', color: 0x55e038,
+          upgrades: [
+            { cost: 9, name: 'Aditivo incendiario', desc: 'Deja una pequeña zona de napalm.', effects: { napalmDps: 5, napalmDuration: 3, napalmRadius: 2.0 } },
+            { cost: 18, name: 'Depósito de gel', desc: '+40% de DPS de napalm.', effects: { napalmDpsMult: 1.4 }, visual: 'napalm_tank' },
+            { cost: 30, name: 'Espuma adherente', desc: '+50% de duración del napalm.', effects: { napalmDurationMult: 1.5 } },
+            { cost: 54, name: 'Incendio de foso', desc: '+30% de radio e ignición al impactar.', effects: { napalmRadiusMult: 1.3, ignitionDamage: 12 } }
+          ]
+        }
+      ]
+    },
+
+    railgun: {
+      id: 'railgun',
+      name: 'CAÑÓN DE RIEL',
+      role: 'FRANCOTIRADOR',
+      icon: 'turret_railgun',
+      spriteKey: 'turret_railgun',
+      description: 'Disparo lento y devastador contra un único objetivo prioritario. Sin área.',
+      cost: 46,
+      color: 0x9fc3c9,
+      spriteSize: 1.7,
+      base: {
+        damage: 110, range: 24, fireRate: 0.45, hp: 220,
+        targetMode: 'strongest',
+        collisionRadius: 0.55, height: 1.8, attackStopDistance: 1.8
+      },
+      paths: [
+        {
+          id: 'caliber', name: 'CALIBRE', color: 0xc8c2ac,
+          upgrades: [
+            { cost: 12, name: 'Proyectil pesado', desc: '+20% de daño.', effects: { damageMult: 1.2 } },
+            { cost: 24, name: 'Núcleo de tungsteno', desc: '+25 de daño.', effects: { damageFlat: 25 }, visual: 'long_rail' },
+            { cost: 40, name: 'Perforador cinético', desc: '+35% de daño.', effects: { damageMult: 1.35 } },
+            { cost: 64, name: 'Ejecutor de placas', desc: '+50% de daño contra el objetivo.', effects: { damageMult: 1.5 } }
+          ]
+        },
+        {
+          id: 'coils', name: 'BOBINAS', color: 0x6fa8c8,
+          upgrades: [
+            { cost: 12, name: 'Carga rápida', desc: '+25% de cadencia.', effects: { fireRateMult: 1.25 } },
+            { cost: 24, name: 'Batería de bobinas', desc: '+15% de alcance y +15% de cadencia.', effects: { rangeMult: 1.15, fireRateMult: 1.15 }, visual: 'coil_bank' },
+            { cost: 40, name: 'Capacitor de riel', desc: '+30% de cadencia.', effects: { fireRateMult: 1.3 } },
+            { cost: 64, name: 'Lanzamiento hipersónico', desc: '+20% de alcance adicional.', effects: { rangeMult: 1.2 } }
+          ]
+        },
+        {
+          id: 'scope', name: 'MIRA', color: 0xe6d7a5,
+          upgrades: [
+            { cost: 12, name: 'Óptica de precisión', desc: '+20% de alcance.', effects: { rangeMult: 1.2 } },
+            { cost: 24, name: 'Marca de prioridad', desc: '+15% de daño y +10% de alcance.', effects: { damageMult: 1.15, rangeMult: 1.1 }, visual: 'scope' },
+            { cost: 40, name: 'Predictor balístico', desc: '+20% de daño.', effects: { damageMult: 1.2 } },
+            { cost: 64, name: 'Tiro de ejecución', desc: '+40% de daño al objetivo prioritario.', effects: { damageMult: 1.4 } }
+          ]
+        }
+      ]
+    },
+
+    collector: {
+      id: 'collector',
+      name: 'RECOLECTOR DE CHATARRA',
+      role: 'ECONOMÍA',
+      icon: 'turret_collector',
+      spriteKey: 'turret_collector',
+      description: 'No ataca. Genera chatarra al completar oleadas y mediante su ciclo de reciclaje.',
+      cost: 32,
+      color: 0xb89c46,
+      spriteSize: 1.5,
+      base: {
+        damage: 0, range: 3, fireRate: 1, hp: 300,
+        scrapPerWave: 6, scrapInterval: 10, scrapAmount: 2,
+        collisionRadius: 0.55, height: 1.7, attackStopDistance: 1.7
+      },
+      paths: [
+        {
+          id: 'yield', name: 'RENDIMIENTO', color: 0xd8b45a,
+          upgrades: [
+            { cost: 10, name: 'Contenedor extra', desc: '+3 de chatarra por oleada.', effects: { scrapPerWave: 3 } },
+            { cost: 20, name: 'Clasificador', desc: '+4 de chatarra por oleada.', effects: { scrapPerWave: 4 }, visual: 'scrap_bin' },
+            { cost: 34, name: 'Línea de fundición', desc: '+5 de chatarra por oleada.', effects: { scrapPerWave: 5 } },
+            { cost: 58, name: 'Fundición industrial', desc: '+8 de chatarra por oleada.', effects: { scrapPerWave: 8 } }
+          ]
+        },
+        {
+          id: 'logistics', name: 'LOGÍSTICA', color: 0x6f8f9c,
+          upgrades: [
+            { cost: 10, name: 'Cinta rápida', desc: '+1 de chatarra por ciclo.', effects: { scrapAmount: 1 } },
+            { cost: 20, name: 'Turno doble', desc: 'Ciclos más frecuentes.', effects: { scrapInterval: 8 }, visual: 'crane' },
+            { cost: 34, name: 'Cadena automatizada', desc: '+2 de chatarra por ciclo.', effects: { scrapAmount: 2 } },
+            { cost: 58, name: 'Reciclaje continuo', desc: 'Ciclos aún más frecuentes.', effects: { scrapInterval: 6 } }
+          ]
+        },
+        {
+          id: 'reserve', name: 'RESERVA', color: 0xa54a2a,
+          upgrades: [
+            { cost: 10, name: 'Reserva de emergencia', desc: '+2 de chatarra por oleada.', effects: { scrapPerWave: 2 } },
+            { cost: 20, name: 'Baliza de suministros', desc: '+1 de chatarra por ciclo y +9s de intervalo.', effects: { scrapAmount: 1, scrapInterval: 9 }, visual: 'beacon' },
+            { cost: 34, name: 'Almacén blindado', desc: '+4 de chatarra por oleada.', effects: { scrapPerWave: 4 } },
+            { cost: 58, name: 'Red de salvamento', desc: '+2 de chatarra por ciclo y +7s de intervalo.', effects: { scrapAmount: 2, scrapInterval: 7 } }
+          ]
+        }
+      ]
+    },
+
+    press: {
+      id: 'press',
+      name: 'PRENSA DE VÍA',
+      role: 'CONTROL A CORTA DISTANCIA',
+      icon: 'turret_press',
+      spriteKey: 'turret_press',
+      description: 'Golpea el suelo a muy corta distancia con una prensa hidráulica. Empuja y aturde.',
+      cost: 20,
+      color: 0xd8b45a,
+      spriteSize: 1.45,
+      base: {
+        damage: 55, range: 2.2, fireRate: 0.45, hp: 280,
+        aoeRadius: 2.2, freezeDuration: 0.6,
+        collisionRadius: 0.6, height: 1.55, attackStopDistance: 1.8
+      },
+      paths: [
+        {
+          id: 'pressure', name: 'PRESIÓN', color: 0xd8b45a,
+          upgrades: [
+            { cost: 8, name: 'Émbolo pesado', desc: '+25% de daño.', effects: { damageMult: 1.25 } },
+            { cost: 16, name: 'Placa de impacto', desc: '+15% de radio.', effects: { aoeRadiusMult: 1.15 }, visual: 'heavy_ram' },
+            { cost: 28, name: 'Pistón sobrealimentado', desc: '+30% de daño.', effects: { damageMult: 1.3 } },
+            { cost: 50, name: 'Prensa de demolición', desc: '+20% de radio y +25% de daño.', effects: { aoeRadiusMult: 1.2, damageMult: 1.25 } }
+          ]
+        },
+        {
+          id: 'cadence', name: 'CADENCIA', color: 0x877a5c,
+          upgrades: [
+            { cost: 8, name: 'Válvula rápida', desc: '+25% de cadencia.', effects: { fireRateMult: 1.25 } },
+            { cost: 16, name: 'Volante de inercia', desc: '+30% de cadencia.', effects: { fireRateMult: 1.3 }, visual: 'side_pistons' },
+            { cost: 28, name: 'Biela ligera', desc: '+15% de alcance.', effects: { rangeMult: 1.15 } },
+            { cost: 50, name: 'Prensa automática', desc: '+40% de cadencia.', effects: { fireRateMult: 1.4 } }
+          ]
+        },
+        {
+          id: 'weight', name: 'PESO', color: 0xa52020,
+          upgrades: [
+            { cost: 8, name: 'Lastre de hierro', desc: 'Aturdimiento de 0.9s.', effects: { freezeDuration: 0.9 } },
+            { cost: 16, name: 'Contrapeso', desc: '+12 de daño.', effects: { damageFlat: 12 }, visual: 'hazard_plate' },
+            { cost: 28, name: 'Yunque de vía', desc: 'Aturdimiento de 1.2s.', effects: { freezeDuration: 1.2 } },
+            { cost: 50, name: 'Impacto sísmico', desc: '+40% de daño y aturdimiento de 1.5s.', effects: { damageMult: 1.4, freezeDuration: 1.5 } }
+          ]
+        }
+      ]
+    },
+
+    ejector: {
+      id: 'ejector',
+      name: 'EYECCIÓN HIDRÁULICA',
+      role: 'DESPLAZAMIENTO',
+      icon: 'turret_ejector',
+      spriteKey: 'turret_ejector',
+      description: 'Válvula de presión que empuja a los hostiles hacia atrás por la ruta. Daño bajo.',
+      cost: 18,
+      color: 0x6f8f9c,
+      spriteSize: 1.4,
+      base: {
+        damage: 10, range: 2.5, fireRate: 1.3, hp: 260,
+        aoeRadius: 2.0, pushDistance: 3.5, freezeDuration: 0.15,
+        collisionRadius: 0.55, height: 1.5, attackStopDistance: 1.8
+      },
+      paths: [
+        {
+          id: 'pressure', name: 'PRESIÓN', color: 0x6f8f9c,
+          upgrades: [
+            { cost: 7, name: 'Acumulador', desc: '+1m de empuje.', effects: { pushDistance: 1 } },
+            { cost: 14, name: 'Válvula de golpe', desc: '+1.5m de empuje.', effects: { pushDistance: 1.5 }, visual: 'pressure_tank' },
+            { cost: 24, name: 'Pistón neumático', desc: '+2m de empuje.', effects: { pushDistance: 2 } },
+            { cost: 44, name: 'Eyección masiva', desc: '+2.5m de empuje.', effects: { pushDistance: 2.5 }, visual: 'wide_nozzle' }
+          ]
+        },
+        {
+          id: 'valve', name: 'VÁLVULA', color: 0xd8b45a,
+          upgrades: [
+            { cost: 7, name: 'Servoválvula', desc: '+25% de cadencia.', effects: { fireRateMult: 1.25 } },
+            { cost: 14, name: 'Boquilla amplia', desc: '+15% de alcance.', effects: { rangeMult: 1.15 } },
+            { cost: 24, name: 'Reacción rápida', desc: '+30% de cadencia.', effects: { fireRateMult: 1.3 }, visual: 'reflux_pipes' },
+            { cost: 44, name: 'Turbina de eyección', desc: '+20% de alcance.', effects: { rangeMult: 1.2 } }
+          ]
+        },
+        {
+          id: 'reflux', name: 'REFLUJO', color: 0xa54a2a,
+          upgrades: [
+            { cost: 7, name: 'Golpe de ariete', desc: '+30% de daño.', effects: { damageMult: 1.3 } },
+            { cost: 14, name: 'Impacto aturdidor', desc: '+0.2s de aturdimiento.', effects: { freezeDuration: 0.2 } },
+            { cost: 24, name: 'Retorno violento', desc: '+40% de daño.', effects: { damageMult: 1.4 } },
+            { cost: 44, name: 'Sobrecarga de retorno', desc: '+0.3s de aturdimiento y +1m de empuje.', effects: { freezeDuration: 0.3, pushDistance: 1 } }
+          ]
+        }
+      ]
     }
   };

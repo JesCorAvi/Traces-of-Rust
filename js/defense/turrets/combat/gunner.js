@@ -10,7 +10,10 @@ export function fireGunner(turret, primary, enemies, ctx) {
 const muzzle = getMuzzleWorldPos(turret);
 const primaryCount = Math.max(1, turret.stats.projectileCount);
 const sorted = getEnemiesInRange(turret, enemies).map(x => x.enemy);
-const primaries = sorted.slice(0, primaryCount);
+const ordered = turret.cfg.targetMode === 'strongest'
+  ? [primary, ...sorted.filter(enemy => enemy !== primary)]
+  : sorted;
+const primaries = ordered.slice(0, primaryCount);
 if (primaries.length === 0) primaries.push(primary);
 
 const shots = turret.stats.burstCount > 0 ? turret.stats.burstCount : 1;
@@ -22,7 +25,9 @@ for (let i = 0; i < shots; i++) {
   if (!target || !target.active || target.state === 'dead') continue;
 
   const aim = target.group.position.clone().add(new THREE.Vector3(0, 1.0, 0));
-  const hits = collectLineHits(turret, enemies, muzzle, aim, maxHits);
+  const hits = turret.cfg.targetMode === 'strongest'
+    ? [target]
+    : collectLineHits(turret, enemies, muzzle, aim, maxHits);
   const finalHits = hits.length > 0 ? hits : [target];
 
   for (let h = 0; h < finalHits.length; h++) {

@@ -38,12 +38,14 @@ let waveCfg;
 let scrapCfg;
 let placementCfg;
 let modesCfg;
+let enemyCfg;
 try {
   turretCfg = loadModule('js/config/coreDefense/turrets.js', ['TURRETS', 'TURRET_UPGRADE_RULES']);
   waveCfg = loadModule('js/config/coreDefense/waves.js', ['WAVES']);
   scrapCfg = loadModule('js/config/coreDefense/economy.js', ['SCRAP']);
   placementCfg = loadModule('js/config/coreDefense/placement.js', ['PLACEMENT']);
   modesCfg = loadModule('js/config/modesConfig.js', ['MODES_CONFIG']);
+  enemyCfg = loadModule('js/config/enemiesConfig.js', ['ENEMY_TYPES']);
 } catch (err) {
   console.error(`No se pudo cargar la configuración: ${err.message}`);
   process.exit(1);
@@ -55,6 +57,7 @@ const { SCRAP } = scrapCfg;
 const { PLACEMENT } = placementCfg;
 const BOSS_SCHEDULE = modesCfg.MODES_CONFIG?.SURVIVAL?.BOSS_SCHEDULE || [];
 const bossIds = new Set(BOSS_SCHEDULE.map(b => b.id));
+const knownEnemyTypes = new Set(['zombie', 'worm', 'weeper', ...Object.keys(enemyCfg.ENEMY_TYPES || {})]);
 
 // Claves que recomputeStats reconoce (case '...':)
 const statsSrc = readText('js/defense/turrets/stats.js');
@@ -145,10 +148,21 @@ if (!WAVES || typeof WAVES !== 'object') {
     if (!Number.isFinite(wave.count) || wave.count <= 0) fail(`${where}: count inválido`);
     if (!Number.isFinite(wave.interval) || wave.interval <= 0) fail(`${where}: interval inválido`);
     const comp = wave.composition || {};
-    const sum = ['zombie', 'worm', 'weeper'].reduce((acc, k) => acc + (Number(comp[k]) || 0), 0);
+    let sum = 0;
+    for (const [enemyType, weight] of Object.entries(comp)) {
+      if (!knownEnemyTypes.has(enemyType)) fail(`${where}: tipo de enemigo desconocido "${enemyType}"`);
+      if (!Number.isFinite(Number(weight)) || Number(weight) < 0) fail(`${where}: peso inválido para "${enemyType}"`);
+      sum += Number(weight) || 0;
+    }
     if (Math.abs(sum - 1) > 0.01) warn(`${where}: composition suma ${sum.toFixed(3)}; referencia 1`);
     if (wave.bossId && !bossIds.has(wave.bossId)) fail(`${where}: bossId "${wave.bossId}" no existe en BOSS_SCHEDULE`);
   }
+
+  for (const key of ['tdBaseHpMult', 'hpMultiplierPerWave', 'dmgMultiplierPerWave', 'speedMultiplierPerWave', 'tdBossHpMult', 'bossHpMultiplierPerWave']) {
+    if (!Number.isFinite(WAVES[key]) || WAVES[key] < 0) fail(`WAVES.${key} inválido`);
+  }
+  if (WAVES.tdBaseHpMult <= 0) fail('WAVES.tdBaseHpMult debe ser > 0');
+  if (WAVES.tdBossHpMult <= 0) fail('WAVES.tdBossHpMult debe ser > 0');
 
   const events = WAVES.EVENTS || {};
   if (!(events.intervalWaves > 0)) fail('EVENTS.intervalWaves inválido');
@@ -157,6 +171,7 @@ if (!WAVES || typeof WAVES !== 'object') {
   if (!(events.maxEnemiesBase > 0) || !(events.maxEnemiesPeak >= events.maxEnemiesBase)) fail('EVENTS.maxEnemies* incoherentes');
   if (!(events.spawnIntervalStart > 0) || !(events.spawnIntervalEnd > 0)) fail('EVENTS.spawnInterval* inválido');
   if (events.spawnIntervalEnd > events.spawnIntervalStart) warn('EVENTS.spawnIntervalEnd > spawnIntervalStart (el clímax spawnearía más lento)');
+  if (events.eventDurationSec > 120) warn('EVENTS.eventDurationSec > 120; el asalto puede alargar demasiado la partida');
 }
 
 // ---------------------------------------------------------------------------

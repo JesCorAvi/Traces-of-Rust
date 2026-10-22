@@ -169,6 +169,7 @@ export class CoreDefenseMode {
           this.coreMachine.heal(healAmt);
         }
         this.addScrap(CORE_DEFENSE_CONFIG.SCRAP.waveCompletionBonus || 0);
+        this.turretSystem?.awardCollectorWave?.();
         AudioSys.setMusicState('PREP');
         AudioSys.setBossMusic(false);
         ctx.onWaveCompleted(payload);
@@ -217,7 +218,9 @@ export class CoreDefenseMode {
 
   handleEnemyLeak(enemy, ctx) {
     if (this.lives <= 0) return;
-    const leakLives = enemy.isBoss ? 20 : (enemy.type === 'weeper' ? 3 : enemy.type === 'worm' ? 2 : 1);
+    const leakLives = enemy.isBoss
+      ? 20
+      : (enemy.leakLives ?? (enemy.type === 'weeper' ? 3 : enemy.type === 'worm' ? 2 : 1));
 
     if (this.isNetworkHost) this.net?.sendEnemyLeak?.(enemy);
 
@@ -472,6 +475,35 @@ export class CoreDefenseMode {
           }
         );
       };
+
+      callbacks.onNestSpawn = nest => {
+        if (this.waveManager) {
+          this.waveManager.spawnBossMinions(nest, 1, nest.group.position, gameTime, camFwd, 'worm');
+        }
+      };
+
+      callbacks.onRegeneratorPulse = regenerator => {
+        const radius = regenerator.healPulseRadius || 5;
+        const amount = regenerator.healPulseAmount || 12;
+        for (const ally of enemyPool.active) {
+          if (!ally.active || ally.state === 'dead' || ally.hp >= ally.maxHp) continue;
+          const dx = ally.group.position.x - regenerator.group.position.x;
+          const dz = ally.group.position.z - regenerator.group.position.z;
+          if (Math.hypot(dx, dz) > radius) continue;
+          ally.hp = Math.min(ally.maxHp, ally.hp + amount);
+        }
+        const ring = new THREE.Mesh(
+          new THREE.RingGeometry(0.4, radius, 24),
+          new THREE.MeshBasicMaterial({
+            color: 0x7f9f5a, transparent: true, opacity: 0.4,
+            side: THREE.DoubleSide, depthWrite: false
+          })
+        );
+        ring.rotation.x = -Math.PI / 2;
+        ring.position.set(regenerator.group.position.x, regenerator.group.position.y + 0.06, regenerator.group.position.z);
+        ctx.scene.add(ring);
+        ctx.vfx.push({ mesh: ring, disposeGeo: true, disposeMat: true, life: 0.35, maxLife: 0.35, fade: true });
+      };
     }
 
     updateEnemies(enemyPool, dt, playerGroup.position, camFwd, camera.position, worldPhysics, callbacks);
@@ -482,6 +514,17 @@ export class CoreDefenseMode {
       this.defenseEventManager.onEnemyKilled(enemy);
     }
     const scrapCfg = CORE_DEFENSE_CONFIG.SCRAP;
+
+    if (enemy.type === 'splitter' && this.waveManager) {
+      this.waveManager.spawnBossMinions(
+        enemy,
+        enemy.splitCount || 2,
+        enemy.group.position,
+        ctx.gameTime,
+        ctx.camFwd,
+        'worm'
+      );
+    }
 
     if (enemy.isBoss) {
       this.bossesDefeated++;
@@ -592,6 +635,19 @@ export class CoreDefenseMode {
     AudioSys.playUISelect();
     GameEvents.emit('wave:skip_prep');
     return this.waveManager.skipPrep();
+  }
+
+  // Las armas del jugador solo están activas durante una oleada, su limpieza
+  // o un evento. En preparación/exploración/victoria el operario baja las armas
+  // y las recupera automáticamente al empezar la siguiente ronda.
+  isPlayerCombatActive() {
+    if (this.tutorialActive) return true;
+    if (!this.waveManager) return true;
+    const state = this.waveManager.state;
+    return state === 'SPAWNING'
+      || state === 'CLEARING'
+      || state === 'EVENT'
+      || state === 'ENDGAME_SWARM';
   }
 
   toggleTurretRanges(forceState = null) {

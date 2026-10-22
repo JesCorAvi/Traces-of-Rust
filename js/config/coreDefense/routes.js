@@ -79,9 +79,12 @@ export const TARGETING = {
     },
 
     BY_ENEMY_TYPE: {
+      // Los valores de coreDamage están expresados en VIDAS del mapa (75-150),
+      // no en el HP de un núcleo de 1500. Un enemigo que llega al reactor debe
+      // doler, pero no borrar media barra en dos golpes.
       // Zombie: equilibrado; persigue al jugador si se acerca a distancia media
       zombie: {
-        coreDamage: 16,
+        coreDamage: 3,
         coreAttackInterval: 1.15,
         detectRadius: 3.8, maxAggroDuration: 3.5,
         abandonRadius: 5.5,
@@ -91,7 +94,7 @@ export const TARGETING = {
       },
       // Weeper (El Observador): cazador agresivo con el jugador, gran radio de detección
       weeper: {
-        coreDamage: 24,
+        coreDamage: 5,
         coreAttackInterval: 1.0,
         detectRadius: 6.0, maxAggroDuration: 3.5,
         abandonRadius: 9.0,
@@ -101,7 +104,7 @@ export const TARGETING = {
       },
       // Worm (Gusano de Escoria): asediador obstinado; casi ignora al jugador y va directo al núcleo
       worm: {
-        coreDamage: 30,
+        coreDamage: 5,
         coreAttackInterval: 1.25,
         detectRadius: 2.2, maxAggroDuration: 2.0,
         abandonRadius: 3.8,
@@ -109,9 +112,55 @@ export const TARGETING = {
         reactionTime: 0.55,
         aggroScareCooldown: 6.0
       },
+      // Enemigos TD nuevos: no abandonan la ruta para perseguir al jugador.
+      runner: {
+        coreDamage: 2,
+        coreAttackInterval: 1.0,
+        detectRadius: 0, maxAggroDuration: 0,
+        abandonRadius: 0,
+        coreOverrideRadius: 0,
+        reactionTime: 0.4,
+        aggroScareCooldown: 8.0
+      },
+      hulk: {
+        coreDamage: 10,
+        coreAttackInterval: 1.6,
+        detectRadius: 0, maxAggroDuration: 0,
+        abandonRadius: 0,
+        coreOverrideRadius: 0,
+        reactionTime: 0.5,
+        aggroScareCooldown: 8.0
+      },
+      nest: {
+        coreDamage: 5,
+        coreAttackInterval: 1.3,
+        detectRadius: 0, maxAggroDuration: 0,
+        abandonRadius: 0,
+        coreOverrideRadius: 0,
+        reactionTime: 0.5,
+        aggroScareCooldown: 8.0
+      },
+      regenerator: {
+        coreDamage: 4,
+        coreAttackInterval: 1.25,
+        detectRadius: 0, maxAggroDuration: 0,
+        abandonRadius: 0,
+        coreOverrideRadius: 0,
+        reactionTime: 0.5,
+        aggroScareCooldown: 8.0
+      },
+      splitter: {
+        coreDamage: 4,
+        coreAttackInterval: 1.2,
+        detectRadius: 0, maxAggroDuration: 0,
+        abandonRadius: 0,
+        coreOverrideRadius: 0,
+        reactionTime: 0.5,
+        aggroScareCooldown: 8.0
+      },
       // Bosses: enormes amenazas para el núcleo; atacan al jugador si les corta el paso
       boss: {
-        coreDamage: 85,
+        coreDamage: 20,
         coreAttackInterval: 1.35,
         detectRadius: 35.0,
         abandonRadius: 50.0,

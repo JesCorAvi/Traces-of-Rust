@@ -22,6 +22,7 @@ import {
   faceTarget
 } from './turrets/targeting.js';
 import { updateCombat } from './turrets/combat/update.js';
+import { updateCollector } from './turrets/collector.js';
 import { updateBarracks, updateSupport } from './turrets/combat/support.js';
 
 const SHARED_RANGE_FILL_GEO = new THREE.CircleGeometry(1, 48);
@@ -217,6 +218,8 @@ export class Turret extends DefensiveStructure {
       this.updateBarracks(dt, ctx);
     } else if (this.cfg.id === 'support') {
       this.updateSupport(dt, ctx);
+    } else if (this.cfg.id === 'collector') {
+      updateCollector(this, dt);
     } else {
       this.updateCombat(dt, enemies, ctx);
     }

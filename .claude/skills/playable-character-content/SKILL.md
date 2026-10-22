@@ -50,7 +50,7 @@ Produce un operador jugable completo y consistente: entrada en `CHARACTERS`, tem
 ## Non-Negotiable Rules
 
 - **ID estable y único:** se guarda en `traces_selected_character` y viaja a los peers.
-- **Arma válida:** `slash`, `shotgun`, `flamethrower`, `aura`, `mines`, `harpoon`, `orbital` o `bolt`.
+- **Arma válida:** `slash`, `shotgun`, `flamethrower`, `aura`, `mines`, `harpoon`, `orbital`, `bolt`, `chakram`, `welder`, `grenade`, `hammer` o `acid`.
 - **Icono válido:** debe existir en el registro de `renderSpriteIconHTML`.
 - **Tema obligatorio:** sin `CHARACTER_THEMES[id]`, el dibujo cae a Otto sin avisar.
 - **Pasiva real:** `passive`/`passiveDesc` son texto; el efecto debe estar en `statMods` o en código.

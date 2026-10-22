@@ -7,6 +7,26 @@ import { triggerBossSpecialAttack, spawnEnemyProjectile } from '../combat.js';
 import { GameEvents } from '../core/eventBus.js';
 import { updateEnemies } from './enemyLoop.js';
 
+function pickExtraEnemyType(gameTime, isEndgame) {
+  const cfg = MODES_CONFIG.SURVIVAL;
+  const chance = isEndgame ? cfg.ENDGAME_EXTRA_SPAWN_CHANCE : cfg.EXTRA_SPAWN_CHANCE;
+  if (!chance || Math.random() > chance) return null;
+
+  const eligible = (cfg.EXTRA_ENEMY_SPAWNS || []).filter(entry => gameTime >= entry.after);
+  if (eligible.length === 0) return null;
+
+  let total = 0;
+  for (const entry of eligible) total += Math.max(0, entry.weight || 0);
+  if (total <= 0) return null;
+
+  let roll = Math.random() * total;
+  for (const entry of eligible) {
+    roll -= Math.max(0, entry.weight || 0);
+    if (roll <= 0) return entry.type;
+  }
+  return eligible[eligible.length - 1].type;
+}
+
 // ============================================================================
 // MODO 1: SUPERVIVENCIA (Comportamiento original 100% intacto)
 // ============================================================================
@@ -158,6 +178,38 @@ export class SurvivalMode {
           }
         );
       };
+
+      callbacks.onNestSpawn = nest => {
+        const child = enemyPool.spawn('worm', nest.group.position, gameTime, camFwd, worldPhysics);
+        if (!child) return;
+        const sx = nest.group.position.x + (Math.random() - 0.5) * 1.8;
+        const sz = nest.group.position.z + (Math.random() - 0.5) * 1.8;
+        const sy = worldPhysics ? worldPhysics.getGroundHeight(sx, sz, nest.group.position.y) : nest.group.position.y;
+        child.group.position.set(sx, sy, sz);
+      };
+
+      callbacks.onRegeneratorPulse = regenerator => {
+        const radius = regenerator.healPulseRadius || 5;
+        const amount = regenerator.healPulseAmount || 12;
+        for (const ally of enemyPool.active) {
+          if (!ally.active || ally.state === 'dead' || ally.hp >= ally.maxHp) continue;
+          const dx = ally.group.position.x - regenerator.group.position.x;
+          const dz = ally.group.position.z - regenerator.group.position.z;
+          if (Math.hypot(dx, dz) > radius) continue;
+          ally.hp = Math.min(ally.maxHp, ally.hp + amount);
+        }
+        const ring = new THREE.Mesh(
+          new THREE.RingGeometry(0.4, radius, 24),
+          new THREE.MeshBasicMaterial({
+            color: 0x7f9f5a, transparent: true, opacity: 0.4,
+            side: THREE.DoubleSide, depthWrite: false
+          })
+        );
+        ring.rotation.x = -Math.PI / 2;
+        ring.position.set(regenerator.group.position.x, regenerator.group.position.y + 0.06, regenerator.group.position.z);
+        ctx.scene.add(ring);
+        ctx.vfx.push({ mesh: ring, disposeGeo: true, disposeMat: true, life: 0.35, maxLife: 0.35, fade: true });
+      };
     }
     updateEnemies(enemyPool, dt, playerGroup.position, camFwd, camera.position, worldPhysics, callbacks);
 
@@ -172,13 +224,15 @@ export class SurvivalMode {
         );
         const r = Math.random();
         // El Weeper aparece solo en etapas más avanzadas y con menor probabilidad
-        const type = gameTime > 90 && r > 0.88 ? 'weeper' : gameTime > 15 && r < 0.32 ? 'worm' : 'zombie';
+        const baseType = gameTime > 90 && r > 0.88 ? 'weeper' : gameTime > 15 && r < 0.32 ? 'worm' : 'zombie';
+        const type = pickExtraEnemyType(gameTime, false) || baseType;
         enemyPool.spawn(type, playerGroup.position, gameTime, camFwd, worldPhysics);
       } else {
         this.spawnTimer = 0.12;
         for (let b = 0; b < CONFIG.DIFFICULTY.ENDGAME_SPAWN_BURST; b++) {
           const r = Math.random();
-          const type = r > 0.78 ? 'weeper' : r < 0.3 ? 'worm' : 'zombie';
+          const baseType = r > 0.78 ? 'weeper' : r < 0.3 ? 'worm' : 'zombie';
+          const type = pickExtraEnemyType(gameTime, true) || baseType;
           enemyPool.spawn(type, playerGroup.position, gameTime, camFwd, worldPhysics);
         }
       }
@@ -197,9 +251,36 @@ export class SurvivalMode {
         this.activateEndgamePhase(ctx);
       }
     } else {
-      const isTooth = Math.random() < 0.26;
-      const drop = ctx.spawnLorePickup(enemy.group.position, isTooth ? 'tooth' : 'serum');
-      if (drop) enemy._networkDrop = { type: drop.type, pickupNetId: drop.pickupNetId };
+      if (enemy.type === 'splitter') {
+        for (let i = 0; i < (enemy.splitCount || 2); i++) {
+          const child = ctx.enemyPool.spawn(
+            enemy.splitType || 'worm',
+            enemy.group.position,
+            ctx.gameTime,
+            ctx.camFwd,
+            ctx.worldPhysics
+          );
+          if (!child) continue;
+          const sx = enemy.group.position.x + (Math.random() - 0.5) * 1.8;
+          const sz = enemy.group.position.z + (Math.random() - 0.5) * 1.8;
+          const sy = ctx.worldPhysics
+            ? ctx.worldPhysics.getGroundHeight(sx, sz, enemy.group.position.y)
+            : enemy.group.position.y;
+          child.group.position.set(sx, sy, sz);
+          child.isSplitChild = true;
+          child.hp = Math.max(1, child.hp * 0.5);
+          child.maxHp = child.hp;
+          child.dmg *= 0.6;
+        }
+      }
+
+      // Las crías no repiten el botín completo del padre.
+      const dropChance = enemy.isSplitChild ? 0.2 : 0.26;
+      const isTooth = Math.random() < dropChance;
+      if (!enemy.isSplitChild || isTooth) {
+        const drop = ctx.spawnLorePickup(enemy.group.position, isTooth ? 'tooth' : 'serum');
+        if (drop) enemy._networkDrop = { type: drop.type, pickupNetId: drop.pickupNetId };
+      }
     }
   }
 

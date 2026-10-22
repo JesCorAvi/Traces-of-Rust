@@ -14,8 +14,8 @@ const s = {
   cluster: 0,
   clusterDamageMult: 1,
   clusterRadiusMult: 1,
-  burnDps: 0,
-  burnDuration: 0,
+  burnDps: turret.base.burnDps || 0,
+  burnDuration: turret.base.burnDuration || 0,
   burnDpsMult: 1,
   burnDurationMult: 1,
   explosionRadius: 0,
@@ -26,7 +26,7 @@ const s = {
   napalmDpsMult: 1,
   napalmDurationMult: 1,
   napalmRadiusMult: 1,
-  freezeDuration: 0,
+  freezeDuration: turret.base.freezeDuration || 0,
   freezeEvery: 0,
   frozenDamageMult: 1,
   frostbiteDps: 0,
@@ -58,7 +58,13 @@ const s = {
   overclockBurstInterval: 0,
   continuous: false,
   continuousHeal: false,
-  barrier: false
+  barrier: false,
+  chainCount: turret.base.chainCount || 0,
+  chainRangeMult: 1,
+  pushDistance: turret.base.pushDistance || 0,
+  scrapPerWave: turret.base.scrapPerWave || 0,
+  scrapInterval: turret.base.scrapInterval || 0,
+  scrapAmount: turret.base.scrapAmount || 0
 };
 
 const specials = new Set();
@@ -141,6 +147,12 @@ for (let p = 0; p < turret.paths.length; p++) {
         case 'continuous': setTrue('continuous'); break;
         case 'continuousHeal': setTrue('continuousHeal'); break;
         case 'barrier': setTrue('barrier'); break;
+        case 'chainCount': max('chainCount', v); break;
+        case 'chainRangeMult': mul('chainRangeMult', v); break;
+        case 'pushDistance': add('pushDistance', v); break;
+        case 'scrapPerWave': add('scrapPerWave', v); break;
+        case 'scrapInterval': min('scrapInterval', v); break;
+        case 'scrapAmount': add('scrapAmount', v); break;
         default: break;
       }
     });

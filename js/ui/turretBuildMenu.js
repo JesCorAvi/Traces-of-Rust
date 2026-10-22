@@ -21,6 +21,18 @@ function formatStats(cfg) {
       return `ALIADOS ${b.allyCap} · CADA ${b.spawnInterval}s`;
     case 'support':
       return `BUFF DAÑO +${Math.round((b.buffDamage || 0.15) * 100)}% · CAD +${Math.round((b.buffFireRate || 0.15) * 100)}% · RADIO ${b.range}m`;
+    case 'tesla':
+      return `DAÑO ${b.damage} · CAD ${b.fireRate.toFixed(1)}/s · CADENA ${b.chainCount} · RANGO ${b.range}m`;
+    case 'incinerator':
+      return `DAÑO ${b.damage} · QUEMA ${b.burnDps}/s · RANGO ${b.range}m`;
+    case 'railgun':
+      return `DAÑO ${b.damage} · RANGO ${b.range}m · OBJETIVO ÚNICO`;
+    case 'collector':
+      return `SCRAP +${b.scrapPerWave}/OLEADA · +${b.scrapAmount}/${b.scrapInterval}s`;
+    case 'press':
+      return `DAÑO ${b.damage} · ÁREA ${b.aoeRadius}m · STUN ${b.freezeDuration}s`;
+    case 'ejector':
+      return `EMPUJE ${b.pushDistance}m · ÁREA ${b.aoeRadius}m · CAD ${b.fireRate.toFixed(1)}/s`;
     default:
       return '';
   }

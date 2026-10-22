@@ -45,6 +45,11 @@ Valores soportados por `playerController`:
 | `harpoon` | `js/combat/weapons/harpoon.js` → `fireHarpoon` |
 | `orbital` | `js/player/playerController.js` (orbitales) |
 | `bolt` | `js/combat/weapons/bolt.js` → `fireDefibrillator` |
+| `chakram` | `js/combat/weapons/playerProjectiles.js` → `fireChakram` |
+| `welder` | `js/combat/weapons/welder.js` → `updateWelder` (carga → haz concentrado → recarga) |
+| `grenade` | `js/combat/weapons/playerProjectiles.js` → `throwGrenade` |
+| `hammer` | `js/combat/weapons/hammer.js` → `slamHammer` |
+| `acid` | `js/combat/weapons/playerProjectiles.js` → `throwAcidFlask` |
 
 El `icon` debe existir en el atlas de `renderSpriteIconHTML`. Si el arma es nueva, primero intégrala en combate, HUD y hoja de sprites.
 

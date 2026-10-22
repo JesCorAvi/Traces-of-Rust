@@ -5,6 +5,10 @@ import { getEffectiveFireRate, findTarget, faceTarget } from '../targeting.js';
 import { fireGunner } from './gunner.js';
 import { fireMortar } from './mortar.js';
 import { fireCryo } from './cryo.js';
+import { fireTesla } from './tesla.js';
+import { fireIncinerator } from './incinerator.js';
+import { firePress } from './press.js';
+import { fireEjector } from './ejector.js';
 
 export function updateCombat(turret, dt, enemies, ctx) {
 turret.fireTimer -= dt;
@@ -28,6 +32,17 @@ turret.fireTimer = interval;
 
 faceTarget(turret, target.group.position);
 
-if (turret.cfg.id === 'gunner') fireGunner(turret, target, enemies, ctx);
-else if (turret.cfg.id === 'mortar') fireMortar(turret, target, enemies, ctx);
+if (turret.cfg.id === 'gunner' || turret.cfg.id === 'railgun') {
+  fireGunner(turret, target, enemies, ctx);
+} else if (turret.cfg.id === 'mortar') {
+  fireMortar(turret, target, enemies, ctx);
+} else if (turret.cfg.id === 'tesla') {
+  fireTesla(turret, target, enemies);
+} else if (turret.cfg.id === 'incinerator') {
+  fireIncinerator(turret, target, enemies);
+} else if (turret.cfg.id === 'press') {
+  firePress(turret, target, enemies);
+} else if (turret.cfg.id === 'ejector') {
+  fireEjector(turret, target, enemies);
+}
 }

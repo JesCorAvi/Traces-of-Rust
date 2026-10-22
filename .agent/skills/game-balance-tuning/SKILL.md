@@ -46,6 +46,7 @@ Mantiene el balance de **Traces of Rust** en los módulos de configuración, no 
 | Rutas/objetivos | `js/config/coreDefense/routes.js` | `PATHS`, `TARGETING` |
 | Tutorial | `js/config/coreDefense/tutorial.js` | `TUTORIAL` |
 | Supervivencia/jefes | `js/config/modesConfig.js` | `MODES_CONFIG.SURVIVAL` |
+| Enemigos TD | `js/config/enemiesConfig.js` | `ENEMY_TYPES` |
 | Agregado | `js/config/coreDefenseConfig.js`, `js/config.js` | `CORE_DEFENSE_CONFIG`, `CONFIG` |
 
 ## Decision Table

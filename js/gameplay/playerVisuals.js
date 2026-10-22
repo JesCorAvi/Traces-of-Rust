@@ -4,7 +4,10 @@
 import { getPlayerLoadoutSheet, peekPlayerLoadoutSheet } from '../spritesheets.js';
 import { getSelectedCharacterId } from '../config/charactersConfig.js';
 
-export const HAND_WEAPONS = ['slash', 'shotgun', 'flamethrower', 'harpoon', 'bolt', 'mines', 'aura', 'orbital'];
+export const HAND_WEAPONS = [
+  'slash', 'shotgun', 'flamethrower', 'harpoon', 'bolt', 'mines', 'aura', 'orbital',
+  'chakram', 'welder', 'grenade', 'hammer', 'acid'
+];
 
 export function createPlayerVisuals({ playerBillboard, renderer, getSkills, getCurrentHandWeapon, setCurrentHandWeapon }) {
   let prewarmGeneration = 0;

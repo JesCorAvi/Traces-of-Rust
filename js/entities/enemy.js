@@ -52,6 +52,24 @@ export class Enemy {
     this.isEventEnemy = !!defenseOpts?.isEventEnemy;
     this.visualState = 1;
     this.netVisualState = 1;
+    this._networkDrop = null;
+    this._lastHitFeedbackAt = 0;
+    this.isSplitChild = false;
+    this.collisionRadius = 0.55;
+    this.attackStopDistance = 1.65;
+    this.enemyTickRate = 0.08;
+    this.leakLives = 1;
+    this.knockbackResist = 0;
+    this.nestSpawnTimer = 0;
+    this.nestSpawnInterval = 5;
+    this.nestMaxChildren = 0;
+    this.nestChildrenSpawned = 0;
+    this.healPulseTimer = 0;
+    this.healPulseInterval = 3;
+    this.healPulseRadius = 5;
+    this.healPulseAmount = 12;
+    this.splitCount = 0;
+    this.splitType = 'worm';
 
     const mins = gameTime / 60;
     let hpScale = defenseOpts?.hpMult ?? (1 + mins * CONFIG.DIFFICULTY.HP_SCALE_PER_MIN);
@@ -67,21 +85,64 @@ export class Enemy {
     }
 
     if (this.isBoss) {
-      this.hp = Math.round(bossCfg.hp * (defenseOpts ? hpScale : (1.35 + mins * 0.18)));
+      const bossHpScale = defenseOpts?.bossHpMult ?? hpScale;
+      this.hp = Math.round(bossCfg.hp * (defenseOpts ? bossHpScale : (1.35 + mins * 0.18)));
       this.maxHp = this.hp;
       this.dmg = Math.round(bossCfg.dmg * (defenseOpts ? dmgScale : 1));
       this.speed = bossCfg.speed * spdBoost;
       this.billboard.changeSheet(bossCfg.id, bossCfg.size);
       this.chargeVec = null;
       this.chargeTime = 0;
+      this.collisionRadius = 0.8;
+      this.attackStopDistance = 2.2;
+      this.enemyTickRate = 0.08;
+      this.leakLives = 20;
       this.bossAI = new BossController(this, bossCfg);
     } else {
-      const size = type === 'weeper' ? 2.5 : 2.0;
-      this.hp = (type === 'weeper' ? 48 : type === 'worm' ? 36 : 22) * hpScale;
-      this.maxHp = this.hp;
-      this.dmg = (type === 'weeper' ? 18 : 13) * dmgScale;
-      this.speed = (type === 'weeper' ? 4.2 : 4.6) * spdBoost;
-      this.billboard.changeSheet(type, size);
+      const archetype = CONFIG.ENEMY_TYPES[type] || null;
+      if (archetype) {
+        this.hp = archetype.hp * hpScale;
+        this.maxHp = this.hp;
+        this.dmg = archetype.dmg * dmgScale;
+        this.speed = archetype.speed * spdBoost;
+        this.billboard.changeSheet(type, archetype.size ?? 2.0);
+        this.collisionRadius = archetype.collisionRadius ?? 0.55;
+        this.attackStopDistance = archetype.attackStopDistance ?? 1.65;
+        this.enemyTickRate = archetype.tickRate ?? 0.08;
+        this.leakLives = archetype.leakLives ?? 1;
+        this.knockbackResist = archetype.knockbackResist ?? 0;
+
+        const spawnWorms = archetype.spawnWorms;
+        if (spawnWorms) {
+          this.nestSpawnInterval = spawnWorms.interval ?? 5;
+          this.nestSpawnTimer = this.nestSpawnInterval;
+          this.nestMaxChildren = spawnWorms.max ?? 3;
+          this.nestChildrenSpawned = 0;
+        }
+        const healPulse = archetype.healPulse;
+        if (healPulse) {
+          this.healPulseInterval = healPulse.interval ?? 3;
+          this.healPulseTimer = this.healPulseInterval;
+          this.healPulseRadius = healPulse.radius ?? 5;
+          this.healPulseAmount = healPulse.amount ?? 12;
+        }
+        const split = archetype.split;
+        if (split) {
+          this.splitCount = split.count ?? 2;
+          this.splitType = split.type ?? 'worm';
+        }
+      } else {
+        const size = type === 'weeper' ? 2.5 : 2.0;
+        this.hp = (type === 'weeper' ? 48 : type === 'worm' ? 36 : 22) * hpScale;
+        this.maxHp = this.hp;
+        this.dmg = (type === 'weeper' ? 18 : 13) * dmgScale;
+        this.speed = (type === 'weeper' ? 4.2 : 4.6) * spdBoost;
+        this.billboard.changeSheet(type, size);
+        this.collisionRadius = 0.55;
+        this.attackStopDistance = 1.65;
+        this.enemyTickRate = type === 'weeper' ? 0.06 : 0.08;
+        this.leakLives = type === 'weeper' ? 3 : type === 'worm' ? 2 : 1;
+      }
       this.chargeVec = null;
       this.chargeTime = 0;
       this.shootTimer = 1.0 + Math.random() * 1.5;
@@ -298,7 +359,7 @@ export class Enemy {
     let goalPos = playerPos;
     let attackTargetType = 'player';
     let targetStructure = null;
-    let stopDist = this.isBoss ? 2.2 : 1.65;
+    let stopDist = this.isBoss ? 2.2 : (this.attackStopDistance || 1.65);
 
     if (isDef) {
       evaluateEnemyTarget(
@@ -345,6 +406,25 @@ export class Enemy {
     }
 
     let targetState = 1; // WALK
+
+    if (this.type === 'nest' && this.nestChildrenSpawned < this.nestMaxChildren) {
+      this.nestSpawnTimer -= dt;
+      if (this.nestSpawnTimer <= 0) {
+        this.nestSpawnTimer = this.nestSpawnInterval;
+        this.nestChildrenSpawned++;
+        targetState = 2; // ATTACK / puesta
+        callbacks.onNestSpawn?.(this);
+      }
+    }
+
+    if (this.type === 'regenerator') {
+      this.healPulseTimer -= dt;
+      if (this.healPulseTimer <= 0) {
+        this.healPulseTimer = this.healPulseInterval;
+        targetState = 2; // ATTACK / pulso
+        callbacks.onRegeneratorPulse?.(this);
+      }
+    }
 
     if (this.type === 'weeper') {
       this.shootTimer = (this.shootTimer || 0) - dt;
@@ -407,8 +487,13 @@ export class Enemy {
       const atkInterval = this.defenseAI.profile.coreAttackInterval || 1.15;
       if (this.defenseAI.coreAttackTimer >= atkInterval) {
         this.defenseAI.coreAttackTimer = 0;
-        const coreDmg = this.defenseAI.profile.coreDamage || this.dmg;
-        targetStructure.takeDamage(Math.round(coreDmg), this);
+        // coreDamage está en vidas del núcleo; contra tropas aliadas se usa
+        // el daño de melé normal del enemigo.
+        const isCoreTarget = targetStructure === callbacks.coreMachine;
+        const hitDmg = isCoreTarget
+          ? (this.defenseAI.profile.coreDamage || this.dmg)
+          : this.dmg;
+        targetStructure.takeDamage(Math.round(hitDmg), this);
       }
     }
 
@@ -433,7 +518,7 @@ export class Enemy {
 
     this.visualState = targetState;
     const isFar = !this.isBoss && horizDistPlayer > CONFIG.DIFFICULTY.AI_LOD_DIST;
-    const tickRate = isFar ? 0.14 : (this.type === 'weeper' ? 0.06 : 0.08);
+    const tickRate = isFar ? 0.14 : (this.enemyTickRate || 0.08);
 
     this.stepAccum += dt;
     if (this.stepAccum >= tickRate) {
@@ -498,7 +583,11 @@ export class Enemy {
             ? Math.max(this.group.position.y, this.jumpTargetY - 0.70)
             : this.group.position.y;
 
-          worldPhysics.resolveCollision(this.group.position, this.isBoss ? 0.8 : 0.55, effectiveY);
+          worldPhysics.resolveCollision(
+            this.group.position,
+            this.collisionRadius || (this.isBoss ? 0.8 : 0.55),
+            effectiveY
+          );
 
           const moved = Math.hypot(this.group.position.x - prevX, this.group.position.z - prevZ);
           if (moved < moveSpd * stepDt * 0.35) {
@@ -519,7 +608,11 @@ export class Enemy {
               const tangent = new THREE.Vector3(-dir.z * this.steerDir, 0, dir.x * this.steerDir);
               this.billboard.facingYaw = Math.atan2(-tangent.x, -tangent.z);
               this.group.position.addScaledVector(tangent, moveSpd * stepDt * 0.9);
-              worldPhysics.resolveCollision(this.group.position, 0.55, effectiveY);
+              worldPhysics.resolveCollision(
+                this.group.position,
+                this.collisionRadius || 0.55,
+                effectiveY
+              );
             }
           }
         }

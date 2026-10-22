@@ -76,8 +76,14 @@ export function createCombatRuntime(rt) {
       }
       if (kb && !en.isBoss) {
         if (mods.knockbackMult && mods.knockbackMult !== 1.0) kb.multiplyScalar(mods.knockbackMult);
+        const resist = Math.min(1, Math.max(0, en.knockbackResist || 0));
+        if (resist > 0) kb.multiplyScalar(1 - resist);
         en.group.position.add(kb);
-        rt.worldPhysics.resolveCollision(en.group.position, 0.55, en.group.position.y);
+        rt.worldPhysics.resolveCollision(
+          en.group.position,
+          en.collisionRadius || 0.55,
+          en.group.position.y
+        );
       }
       if (en.isBoss) rt.hudController.updateBossHUD(rt.activeBoss, !isDoT);
       if (!opts.visualOnly && Number.isFinite(en.netId)) {
@@ -108,12 +114,20 @@ export function createCombatRuntime(rt) {
       }
     }
     if (kb && !en.isBoss) {
-      // El Cliente ya aplicó su multiplicador antes de enviar PLAYER_HIT.
-      if (!opts.fromRemote && mods.knockbackMult && mods.knockbackMult !== 1.0) {
-        kb.multiplyScalar(mods.knockbackMult);
+      // El Cliente ya aplicó multiplicadores/resistencia antes de enviar PLAYER_HIT.
+      if (!opts.fromRemote) {
+        if (mods.knockbackMult && mods.knockbackMult !== 1.0) {
+          kb.multiplyScalar(mods.knockbackMult);
+        }
+        const resist = Math.min(1, Math.max(0, en.knockbackResist || 0));
+        if (resist > 0) kb.multiplyScalar(1 - resist);
       }
       en.group.position.add(kb);
-      rt.worldPhysics.resolveCollision(en.group.position, 0.55, en.group.position.y);
+      rt.worldPhysics.resolveCollision(
+        en.group.position,
+        en.collisionRadius || 0.55,
+        en.group.position.y
+      );
     }
     if (opts.burnDps && opts.burnDuration) {
       en.applyBurn(opts.burnDps, opts.burnDuration);

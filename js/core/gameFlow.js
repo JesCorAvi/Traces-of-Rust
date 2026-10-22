@@ -14,6 +14,7 @@ function clearSharedRunState() {
   rt.drops.forEach(d => rt.scene.remove(d.group)); rt.drops.length = 0;
   rt.orbitals.forEach(o => { rt.scene.remove(o.group); o.geo.dispose(); }); rt.orbitals.length = 0;
   rt.minesList.forEach(m => rt.scene.remove(m.group)); rt.minesList.length = 0;
+  rt.clearPlayerProjectiles?.();
   rt.vfx.forEach(v => rt.cleanupVfxItem(v)); rt.vfx.length = 0;
   rt.bossHazards.forEach(h => { rt.scene.remove(h.mesh); h.mesh.geometry.dispose(); h.mesh.material.dispose(); }); rt.bossHazards.length = 0;
   rt.bossProjectiles.forEach(p => { rt.scene.remove(p.mesh); p.mesh.material.dispose(); }); rt.bossProjectiles.length = 0;

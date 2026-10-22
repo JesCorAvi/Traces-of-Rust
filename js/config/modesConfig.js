@@ -50,6 +50,17 @@ export const MODES_CONFIG = {
       ENDGAME_SPAWN_BURST: 4
     },
 
+    // Capa de spawns TD sobre la horda base de Supervivencia.
+    EXTRA_ENEMY_SPAWNS: [
+      { type: 'runner', after: 30, weight: 1.2 },
+      { type: 'splitter', after: 60, weight: 0.8 },
+      { type: 'hulk', after: 80, weight: 0.6 },
+      { type: 'nest', after: 100, weight: 0.5 },
+      { type: 'regenerator', after: 120, weight: 0.4 }
+    ],
+    EXTRA_SPAWN_CHANCE: 0.22,
+    ENDGAME_EXTRA_SPAWN_CHANCE: 0.35,
+
     // Calendario de Bosses (Cada 3 minutos: 180s, 360s, 540s, 720s, 900s)
     BOSS_SCHEDULE: [
       {

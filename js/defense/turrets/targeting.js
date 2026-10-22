@@ -36,6 +36,13 @@ return out;
 export function findTarget(turret, enemies) {
 const list = getEnemiesInRange(turret, enemies);
 if (list.length === 0) return null;
+if (turret.cfg.targetMode === 'strongest') {
+  let best = list[0];
+  for (const candidate of list) {
+    if (candidate.enemy.hp > best.enemy.hp) best = candidate;
+  }
+  return best.enemy;
+}
 if (turret.cfg.id === 'mortar') {
   // Preferir el enemigo con más vecinos dentro del radio de explosión
   let best = list[0].enemy;

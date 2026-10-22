@@ -74,16 +74,22 @@ export class WaveManager {
   buildWaveQueue(waveCfg) {
     const queue = [];
     const total = waveCfg.count;
-    const comp = waveCfg.composition || { zombie: 1, worm: 0, weeper: 0 };
+    const comp = waveCfg.composition || { zombie: 1 };
     const routes = this.getActiveRoutes(waveCfg);
+    const entries = Object.entries(comp).filter(([, weight]) => Number(weight) > 0);
+    const totalWeight = entries.reduce((sum, [, weight]) => sum + Number(weight), 0);
 
     for (let i = 0; i < total; i++) {
-      const r = Math.random();
       let type = 'zombie';
-      if (r < comp.worm) {
-        type = 'worm';
-      } else if (r < comp.worm + comp.weeper) {
-        type = 'weeper';
+      if (entries.length > 0 && totalWeight > 0) {
+        let roll = Math.random() * totalWeight;
+        for (const [candidate, weight] of entries) {
+          roll -= Number(weight);
+          if (roll <= 0) {
+            type = candidate;
+            break;
+          }
+        }
       }
       const routeId = routes[i % routes.length];
       queue.push({ type, routeId });
@@ -126,11 +132,15 @@ export class WaveManager {
 
   getWaveScalingMultipliers() {
     const w = Math.max(0, this.currentWaveIndex - 1);
-    const baseMult = this.cfg.tdBaseHpMult || 2.8;
+    const baseMult = this.cfg.tdBaseHpMult ?? 1.0;
+    const bossBaseMult = this.cfg.tdBossHpMult ?? 1.1;
     return {
-      hpMult: (1 + w * this.cfg.hpMultiplierPerWave) * baseMult,
-      dmgMult: 1 + w * this.cfg.dmgMultiplierPerWave,
-      spdMult: 1 + w * this.cfg.speedMultiplierPerWave
+      hpMult: (1 + w * (this.cfg.hpMultiplierPerWave ?? 0.22)) * baseMult,
+      // El jefe ya trae un HP base muy alto; usa una curva propia para no
+      // convertir la oleada 12 en un muro de decenas de miles de HP.
+      bossHpMult: (1 + w * (this.cfg.bossHpMultiplierPerWave ?? 0.18)) * bossBaseMult,
+      dmgMult: 1 + w * (this.cfg.dmgMultiplierPerWave ?? 0.07),
+      spdMult: 1 + w * (this.cfg.speedMultiplierPerWave ?? 0.025)
     };
   }
 
@@ -194,12 +204,12 @@ export class WaveManager {
    * Permite que el ataque de invocación de un Boss ("La Madre de Alambre")
    * engendre esbirros en la misma ruta por la que avanza el Boss.
    */
-  spawnBossMinions(boss, count, playerPos, gameTime, playerFwd) {
+  spawnBossMinions(boss, count, playerPos, gameTime, playerFwd, forcedType = null) {
     const routeId = boss?.defenseAI?.routeId || this.activeRoutes[0] || 'path_north';
     const scaling = this.getWaveScalingMultipliers();
 
     for (let i = 0; i < count; i++) {
-      const type = i % 2 === 0 ? 'zombie' : 'worm';
+      const type = forcedType || (i % 2 === 0 ? 'zombie' : 'worm');
       const minion = this.enemyPool.spawn(
         type,
         playerPos,

@@ -87,6 +87,42 @@ export function renderWeaponByDirection(rawPx, rawGlow, handWeapon, dir, stateId
       px(wx - 1, wy - 5 + cleaveY, 2, 5, '#8a1a1a'); // Sangre seca
       px(wx + 2, wy - 6 + cleaveY, 2, 2, '#877a5c'); // Lomo reforzado
       if (isAtk && col === 1) glow(wx - 4, wy - 7 + cleaveY, 9, 8, '#ff3b3b');
+    } else if (handWeapon === 'chakram') {
+      const spin = isAtk ? (col < 2 ? -3 : 3) : 0;
+      px(wx - 1, wy - 4, 3, 3, '#4a2518');
+      px(wx - 3, wy - 7 + spin, 7, 7, '#877a5c');
+      px(wx - 2, wy - 6 + spin, 5, 5, '#243022');
+      px(wx, wy - 4 + spin, 2, 2, '#b89c46');
+      if (isAtk) glow(wx - 5, wy - 9 + spin, 11, 10, '#e6d7a5');
+    } else if (handWeapon === 'welder') {
+      px(wx - 2, wy - 1, 5, 5, '#4a2518');
+      px(wx, wy - 4, 3, 4, '#877a5c');
+      px(wx + 1, wy - 6, 2, 3, '#c8c2ac');
+      if (isAtk) {
+        glow(wx - 1, wy - 10, 6, 8, '#3fe0f5');
+        px(wx + 1, wy - 8, 2, 2, '#ffffff');
+      } else {
+        glow(wx + 1, wy - 6, 2, 2, '#3fe0f5');
+      }
+    } else if (handWeapon === 'grenade') {
+      px(wx - 3, wy - 2, 7, 5, '#364832');
+      px(wx + 2, wy - 3, 4, 3, '#4a2518');
+      const lob = isAtk ? col * 2 : 0;
+      px(wx + 4, wy - 5 - lob, 3, 3, '#243022');
+      glow(wx + 5, wy - 4 - lob, 1, 1, '#a52020');
+      if (isAtk) glow(wx + 4, wy - 8 - lob, 4, 4, '#b89c46');
+    } else if (handWeapon === 'hammer') {
+      const slam = isAtk ? (col < 2 ? -5 : 2) : 0;
+      px(wx - 1, wy - 1, 3, 5, '#4a2518');
+      px(wx - 3, wy - 7 + slam, 7, 6, '#63533b');
+      px(wx - 2, wy - 8 + slam, 5, 2, '#c8c2ac');
+      if (isAtk) glow(wx - 4, wy - 10 + slam, 9, 9, '#b89c46');
+    } else if (handWeapon === 'acid') {
+      const throwY = isAtk ? (col < 2 ? -3 : 2) : 0;
+      px(wx - 1, wy - 2 + throwY, 4, 4, '#243022');
+      px(wx, wy - 4 + throwY, 2, 3, '#b89c46');
+      glow(wx - 1, wy - 1 + throwY, 4, 3, '#55e038');
+      if (isAtk) glow(wx - 2, wy - 5 + throwY, 6, 8, '#a8f044');
     } else {
       // Sierra de Amputación
       const swingX = isAtk ? (col === 0 ? -4 : col === 1 ? 5 : 2) : 0;
@@ -197,6 +233,42 @@ export function renderWeaponByDirection(rawPx, rawGlow, handWeapon, dir, stateId
       rGlow(6, -5 + slashY, 9, 8, '#ff3b3b');
       rGlow(9, -3 + slashY, 6, 5, '#ffffff');
     }
+  } else if (handWeapon === 'chakram') {
+    const spin = isAtk ? (col < 2 ? -2 : 2) : 0;
+    rPx(0, 0, 3, 2, '#4a2518');
+    rPx(3, -2 + spin, 5, 5, '#877a5c');
+    rPx(4, -1 + spin, 3, 3, '#243022');
+    rGlow(4, -1 + spin, 2, 2, '#b89c46');
+    if (isAtk) rGlow(3, -4 + spin, 7, 8, '#e6d7a5');
+  } else if (handWeapon === 'welder') {
+    rPx(0, 0, 5, 2, '#4a2518');
+    rPx(3, -2, 3, 4, '#877a5c');
+    rPx(6, -1, 4, 2, '#c8c2ac');
+    if (isAtk) {
+      rGlow(9, -4, 7, 7, '#3fe0f5');
+      rPx(10, -2, 2, 2, '#ffffff');
+    } else {
+      rGlow(9, -1, 2, 2, '#3fe0f5');
+    }
+  } else if (handWeapon === 'grenade') {
+    rPx(0, 0, 5, 2, '#364832');
+    rPx(3, -2, 3, 3, '#4a2518');
+    const lob = isAtk ? col * 2 : 0;
+    rPx(6 + lob, -3, 3, 3, '#243022');
+    rGlow(7 + lob, -2, 1, 1, '#a52020');
+    if (isAtk) rGlow(6 + lob, -5, 4, 4, '#b89c46');
+  } else if (handWeapon === 'hammer') {
+    const slam = isAtk ? (col < 2 ? -4 : 2) : 0;
+    rPx(0, 0, 4, 2, '#4a2518');
+    rPx(2, -4 + slam, 5, 5, '#63533b');
+    rPx(3, -5 + slam, 4, 1, '#c8c2ac');
+    if (isAtk) rGlow(2, -7 + slam, 8, 8, '#b89c46');
+  } else if (handWeapon === 'acid') {
+    const throwY = isAtk ? (col < 2 ? -2 : 2) : 0;
+    rPx(0, 0, 3, 2, '#243022');
+    rPx(2, -2 + throwY, 3, 3, '#b89c46');
+    rGlow(3, -1 + throwY, 3, 2, '#55e038');
+    if (isAtk) rGlow(4, -3 + throwY, 5, 6, '#a8f044');
   } else {
     // Sierra de Amputación
     const isWindup = isAtk && col === 0;

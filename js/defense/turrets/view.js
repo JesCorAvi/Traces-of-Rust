@@ -10,8 +10,11 @@ export function buildBillboard(turret) {
 
 export function buildMuzzleFlash(turret) {
   if (!turret.muzzleFlashMat) return;
-  const isMortar = turret.cfg.id === 'mortar';
-  const flashSize = isMortar ? 1.15 : 0.72;
+  const flashSize = turret.cfg.id === 'mortar'
+    ? 1.15
+    : turret.cfg.id === 'railgun'
+      ? 1.0
+      : 0.72;
   const geo = new THREE.PlaneGeometry(flashSize, flashSize);
   const mesh = new THREE.Mesh(geo, turret.muzzleFlashMat);
   mesh.visible = false;

@@ -226,12 +226,12 @@ export class HUDController {
    * Actualiza el marcador/flecha direccional hacia el Núcleo cuando el jugador se aleja o no lo mira.
    */
 
-  showPlayerDownOverlay(totalDurationSec = 5, corePenalty = 50) {
+  showPlayerDownOverlay(totalDurationSec = 5, corePenalty = 10) {
     const overlay = document.getElementById('player-down-overlay');
     if (!overlay) return;
     const titleEl = overlay.querySelector('.player-down-title');
     if (titleEl) {
-      titleEl.textContent = `[ OPERADOR ABATIDO // SOBRECARGA DEL NÚCLEO -${corePenalty} HP ]`;
+      titleEl.textContent = `[ OPERADOR ABATIDO // SOBRECARGA DEL NÚCLEO -${corePenalty} VIDAS ]`;
     }
     const cdEl = document.getElementById('player-down-countdown');
     if (cdEl) {
@@ -291,7 +291,7 @@ export class HUDController {
     }
   }
 
-  showTeammateDownAlert(msg = '¡COMPAÑERO ABATIDO! -50 HP AL NÚCLEO') {
+  showTeammateDownAlert(msg = '¡COMPAÑERO ABATIDO! -10 VIDAS AL NÚCLEO') {
     this.showKineticAlertBanner({
       tag: '¡COMPAÑERO ABATIDO!',
       title: msg,

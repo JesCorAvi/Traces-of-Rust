@@ -186,7 +186,7 @@ class RemotePlayer {
     if (down !== this.isDown) {
       this.setDownState(down, this.downTimer);
       if (down && !prevDown) {
-        MultiplayerSync.ctx?.hudController?.showTeammateDownAlert?.('¡COMPAÑERO ABATIDO! -50 HP AL NÚCLEO');
+        MultiplayerSync.ctx?.hudController?.showTeammateDownAlert?.('¡COMPAÑERO ABATIDO! -10 VIDAS AL NÚCLEO');
         AudioSys.playTacticalAlarm?.();
       }
     } else if (hpChanged || (this.isDown && downSecChanged)) {
@@ -1670,6 +1670,98 @@ export const MultiplayerSync = {
         AudioSys.play(310, 0.12, 'sawtooth', vol * 0.6);
         break;
       }
+      case 'chakram': {
+        const ring = new THREE.Mesh(
+          new THREE.RingGeometry(0.25, 0.7, 16),
+          new THREE.MeshBasicMaterial({ color: 0xd8b45a, transparent: true, opacity: 0.75, side: THREE.DoubleSide })
+        );
+        ring.position.copy(hasHit ? hit : origin);
+        scene.add(ring);
+        vfx.push({ mesh: ring, disposeGeo: true, disposeMat: true, life: 0.22, maxLife: 0.22, billboard: true, fade: true, scaleSpeed: 2.8 });
+        addTracer(0xd8b45a, 0.1);
+        AudioSys.play(260, 0.09, 'sawtooth', vol * 0.6);
+        break;
+      }
+      case 'welder': {
+        addMuzzle(0x3fe0f5);
+        const beamEnd = hasHit ? hit.clone() : origin.clone().addScaledVector(dir, 10);
+        const beamVec = beamEnd.clone().sub(origin);
+        const beamLen = Math.max(0.5, beamVec.length());
+        const beamDir = beamVec.clone().normalize();
+        const beamMid = origin.clone().addScaledVector(beamDir, beamLen * 0.5);
+        const beam = new THREE.Mesh(
+          new THREE.CylinderGeometry(1, 1, 1, 10, 1, true),
+          new THREE.MeshBasicMaterial({
+            color: 0x3fe0f5, transparent: true, opacity: 0.3,
+            blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide
+          })
+        );
+        beam.position.copy(beamMid);
+        beam.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), beamDir);
+        beam.scale.set(0.9, beamLen, 0.9);
+        scene.add(beam);
+        vfx.push({
+          mesh: beam, disposeGeo: true, disposeMat: true,
+          life: 1.5, maxLife: 1.5, fade: true, baseOpacity: 0.3
+        });
+        const core = new THREE.Line(
+          new THREE.BufferGeometry().setFromPoints([origin.clone(), beamEnd.clone()]),
+          new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.9 })
+        );
+        scene.add(core);
+        vfx.push({
+          mesh: core, disposeGeo: true, disposeMat: true,
+          life: 1.2, maxLife: 1.2, fade: true, baseOpacity: 0.9
+        });
+        AudioSys.playElectric();
+        AudioSys.play(72, 0.38, 'sawtooth', vol);
+        break;
+      }
+      case 'grenade': {
+        addMuzzle(0xffb347);
+        AudioSys.play(180, 0.12, 'triangle', vol * 0.7);
+        break;
+      }
+      case 'grenade_blast': {
+        const blast = new THREE.Mesh(
+          new THREE.PlaneGeometry(4.8, 4.8),
+          new THREE.MeshBasicMaterial({ color: 0xff8822, transparent: true, opacity: 0.9, side: THREE.DoubleSide })
+        );
+        blast.position.copy(hit);
+        scene.add(blast);
+        vfx.push({ mesh: blast, disposeGeo: true, disposeMat: true, life: 0.24, maxLife: 0.24, billboard: true, fade: true, scaleSpeed: 3.5 });
+        AudioSys.play(65, 0.22, 'sawtooth', vol);
+        break;
+      }
+      case 'acid': {
+        addMuzzle(0x55e038);
+        AudioSys.play(210, 0.1, 'sine', vol * 0.6);
+        break;
+      }
+      case 'acid_cloud': {
+        const cloud = new THREE.Mesh(
+          new THREE.RingGeometry(0.4, 2.8, 24),
+          new THREE.MeshBasicMaterial({ color: 0x55e038, transparent: true, opacity: 0.45, side: THREE.DoubleSide })
+        );
+        cloud.rotation.x = -Math.PI / 2;
+        cloud.position.set(hit.x, hit.y + 0.06, hit.z);
+        scene.add(cloud);
+        vfx.push({ mesh: cloud, disposeGeo: true, disposeMat: true, life: 0.5, maxLife: 0.5, fade: true });
+        AudioSys.play(120, 0.2, 'sawtooth', vol * 0.7);
+        break;
+      }
+      case 'hammer': {
+        const ring = new THREE.Mesh(
+          new THREE.RingGeometry(0.5, 3.8, 28),
+          new THREE.MeshBasicMaterial({ color: 0xd8b45a, transparent: true, opacity: 0.6, side: THREE.DoubleSide })
+        );
+        ring.rotation.x = -Math.PI / 2;
+        ring.position.set(origin.x, origin.y + 0.06, origin.z);
+        scene.add(ring);
+        vfx.push({ mesh: ring, disposeGeo: true, disposeMat: true, life: 0.3, maxLife: 0.3, fade: true, scaleSpeed: 3.2 });
+        AudioSys.play(72, 0.2, 'sawtooth', vol);
+        break;
+      }
       default: {
         addTracer(0xe6d7a5, 0.12);
         AudioSys.play(200, 0.1, 'triangle', vol * 0.6);
@@ -2453,7 +2545,9 @@ export const MultiplayerSync = {
           if (rp) {
             const durations = {
               slash: 0.22, shotgun: 0.28, flamethrower: 0.14, mines: 0.22,
-              mine_blast: 0.2, harpoon: 0.25, bolt: 0.24, aura: 0.2, orbital: 0.15
+              mine_blast: 0.2, harpoon: 0.25, bolt: 0.24, aura: 0.2, orbital: 0.15,
+              chakram: 0.22, welder: 1.6, grenade: 0.24, grenade_blast: 0.2,
+              acid: 0.22, acid_cloud: 0.3, hammer: 0.3
             };
             rp.triggerAttackVisual(data.weaponId, durations[data.weaponId] || 0.2);
             this.playRemoteAttackFx(data);
