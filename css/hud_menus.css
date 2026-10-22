@@ -1941,3 +1941,30 @@
     padding: 8px 10px;
   }
 }
+
+.settings-lang-title-row {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.settings-lang-container {
+  width: 100%;
+  margin-top: 6px;
+}
+
+.settings-lang-container .lang-grid {
+  gap: 8px;
+}
+
+.settings-lang-container .lang-card-btn {
+  padding: 8px 12px;
+}
+
+#btn-lang-auto.selected {
+  border-color: #8cf074 !important;
+  color: #8cf074 !important;
+  box-shadow: 0 0 10px rgba(140, 240, 116, 0.4) !important;
+}

@@ -3,12 +3,66 @@
 
 import { gameSettings, saveGameSettings } from '../core/saveState.js';
 import { AudioSys } from '../audio.js';
-import { t } from '../core/i18n.js';
+import { t, setLanguage, getLanguage, detectSystemLanguage } from '../core/i18n.js';
 import { GameEvents } from '../core/eventBus.js';
+import { renderLanguageGrid } from './languageSelector.js';
 
 let initialized = false;
 let lastKnownFullscreen = true;
 let syncMuteFn = null;
+let langController = null;
+
+function updateAutoButtonState(isAuto) {
+  const autoBtn = document.getElementById('btn-lang-auto');
+  if (autoBtn) {
+    autoBtn.classList.toggle('selected', !!isAuto);
+    autoBtn.setAttribute('aria-pressed', String(!!isAuto));
+  }
+}
+
+function setupLanguageControls() {
+  const container = document.getElementById('settings-lang-container');
+  if (!container) return;
+
+  const isAuto = gameSettings.language === 'auto';
+  const activeCode = getLanguage() || 'es';
+
+  langController = renderLanguageGrid(container, {
+    currentLang: activeCode,
+    showAuto: false,
+    idPrefix: 'settings-lang-',
+    onSelect: async (code) => {
+      gameSettings.language = code;
+      saveGameSettings();
+      updateAutoButtonState(false);
+      await setLanguage(code);
+    }
+  });
+
+  const autoBtn = document.getElementById('btn-lang-auto');
+  if (autoBtn) {
+    updateAutoButtonState(isAuto);
+    autoBtn.addEventListener('click', async () => {
+      AudioSys.playUISelect?.();
+      gameSettings.language = 'auto';
+      saveGameSettings();
+      updateAutoButtonState(true);
+      const detected = detectSystemLanguage();
+      await setLanguage(detected);
+      if (langController) {
+        langController.updateCurrent(detected);
+      }
+    });
+  }
+
+  GameEvents.on('i18n:change', (data) => {
+    const lang = data?.language || getLanguage();
+    if (langController) {
+      langController.updateCurrent(lang);
+    }
+    updateAutoButtonState(gameSettings.language === 'auto');
+  });
+}
 
 function getElectronBridge() {
   const direct = window.electronWindow;
@@ -163,6 +217,7 @@ export function setupSettingsUI() {
   initialized = true;
 
   setupAudioControls();
+  setupLanguageControls();
 
   const button = document.getElementById('btn-toggle-fullscreen');
   if (button) {
@@ -188,6 +243,7 @@ export function setupSettingsUI() {
   for (const id of ['btn-open-settings', 'btn-pause-settings']) {
     document.getElementById(id)?.addEventListener('click', () => {
       isFullscreen().then(updateToggleUI);
+      langController?.startGamepad?.();
     });
   }
 

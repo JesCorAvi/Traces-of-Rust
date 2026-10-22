@@ -295,7 +295,10 @@ export async function setLanguage(lang) {
  * Inicializa el sistema de localización con un idioma guardado o detectado.
  */
 export async function initI18n(preferredLanguage = null) {
-  const target = preferredLanguage || DEFAULT_LANGUAGE;
+  let target = preferredLanguage;
+  if (!target || target === 'auto') {
+    target = detectSystemLanguage();
+  }
   await setLanguage(target);
   isInitialized = true;
   return currentLanguage;
