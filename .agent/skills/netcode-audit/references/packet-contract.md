@@ -46,8 +46,10 @@ JSON.stringify({ ...payload, type, sender, t })
 | `ENEMY_DIE` | Host → Cliente | Reliable | Muerte | `netId`, `x/z`, `enemyType`, `isBoss`, `dropType`, `pickupNetId` |
 | `ENEMY_LEAK` | Host → Cliente | Reliable | Fuga por esclusa | `netId`, `routeId` |
 | `ENEMY_BATCH_SYNC` | Host → Cliente | Unreliable | 10 Hz y late-join | `seq`, `e[]`, `matchTimestamp`; cada fila `[netId,x,z,hp,wp,st,isLocal]`; chunks de 20 |
-| `ENEMY_PROJECTILE` | Host → Cliente | Unreliable | Proyectil de jefe | `x/y/z`, `vx/vy/vz`, `life`, `dmg` |
+| `ENEMY_PROJECTILE` | Host → Cliente | Unreliable | Proyectil de jefe | `x/y/z`, `vx/vy/vz`, `life`, `dmg`, `bossNetId` |
 | `ENEMY_HAZARD` | Host → Cliente | Unreliable | Telegrafía de jefe | `hazardType`, `x/y/z`, `dirX/dirZ`, `radius`, `arc`, `timer`, `maxTimer`, `dmg`, `bossNetId` |
+
+Al recibir `ENEMY_DIE` o `ENEMY_LEAK`, el Cliente elimina hazards/proyectiles pendientes cuyo `bossNetId` coincida; los paquetes de ataque que lleguen después se ignoran si su jefe ya no está vivo.
 
 ## Jugador, daño y ataques
 

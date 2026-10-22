@@ -5,6 +5,7 @@ import * as THREE from 'three';
 import { CONFIG } from '../config.js';
 import { AudioSys } from '../audio.js';
 import { createBillboardSprite } from './billboard.js';
+import { BossController } from './bossController.js';
 import {
   initEnemyDefenseState,
   evaluateEnemyTarget,
@@ -18,6 +19,7 @@ export class Enemy {
     this.group = this.billboard.group;
     this.active = false;
     this.isBoss = false;
+    this.bossAI = null;
     this.defenseAI = null;
     this.isEventEnemy = false;
     this.netId = 0;
@@ -26,6 +28,7 @@ export class Enemy {
     this.netTargetZ = null;
     this.netTargetIsLocal = true;
     this.visualState = 1;
+    this.netVisualState = 1;
     this.yVel = 0;
     this.isGrounded = true;
     this.isJumping = false;
@@ -37,6 +40,8 @@ export class Enemy {
   }
 
   init(type, playerPos, gameTime, playerFwd, worldPhysics, bossCfg = null, defenseOpts = null) {
+    this.bossAI?.destroy();
+    this.bossAI = null;
     this.type = type;
     this.active = true;
     this.group.visible = true;
@@ -45,6 +50,8 @@ export class Enemy {
     this.phase = 1;
     this.defenseAI = null;
     this.isEventEnemy = !!defenseOpts?.isEventEnemy;
+    this.visualState = 1;
+    this.netVisualState = 1;
 
     const mins = gameTime / 60;
     let hpScale = defenseOpts?.hpMult ?? (1 + mins * CONFIG.DIFFICULTY.HP_SCALE_PER_MIN);
@@ -65,9 +72,9 @@ export class Enemy {
       this.dmg = Math.round(bossCfg.dmg * (defenseOpts ? dmgScale : 1));
       this.speed = bossCfg.speed * spdBoost;
       this.billboard.changeSheet(bossCfg.id, bossCfg.size);
-      this.specialTimer = 3.2;
       this.chargeVec = null;
       this.chargeTime = 0;
+      this.bossAI = new BossController(this, bossCfg);
     } else {
       const size = type === 'weeper' ? 2.5 : 2.0;
       this.hp = (type === 'weeper' ? 48 : type === 'worm' ? 36 : 22) * hpScale;
@@ -136,6 +143,14 @@ export class Enemy {
     this.stunTimer = Math.max(this.stunTimer, duration);
   }
 
+  onPlayerDead() {
+    this.bossAI?.onPlayerDead();
+  }
+
+  onPlayerAlive() {
+    this.bossAI?.onPlayerAlive();
+  }
+
   update(dt, playerPos, playerFwd, camPos, worldPhysics, callbacks) {
     if (!this.active) return false;
     this.billboard.faceCamera(camPos);
@@ -159,31 +174,44 @@ export class Enemy {
 
     if (this.burnTimer > 0) {
       this.burnTimer -= dt;
-      this.billboard.mesh.material.emissive.setHex(0x662200);
       if (callbacks.onBurnTick) callbacks.onBurnTick(this, this.burnDps * dt);
       if (this.state === 'dead') return false;
+    }
+
+    if (this.isBoss && this.bossAI?.hitFlashTimer > 0) {
+      this.billboard.mesh.material.emissive.setHex(0xff5533);
+    } else if (this.burnTimer > 0) {
+      this.billboard.mesh.material.emissive.setHex(0x662200);
     } else if (this.stunTimer > 0) {
       this.billboard.mesh.material.emissive.setHex(0x2c4148);
     } else if (this.slowTimer > 0) {
       this.billboard.mesh.material.emissive.setHex(0x18282c);
     } else if (isDef && this.defenseAI.alertFlashTimer > 0) {
       this.billboard.mesh.material.emissive.setHex(0x881111);
+    } else if (this.isBoss && this.bossAI?.isPhaseTransition) {
+      const pulse = Math.sin(this.bossAI.stateAge * 18) > 0 ? 0x661010 : 0x220404;
+      this.billboard.mesh.material.emissive.setHex(pulse);
     } else if (this.isBoss && this.phase === 2) {
       this.billboard.mesh.material.emissive.setHex(0x440808);
     } else {
       this.billboard.mesh.material.emissive.setHex(0x000000);
     }
 
-    if (this.isBoss && this.phase === 1 && this.hp <= this.maxHp * 0.5) {
-      this.phase = 2;
-      this.speed *= 1.28;
-      AudioSys.playBossHorn();
-      if (callbacks.onBossPhaseChange) callbacks.onBossPhaseChange(this);
-    }
-
     const toPlayer = new THREE.Vector3().subVectors(playerPos, this.group.position);
     const horizDistPlayer = Math.hypot(toPlayer.x, toPlayer.z);
     const heightDiffPlayer = Math.abs(playerPos.y - this.group.position.y);
+
+    // La IA del jefe decide antes de mover/atacar; la navegación sigue siendo la original.
+    if (this.isBoss && this.bossAI) {
+      this.bossAI.update(dt, {
+        playerPos,
+        playerAlive: callbacks.playerAlive !== false,
+        callbacks,
+        worldPhysics,
+        horizDistPlayer,
+        isNetworkReplica: this.isNetworkReplica
+      });
+    }
 
     // ========================================================================
     // FÍSICA VERTICAL, GRAVEDAD Y ATERRIZAJE (SALTO Y ESCALADA DE SUPERFICIES)
@@ -214,9 +242,7 @@ export class Enemy {
         this.jumpTargetY = 0;
         this.landingSquashTimer = 0.12;
 
-        if (this.isBoss && callbacks && typeof callbacks.camShake === 'number') {
-          callbacks.camShake = Math.max(callbacks.camShake, 0.22);
-        }
+        if (this.isBoss) callbacks.onCamShake?.(0.22);
       } else if (this.yVel > 1.8) {
         this.billboard.applyJuiceTransforms(0.9, 1.12, 0, 0);
       }
@@ -237,7 +263,12 @@ export class Enemy {
     }
 
     if (this.isBoss) {
-      if (this.chargeTime > 0) {
+      if (this.chargeTime > 0 && this.bossAI?.canStartCharge === false) {
+        this.chargeTime = 0;
+        this.chargeVec = null;
+      }
+
+      if (this.chargeTime > 0 && this.chargeVec) {
         this.chargeTime -= dt;
         this.billboard.facingYaw = Math.atan2(-this.chargeVec.x, -this.chargeVec.z);
         this.group.position.addScaledVector(this.chargeVec, 18.5 * dt);
@@ -261,14 +292,6 @@ export class Enemy {
         }
         if (horizDistPlayer < 2.2 && heightDiffPlayer < 2.2 && callbacks.onDealDamage) callbacks.onDealDamage(this);
         return false;
-      }
-
-      this.specialTimer -= dt * (this.phase === 2 ? 1.45 : 1.0);
-      if (this.specialTimer <= 0) {
-        this.specialTimer = 3.6;
-        const atkList = this.bossData.attacks;
-        const chosen = atkList[Math.floor(Math.random() * atkList.length)];
-        if (callbacks.onBossSpecial) callbacks.onBossSpecial(this, chosen, playerPos);
       }
     }
 
@@ -315,6 +338,11 @@ export class Enemy {
       this.stunTimer -= dt;
       moveSpd = 0;
     }
+    if (this.isBoss && this.bossAI) {
+      moveSpd *= this.bossAI.movementScale;
+      // En réplicas, el Host marca el estado visual de ataque: evita deslizamientos.
+      if (this.isNetworkReplica && this.netVisualState === 2) moveSpd = 0;
+    }
 
     let targetState = 1; // WALK
 
@@ -340,12 +368,13 @@ export class Enemy {
     }
 
     // Ataque al objetivo actual (Jugador en cualquier modo, o Núcleo/Estructura en modo Defensa)
+    const bossAllowsContact = !this.isBoss || this.bossAI?.allowsContactDamage !== false;
     if (attackTargetType === 'player') {
       const vertDiff = Math.abs(playerPos.y - this.group.position.y);
       const inAttackRange = horizDistPlayer < stopDist && (vertDiff < 1.8 || (this.isJumping && vertDiff < 2.6));
 
       // Si el jugador está en una superficie elevada y a distancia de asalto, abalanzarse con un salto hacia él
-      if (horizDistPlayer < stopDist + 1.4 && playerPos.y > this.group.position.y + 0.45 && this.isGrounded && this.jumpCooldown <= 0) {
+      if (bossAllowsContact && horizDistPlayer < stopDist + 1.4 && playerPos.y > this.group.position.y + 0.45 && this.isGrounded && this.jumpCooldown <= 0) {
         const dy = playerPos.y - this.group.position.y;
         this.yVel = Math.min(14.0, Math.sqrt(2 * GRAVITY * (dy + 0.65)));
         this.isGrounded = false;
@@ -355,7 +384,7 @@ export class Enemy {
         this.billboard.applyJuiceTransforms(1.15, 0.85, 0, 0);
       }
 
-      if (inAttackRange && moveSpd > 0 && this.state !== 'hurt') {
+      if (bossAllowsContact && inAttackRange && moveSpd > 0 && this.state !== 'hurt') {
         targetState = 2; // ATTACK
         moveSpd *= 0.25;
         this.attackCharge += dt;
@@ -368,7 +397,7 @@ export class Enemy {
       } else {
         this.attackCharge = Math.max(0, this.attackCharge - dt * 2);
       }
-    } else if (isDef && targetStructure && horizDistGoal <= stopDist + 0.25 && this.state !== 'hurt' && this.stunTimer <= 0) {
+    } else if (bossAllowsContact && isDef && targetStructure && horizDistGoal <= stopDist + 0.25 && this.state !== 'hurt' && this.stunTimer <= 0) {
       targetState = 2; // ATTACK AL NÚCLEO O ESTRUCTURA
       moveSpd = 0;
       const dirToStruct = new THREE.Vector3().subVectors(targetStructure.position, this.group.position);
@@ -380,6 +409,25 @@ export class Enemy {
         this.defenseAI.coreAttackTimer = 0;
         const coreDmg = this.defenseAI.profile.coreDamage || this.dmg;
         targetStructure.takeDamage(Math.round(coreDmg), this);
+      }
+    }
+
+    if (this.isBoss && this.bossAI) {
+      if (this.isNetworkReplica) {
+        targetState = Number.isFinite(this.netVisualState) ? this.netVisualState : 1;
+      } else if (this.state !== 'hurt') {
+        targetState = this.bossAI.visualState;
+      }
+
+      const lockedYaw = this.bossAI.lockedFacingYaw;
+      if (lockedYaw !== null) {
+        this.billboard.facingYaw = lockedYaw;
+      } else if (this.bossAI.shouldFacePlayer) {
+        const dx = playerPos.x - this.group.position.x;
+        const dz = playerPos.z - this.group.position.z;
+        if (Math.abs(dx) + Math.abs(dz) > 0.001) {
+          this.billboard.facingYaw = Math.atan2(-dx, -dz);
+        }
       }
     }
 

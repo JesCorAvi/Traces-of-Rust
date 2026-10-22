@@ -6,6 +6,10 @@ import { AudioSys } from '../audio.js';
 
 export const keys = {};
 
+export function clearMovementKeys() {
+  Object.keys(keys).forEach(key => { keys[key] = false; });
+}
+
 export function setupInput(rt) {
 window.addEventListener('keydown', e => {
   if (e.key === 'F3' || (e.key.toLowerCase() === 'b' && rt.state === 'PLAYING')) {
@@ -13,6 +17,16 @@ window.addEventListener('keydown', e => {
     rt.debugOverlay.toggle();
     return;
   }
+  // Muerte estricta: no se leen inputs de juego mientras el operario está caído.
+  // No se interceptan combinaciones del navegador (Ctrl/Cmd/Alt).
+  if (rt.isDead) {
+    const deadKey = e.key.toLowerCase();
+    const gameKey = ['w', 'a', 's', 'd', 'shift', ' ', 'e', 'f', 'g', 'v', 't', 'p'].includes(deadKey)
+      || e.code === 'Space';
+    if (gameKey && !e.ctrlKey && !e.metaKey && !e.altKey) e.preventDefault();
+    return;
+  }
+
   const k = e.key.toLowerCase();
 
   // Transferencia rápida de chatarra en co-op: T envía +5, Shift+T envía +1.
@@ -149,7 +163,7 @@ window.addEventListener('keydown', e => {
 });
 window.addEventListener('keyup', e => { keys[e.key.toLowerCase()] = false; });
 document.addEventListener('mousemove', e => {
-  if (document.pointerLockElement === document.body && rt.state === 'PLAYING') {
+  if (document.pointerLockElement === document.body && rt.state === 'PLAYING' && !rt.isDead) {
     const sens = (rt.gameSettings.mouseSens || 100) / 100;
     rt.yaw -= e.movementX * 0.0028 * sens;
     rt.pitch = Math.max(-0.95, Math.min(0.5, rt.pitch - e.movementY * 0.0024 * sens));
@@ -157,7 +171,7 @@ document.addEventListener('mousemove', e => {
 });
 
 window.addEventListener('mousedown', e => {
-  if (rt.state !== 'PLAYING') return;
+  if (rt.state !== 'PLAYING' || rt.isDead) return;
   const mode = rt.ModeManager.activeMode;
 
   if (mode?.isTurretPlacementActive?.()) {

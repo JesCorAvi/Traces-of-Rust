@@ -42,6 +42,12 @@ export function createCombatRuntime(rt) {
       ? !!opts.isCrit
       : (!isDoT && Math.random() < mods.critChance);
 
+    // La transición de fase protege al jefe desde el mismo frame en que cruza el 50%.
+    if (!isReplicaClient && en.isBoss && en.bossAI?.isInvulnerable) {
+      rt.AudioSys.play?.(165, 0.06, 'square', 0.028);
+      return;
+    }
+
     let appliedDmg = amount;
     if (!opts.finalDamage) {
       // En modo defensa, los enemigos de ruta tienen blindaje frente a armas
@@ -60,6 +66,7 @@ export function createCombatRuntime(rt) {
     // de 1 ni dispara muertes/recompensas; la autoridad real es del Host.
     if (isReplicaClient) {
       en.hp = Math.max(1, en.hp - appliedDmg);
+      if (en.isBoss) en.bossAI?.flashHit?.();
       if (!isDoT) {
         en.state = 'hurt';
         en.stateTimer = 0.15;
@@ -84,6 +91,7 @@ export function createCombatRuntime(rt) {
     }
 
     en.hp -= appliedDmg;
+    if (en.isBoss) en.bossAI?.onDamaged?.(appliedDmg);
 
     if (!isDoT) {
       en.state = 'hurt';
@@ -114,6 +122,7 @@ export function createCombatRuntime(rt) {
 
     if (en.hp <= 0) {
       en.hp = 0;
+      en.bossAI?.markDead?.();
       en.state = 'dead';
       en.stateTimer = 0;
       rt.kills++;
@@ -136,13 +145,13 @@ export function createCombatRuntime(rt) {
   function dealDamageToPlayer(dmgAmount) {
     // En co-op el mundo sigue vivo mientras el jugador está en un menú local.
     const simActive = rt.state === 'PLAYING' || rt.isOnlineSimulationActive?.();
-    if (rt.invuln > 0 || !simActive) return;
+    if (rt.isPlayerDead?.() || rt.invuln > 0 || !simActive || rt.stats.hp <= 0) return;
     const mods = rt.getMods();
     let netDmg = dmgAmount;
     if (mods.damageReduction > 0) {
       netDmg *= Math.max(0.2, 1 - mods.damageReduction);
     }
-    rt.stats.hp -= netDmg;
+    rt.stats.hp = Math.max(0, rt.stats.hp - netDmg);
     rt.invuln = 0.72;
     rt.triggerScare(0.48);
     rt.triggerPlayerHurtJuice?.(netDmg);
@@ -157,6 +166,10 @@ export function createCombatRuntime(rt) {
     rt.refreshHUD();
 
     if (rt.stats.hp <= 0) {
+      rt.stats.hp = 0;
+      // El estado estricto se activa antes de consultar la política del modo, de
+      // modo que buildModeContext() ya expone playerAlive=false.
+      rt.onPlayerDeath?.();
       rt.ModeManager.onPlayerLethalDamage(rt.buildModeContext());
     }
   }

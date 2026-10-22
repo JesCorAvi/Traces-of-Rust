@@ -43,7 +43,7 @@ import { createPlayerVisuals } from './gameplay/playerVisuals.js';
 import { createCombatRuntime } from './gameplay/combatRuntime.js';
 import { createLevelUpFlow } from './gameplay/levelUp.js';
 import { createPickupSystem } from './gameplay/pickups.js';
-import { keys, setupInput } from './core/input.js';
+import { keys, clearMovementKeys, setupInput } from './core/input.js';
 import { setupGameFlow } from './core/gameFlow.js';
 import { updateMenuBattleDemo, resetMenuBattleDemo } from './gameplay/menuBattleDemo.js';
 
@@ -130,6 +130,65 @@ let dashTimer = 0, dashGhostTimer = 0;
 const dashDirVec = new THREE.Vector3();
 let camShake = 0, targetFov = 70;
 let activeBoss = null;
+let isDead = false;
+
+function hasLivingRemotePlayer() {
+  if (!MultiplayerSync.isMatchActive) return false;
+  const targets = MultiplayerSync.getPlayerTargets?.(playerGroup.position, false) || [];
+  return targets.some(target => !target.isLocal && target.alive);
+}
+
+function markPlayerDead() {
+  if (isDead) return;
+  isDead = true;
+  clearMovementKeys();
+  dashTimer = 0;
+  dashGhostTimer = 0;
+  dashDirVec.set(0, 0, 0);
+  playerYVel = 0;
+  atkAnimTimer = 0;
+  invuln = Math.max(invuln, 999);
+  auraMesh.visible = false;
+  Object.keys(weaponTimers).forEach(key => { weaponTimers[key] = 0; });
+
+  // En co-op, si otro peer sigue vivo, los jefes deben continuar contra él.
+  if (!hasLivingRemotePlayer()) {
+    for (const enemy of enemyPool.active) {
+      if (enemy.isBoss) enemy.onPlayerDead?.();
+    }
+  }
+}
+
+function revivePlayerFromDeath(invulnSec = 0) {
+  isDead = false;
+  invuln = invulnSec;
+  dashTimer = 0;
+  dashGhostTimer = 0;
+  dashDirVec.set(0, 0, 0);
+  playerYVel = 0;
+  isGrounded = true;
+  clearMovementKeys();
+  for (const enemy of enemyPool.active) {
+    if (enemy.isBoss) enemy.onPlayerAlive?.();
+  }
+}
+
+function resetPlayerDeathState() {
+  isDead = false;
+  invuln = 0;
+  dashCd = 0;
+  dashTimer = 0;
+  dashGhostTimer = 0;
+  dashDirVec.set(0, 0, 0);
+  playerYVel = 0;
+  isGrounded = true;
+  atkAnimTimer = 0;
+  camShake = 0;
+  hitstopTimer = 0;
+  auraMesh.visible = false;
+  clearMovementKeys();
+  Object.keys(weaponTimers).forEach(key => { weaponTimers[key] = 0; });
+}
 let fpsFrames = 0, fpsTimer = 0;
 let hitstopTimer = 0;
 let lastAttackHit = null;
@@ -343,6 +402,9 @@ function buildModeContext(camFwd = new THREE.Vector3(0, 0, -1)) {
     bossHazards,
     bossProjectiles,
     gameTime,
+    playerAlive: !isDead,
+    isPlayerDead: () => isDead,
+    addCamShake: amount => { camShake = Math.max(camShake, amount); },
     triggerScare,
     damageEnemy,
     dealDamageToPlayer,
@@ -373,12 +435,13 @@ function buildModeContext(camFwd = new THREE.Vector3(0, 0, -1)) {
       refreshHUD();
     },
     notifyPlayerEmergencyRespawn: (delaySec, corePenalty) => {
+      if (!isDead) markPlayerDead();
       hudController.showWaveAnnouncement(`OPERARIO ABATIDO // SOBRECARGA AL NÚCLEO (-${corePenalty} HP)`);
       hudController.showPlayerDownOverlay?.(delaySec, corePenalty);
       AudioSys.playPlayerDowned?.();
       AudioSys.startPlayerDownHum?.();
       camShake = Math.max(camShake, 0.58);
-      stats.hp = 1;
+      stats.hp = 0;
       invuln = delaySec + 1.0;
       refreshHUD();
     },
@@ -386,8 +449,8 @@ function buildModeContext(camFwd = new THREE.Vector3(0, 0, -1)) {
       hudController.hidePlayerDownOverlay?.();
       AudioSys.stopPlayerDownHum?.();
       AudioSys.playPlayerRevived?.();
+      revivePlayerFromDeath(invulnSec);
       stats.hp = stats.maxHp;
-      invuln = invulnSec;
       refreshHUD();
     },
     triggerRunEnd: outcome => flowRuntime.finishRun(outcome),
@@ -444,10 +507,11 @@ function animate() {
     if (invuln > 0) invuln -= dt;
     if (dashCd > 0) dashCd -= dt;
     if (atkAnimTimer > 0) atkAnimTimer -= dt;
-    stats.stamina = Math.min(100, stats.stamina + dt * 22);
-
-    if (mods.regenPerSec > 0 && stats.hp < stats.maxHp) {
-      stats.hp = Math.min(stats.maxHp, stats.hp + mods.regenPerSec * dt);
+    if (!isDead) {
+      stats.stamina = Math.min(100, stats.stamina + dt * 22);
+      if (mods.regenPerSec > 0 && stats.hp < stats.maxHp) {
+        stats.hp = Math.min(stats.maxHp, stats.hp + mods.regenPerSec * dt);
+      }
     }
     if (Math.abs(camera.fov - targetFov) > 0.2) {
       camera.fov += (targetFov - camera.fov) * dt * 8;
@@ -461,16 +525,16 @@ function animate() {
     if (keys.s) move.sub(camFwd);
     if (keys.d) move.add(camRight);
     if (keys.a) move.sub(camRight);
-    const isMoving = move.lengthSq() > 0;
+    const isMoving = !isDead && move.lengthSq() > 0;
 
-    if (dashTimer > 0) {
+    if (!isDead && dashTimer > 0) {
       dashTimer -= dt;
       const progress = Math.max(0, Math.min(1, 1 - (dashTimer / 0.24)));
       // Curva cinética de potencia: estallido inicial a ~32 m/s desacelerando fluidamente a carrera
       const currentDashSpd = 26.0 * Math.pow(1 - progress * 0.72, 2.4) + 6.0;
       playerGroup.position.addScaledVector(dashDirVec, currentDashSpd * dt);
       worldPhysics.resolveCollision(playerGroup.position, 0.55, playerGroup.position.y);
-    } else if (isMoving) {
+    } else if (!isDead && isMoving) {
       move.normalize();
       playerFacingYaw = Math.atan2(-move.x, -move.z);
       playerGroup.position.addScaledVector(move, mods.moveSpeed * dt);
@@ -492,7 +556,7 @@ function animate() {
     }
 
     // Impacto de aterrizaje (Landing Juice)
-    if (!wasGrounded && isGrounded) {
+    if (!wasGrounded && isGrounded && !isDead) {
       landingSquashTimer = 0.10;
       camShake = Math.max(camShake, 0.10 * mods.shakeMod);
       AudioSys.play(80, 0.08, 'sawtooth', 0.04);
@@ -513,7 +577,8 @@ function animate() {
     const ST = CONFIG.DIRECTIONAL.STATES;
     const FPS = CONFIG.DIRECTIONAL.ANIM_FPS;
     let pState = ST.IDLE, fps = FPS.IDLE;
-    if (dashTimer > 0) { pState = ST.DASH; fps = FPS.DASH; }
+    if (isDead) { pState = ST.HURT; fps = FPS.HURT; }
+    else if (dashTimer > 0) { pState = ST.DASH; fps = FPS.DASH; }
     else if (invuln > 0.38) { pState = ST.HURT; fps = FPS.HURT; }
     else if (atkAnimTimer > 0 && isMoving) { pState = ST.ATTACK_WALK; fps = FPS.ATTACK_WALK; }
     else if (atkAnimTimer > 0) { pState = ST.ATTACK; fps = FPS.ATTACK; }
@@ -615,7 +680,7 @@ function animate() {
       pState,
       hp: stats.hp,
       maxHp: stats.maxHp,
-      down: downTimer > 0,
+      down: downTimer > 0 || isDead,
       downTimer,
       charId: getSelectedCharacterId()
     });
@@ -627,7 +692,7 @@ function animate() {
       bossHazards, bossProjectiles, vfx, activeEnemies: enemyPool.active,
       worldPhysics, coreMachine: activeCore, damageEnemy: networkDamageEnemy, dealDamageToPlayer,
       addCamShake: s => { camShake = Math.max(camShake, s); },
-      triggerWeaponVisualAttack, sendAutomaticAttack, cleanupVfxItem
+      triggerWeaponVisualAttack, sendAutomaticAttack, cleanupVfxItem, isDead
     });
 
     pickupSystem.updateDrops(dt, {
@@ -639,7 +704,8 @@ function animate() {
       onTooth: () => { runSouls++; },
       onScrap: value => ModeManager.activeMode?.addScrap?.(value),
       showLevelUp,
-      refreshHUD
+      refreshHUD,
+      isDead
     });
 
     dust.position.copy(playerGroup.position);
@@ -688,7 +754,7 @@ function animate() {
       pState: 0,
       hp: stats.hp,
       maxHp: stats.maxHp,
-      down: downTimer > 0,
+      down: downTimer > 0 || isDead,
       downTimer,
       charId: getSelectedCharacterId()
     });
@@ -751,6 +817,8 @@ const combatRuntime = createCombatRuntime({
   get invuln() { return invuln; }, set invuln(v) { invuln = v; },
   get kills() { return kills; }, set kills(v) { kills = v; },
   get activeBoss() { return activeBoss; }, set activeBoss(v) { activeBoss = v; },
+  isPlayerDead: () => isDead,
+  onPlayerDeath: markPlayerDead,
   triggerHitstop,
   triggerPlayerHurtJuice,
   addCamShake: s => { camShake = Math.max(camShake, s); },
@@ -817,6 +885,7 @@ const flowRuntime = {
   getSelectedCharacterId, getCharacterById,
   renderModeSelectorUI, updateCareerDossierForSelectedMode, updateStartPlayButton, renderShopUI,
   cleanupVfxItem, initUISpritesCSS,
+  resetPlayerDeathState,
   resetMenuBattleDemo: () => resetMenuBattleDemo(enemyPool, vfx, cleanupVfxItem, scene, playerGroup, playerBillboard)
 };
 setupGameFlow(flowRuntime);
@@ -834,6 +903,7 @@ const inputRuntime = {
   get isGrounded() { return isGrounded; }, set isGrounded(v) { isGrounded = v; },
   get playerYVel() { return playerYVel; }, set playerYVel(v) { playerYVel = v; },
   get camShake() { return camShake; }, set camShake(v) { camShake = v; },
+  get isDead() { return isDead; },
   playerGroup,
   playerBillboard,
   camera,

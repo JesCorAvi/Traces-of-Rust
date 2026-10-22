@@ -49,6 +49,7 @@ function startGame(options = {}) {
 
   const baseHp = 100 + (rt.save.hp || 0) * 5 + (character?.statMods?.baseHpBonus || 0);
   rt.stats = { maxHp: baseHp, hp: baseHp, stamina: 100, level: 1, exp: 0, maxExp: 5 };
+  rt.resetPlayerDeathState?.();
   const startWp = character?.weapon || 'slash';
   rt.skills = { [startWp]: 1 };
   rt.passives = {};
@@ -100,6 +101,8 @@ function finishRun(outcome, options = {}) {
   // En co-op la simulación sigue con menús locales abiertos; ciérralos para
   // que la pantalla de resultados no quede tapada.
   rt.turretBuildMenu?.closeSilently?.();
+  rt.hudController?.hidePlayerDownOverlay?.();
+  rt.AudioSys?.stopPlayerDownHum?.();
   document.getElementById('pause-screen')?.classList.add('hidden');
   document.getElementById('level-up-screen')?.classList.add('hidden');
   rt.AudioSys?.setMenuFilter?.(false);
@@ -147,6 +150,7 @@ function returnToMainMenu(reasonMsg = null) {
   if (rt.AudioSys) rt.AudioSys.isDemoSilent = true;
 
   clearSharedRunState();
+  rt.resetPlayerDeathState?.();
   rt.state = 'START';
   rt.playerGroup.position.set(0, 0, 0);
   document.querySelectorAll('.overlay').forEach(el => el.classList.add('hidden'));

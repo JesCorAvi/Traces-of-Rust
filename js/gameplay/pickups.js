@@ -134,7 +134,10 @@ export function createPickupSystem({ scene, worldPhysics, drops, net = null }) {
 
   function updateDrops(dt, ctx) {
     lastCtx = ctx;
-    const { playerGroup, gameTime, camAngle, stats, magnetRange, onTooth, onScrap, showLevelUp, refreshHUD } = ctx;
+    const {
+      playerGroup, gameTime, camAngle, stats, magnetRange,
+      onTooth, onScrap, showLevelUp, refreshHUD, isDead = false
+    } = ctx;
 
     const frameOffset = (Math.floor(gameTime * 6.5) % 4) * 0.25;
     PICKUP_ASSETS.texs.serum.offset.x = frameOffset;
@@ -148,14 +151,14 @@ export function createPickupSystem({ scene, worldPhysics, drops, net = null }) {
       d.spriteMesh.rotation.y = camAngle;
       d.spriteMesh.position.y = d.baseHeight + Math.sin(gameTime * 5.2 + d.bobPhase) * 0.1;
       const dist = d.group.position.distanceTo(playerGroup.position);
-      if (dist < magnetRange) {
+      if (!isDead && dist < magnetRange) {
         const pullDir = new THREE.Vector3().subVectors(playerGroup.position, d.group.position).normalize();
         d.group.position.addScaledVector(pullDir, 18.5 * dt);
-      } else if (d.isScrap && d.age > 0.5) {
+      } else if (!isDead && d.isScrap && d.age > 0.5) {
         const pullDir = new THREE.Vector3().subVectors(playerGroup.position, d.group.position).normalize();
         d.group.position.addScaledVector(pullDir, 7.5 * dt);
       }
-      if (dist < 1.45) {
+      if (!isDead && dist < 1.45) {
         scene.remove(d.group);
         drops.splice(i, 1);
 

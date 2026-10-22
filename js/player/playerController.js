@@ -12,7 +12,8 @@ import {
   fireFlamethrower,
   spawnShrapnelMine,
   fireHarpoon,
-  fireDefibrillator
+  fireDefibrillator,
+  spawnBossAttackDust
 } from '../combat.js';
 
 // ============================================================================
@@ -45,12 +46,13 @@ export function updatePlayerWeaponsAndCombat({
   addCamShake,
   triggerWeaponVisualAttack,
   sendAutomaticAttack,
-  cleanupVfxItem
+  cleanupVfxItem,
+  isDead = false
 }) {
   const cdFactor = 1 / mods.atkSpeedMult;
 
   // 1. Sierra de Amputación
-  if (skills.slash) {
+  if (!isDead && skills.slash) {
     weaponTimers.slash += dt;
     const cd = Math.max(0.26, (CONFIG.SKILLS.slash.baseCd - skills.slash * 0.06) * cdFactor);
     if (weaponTimers.slash >= cd) {
@@ -65,7 +67,7 @@ export function updatePlayerWeaponsAndCombat({
   }
 
   // 2. Escopeta Calibre 12
-  if (skills.shotgun) {
+  if (!isDead && skills.shotgun) {
     weaponTimers.shotgun += dt;
     const cd = Math.max(0.4, (CONFIG.SKILLS.shotgun.baseCd - skills.shotgun * 0.08) * cdFactor);
     if (weaponTimers.shotgun >= cd) {
@@ -81,7 +83,7 @@ export function updatePlayerWeaponsAndCombat({
   }
 
   // 3. Soplete Incinerador
-  if (skills.flamethrower) {
+  if (!isDead && skills.flamethrower) {
     weaponTimers.flamethrower += dt;
     if (weaponTimers.flamethrower >= CONFIG.SKILLS.flamethrower.baseCd * cdFactor) {
       weaponTimers.flamethrower = 0;
@@ -94,7 +96,9 @@ export function updatePlayerWeaponsAndCombat({
   }
 
   // 4. Incensario de Bilis (Aura)
-  if (skills.aura) {
+  if (isDead) {
+    auraMesh.visible = false;
+  } else if (skills.aura) {
     auraMesh.visible = true;
     const auraRadius = (CONFIG.SKILLS.aura.baseRange + skills.aura * 0.35) * mods.areaMult;
     auraMesh.scale.set(auraRadius * 2, auraRadius * 2, 1);
@@ -116,7 +120,7 @@ export function updatePlayerWeaponsAndCombat({
   }
 
   // 5. Minas de Metralla
-  if (skills.mines) {
+  if (!isDead && skills.mines) {
     weaponTimers.mines += dt;
     const cd = Math.max(0.85, (CONFIG.SKILLS.mines.baseCd - skills.mines * 0.16) * cdFactor);
     const maxMines = 10 + mods.bonusProjectiles * 4;
@@ -128,7 +132,7 @@ export function updatePlayerWeaponsAndCombat({
   }
 
   // 6. Arpón Neumático
-  if (skills.harpoon) {
+  if (!isDead && skills.harpoon) {
     weaponTimers.harpoon += dt;
     const cd = Math.max(0.5, (CONFIG.SKILLS.harpoon.baseCd - skills.harpoon * 0.1) * cdFactor);
     if (weaponTimers.harpoon >= cd) {
@@ -142,7 +146,7 @@ export function updatePlayerWeaponsAndCombat({
   }
 
   // 7. Desfibrilador Roto
-  if (skills.bolt) {
+  if (!isDead && skills.bolt) {
     weaponTimers.bolt += dt;
     const cd = Math.max(0.5, (CONFIG.SKILLS.bolt.baseCd - skills.bolt * 0.12) * cdFactor);
     if (weaponTimers.bolt >= cd) {
@@ -185,30 +189,33 @@ export function updatePlayerWeaponsAndCombat({
     }
 
     if (o.hitCd > 0) o.hitCd -= dt;
-    activeEnemies.forEach(e => {
-      if (e.state !== 'dead' && e.group.position.distanceTo(o.group.position) < 1.45) {
-        const mult = 1 + (lvl - 1) * CONFIG.SKILLS.orbital.scalePerLvl;
-        damageEnemy(e, CONFIG.SKILLS.orbital.baseDmg * mult * mods.dmgMult * (mods.orbitalDmgMult || 1.0) * dt, null, true);
+    // Las jaulas siguen orbitando al morir, pero no aplican colisiones de daño.
+    if (!isDead) {
+      activeEnemies.forEach(e => {
+        if (e.state !== 'dead' && e.group.position.distanceTo(o.group.position) < 1.45) {
+          const mult = 1 + (lvl - 1) * CONFIG.SKILLS.orbital.scalePerLvl;
+          damageEnemy(e, CONFIG.SKILLS.orbital.baseDmg * mult * mods.dmgMult * (mods.orbitalDmgMult || 1.0) * dt, null, true);
 
-        if (o.hitCd <= 0) {
-          o.hitCd = 0.18;
-          AudioSys.play(310, 0.05, 'sawtooth', 0.03);
-          const blood = new THREE.Mesh(SHARED_GEO.spark, SHARED_MAT.sparkBlood);
-          blood.position.copy(o.group.position);
-          scene.add(blood);
-          vfx.push({
-            mesh: blood, life: 0.2,
-            vel: new THREE.Vector3((Math.random() - 0.5) * 4, 2.5, (Math.random() - 0.5) * 4),
-            gravity: 15, floorY: playerGroup.position.y + 0.05
-          });
-          sendAutomaticAttack?.(
-            'orbital',
-            e.group.position.clone().add(new THREE.Vector3(0, 1.1, 0)),
-            o.group.position.clone()
-          );
+          if (o.hitCd <= 0) {
+            o.hitCd = 0.18;
+            AudioSys.play(310, 0.05, 'sawtooth', 0.03);
+            const blood = new THREE.Mesh(SHARED_GEO.spark, SHARED_MAT.sparkBlood);
+            blood.position.copy(o.group.position);
+            scene.add(blood);
+            vfx.push({
+              mesh: blood, life: 0.2,
+              vel: new THREE.Vector3((Math.random() - 0.5) * 4, 2.5, (Math.random() - 0.5) * 4),
+              gravity: 15, floorY: playerGroup.position.y + 0.05
+            });
+            sendAutomaticAttack?.(
+              'orbital',
+              e.group.position.clone().add(new THREE.Vector3(0, 1.1, 0)),
+              o.group.position.clone()
+            );
+          }
         }
-      }
-    });
+      });
+    }
   });
 
   // 9. Detonación de Minas (Nunca dañan al jugador ni al Núcleo)
@@ -218,7 +225,7 @@ export function updatePlayerWeaponsAndCombat({
     m.led.visible = Math.floor(gameTime * 8) % 2 === 0;
 
     let triggered = m.life <= 0;
-    if (m.armTimer <= 0) {
+    if (!isDead && m.armTimer <= 0) {
       triggered = activeEnemies.some(e => e.state !== 'dead' && e.group.position.distanceTo(m.group.position) < 1.65);
     }
     if (triggered) {
@@ -235,13 +242,15 @@ export function updatePlayerWeaponsAndCombat({
       scene.add(blast);
       vfx.push({ mesh: blast, disposeGeo: true, disposeMat: true, life: 0.2, maxLife: 0.2, billboard: true, fade: true });
 
-      activeEnemies.forEach(e => {
-        if (e.state !== 'dead' && e.group.position.distanceTo(m.group.position) < blastRadius) {
-          const knock = new THREE.Vector3().subVectors(e.group.position, m.group.position).setY(0).normalize().multiplyScalar(2.4);
-          damageEnemy(e, dmg, knock);
-        }
-      });
-      sendAutomaticAttack?.('mine_blast', m.group.position.clone());
+      if (!isDead) {
+        activeEnemies.forEach(e => {
+          if (e.state !== 'dead' && e.group.position.distanceTo(m.group.position) < blastRadius) {
+            const knock = new THREE.Vector3().subVectors(e.group.position, m.group.position).setY(0).normalize().multiplyScalar(2.4);
+            damageEnemy(e, dmg, knock);
+          }
+        });
+        sendAutomaticAttack?.('mine_blast', m.group.position.clone());
+      }
       scene.remove(m.group);
       minesList.splice(i, 1);
     }
@@ -255,14 +264,23 @@ export function updatePlayerWeaponsAndCombat({
 
     if (h.timer <= 0) {
       if (h.type === 'charge_line') {
-        if (h.boss && h.boss.active && h.boss.state !== 'dead') {
+        if (h.boss && h.boss.active && h.boss.state !== 'dead' && h.boss.bossAI?.canStartCharge !== false) {
           h.boss.chargeVec = h.dir;
           h.boss.chargeTime = 0.65;
           AudioSys.play(90, 0.3, 'sawtooth', 0.09);
+          addCamShake(0.22 * mods.shakeMod);
+          if (h.boss.group) {
+            spawnBossAttackDust(scene, h.boss.group.position, vfx, {
+              count: 10, power: 3.4, color: 0x8a7a58, ring: false
+            });
+          }
         }
       } else if (h.type === 'circle') {
         AudioSys.play(72, 0.26, 'sawtooth', 0.1);
         addCamShake(0.25 * mods.shakeMod);
+        spawnBossAttackDust(scene, h.center, vfx, {
+          count: 8, power: 3.0, color: 0x7a684d, ring: false
+        });
         const pillar = new THREE.Mesh(
           new THREE.CylinderGeometry(h.radius * 0.85, h.radius, 3.6, 12),
           new THREE.MeshBasicMaterial({ color: 0xff5511, transparent: true, opacity: 0.85 })
@@ -280,6 +298,10 @@ export function updatePlayerWeaponsAndCombat({
       } else if (h.type === 'cone') {
         AudioSys.play(82, 0.25, 'square', 0.1);
         addCamShake(0.25 * mods.shakeMod);
+        const impact = h.origin.clone().addScaledVector(h.dir, h.radius * 0.55);
+        spawnBossAttackDust(scene, impact, vfx, {
+          count: 10, power: 3.2, color: 0x8a7a58, ring: false
+        });
         const toP = new THREE.Vector3().subVectors(playerGroup.position, h.origin).setY(0);
         if (toP.length() <= h.radius && h.dir.angleTo(toP.clone().normalize()) <= h.arc) {
           dealDamageToPlayer(h.dmg);
@@ -345,7 +367,7 @@ export function updatePlayerWeaponsAndCombat({
     if (v.spin) { v.mesh.rotation.x += v.spin.x * dt; v.mesh.rotation.z += v.spin.z * dt; }
     if (v.billboard) v.mesh.rotation.y = camAngle;
     if (v.fade && v.mesh.material && v.maxLife) {
-      v.mesh.material.opacity = Math.max(0, v.life / v.maxLife);
+      v.mesh.material.opacity = (v.baseOpacity ?? 1) * Math.max(0, v.life / v.maxLife);
     }
     if (v.life <= 0) {
       cleanupVfxItem(v);

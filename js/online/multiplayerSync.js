@@ -853,7 +853,7 @@ export const MultiplayerSync = {
         Math.round(e.group.position.z * 100) / 100,
         Math.round(e.hp * 10) / 10,
         e.defenseAI?.waypointIdx || 0,
-        e.visualState || 1,
+        Number.isFinite(e.visualState) ? e.visualState : 1,
         e.netTargetIsLocal === false ? 1 : 0
       ]);
     }
@@ -901,6 +901,7 @@ export const MultiplayerSync = {
           vx: p.vel.x, vy: p.vel.y, vz: p.vel.z,
           life: p.life,
           dmg: p.dmg,
+          bossNetId: p.boss?.netId ?? null,
           matchTimestamp: this._matchInfo?.timestamp || 0
         }, false);
       }
@@ -1217,6 +1218,7 @@ export const MultiplayerSync = {
 
   handleEnemyDiePacket(data) {
     if (data.matchTimestamp && this._matchInfo?.timestamp && data.matchTimestamp !== this._matchInfo.timestamp) return;
+    this.cleanupBossAttacks(data.netId);
     const pool = this.ctx?.enemyPool;
     const mode = ModeManager?.activeMode;
     const enemy = pool?.getByNetId(data.netId);
@@ -1225,6 +1227,7 @@ export const MultiplayerSync = {
         enemy.hp = 0;
         enemy.state = 'dead';
         enemy.stateTimer = 0;
+        enemy.bossAI?.markDead?.();
         enemy.netTargetX = null;
         this.ctx?.onNetworkKill?.();
         if (enemy.isBoss && mode) {
@@ -1258,8 +1261,40 @@ export const MultiplayerSync = {
     }
   },
 
+  // Cancela en el Cliente los ataques pendientes del jefe que acaba de morir/fugar.
+  cleanupBossAttacks(bossNetId) {
+    if (bossNetId == null) return;
+    const scene = this.ctx?.scene;
+
+    const hazards = this.ctx?.bossHazards;
+    if (Array.isArray(hazards)) {
+      for (let i = hazards.length - 1; i >= 0; i--) {
+        const hazard = hazards[i];
+        if (hazard?.bossNetId !== bossNetId) continue;
+        if (hazard.mesh && scene) scene.remove(hazard.mesh);
+        hazard.mesh?.geometry?.dispose?.();
+        hazard.mesh?.material?.dispose?.();
+        hazards.splice(i, 1);
+      }
+    }
+
+    const projectiles = this.ctx?.bossProjectiles;
+    if (Array.isArray(projectiles)) {
+      for (let i = projectiles.length - 1; i >= 0; i--) {
+        const projectile = projectiles[i];
+        if (projectile?.bossNetId !== bossNetId) continue;
+        if (projectile.mesh && scene) scene.remove(projectile.mesh);
+        if (projectile.mesh?.material && !projectile.sharedMat) {
+          projectile.mesh.material.dispose();
+        }
+        projectiles.splice(i, 1);
+      }
+    }
+  },
+
   handleEnemyLeakPacket(data) {
     if (data.matchTimestamp && this._matchInfo?.timestamp && data.matchTimestamp !== this._matchInfo.timestamp) return;
+    this.cleanupBossAttacks(data.netId);
     const pool = this.ctx?.enemyPool;
     const mode = ModeManager?.activeMode;
     const enemy = pool?.getByNetId(data.netId);
@@ -1295,7 +1330,10 @@ export const MultiplayerSync = {
       if (enemy.defenseAI && Number.isFinite(waypointIdx) && waypointIdx > 0) {
         enemy.defenseAI.waypointIdx = waypointIdx;
       }
-      if (Number.isFinite(visualState)) enemy.visualState = visualState;
+      if (Number.isFinite(visualState)) {
+        enemy.visualState = visualState;
+        enemy.netVisualState = visualState;
+      }
       enemy.netTargetIsLocal = targetPlayer !== 1;
     }
   },
@@ -1305,6 +1343,10 @@ export const MultiplayerSync = {
     const scene = this.ctx?.scene;
     if (!projectiles || !scene) return;
     if (data.matchTimestamp && this._matchInfo?.timestamp && data.matchTimestamp !== this._matchInfo.timestamp) return;
+    if (data.bossNetId != null) {
+      const owner = this.ctx?.enemyPool?.getByNetId(data.bossNetId);
+      if (!owner || owner.state === 'dead' || owner.hp <= 0) return;
+    }
     const speed = Math.hypot(data.vx || 0, data.vy || 0, data.vz || 0);
     if (speed < 0.01) return;
     const dir = new THREE.Vector3(data.vx / speed, data.vy / speed, data.vz / speed);
@@ -1317,6 +1359,7 @@ export const MultiplayerSync = {
       data.dmg || 1
     );
     const p = projectiles[projectiles.length - 1];
+    if (p) p.bossNetId = data.bossNetId ?? null;
     if (p && Number.isFinite(data.life)) p.life = Math.max(0.1, data.life);
     const now = performance.now();
     if (!this._lastEnemyAttackSoundAt || now - this._lastEnemyAttackSoundAt > 120) {
@@ -1333,6 +1376,10 @@ export const MultiplayerSync = {
     const hazards = this.ctx?.bossHazards;
     if (!scene || !hazards) return;
     if (data.matchTimestamp && this._matchInfo?.timestamp && data.matchTimestamp !== this._matchInfo.timestamp) return;
+    if (data.bossNetId != null) {
+      const owner = this.ctx?.enemyPool?.getByNetId(data.bossNetId);
+      if (!owner || owner.state === 'dead' || owner.hp <= 0) return;
+    }
 
     const x = data.x, y = data.y, z = data.z;
     const timer = Number.isFinite(data.timer) ? data.timer : 1.0;
@@ -1390,6 +1437,7 @@ export const MultiplayerSync = {
     }
 
     if (hazard) {
+      hazard.bossNetId = data.bossNetId ?? null;
       hazards.push(hazard);
       const now = performance.now();
       if (!this._lastHazardSoundAt || now - this._lastHazardSoundAt > 120) {

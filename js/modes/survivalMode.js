@@ -112,17 +112,23 @@ export class SurvivalMode {
       : null;
 
     const callbacks = {
-      playerAlive: true,
+      playerAlive: ctx.playerAlive !== false,
       playerTargets,
+      vfxList: ctx.vfx,
+      bossHazards,
+      bossProjectiles,
       onScare: () => ctx.triggerScare(0.35),
       onDealDamage: attacker => {
-        if (attacker.netTargetIsLocal !== false) ctx.dealDamageToPlayer(attacker.dmg);
+        if (ctx.playerAlive !== false && attacker.netTargetIsLocal !== false) {
+          ctx.dealDamageToPlayer(attacker.dmg);
+        }
       },
       onBurnTick: (burningEnemy, burnDmg) => ctx.damageEnemy(
         burningEnemy, burnDmg, null, true,
         { visualOnly: isNetworkClient }
       ),
-      onBossPhaseChange: () => ctx.onBossPhaseChange()
+      onBossPhaseChange: () => ctx.onBossPhaseChange(),
+      onCamShake: amount => ctx.addCamShake?.(amount)
     };
 
     if (!isNetworkClient) {
@@ -131,7 +137,7 @@ export class SurvivalMode {
         AudioSys.play(380, 0.12, 'sawtooth', 0.05);
       };
       callbacks.onBossSpecial = (boss, atkType, targetPos = playerGroup.position) => {
-        triggerBossSpecialAttack(
+        return triggerBossSpecialAttack(
           ctx.scene,
           boss,
           atkType,

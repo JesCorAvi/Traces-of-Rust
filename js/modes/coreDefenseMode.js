@@ -381,7 +381,7 @@ export class CoreDefenseMode {
     } = ctx;
 
     // Gestión de abatimiento temporal del jugador en modo Defensa
-    let playerAlive = true;
+    let playerAlive = ctx.playerAlive !== false;
     if (this.playerDownTimer > 0) {
       playerAlive = false;
       this.playerDownTimer -= dt;
@@ -392,6 +392,8 @@ export class CoreDefenseMode {
         playerGroup.position.set(startPos.x, gy, startPos.z);
         ctx.hudController?.hidePlayerDownOverlay?.();
         ctx.revivePlayerAfterPenalty(CORE_DEFENSE_CONFIG.PLAYER_DEATH_POLICY.respawnInvulnSec);
+        // El mismo frame ya puede reanudar la persecución y el ataque al Núcleo.
+        playerAlive = true;
       }
     }
 
@@ -429,6 +431,8 @@ export class CoreDefenseMode {
       extraStructures: this.extraStructures,
       pathSystem: this.pathSystem,
       vfxList: ctx.vfx,
+      bossHazards,
+      bossProjectiles,
       onScare: () => ctx.triggerScare(0.32),
       onDealDamage: attacker => {
         // El Host no daña a avatares remotos: cada Cliente es autoritativo
@@ -443,7 +447,8 @@ export class CoreDefenseMode {
       onEnemyEscaped: enemy => {
         this.handleEnemyLeak(enemy, ctx);
       },
-      onBossPhaseChange: () => ctx.onBossPhaseChange()
+      onBossPhaseChange: () => ctx.onBossPhaseChange(),
+      onCamShake: amount => ctx.addCamShake?.(amount)
     };
 
     if (!isNetworkClient) {
@@ -452,7 +457,7 @@ export class CoreDefenseMode {
         AudioSys.play(380, 0.12, 'sawtooth', 0.05);
       };
       callbacks.onBossSpecial = (boss, atkType, targetPos = playerGroup.position) => {
-        triggerBossSpecialAttack(
+        return triggerBossSpecialAttack(
           ctx.scene,
           boss,
           atkType,

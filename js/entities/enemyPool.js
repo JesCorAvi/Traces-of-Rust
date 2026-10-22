@@ -61,6 +61,8 @@ export class EnemyPool {
     const enemy = this.active[index];
     if (!enemy) return;
     enemy.active = false;
+    enemy.bossAI?.destroy();
+    enemy.bossAI = null;
     enemy.defenseAI = null;
     enemy.group.visible = false;
     if (enemy.netId !== undefined) this.enemiesById.delete(enemy.netId);
