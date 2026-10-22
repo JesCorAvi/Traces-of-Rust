@@ -13,7 +13,7 @@ export function executeSawSlash(scene, playerPos, facingYaw, level, mods, enemie
   const dmg = cfg.baseDmg * mult * mods.dmgMult * (mods.slashDmgMult || 1.0);
   const range = (cfg.baseRange + level * 0.28) * mods.areaMult;
 
-  AudioSys.playSlash();
+  if (!mods?.silent) AudioSys.playSlash();
   if (onMicroShake) onMicroShake(0.09);
 
   const handOrigin = getDirectionalHandPos(playerPos, bodyYaw, 0.5, 0.32, 1.05);

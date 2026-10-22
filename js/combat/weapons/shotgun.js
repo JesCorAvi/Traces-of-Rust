@@ -17,7 +17,7 @@ export function fireBuckshot(scene, playerPos, aimYaw, bodyYaw, level, mods, ene
   );
   if (closest.group.position.distanceTo(playerPos) > maxRange) return null;
 
-  AudioSys.playShotgun();
+  if (!mods?.silent) AudioSys.playShotgun();
   if (triggerFlash) triggerFlash();
 
   const baseDir = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), aimYaw);

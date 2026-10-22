@@ -4,7 +4,6 @@
 
 import * as THREE from 'three';
 import { CONFIG } from '../config.js';
-import { AudioSys } from '../audio.js';
 import { executeSawSlash } from '../combat/weapons/saw.js';
 import { fireBuckshot } from '../combat/weapons/shotgun.js';
 import { updateEnemies } from '../modes/enemyLoop.js';
@@ -20,7 +19,8 @@ const DEMO_MODS = Object.freeze({
   critChance: 0.25,
   knockbackMult: 1.2,
   atkSpeedMult: 1.0,
-  shakeMod: 1.0
+  shakeMod: 1.0,
+  silent: true
 });
 
 let camOrbitT = 0;
@@ -113,7 +113,6 @@ export function updateMenuBattleDemo({
     en.hp -= amount;
     en.state = 'hurt';
     en.stateTimer = 0.15;
-    AudioSys.playHit?.(amount > 22);
     if (kb) {
       en.group.position.add(kb);
       if (worldPhysics) {
@@ -124,7 +123,6 @@ export function updateMenuBattleDemo({
       en.hp = 0;
       en.state = 'dead';
       en.stateTimer = 0;
-      AudioSys.playEnemyDeath?.();
       camShake = Math.max(camShake, 0.18);
 
       // Partículas viscerales de impacto final
@@ -307,7 +305,6 @@ export function updateMenuBattleDemo({
     playerAlive: true,
     onDealDamage: attacker => {
       invulnTimer = 0.22;
-      AudioSys.playHit?.(false);
       camShake = Math.max(camShake, 0.12);
       const pushDir = new THREE.Vector3()
         .subVectors(attacker.group.position, playerGroup.position)
