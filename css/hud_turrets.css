@@ -24,7 +24,7 @@
   background: rgba(10, 22, 10, 0.92);
   border: 1px solid #4a6b42;
   color: #a8e6a0;
-  font-family: 'Press Start 2P', monospace;
+  font-family: var(--font-retro, 'Press Start 2P', monospace);
   font-size: 8px;
   cursor: pointer;
   pointer-events: auto;
@@ -45,7 +45,7 @@
 .coop-scrap-toast {
   margin-top: 4px;
   padding: 3px 6px;
-  font-family: 'Press Start 2P', monospace;
+  font-family: var(--font-retro, 'Press Start 2P', monospace);
   font-size: 8px;
   line-height: 1.4;
   border-left: 2px solid #4a6b42;
@@ -71,7 +71,7 @@
   border-radius: 4px;
   clip-path: none;
   padding: 5px 12px;
-  font-family: 'Press Start 2P', monospace;
+  font-family: var(--font-retro, 'Press Start 2P', monospace);
   font-size: 8px;
   color: #f0c954;
   text-shadow: 1px 1px 0 #000;
@@ -118,7 +118,7 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-family: 'Press Start 2P', monospace;
+  font-family: var(--font-retro, 'Press Start 2P', monospace);
   font-size: 9px;
   color: #f0c954;
   background: rgba(10, 14, 10, 0.85);
@@ -128,7 +128,7 @@
 }
 .turret-scrap-balance b { color: #e6d7a5; font-size: 12px; }
 .turret-panel-sub {
-  font-family: 'VT323', monospace;
+  font-family: var(--font-body, 'VT323', monospace);
   font-size: 19px;
   color: #e6dec8;
   margin: 6px 0 10px;
@@ -150,7 +150,7 @@
   background: #0d120d;
   color: #f5ecd3;
   padding: 6px 8px;
-  font-family: 'VT323', monospace;
+  font-family: var(--font-body, 'VT323', monospace);
   position: relative;
   overflow: hidden;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.8), 2px 2px 0 #050605;
@@ -173,7 +173,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  font-family: 'Press Start 2P', monospace;
+  font-family: var(--font-retro, 'Press Start 2P', monospace);
 }
 .turret-card-name { flex: 1; color: #f0c954; font-size: 10px; }
 .turret-card-cost {
@@ -184,20 +184,20 @@
   padding: 2px 5px;
 }
 .turret-card-role {
-  font-family: 'Press Start 2P', monospace;
+  font-family: var(--font-retro, 'Press Start 2P', monospace);
   font-size: 8px;
   color: #a8c499;
 }
 .turret-card-desc {
   color: #e6dec8;
-  font-family: 'VT323', monospace;
+  font-family: var(--font-body, 'VT323', monospace);
   font-size: 19px;
   line-height: 1.25;
   letter-spacing: 0.5px;
 }
 .turret-card-stats {
   color: #b89c46;
-  font-family: 'Press Start 2P', monospace;
+  font-family: var(--font-retro, 'Press Start 2P', monospace);
   font-size: 8px;
   border-top: 1px dashed #364832;
   padding-top: 5px;
@@ -214,12 +214,12 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  font-family: 'Press Start 2P', monospace;
+  font-family: var(--font-retro, 'Press Start 2P', monospace);
   color: #f0c954;
   font-size: 12px;
 }
 .turret-summary-role {
-  font-family: 'Press Start 2P', monospace;
+  font-family: var(--font-retro, 'Press Start 2P', monospace);
   font-size: 8px;
   color: #a8c499;
 }
@@ -236,7 +236,7 @@
   transition: width 0.15s steps(8);
 }
 .turret-summary-sub {
-  font-family: 'Press Start 2P', monospace;
+  font-family: var(--font-retro, 'Press Start 2P', monospace);
   font-size: 8px;
   color: #877a5c;
   margin: 4px 0 10px;
@@ -257,7 +257,7 @@
   gap: 6px;
 }
 .turret-path-name {
-  font-family: 'Press Start 2P', monospace;
+  font-family: var(--font-retro, 'Press Start 2P', monospace);
   font-size: 9px;
   color: var(--path-color);
 }
@@ -273,13 +273,13 @@
   border-color: #e6d7a5;
 }
 .turret-next-name {
-  font-family: 'Press Start 2P', monospace;
+  font-family: var(--font-retro, 'Press Start 2P', monospace);
   font-size: 9px;
   color: #f5ecd3;
 }
 .turret-next-desc { font-size: 17px; color: #e6dec8; line-height: 1.2; }
 .turret-lock {
-  font-family: 'Press Start 2P', monospace;
+  font-family: var(--font-retro, 'Press Start 2P', monospace);
   font-size: 7px;
   color: #ff6b6b;
 }
@@ -304,7 +304,7 @@
   margin-top: 10px;
   padding-top: 8px;
   border-top: 1px dashed #364832;
-  font-family: 'Press Start 2P', monospace;
+  font-family: var(--font-retro, 'Press Start 2P', monospace);
   font-size: 8px;
   color: #877a5c;
   text-align: center;

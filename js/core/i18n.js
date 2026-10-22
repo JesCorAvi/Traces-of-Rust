@@ -174,6 +174,44 @@ export function t(key, params = null) {
   return text;
 }
 
+const FONT_STYLESHEETS = {
+  'ja': 'https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap',
+  'zh-Hans': 'https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700&display=swap',
+  'zh-Hant': 'https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap',
+  'ko': 'https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap',
+  'ru': 'https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;700&display=swap'
+};
+
+/**
+ * Carga de forma dinámica y condicional únicamente la fuente necesaria
+ * para el idioma activo (Noto Sans JP / SC / TC / KR / RU).
+ */
+export function updateLanguageFonts(lang) {
+  if (typeof document === 'undefined') return;
+
+  const linkId = 'i18n-font-loader';
+  let link = document.getElementById(linkId);
+  const targetUrl = FONT_STYLESHEETS[lang];
+
+  if (!targetUrl) {
+    if (link) {
+      link.remove();
+    }
+    return;
+  }
+
+  if (!link) {
+    link = document.createElement('link');
+    link.id = linkId;
+    link.rel = 'stylesheet';
+    document.head.appendChild(link);
+  }
+
+  if (link.getAttribute('href') !== targetUrl) {
+    link.setAttribute('href', targetUrl);
+  }
+}
+
 /**
  * Actualiza todos los elementos del DOM que utilicen atributos de traducción:
  * - data-i18n: reemplaza el textContent
@@ -188,6 +226,9 @@ export function updateDOMTranslations(root = null) {
   if (document.documentElement) {
     document.documentElement.lang = currentLanguage;
   }
+
+  // Cargar dinámicamente la fuente tipográfica adecuada para el idioma
+  updateLanguageFonts(currentLanguage);
 
   // data-i18n
   const textElements = targetRoot.querySelectorAll('[data-i18n]');

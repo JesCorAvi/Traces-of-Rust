@@ -28,21 +28,21 @@
   justify-content: space-between;
   align-items: center;
   gap: 8px;
-  font-family: 'Press Start 2P', monospace;
+  font-family: var(--font-retro, 'Press Start 2P', monospace);
   font-size: 8px;
   color: #a8c499;
   margin-bottom: 6px;
 }
 .td-tutorial-skip { color: #ff6b6b; }
 .td-tutorial-title {
-  font-family: 'Press Start 2P', monospace;
+  font-family: var(--font-retro, 'Press Start 2P', monospace);
   font-size: 10px;
   line-height: 1.45;
   color: #f0c954;
   margin-bottom: 6px;
 }
 .td-tutorial-text {
-  font-family: 'VT323', monospace;
+  font-family: var(--font-body, 'VT323', monospace);
   font-size: 18px;
   line-height: 1.25;
   color: #e6dec8;
@@ -51,7 +51,7 @@
   margin-top: 8px;
   padding-top: 6px;
   border-top: 1px dashed #364832;
-  font-family: 'Press Start 2P', monospace;
+  font-family: var(--font-retro, 'Press Start 2P', monospace);
   font-size: 8px;
   line-height: 1.45;
   color: #b89c46;
