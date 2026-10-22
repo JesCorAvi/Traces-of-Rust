@@ -156,9 +156,13 @@ export const CONFIG = {
     BADGES_ORIGIN_Y: 256,
 
     CURSORS: {
-      default:   { x: 0,  y: 280, w: 16, h: 16, hotX: 2, hotY: 2 },
-      pointer:   { x: 16, y: 280, w: 16, h: 16, hotX: 5, hotY: 2 },
-      crosshair: { x: 32, y: 280, w: 16, h: 16, hotX: 8, hotY: 8 }
+      default:   { x: 0,  y: 280, w: 16, h: 16, hotX: 1, hotY: 1 },
+      pointer:   { x: 16, y: 280, w: 16, h: 16, hotX: 4, hotY: 1 },
+      click:     { x: 32, y: 280, w: 16, h: 16, hotX: 4, hotY: 2 },
+      crosshair: { x: 48, y: 280, w: 16, h: 16, hotX: 7, hotY: 7 },
+      disabled:  { x: 64, y: 280, w: 16, h: 16, hotX: 7, hotY: 7 },
+      grab:      { x: 80, y: 280, w: 16, h: 16, hotX: 7, hotY: 6 },
+      grabbing:  { x: 96, y: 280, w: 16, h: 16, hotX: 7, hotY: 6 }
     }
   },
 

@@ -26,7 +26,7 @@
   color: #a8e6a0;
   font-family: var(--font-retro, 'Press Start 2P', monospace);
   font-size: 8px;
-  cursor: pointer;
+  cursor: var(--cursor-pointer), pointer;
   pointer-events: auto;
 }
 .coop-scrap-transfer:hover {
@@ -167,7 +167,7 @@
 }
 .turret-card:disabled, .turret-card.is-locked {
   opacity: 0.55;
-  cursor: var(--cursor-default), default;
+  cursor: var(--cursor-disabled), not-allowed;
 }
 .turret-card-top {
   display: flex;

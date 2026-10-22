@@ -118,7 +118,7 @@
   color: #7dd3fc;
   padding: 2px 6px;
   border-radius: 3px;
-  cursor: pointer;
+  cursor: var(--cursor-pointer), pointer;
   font-size: 7px;
   font-family: var(--font-retro, 'Press Start 2P', monospace);
   text-shadow: 1px 1px 0 #000;
@@ -170,7 +170,7 @@
   color: #a2f593;
   padding: 2px 6px;
   border-radius: 3px;
-  cursor: pointer;
+  cursor: var(--cursor-pointer), pointer;
   font-size: 7px;
   font-family: var(--font-retro, 'Press Start 2P', monospace);
   text-shadow: 1px 1px 0 #000;

@@ -171,6 +171,7 @@ document.addEventListener('mousemove', e => {
 });
 
 window.addEventListener('mousedown', e => {
+  document.body.classList.add('mouse-pressed');
   if (rt.state !== 'PLAYING' || rt.isDead) return;
   const mode = rt.ModeManager.activeMode;
 
@@ -189,6 +190,13 @@ window.addEventListener('mousedown', e => {
   if (e.button === 0 && !document.pointerLockElement) {
     document.body.requestPointerLock();
   }
+});
+
+window.addEventListener('mouseup', () => {
+  document.body.classList.remove('mouse-pressed');
+});
+window.addEventListener('blur', () => {
+  document.body.classList.remove('mouse-pressed');
 });
 
 window.addEventListener('contextmenu', e => {

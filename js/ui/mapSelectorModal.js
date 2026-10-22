@@ -282,12 +282,13 @@ function launchGameWithSelectedMap() {
 
   const chosenMapId = selectedMapId;
   const chosenDiff = currentDiff;
+  const cb = onLaunchCallback;
 
   closeMapSelector();
 
   // Si hay callback registrado por gameFlow, ejecutarlo
-  if (typeof onLaunchCallback === 'function') {
-    onLaunchCallback(chosenMapId, chosenDiff);
+  if (typeof cb === 'function') {
+    cb(chosenMapId, chosenDiff);
   }
 }
 

@@ -41,6 +41,15 @@
   /* Fuentes tipográficas base con soporte para lenguajes extendidos */
   --font-retro: 'Press Start 2P', monospace;
   --font-body: 'VT323', 'Courier New', Courier, monospace;
+
+  /* Variables de cursor con fallback seguro antes de cargar el atlas */
+  --cursor-default: auto;
+  --cursor-pointer: pointer;
+  --cursor-click: pointer;
+  --cursor-crosshair: crosshair;
+  --cursor-disabled: not-allowed;
+  --cursor-grab: grab;
+  --cursor-grabbing: grabbing;
 }
 
 /* ==========================================================================
@@ -167,6 +176,7 @@ html[lang="fr"] .rust-btn {
   border: 1px solid #1c261c;
 }
 
+html,
 body {
   margin: 0;
   overflow: hidden;
@@ -176,6 +186,99 @@ body {
   font-size: 20px;
   letter-spacing: 0.6px;
   cursor: var(--cursor-default), auto;
+}
+
+#game-container,
+#game-container canvas {
+  cursor: var(--cursor-default), auto;
+}
+
+/* ==========================================================================
+   SISTEMA DE CURSORES RETRO INDUSTRIALES (BUCKSHOT ROULETTE / TRACES OF RUST)
+   ========================================================================== */
+
+/* Elementos interactivos / clickables (Hover) */
+button,
+a,
+select,
+input[type="button"],
+input[type="submit"],
+input[type="range"],
+[role="button"],
+.clickable,
+.btn-ui,
+.nav-btn,
+.mode-capsule,
+.turret-card,
+.level-card,
+.shop-item-btn,
+.tab-btn,
+.map-card,
+.hud-icon-btn,
+.start-dossier-card,
+.start-currency-pill,
+.practice-wave-btn,
+.tutorial-skip-btn,
+.settings-tab,
+.volume-slider,
+[data-clickable="true"] {
+  cursor: var(--cursor-pointer), pointer;
+}
+
+/* Estado de Click / Pulsado mecánico (Active y mouse-pressed) */
+button:active,
+a:active,
+select:active,
+input[type="button"]:active,
+input[type="submit"]:active,
+[role="button"]:active,
+.clickable:active,
+.btn-ui:active,
+.nav-btn:active,
+.mode-capsule:active,
+.turret-card:active,
+.level-card:active,
+.shop-item-btn:active,
+.tab-btn:active,
+.map-card:active,
+.hud-icon-btn:active,
+.start-dossier-card:active,
+.start-currency-pill:active,
+body.mouse-pressed,
+body.mouse-pressed * {
+  cursor: var(--cursor-click), var(--cursor-pointer), pointer;
+}
+
+/* Elementos deshabilitados o bloqueados (Not-Allowed) */
+button:disabled,
+button.disabled,
+.btn-disabled,
+.is-disabled,
+.not-allowed,
+[aria-disabled="true"],
+body.mouse-pressed button:disabled,
+body.mouse-pressed button.disabled,
+body.mouse-pressed .btn-disabled,
+body.mouse-pressed [aria-disabled="true"] {
+  cursor: var(--cursor-disabled), not-allowed !important;
+}
+
+/* Modos de apuntado, retícula y arrastre táctico */
+.crosshair-mode,
+.turret-placement-active,
+.aiming-active {
+  cursor: var(--cursor-crosshair), crosshair !important;
+}
+
+.grab-mode,
+.draggable {
+  cursor: var(--cursor-grab), grab;
+}
+
+.grab-mode:active,
+.draggable:active,
+.is-dragging {
+  cursor: var(--cursor-grabbing), grabbing !important;
 }
 
 #game-container { position: fixed; inset: 0; z-index: 1; }
@@ -493,7 +596,7 @@ body.endgame-mode #vignette-overlay {
   border-image-source: var(--slice-btn_disabled);
   color: #6c7a65;
   text-shadow: 1px 1px 0 #050605;
-  cursor: var(--cursor-default), not-allowed;
+  cursor: var(--cursor-disabled), not-allowed;
   opacity: 0.75;
   box-shadow: none;
 }
