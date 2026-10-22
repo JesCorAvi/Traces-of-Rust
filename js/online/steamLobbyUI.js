@@ -65,11 +65,6 @@ export function setupSteamLobbyUI(runtime = {}) {
     btnLeave.onclick = handleLeaveLobby;
   }
 
-  const btnInvite = document.getElementById('btn-invite-friends');
-  if (btnInvite) {
-    btnInvite.onclick = handleInviteFriends;
-  }
-
   const btnCopyId = document.getElementById('btn-copy-lobby-id');
   if (btnCopyId) {
     btnCopyId.onclick = handleCopyLobbyId;
@@ -146,8 +141,8 @@ function applyOnlineModeCopy() {
   const overlayBtn = document.getElementById('btn-steam-overlay');
   if (overlayBtn) overlayBtn.innerHTML = '<span>[ COPIAR ENLACE DE SALA ]</span>';
 
-  const inviteBtn = document.getElementById('btn-invite-friends');
-  if (inviteBtn) inviteBtn.innerHTML = '<span>[ COPIAR CÓDIGO ]</span>';
+  const copyBtn = document.getElementById('btn-copy-lobby-id');
+  if (copyBtn) copyBtn.innerHTML = '<span>[ COPIAR ENLACE ]</span>';
 
   const joinInput = document.getElementById('steam-join-input');
   if (joinInput) joinInput.placeholder = 'Código de 6 caracteres (ej. A7K9X2)...';
@@ -609,39 +604,40 @@ async function handleLeaveLobby() {
   resetLobbyView();
 }
 
-async function handleInviteFriends() {
+async function handleCopyLobbyId() {
   AudioSys.playUISelect();
   if (window.steamOnline && window.steamOnline.openInviteDialog) {
     const res = await window.steamOnline.openInviteDialog();
-    if (isWebRtcMode && res && res.copied) {
-      const inviteBtn = document.getElementById('btn-invite-friends');
-      if (inviteBtn) {
-        const original = inviteBtn.innerHTML;
-        inviteBtn.innerHTML = '<span>[ ¡ENLACE COPIADO! ]</span>';
-        setTimeout(() => { inviteBtn.innerHTML = original; }, 1800);
-      }
+    const copyBtn = document.getElementById('btn-copy-lobby-id');
+    if (copyBtn) {
+      const orig = copyBtn.innerHTML;
+      copyBtn.innerHTML = '<span>[ ¡ENLACE COPIADO! ]</span>';
+      setTimeout(() => { copyBtn.innerHTML = orig; }, 1800);
     }
+    return;
   }
-}
-
-async function handleCopyLobbyId() {
   const idEl = document.getElementById('steam-active-lobby-id');
   if (!idEl) return;
   const id = idEl.textContent.trim();
   if (id && id !== '---') {
+    const url = `${window.location.origin}${window.location.pathname}?room=${id}`;
     try {
-      await navigator.clipboard.writeText(id);
+      await navigator.clipboard.writeText(url);
       AudioSys.play(800, 0.1, 'sine', 0.05);
       const copyBtn = document.getElementById('btn-copy-lobby-id');
       if (copyBtn) {
         const orig = copyBtn.innerHTML;
-        copyBtn.innerHTML = '<span>[ ¡ID COPIADO! ]</span>';
+        copyBtn.innerHTML = '<span>[ ¡ENLACE COPIADO! ]</span>';
         setTimeout(() => { copyBtn.innerHTML = orig; }, 1800);
       }
     } catch (e) {
-      prompt('Copia tu Lobby ID manualmente:', id);
+      prompt('Copia el enlace de la sala:', url);
     }
   }
+}
+
+async function handleInviteFriends() {
+  return handleCopyLobbyId();
 }
 
 

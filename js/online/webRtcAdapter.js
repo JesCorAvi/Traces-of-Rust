@@ -982,15 +982,14 @@ async function openInviteDialog() {
     return { success: false, error: 'No hay ninguna sala activa.' };
   }
   const url = buildInviteUrl(currentRoomCode);
-  const text = `Traces of Rust — Únete a mi partida. Código: ${currentRoomCode} · Enlace: ${url}`;
-  const copied = await copyToClipboard(text);
+  const copied = await copyToClipboard(url);
   if (copied) {
-    showToast(`CÓDIGO COPIADO: ${currentRoomCode}`, 'ok');
+    showToast(`ENLACE COPIADO: ${currentRoomCode}`, 'ok');
   } else {
     showToast(`CÓDIGO DE SALA: ${currentRoomCode}`, 'warn');
-    try { window.prompt('Copia el código o enlace de la sala:', text); } catch (e) {}
+    try { window.prompt('Copia el enlace de la sala:', url); } catch (e) {}
   }
-  return { success: true, copied, code: currentRoomCode, url, text };
+  return { success: true, copied, code: currentRoomCode, url, text: url };
 }
 
 function getStatus() {
