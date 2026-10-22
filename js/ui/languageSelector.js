@@ -348,8 +348,8 @@ export function initFirstBootLanguageFlow(options = {}) {
     // Dar foco visible inmediato al botón preseleccionado
     if (firstBootController) {
       setTimeout(() => {
-        firstBootController.focusCurrent();
-        firstBootController.startGamepad();
+        firstBootController?.focusCurrent();
+        firstBootController?.startGamepad();
       }, 50);
     }
   });

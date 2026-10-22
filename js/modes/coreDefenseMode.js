@@ -14,6 +14,7 @@ import { TurretSystem } from '../defense/turretSystem.js';
 import { TowerDefenseTutorial } from '../tutorial/towerDefenseTutorial.js';
 import { DefenseEventManager } from '../defense/defenseEventManager.js';
 import { updateEnemies } from './enemyLoop.js';
+import { t } from '../core/i18n.js';
 
 // ============================================================================
 // MODO 2: DEFENDER LAS INSTALACIONES (Tower Defense estilo Bloons TD 6)
@@ -707,17 +708,17 @@ export class CoreDefenseMode {
 
     const eventInfo = this.defenseEventManager ? this.defenseEventManager.getActiveEventInfo() : null;
 
-    let subTaskText = `HOSTILES RESTANTES: ${remaining}`;
+    let subTaskText = t('hud.objective.hostiles_left', { count: remaining });
     if (this.tutorialActive) {
-      subTaskText = 'TUTORIAL INTERACTIVO EN CURSO';
+      subTaskText = t('hud.objective.tutorial_active');
     } else if (eventInfo) {
       subTaskText = eventInfo.subTaskText;
     } else if (isFirstWavePrep) {
-      subTaskText = 'Despliega tus torretas iniciales';
+      subTaskText = t('hud.objective.first_wave_prep');
     } else if (isPrep) {
-      subTaskText = `Próxima oleada en: ${prepSeconds.toFixed(0)}s`;
+      subTaskText = t('hud.objective.next_wave_in', { seconds: prepSeconds.toFixed(0) });
     } else if (this.playerDownTimer > 0) {
-      subTaskText = `RECONSTRUYENDO OPERARIO: ${this.playerDownTimer.toFixed(1)}S`;
+      subTaskText = t('hud.objective.rebuilding_operator', { seconds: this.playerDownTimer.toFixed(1) });
     }
 
     const coreHp = this.coreMachine ? Math.ceil(this.coreMachine.hp) : 0;
@@ -735,10 +736,10 @@ export class CoreDefenseMode {
       : 0;
 
     return {
-      objectiveText: eventInfo ? `[!] ${eventInfo.objectiveText}` : `Contén la brecha (${diffMeta.name})`,
+      objectiveText: eventInfo ? `[!] ${eventInfo.objectiveText}` : t('hud.objective.default_td', { diff: diffMeta.name }),
       objectiveCheck: (eventInfo || this.lives < this.maxLives * 0.4) ? '[!]' : '[ ]',
       subTaskText,
-      waveBadgeText: eventInfo ? `EVENTO // ${eventInfo.badgeText}` : (isPrep ? 'PREPARACIÓN' : `OLEADA ${waveNum}/${totalW}`),
+      waveBadgeText: eventInfo ? `EVENTO // ${eventInfo.badgeText}` : (isPrep ? t('hud.wave.prep') : t('hud.wave.in_progress', { current: waveNum, total: totalW })),
       eventBadge: eventInfo ? eventInfo.badgeText : null,
       eventTelemetry: eventInfo ? {
         phase: eventInfo.phase,
