@@ -5,7 +5,7 @@ export { SHARED_GEO, SHARED_MAT, initCombatLight, triggerCombatFlash, updateComb
 export { executeSawSlash } from './combat/weapons/saw.js';
 export { createOrbitalUnit } from './combat/weapons/orbital.js';
 export { fireBuckshot } from './combat/weapons/shotgun.js';
-export { fireFlamethrower } from './combat/weapons/flamethrower.js';
+export { fireFlamethrower, updateFlamethrower, resetFlamethrowerState, getFlamethrowerState } from './combat/weapons/flamethrower.js';
 export { spawnShrapnelMine } from './combat/weapons/mines.js';
 export { fireHarpoon } from './combat/weapons/harpoon.js';
 export { fireDefibrillator } from './combat/weapons/bolt.js';

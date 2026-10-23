@@ -274,10 +274,20 @@
       <span id="wave-text" style="display:none"></span>
     </div>
 
-    <!-- Indicador de Dash (micro-barra finita bajo los pies del personaje en el centro) -->
-    <div id="stamina-tracker-overlay" class="dash-micro-tracker">
+    <!-- Indicador Táctico de Dash / Estamina bajo los pies del personaje -->
+    <div id="stamina-tracker-overlay" class="dash-micro-tracker" aria-hidden="true">
+      <!-- Fila superior: Barra fina de Cooldown (Amarilla) -->
+      <div class="dash-cd-track">
+        <div id="dash-cd-bar" class="dash-cd-bar"></div>
+      </div>
+      <!-- Barra inferior: Reserva de Estamina (Verde) -->
       <div class="stam-frame-compact">
         <div id="stam-bar"></div>
+        <div class="stam-notches">
+          <span class="notch" style="left: 35%;"></span>
+          <span class="notch" style="left: 70%;"></span>
+        </div>
+        <div class="stam-glass-glare"></div>
       </div>
     </div>
 

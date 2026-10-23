@@ -131,8 +131,16 @@ window.addEventListener('keydown', e => {
 
   if (k === 'shift' && rt.dashCd <= 0 && rt.stats.stamina >= 35 && rt.dashTimer <= 0) {
     rt.stats.stamina -= 35;
-    document.getElementById('stam-bar').style.width = Math.max(0, rt.stats.stamina) + '%';
     rt.dashCd = 0.85;
+    const bar = document.getElementById('stam-bar');
+    const cdBar = document.getElementById('dash-cd-bar');
+    const tracker = document.getElementById('stamina-tracker-overlay');
+    if (bar) {
+      bar.style.width = Math.max(0, rt.stats.stamina) + '%';
+      bar.classList.toggle('low-energy', rt.stats.stamina < 35);
+    }
+    if (cdBar) cdBar.style.width = '0%';
+    if (tracker) tracker.classList.add('visible');
     rt.dashTimer = 0.24;
     rt.dashGhostTimer = 0.045; // Provoca la primera estela y chispas instantáneamente al despegar
     rt.invuln = 0.35;
@@ -167,8 +175,32 @@ document.addEventListener('mousemove', e => {
     const sens = (rt.gameSettings.mouseSens || 100) / 100;
     rt.yaw -= e.movementX * 0.0028 * sens;
     rt.pitch = Math.max(-0.95, Math.min(0.5, rt.pitch - e.movementY * 0.0024 * sens));
+
+    // Inercia dinámica para el viewmodel en primera persona
+    rt.swayInputX = Math.max(-18, Math.min(18, (rt.swayInputX || 0) - e.movementX * 0.35));
+    rt.swayInputY = Math.max(-14, Math.min(14, (rt.swayInputY || 0) - e.movementY * 0.25));
   }
 });
+
+window.addEventListener('wheel', e => {
+  if (rt.state !== 'PLAYING' || rt.isDead) return;
+  // Si hay menús modales interactivos en pantalla, permitir scroll de la UI y no hacer zoom
+  if (rt.state === 'BUILD' || rt.state === 'PAUSED' || rt.state === 'LEVEL_UP') return;
+
+  // Ajuste de distancia de cámara con la rueda del ratón:
+  // - deltaY > 0 (rueda hacia abajo / atrás): aleja la cámara (máximo 2.5x distancia base)
+  // - deltaY < 0 (rueda hacia arriba / adelante): acerca la cámara (mínimo 0.0 = primera persona)
+  const rawDelta = e.deltaMode === 1 ? e.deltaY * 20 : e.deltaY;
+  const zoomStep = Math.sign(rawDelta) * Math.min(0.25, Math.max(0.08, Math.abs(rawDelta) * 0.002));
+
+  const current = rt.targetCamDistMult ?? 1.0;
+  const next = Math.max(0.0, Math.min(2.5, current + zoomStep));
+  rt.targetCamDistMult = Math.round(next * 100) / 100;
+
+  try {
+    localStorage.setItem('traces_camera_dist', String(rt.targetCamDistMult));
+  } catch (_) {}
+}, { passive: true });
 
 window.addEventListener('mousedown', e => {
   document.body.classList.add('mouse-pressed');
@@ -183,6 +215,16 @@ window.addEventListener('mousedown', e => {
       e.preventDefault();
       mode.cancelTurretPlacement();
     }
+    return;
+  }
+
+  // Clic de rueda (botón central): restablecer distancia de cámara predeterminada (1.0x)
+  if (e.button === 1) {
+    e.preventDefault();
+    rt.targetCamDistMult = 1.0;
+    try {
+      localStorage.setItem('traces_camera_dist', '1.0');
+    } catch (_) {}
     return;
   }
 

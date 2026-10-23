@@ -132,12 +132,17 @@ function isOnlineSimulationActive() {
 }
 let pendingTutorial = false;
 let yaw = 0, pitch = -0.22, playerFacingYaw = 0;
+const savedCamDist = parseFloat(localStorage.getItem('traces_camera_dist'));
+let camDistMult = (!isNaN(savedCamDist) && savedCamDist >= 0 && savedCamDist <= 2.5) ? savedCamDist : 1.0;
+let targetCamDistMult = camDistMult;
+let swayInputX = 0, swayInputY = 0;
 let gameTime = 0, runSouls = 0, kills = 0;
 let stats = {}, skills = {}, passives = {}, rerollsLeft = CONFIG.LIMITS.REROLLS_PER_RUN, maxRerollsRun = CONFIG.LIMITS.REROLLS_PER_RUN;
 let playerYVel = 0, isGrounded = true, dashCd = 0, invuln = 0, atkAnimTimer = 0;
 let dashTimer = 0, dashGhostTimer = 0;
 const dashDirVec = new THREE.Vector3();
 let camShake = 0, targetFov = 70;
+let stamBarEl = null, stamTrackerEl = null, dashCdBarEl = null;
 let activeBoss = null;
 let isDead = false;
 
@@ -525,7 +530,36 @@ function animate() {
     if (dashCd > 0) dashCd -= dt;
     if (atkAnimTimer > 0) atkAnimTimer -= dt;
     if (!isDead) {
-      stats.stamina = Math.min(100, stats.stamina + dt * 22);
+      if (stats.stamina < 100) {
+        stats.stamina = Math.min(100, stats.stamina + dt * 22);
+      }
+
+      if (!stamBarEl) stamBarEl = document.getElementById('stam-bar');
+      if (!dashCdBarEl) dashCdBarEl = document.getElementById('dash-cd-bar');
+      if (!stamTrackerEl) stamTrackerEl = document.getElementById('stamina-tracker-overlay');
+
+      if (stamBarEl) {
+        stamBarEl.style.width = `${stats.stamina}%`;
+        stamBarEl.classList.toggle('low-energy', stats.stamina < 35);
+      }
+
+      if (dashCdBarEl) {
+        if (dashCd > 0) {
+          const cdPct = Math.max(0, Math.min(100, (1 - dashCd / 0.85) * 100));
+          dashCdBarEl.style.width = `${cdPct}%`;
+        } else {
+          dashCdBarEl.style.width = '100%';
+        }
+      }
+
+      if (stamTrackerEl) {
+        if (stats.stamina >= 100 && dashCd <= 0) {
+          stamTrackerEl.classList.remove('visible');
+        } else {
+          stamTrackerEl.classList.add('visible');
+        }
+      }
+
       if (mods.regenPerSec > 0 && stats.hp < stats.maxHp) {
         stats.hp = Math.min(stats.maxHp, stats.hp + mods.regenPerSec * dt);
       }
@@ -533,6 +567,11 @@ function animate() {
     if (Math.abs(camera.fov - targetFov) > 0.2) {
       camera.fov += (targetFov - camera.fov) * dt * 8;
       camera.updateProjectionMatrix();
+    }
+    if (Math.abs(camDistMult - targetCamDistMult) > 0.001) {
+      camDistMult += (targetCamDistMult - camDistMult) * Math.min(1.0, dt * 14);
+    } else {
+      camDistMult = targetCamDistMult;
     }
 
     const camFwd = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), yaw);
@@ -580,16 +619,89 @@ function animate() {
       spawnLandingDust(playerGroup.position);
     }
 
-    camera.position.copy(playerGroup.position)
-      .add(camFwd.clone().multiplyScalar(-5.8 * Math.cos(pitch)))
-      .add(new THREE.Vector3(0, Math.max(1.1, -Math.sin(pitch) * 5.2 + 2.1), 0));
+    // Elevación de la cámara en primera persona (altura de ojos natural elevada ~1.80m)
+    const fpHeightBoost = (1.0 - Math.min(1.0, camDistMult / 0.40)) * 0.45;
+    const eyeHeight = 1.35 + fpHeightBoost;
+    const eyePos = playerGroup.position.clone().add(new THREE.Vector3(0, eyeHeight, 0));
+
+    // Vector tridimensional de línea de visión (yaw + pitch)
+    const lookDir = new THREE.Vector3(
+      -Math.sin(yaw) * Math.cos(pitch),
+      Math.sin(pitch),
+      -Math.cos(yaw) * Math.cos(pitch)
+    );
+
+    // Posición de cámara: interpolación continua desde primera persona (0.0) hasta 2.5x distancia base
+    camera.position.copy(eyePos)
+      .add(camFwd.clone().multiplyScalar(-5.8 * Math.cos(pitch) * camDistMult))
+      .add(new THREE.Vector3(0, (-Math.sin(pitch) * 5.2 + 0.75) * camDistMult, 0));
+
+    // Seguridad de colisión con suelo/obstáculos en ángulo cenital o zoom elevado
+    const camGround = worldPhysics.getGroundHeight(camera.position.x, camera.position.z, playerGroup.position.y);
+    if (camera.position.y < camGround + 0.35) {
+      camera.position.y = camGround + 0.35;
+    }
+
     if (camShake > 0) {
       camera.position.x += (Math.random() - 0.5) * camShake;
       camera.position.y += (Math.random() - 0.5) * camShake;
       camShake = Math.max(0, camShake - dt * 1.8);
     }
-    camera.lookAt(playerGroup.position.clone().add(new THREE.Vector3(0, 1.3, 0)));
+
+    // Objetivo de enfoque (lookAt):
+    // En tercera persona enfoca el torso/cabeza del superviviente (y=1.3).
+    // Al aproximarse a primera persona (< 0.35) desliza suavemente el punto de enfoque hacia el horizonte en lookDir.
+    const lookT = Math.min(1.0, camDistMult / 0.35);
+    const tpTarget = playerGroup.position.clone().add(new THREE.Vector3(0, 1.3, 0));
+    const fpTarget = eyePos.clone().add(lookDir.clone().multiplyScalar(30.0));
+    const finalTarget = tpTarget.clone().lerp(fpTarget, 1.0 - lookT);
+    camera.lookAt(finalTarget);
+
+    // Visibilidad y desvanecimiento suave del sprite del jugador para no tapar la vista en primera persona
+    if (camDistMult < 0.20) {
+      playerBillboard.mesh.visible = false;
+      if (playerBillboard.glowMesh) playerBillboard.glowMesh.visible = false;
+    } else {
+      playerBillboard.mesh.visible = true;
+      if (playerBillboard.glowMesh) playerBillboard.glowMesh.visible = true;
+      const pAlpha = camDistMult < 0.40 ? (camDistMult - 0.20) / 0.20 : 1.0;
+      playerBillboard.mesh.material.opacity = pAlpha;
+      if (playerBillboard.glowMesh) playerBillboard.glowMesh.material.opacity = pAlpha * 0.8;
+    }
+
     playerBillboard.faceCamera(camera.position);
+
+    // Modo primera persona: solo activo en la distancia mínima de cámara (< 0.08)
+    const isFirstPerson = camDistMult < 0.08;
+    document.body.classList.toggle('first-person-active', isFirstPerson && state === 'PLAYING' && !isDead);
+
+    if (isFirstPerson && state === 'PLAYING' && !isDead) {
+      swayInputX *= Math.max(0, 1 - dt * 8);
+      swayInputY *= Math.max(0, 1 - dt * 8);
+    }
+
+    // Posicionamiento dinámico 3D centrado del micro-tracker de estamina y cooldown
+    if (!stamTrackerEl) stamTrackerEl = document.getElementById('stamina-tracker-overlay');
+    if (stamTrackerEl && (stats.stamina < 100 || dashCd > 0) && !isDead) {
+      if (isFirstPerson) {
+        // En primera persona: centrado ergonómico justo debajo del punto de mira
+        stamTrackerEl.style.left = '50%';
+        stamTrackerEl.style.top = 'calc(50% + 34px)';
+        stamTrackerEl.style.transform = 'translate(-50%, -50%)';
+      } else {
+        // En tercera persona: anclado exactamente en la base de los pies del modelo 3D
+        const feetPos = playerGroup.position.clone();
+        feetPos.y += 0.04;
+        const proj = feetPos.project(camera);
+        if (proj.z < 1.0) {
+          const screenX = Math.round((proj.x * 0.5 + 0.5) * window.innerWidth);
+          const screenY = Math.round((-proj.y * 0.5 + 0.5) * window.innerHeight);
+          stamTrackerEl.style.left = `${screenX}px`;
+          stamTrackerEl.style.top = `${screenY + 12}px`;
+          stamTrackerEl.style.transform = 'translate(-50%, 0)';
+        }
+      }
+    }
 
     const ST = CONFIG.DIRECTIONAL.STATES;
     const FPS = CONFIG.DIRECTIONAL.ANIM_FPS;
@@ -605,7 +717,9 @@ function animate() {
     playerBillboard.animTimer += dt * fps;
     playerBillboard.setDirectionalFrame(playerBillboard.dirRow, pState, Math.floor(playerBillboard.animTimer) % 4);
 
-    const camAngle = Math.atan2(camera.position.x - playerGroup.position.x, camera.position.z - playerGroup.position.z);
+    const camDx = camera.position.x - playerGroup.position.x;
+    const camDz = camera.position.z - playerGroup.position.z;
+    const camAngle = (Math.abs(camDx) > 0.02 || Math.abs(camDz) > 0.02) ? Math.atan2(camDx, camDz) : yaw;
     propBillboards.forEach(p => { p.rotation.y = camAngle; });
 
     // =========================================================================
@@ -679,7 +793,7 @@ function animate() {
     const toCam = new THREE.Vector3().subVectors(camera.position, playerGroup.position).setY(0).normalize();
     playerLanternLight.position.copy(playerGroup.position).addScaledVector(toCam, 1.1).add(new THREE.Vector3(0, 1.35, 0));
     flashlight.position.copy(playerGroup.position).addScaledVector(camFwd, 0.55).add(new THREE.Vector3(0, 1.5, 0));
-    flashlight.target.position.copy(flashlight.position).add(camFwd);
+    flashlight.target.position.copy(flashlight.position).add(lookDir);
 
     const modeCtx = buildModeContext(camFwd);
     ModeManager.updateActiveMode(dt, modeCtx);
@@ -913,6 +1027,10 @@ const inputRuntime = {
   get state() { return state; }, set state(v) { state = v; },
   get yaw() { return yaw; }, set yaw(v) { yaw = v; },
   get pitch() { return pitch; }, set pitch(v) { pitch = v; },
+  get camDistMult() { return camDistMult; }, set camDistMult(v) { camDistMult = v; },
+  get targetCamDistMult() { return targetCamDistMult; }, set targetCamDistMult(v) { targetCamDistMult = v; },
+  get swayInputX() { return swayInputX; }, set swayInputX(v) { swayInputX = v; },
+  get swayInputY() { return swayInputY; }, set swayInputY(v) { swayInputY = v; },
   get dashCd() { return dashCd; }, set dashCd(v) { dashCd = v; },
   get dashTimer() { return dashTimer; }, set dashTimer(v) { dashTimer = v; },
   get dashGhostTimer() { return dashGhostTimer; }, set dashGhostTimer(v) { dashGhostTimer = v; },

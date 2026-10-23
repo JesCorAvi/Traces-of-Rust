@@ -10,6 +10,8 @@ import {
   executeSawSlash,
   fireBuckshot,
   fireFlamethrower,
+  updateFlamethrower,
+  resetFlamethrowerState,
   spawnShrapnelMine,
   fireHarpoon,
   fireDefibrillator,
@@ -68,6 +70,9 @@ export function updatePlayerWeaponsAndCombat({
   if (!canAttack || !skills.welder) {
     resetWelderState();
   }
+  if (!canAttack || !skills.flamethrower) {
+    resetFlamethrowerState();
+  }
   if (!canAttack) {
     Object.keys(weaponTimers).forEach(key => { weaponTimers[key] = 0; });
     if (Array.isArray(playerProjectiles)) clearPlayerProjectiles(scene, playerProjectiles);
@@ -104,17 +109,24 @@ export function updatePlayerWeaponsAndCombat({
     }
   }
 
-  // 3. Soplete Incinerador
+  // 3. Soplete Incinerador (Rework: torrente continuo sostenido -> enfriamiento/recarga)
   if (canAttack && skills.flamethrower) {
-    weaponTimers.flamethrower += dt;
-    if (weaponTimers.flamethrower >= CONFIG.SKILLS.flamethrower.baseCd * cdFactor) {
-      weaponTimers.flamethrower = 0;
-      fireFlamethrower(
-        scene, playerGroup.position, yaw, skills.flamethrower, mods,
-        activeEnemies, vfx, damageEnemy, playerFacingYaw
-      );
-      triggerWeaponVisualAttack('flamethrower', yaw, 0.14, true);
-    }
+    updateFlamethrower({
+      dt,
+      scene,
+      playerPos: playerGroup.position,
+      facingYaw: yaw,
+      bodyYaw: playerFacingYaw,
+      level: skills.flamethrower,
+      mods,
+      enemies: activeEnemies,
+      vfx,
+      onDamage: damageEnemy,
+      onDischarge: info => {
+        addCamShake(0.04 * mods.shakeMod);
+        triggerWeaponVisualAttack('flamethrower', info.yaw, 0.18, true, info.hitPoint, info.origin);
+      }
+    });
   }
 
   // 4. Incensario de Bilis (Aura)

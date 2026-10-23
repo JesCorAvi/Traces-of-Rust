@@ -50,6 +50,14 @@ function startGame(options = {}) {
 
   const baseHp = 100 + (rt.save.hp || 0) * 5 + (character?.statMods?.baseHpBonus || 0);
   rt.stats = { maxHp: baseHp, hp: baseHp, stamina: 100, level: 1, exp: 0, maxExp: 5 };
+  document.getElementById('stamina-tracker-overlay')?.classList.remove('visible');
+  const initStamBar = document.getElementById('stam-bar');
+  if (initStamBar) {
+    initStamBar.style.width = '100%';
+    initStamBar.classList.remove('low-energy');
+  }
+  const initCdBar = document.getElementById('dash-cd-bar');
+  if (initCdBar) initCdBar.style.width = '100%';
   rt.resetPlayerDeathState?.();
   const startWp = character?.weapon || 'slash';
   rt.skills = { [startWp]: 1 };

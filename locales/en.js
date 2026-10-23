@@ -383,7 +383,7 @@ export default {
   "weapon.shotgun.name": "12-Gauge Shotgun",
   "weapon.shotgun.desc": "Physical buckshot spread with muzzle flash and shell ejection.",
   "weapon.flamethrower.name": "Incinerating Blowtorch",
-  "weapon.flamethrower.desc": "Continuous flame cone illuminating dark halls and applying Burn per second. (Unaffected by +Projectiles).",
+  "weapon.flamethrower.desc": "Discharges a continuous stream of fire for several seconds engulfing hostiles, then enters cooldown. (Unaffected by +Projectiles).",
   "weapon.aura.name": "Bile Censer",
   "weapon.aura.desc": "Corrosive field around player dealing damage and slowing the horde. (Unaffected by +Projectiles).",
   "weapon.mines.name": "Shrapnel Mines",

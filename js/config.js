@@ -232,9 +232,9 @@ export const CONFIG = {
     },
     flamethrower: {
       get name() { return _t('weapon.flamethrower.name', 'Soplete Incinerador'); }, icon: 'flamethrower',
-      baseDmg: 8.0, baseCd: 0.11, baseRange: 7.4, scalePerLvl: 0.25,
+      baseDmg: 8.5, baseCd: 2.8, activeSec: 2.6, tickSec: 0.085, baseRange: 8.2, scalePerLvl: 0.25,
       usesMultishot: false,
-      get desc() { return _t('weapon.flamethrower.desc', 'Cono continuo de fuego que ilumina y aplica Quemadura por segundo. (No afectada por +Proyectiles).'); }
+      get desc() { return _t('weapon.flamethrower.desc', 'Descarga un torrente continuo de fuego durante varios segundos que calcina a los enemigos, y luego entra en enfriamiento. (No afectada por +Proyectiles).'); }
     },
     aura: {
       get name() { return _t('weapon.aura.name', 'Incensario de Bilis'); }, icon: 'aura',

@@ -383,7 +383,7 @@ export default {
   "weapon.shotgun.name": "Escopeta Calibre 12",
   "weapon.shotgun.desc": "Abanico de postas físicas con fogonazo y expulsión de cartucho.",
   "weapon.flamethrower.name": "Soplete Incinerador",
-  "weapon.flamethrower.desc": "Cono continuo de fuego que ilumina y aplica Quemadura por segundo. (No afectada por +Proyectiles).",
+  "weapon.flamethrower.desc": "Descarga un torrente continuo de fuego durante varios segundos que calcina a los enemigos, y luego entra en enfriamiento. (No afectada por +Proyectiles).",
   "weapon.aura.name": "Incensario de Bilis",
   "weapon.aura.desc": "Campo corrosivo alrededor del jugador que daña y frena a la horda. (No afectada por +Proyectiles).",
   "weapon.mines.name": "Minas de Metralla",
