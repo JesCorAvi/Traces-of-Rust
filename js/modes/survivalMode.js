@@ -50,9 +50,9 @@ export class SurvivalMode {
     this.isEndgame = false;
 
     ctx.playerGroup.position.set(0, 0, 0);
-    ctx.scene.fog.color.setHex(0x040604);
-    ctx.scene.fog.density = 0.038;
-    ctx.ambientLight.color.setHex(0x1e281d);
+    ctx.scene.fog.color.setHex(0xf6aa8b);
+    ctx.scene.fog.density = 0.0042;
+    ctx.ambientLight.color.setHex(0xffc8a2);
     document.body.classList.remove('endgame-mode');
     AudioSys.setEndgameDrone(false);
     AudioSys.setBossMusic(false);
@@ -90,9 +90,9 @@ export class SurvivalMode {
   activateEndgamePhase(ctx) {
     this.isEndgame = true;
     document.body.classList.add('endgame-mode');
-    ctx.scene.fog.color.setHex(0x160303);
-    ctx.scene.fog.density = 0.058;
-    ctx.ambientLight.color.setHex(0x3a0808);
+    ctx.scene.fog.color.setHex(0x6f2638);
+    ctx.scene.fog.density = 0.014;
+    ctx.ambientLight.color.setHex(0x6a2934);
     AudioSys.setEndgameDrone(true);
     AudioSys.setMusicState('CLIMAX');
     AudioSys.playBossHorn();
@@ -125,7 +125,7 @@ export class SurvivalMode {
       this.activateEndgamePhase(ctx);
     }
 
-    // 3. Actualización de todos los enemigos activos en la piscina
+    // 3. Actualización de todos los cangrejos activos en la piscina
     const isNetworkClient = !!(ctx.net?.isMatchActive && !ctx.net.isHost());
     const playerTargets = (!isNetworkClient && ctx.net?.isMatchActive && typeof ctx.net.getPlayerTargets === 'function')
       ? ctx.net.getPlayerTargets(playerGroup.position, true)
@@ -289,8 +289,8 @@ export class SurvivalMode {
     ctx.triggerRunEnd({
       victory: false,
       modeId: 'survival',
-      title: 'PACIENTE EXPIRADO',
-      cause: 'CAUSA: DESMEMBRAMIENTO EN PLANTA INDUSTRIAL',
+      title: 'SOCORRISTA AGOTADO',
+      cause: 'CAUSA: LA MAREA DE CANGREJOS TE ALCANZÓ',
       bossesDefeated: this.bossesDefeated,
       totalBosses: CONFIG.BOSS_SCHEDULE.length,
       isEndgame: this.isEndgame

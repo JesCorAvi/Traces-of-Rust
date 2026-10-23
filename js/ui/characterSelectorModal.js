@@ -1,4 +1,4 @@
-// Modal temático de Selección de Operadores tácticos para Traces of Rust.
+// Modal temático de Selección de Operadores tácticos para Crabs wants your food!.
 // Exports: openCharacterSelectorModal, closeCharacterSelectorModal, setupCharacterSelectorUI,
 // updateCharacterSelectorCard, onCharacterChange, setCoopCharSelectionStatus.
 

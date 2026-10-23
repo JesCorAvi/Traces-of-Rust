@@ -1,4 +1,4 @@
-// Rutas de oleadas, pasarelas industriales con rieles 3D, balizas, cruces giratorios y flechas de flujo.
+// Rutas de oleadas: senderos de tablones, cuerdas, balizas y flechas de flujo.
 // Exports: PathSystem.
 import * as THREE from 'three';
 import { CORE_DEFENSE_CONFIG } from '../config/coreDefenseConfig.js';
@@ -7,7 +7,7 @@ import { projectPointToSegment } from '../utils/routeMath.js';
 import { disposeObject3D } from '../utils/dispose.js';
 
 // ============================================================================
-// SISTEMA DE CAMINOS Y VÍAS INDUSTRIALES (Solo en Modo Defensa)
+// SISTEMA DE CAMINOS DE PLAYA (Solo en Modo Defensa)
 // ============================================================================
 
 /**
@@ -85,12 +85,12 @@ export class PathSystem {
     const metalTex = SpriteSheets?.env?.metal?.tex || null;
     const intersectionTex = SpriteSheets?.env?.intersection?.tex || metalTex;
 
-    // Materiales industriales compartidos
+    // Materiales de sendero: tablones cálidos, cuerdas y arena compactada.
     const walkwayMat = new THREE.MeshStandardMaterial({
       map: metalTex,
-      color: 0x3d3024,
-      roughness: 0.85,
-      metalness: 0.45,
+      color: 0xd3a06a,
+      roughness: 0.92,
+      metalness: 0.02,
       polygonOffset: true,
       polygonOffsetFactor: -2,
       polygonOffsetUnits: -2
@@ -98,32 +98,32 @@ export class PathSystem {
 
     const junctionMat = new THREE.MeshStandardMaterial({
       map: intersectionTex,
-      color: 0x3d3024,
-      roughness: 0.85,
-      metalness: 0.45,
+      color: 0xc08d59,
+      roughness: 0.92,
+      metalness: 0.02,
       polygonOffset: true,
       polygonOffsetFactor: -3,
       polygonOffsetUnits: -3
     });
 
     const railMat = new THREE.MeshStandardMaterial({
-      color: 0x241c14,
-      roughness: 0.75,
-      metalness: 0.65
+      color: 0xd8b477,
+      roughness: 0.95,
+      metalness: 0.01
     });
 
     const tieMat = new THREE.MeshStandardMaterial({
-      color: 0x1c1510,
-      roughness: 0.9,
-      metalness: 0.4
+      color: 0x7a4a2d,
+      roughness: 0.96,
+      metalness: 0.01
     });
 
-    const beaconGeo = new THREE.BoxGeometry(0.18, 0.26, 0.18);
-    const postGeo = new THREE.BoxGeometry(0.22, 0.45, 0.22);
+    const beaconGeo = new THREE.OctahedronGeometry(0.16, 0);
+    const postGeo = new THREE.CylinderGeometry(0.09, 0.13, 0.55, 6);
     const postMat = new THREE.MeshStandardMaterial({
-      color: 0x2b1d14,
-      roughness: 0.9,
-      metalness: 0.3
+      color: 0x9a6841,
+      roughness: 0.94,
+      metalness: 0.01
     });
 
     // -------------------------------------------------------------------------
@@ -221,7 +221,7 @@ export class PathSystem {
       jMesh.renderOrder = 20;
       this.visualGroup.add(jMesh);
 
-      // Topes esquineros remachados para delimitar el cruce
+      // Nudos de cuerda en las esquinas del cruce
       for (const ox of [-1.05, 1.05]) {
         for (const oz of [-1.05, 1.05]) {
           const stud = new THREE.Mesh(cornerStudGeo, tieMat);
@@ -250,12 +250,12 @@ export class PathSystem {
     arrowGeo.computeVertexNormals();
 
     const getRouteGlowColor = rId => {
-      if (rId === 'path_main') return 0x00e5ff;   // Cian eléctrico (Fácil)
-      if (rId === 'path_west') return 0xffc107;   // Ámbar dorado (Normal Oeste)
-      if (rId === 'path_east') return 0xff3366;   // Rojo coral (Normal Este)
-      if (rId === 'path_alpha') return 0xff7700;  // Naranja fuego (Difícil Alfa)
-      if (rId === 'path_beta') return 0xd946ef;   // Magenta eléctrico (Difícil Beta)
-      return 0xffd700;
+      if (rId === 'path_main') return 0x56e0d8;   // Laguna turquesa (Fácil)
+      if (rId === 'path_west') return 0xffc857;   // Sol bajo (Normal Oeste)
+      if (rId === 'path_east') return 0xff6b5a;   // Coral vivo (Normal Este)
+      if (rId === 'path_alpha') return 0xff9a4d;  // Naranja de horizonte (Difícil Alfa)
+      if (rId === 'path_beta') return 0xff7fbf;   // Buganvilla (Difícil Beta)
+      return 0xffd978;
     };
 
     this.routes.forEach(route => {
@@ -290,7 +290,7 @@ export class PathSystem {
           Math.hypot(b.x - j.x, b.z - j.z) < 0.95
         );
 
-        // 1. Plancha / Pasarela metálica de suelo (1.35m de ancho)
+        // 1. Sendero de tablones de madera (1.35m de ancho)
         const walkGeo = new THREE.PlaneGeometry(1.35, segLen + 0.06);
         const walkMesh = new THREE.Mesh(walkGeo, walkwayMat);
         walkMesh.rotation.x = -Math.PI / 2;
@@ -299,7 +299,7 @@ export class PathSystem {
         walkMesh.receiveShadow = true;
         this.visualGroup.add(walkMesh);
 
-        // 2. Rieles laterales de acero 3D (se omiten dentro del cruce para no cortar el camino transversal)
+        // 2. Cordones laterales de cuerda (se omiten dentro del cruce)
         if (!isNearJunction) {
           const railGeo = new THREE.BoxGeometry(0.08, 0.06, segLen + 0.04);
           const railL = new THREE.Mesh(railGeo, railMat);
@@ -313,7 +313,7 @@ export class PathSystem {
           this.visualGroup.add(railL, railR);
         }
 
-        // 3. Traviesas metálicas transversales cada tramo (se omiten dentro del cruce)
+        // 3. Travesaños de madera transversales cada tramo (se omiten dentro del cruce)
         const isTieInJunction = junctions.some(j => Math.hypot(a.x - j.x, a.z - j.z) < 1.15);
         if (!isTieInJunction) {
           const tieGeo = new THREE.BoxGeometry(1.4, 0.035, 0.24);

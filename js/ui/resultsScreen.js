@@ -125,7 +125,7 @@ export function presentRunResultsScreen(data) {
   }
   saveCareerFn();
 
-  // Efecto visual de apagón/colapso si el Núcleo fue destruido
+  // Efecto visual de apagón/colapso si la Despensa fue destruido
   const flashEl = document.getElementById('damage-flash');
   if (flashEl && modeId === 'core_defense' && !isVictory) {
     flashEl.style.opacity = '0.92';

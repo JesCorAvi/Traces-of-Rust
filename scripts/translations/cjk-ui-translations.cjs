@@ -535,9 +535,9 @@ module.exports = {
     zhHant: "x1 (緊湊視圖)"
   },
   "ui.settings.shadows_lantern": {
-    ko: "플래시라이트 동적 그림자:",
-    zhHans: "手电筒动态阴影：",
-    zhHant: "手電筒動態陰影："
+    ko: "동적 월드 그림자:",
+    zhHans: "动态世界阴影：",
+    zhHant: "動態世界陰影："
   },
   "ui.settings.crt_grain": {
     ko: "CRT 필터 및 필름 입자:",

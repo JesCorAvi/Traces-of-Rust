@@ -22,9 +22,9 @@ export const TURRETS = {
       get role() { return _t('turret.gunner.role', 'DAÑO DIRECTO'); },
       icon: 'turret_gunner',
       spriteKey: 'turret_gunner',
-      get description() { return _t('turret.gunner.desc', 'Rifle industrial de alta cadencia. Barato y fiable contra objetivos únicos.'); },
+      get description() { return _t('turret.gunner.desc', 'Rifle tropical de alta cadencia. Barato y fiable contra objetivos únicos.'); },
       cost: 10,
-      color: 0xb89c46,
+      color: 0xffc857,
       spriteSize: 1.5,
       base: {
         damage: 15, range: 11, fireRate: 2.8, hp: 220,
@@ -44,10 +44,10 @@ export const TURRETS = {
         {
           id: 'pierce', get name() { return _t('turret.gunner.path.pierce.name', 'PERFORACIÓN'); }, color: 0x877a5c,
           upgrades: [
-            { cost: 6, get name() { return _t('turret.gunner.upgrade.pierce.1.name', 'Núcleo de acero'); }, get desc() { return _t('turret.gunner.upgrade.pierce.1.desc', '+2 de daño.'); }, effects: { damageFlat: 2 } },
-            { cost: 12, get name() { return _t('turret.gunner.upgrade.pierce.2.name', 'Munición perforante'); }, get desc() { return _t('turret.gunner.upgrade.pierce.2.desc', 'La bala atraviesa 2 enemigos.'); }, effects: { pierce: 2 }, special: 'pierce', visual: 'long_barrel' },
+            { cost: 6, get name() { return _t('turret.gunner.upgrade.pierce.1.name', 'Despensa de acero'); }, get desc() { return _t('turret.gunner.upgrade.pierce.1.desc', '+2 de daño.'); }, effects: { damageFlat: 2 } },
+            { cost: 12, get name() { return _t('turret.gunner.upgrade.pierce.2.name', 'Munición perforante'); }, get desc() { return _t('turret.gunner.upgrade.pierce.2.desc', 'La bala atraviesa 2 cangrejos.'); }, effects: { pierce: 2 }, special: 'pierce', visual: 'long_barrel' },
             { cost: 22, get name() { return _t('turret.gunner.upgrade.pierce.3.name', 'Cañón reforzado'); }, get desc() { return _t('turret.gunner.upgrade.pierce.3.desc', '+3 de daño y +10% de alcance.'); }, effects: { damageFlat: 3, rangeMult: 1.1 } },
-            { cost: 40, get name() { return _t('turret.gunner.upgrade.pierce.4.name', 'Riel electromagnético'); }, get desc() { return _t('turret.gunner.upgrade.pierce.4.desc', 'El disparo atraviesa a todos los enemigos en línea y hace +50% de daño.'); }, effects: { damageMult: 1.5, pierce: 99, rangeMult: 1.15 }, special: 'railgun', visual: 'rail_coils' }
+            { cost: 40, get name() { return _t('turret.gunner.upgrade.pierce.4.name', 'Riel electromagnético'); }, get desc() { return _t('turret.gunner.upgrade.pierce.4.desc', 'El disparo atraviesa a todos los cangrejos en línea y hace +50% de daño.'); }, effects: { damageMult: 1.5, pierce: 99, rangeMult: 1.15 }, special: 'railgun', visual: 'rail_coils' }
           ]
         },
         {
@@ -68,9 +68,9 @@ export const TURRETS = {
       get role() { return _t('turret.mortar.role', 'ÁREA'); },
       icon: 'turret_mortar',
       spriteKey: 'turret_mortar',
-      get description() { return _t('turret.mortar.desc', 'Mortero pesado de cadencia lenta. Castiga grupos enteros de hostiles.'); },
+      get description() { return _t('turret.mortar.desc', 'Mortero pesado de cadencia lenta. Castiga grupos enteros de cangrejos.'); },
       cost: 18,
-      color: 0x9c6b3f,
+      color: 0xffb05c,
       spriteSize: 1.65,
       base: {
         damage: 44, range: 16, fireRate: 0.55, hp: 260,
@@ -116,7 +116,7 @@ export const TURRETS = {
       spriteKey: 'turret_cryo',
       get description() { return _t('turret.cryo.desc', 'Emisor criogénico que ralentiza a la horda. Poco daño, control brutal.'); },
       cost: 12,
-      color: 0x6f8f9c,
+      color: 0x9ff7ff,
       spriteSize: 1.55,
       base: {
         damage: 0, range: 10, fireRate: 0.8, hp: 240,
@@ -128,7 +128,7 @@ export const TURRETS = {
           id: 'refrigerant', get name() { return _t('turret.cryo.path.refrigerant.name', 'REFRIGERANTE'); }, color: 0x9fc3c9,
           upgrades: [
             { cost: 7, get name() { return _t('turret.cryo.upgrade.refrigerant.1.name', 'Refrigerante II'); }, get desc() { return _t('turret.cryo.upgrade.refrigerant.1.desc', 'Ralentiza un 45%.'); }, effects: { slowFactor: 0.55 } },
-            { cost: 14, get name() { return _t('turret.cryo.upgrade.refrigerant.2.name', 'Congelación'); }, get desc() { return _t('turret.cryo.upgrade.refrigerant.2.desc', 'Cada 5 pulsos congela a los enemigos 0.8s.'); }, effects: { freezeDuration: 0.8, freezeEvery: 5 }, special: 'freeze', visual: 'frost_coils' },
+            { cost: 14, get name() { return _t('turret.cryo.upgrade.refrigerant.2.name', 'Congelación'); }, get desc() { return _t('turret.cryo.upgrade.refrigerant.2.desc', 'Cada 5 pulsos congela a los cangrejos 0.8s.'); }, effects: { freezeDuration: 0.8, freezeEvery: 5 }, special: 'freeze', visual: 'frost_coils' },
             { cost: 24, get name() { return _t('turret.cryo.upgrade.refrigerant.3.name', 'Refrigerante III'); }, get desc() { return _t('turret.cryo.upgrade.refrigerant.3.desc', 'Ralentiza un 55%.'); }, effects: { slowFactor: 0.45 } },
             { cost: 44, get name() { return _t('turret.cryo.upgrade.refrigerant.4.name', 'Cero absoluto'); }, get desc() { return _t('turret.cryo.upgrade.refrigerant.4.desc', 'Congela 1.5s y los congelados reciben +50% de daño.'); }, effects: { freezeDuration: 1.5, frozenDamageMult: 1.5 }, special: 'absolute_zero', visual: 'crystal_core' }
           ]
@@ -138,7 +138,7 @@ export const TURRETS = {
           upgrades: [
             { cost: 7, get name() { return _t('turret.cryo.upgrade.radius.1.name', 'Boquilla ancha'); }, get desc() { return _t('turret.cryo.upgrade.radius.1.desc', '+15% de radio.'); }, effects: { aoeRadiusMult: 1.15 } },
             { cost: 14, get name() { return _t('turret.cryo.upgrade.radius.2.name', 'Ventisca'); }, get desc() { return _t('turret.cryo.upgrade.radius.2.desc', 'El pulso cubre +40% de radio.'); }, effects: { aoeRadiusMult: 1.4 }, special: 'blizzard', visual: 'radiator_fins' },
-            { cost: 24, get name() { return _t('turret.cryo.upgrade.radius.3.name', 'Difusor industrial'); }, get desc() { return _t('turret.cryo.upgrade.radius.3.desc', '+20% de radio.'); }, effects: { aoeRadiusMult: 1.2 } },
+            { cost: 24, get name() { return _t('turret.cryo.upgrade.radius.3.name', 'Difusor tropical'); }, get desc() { return _t('turret.cryo.upgrade.radius.3.desc', '+20% de radio.'); }, effects: { aoeRadiusMult: 1.2 } },
             { cost: 44, get name() { return _t('turret.cryo.upgrade.radius.4.name', 'Blanco total'); }, get desc() { return _t('turret.cryo.upgrade.radius.4.desc', 'Aura continua sin huecos y +20% de alcance.'); }, effects: { continuous: true, rangeMult: 1.2 }, special: 'whiteout', visual: 'blizzard_core' }
           ]
         },
@@ -146,9 +146,9 @@ export const TURRETS = {
           id: 'lethal', get name() { return _t('turret.cryo.path.lethal.name', 'ESCARCHA LETAL'); }, color: 0x4a6b73,
           upgrades: [
             { cost: 7, get name() { return _t('turret.cryo.upgrade.lethal.1.name', 'Escarcha cortante'); }, get desc() { return _t('turret.cryo.upgrade.lethal.1.desc', 'El pulso inflige 3 de daño.'); }, effects: { damageFlat: 3 } },
-            { cost: 14, get name() { return _t('turret.cryo.upgrade.lethal.2.name', 'Congelación profunda'); }, get desc() { return _t('turret.cryo.upgrade.lethal.2.desc', 'Los enemigos ralentizados sufren 2 dps.'); }, effects: { frostbiteDps: 2 }, special: 'frostbite', visual: 'ice_spikes' },
+            { cost: 14, get name() { return _t('turret.cryo.upgrade.lethal.2.name', 'Congelación profunda'); }, get desc() { return _t('turret.cryo.upgrade.lethal.2.desc', 'Los cangrejos ralentizados sufren 2 dps.'); }, effects: { frostbiteDps: 2 }, special: 'frostbite', visual: 'ice_spikes' },
             { cost: 24, get name() { return _t('turret.cryo.upgrade.lethal.3.name', 'Hielo negro'); }, get desc() { return _t('turret.cryo.upgrade.lethal.3.desc', '+3 de daño y +50% de daño por congelación.'); }, effects: { damageFlat: 3, frostbiteDpsMult: 1.5 } },
-            { cost: 44, get name() { return _t('turret.cryo.upgrade.lethal.4.name', 'Fractura'); }, get desc() { return _t('turret.cryo.upgrade.lethal.4.desc', 'Los enemigos ralentizados o congelados reciben +40% de daño.'); }, effects: { brittleMult: 1.4 }, special: 'shatter', visual: 'shatter_crystal' }
+            { cost: 44, get name() { return _t('turret.cryo.upgrade.lethal.4.name', 'Fractura'); }, get desc() { return _t('turret.cryo.upgrade.lethal.4.desc', 'Los cangrejos ralentizados o congelados reciben +40% de daño.'); }, effects: { brittleMult: 1.4 }, special: 'shatter', visual: 'shatter_crystal' }
           ]
         }
       ]
@@ -162,7 +162,7 @@ export const TURRETS = {
       spriteKey: 'turret_barracks',
       get description() { return _t('turret.barracks.desc', 'Foso de reconstrucción que despliega guardias para bloquear y hostigar.'); },
       cost: 20,
-      color: 0x68863a,
+      color: 0x9cff9a,
       spriteSize: 1.7,
       base: {
         damage: 0, range: 10, fireRate: 1, hp: 300,
@@ -209,7 +209,7 @@ export const TURRETS = {
       spriteKey: 'turret_support',
       get description() { return _t('turret.support.desc', 'Torre de enlace táctico. Potencia a las torretas cercanas aumentando su cadencia, daño y alcance.'); },
       cost: 14,
-      color: 0xb89c46,
+      color: 0x59d6c8,
       spriteSize: 1.5,
       base: {
         damage: 0, range: 14, fireRate: 1, hp: 300,
@@ -232,16 +232,16 @@ export const TURRETS = {
             { cost: 8, get name() { return _t('turret.support.upgrade.power.1.name', 'Cargas de tungsteno'); }, get desc() { return _t('turret.support.upgrade.power.1.desc', '+15% de daño a torretas cercanas.'); }, effects: { buffDamage: 0.15 } },
             { cost: 16, get name() { return _t('turret.support.upgrade.power.2.name', 'Amplificador cinético'); }, get desc() { return _t('turret.support.upgrade.power.2.desc', '+25% de daño a torretas cercanas.'); }, effects: { buffDamage: 0.25 }, special: 'kinetic_amp', visual: 'tool_arms' },
             { cost: 28, get name() { return _t('turret.support.upgrade.power.3.name', 'Sobrealimentación'); }, get desc() { return _t('turret.support.upgrade.power.3.desc', '+30% de daño adicional.'); }, effects: { buffDamage: 0.30 } },
-            { cost: 48, get name() { return _t('turret.support.upgrade.power.4.name', 'Fisión industrial'); }, get desc() { return _t('turret.support.upgrade.power.4.desc', '+45% de daño adicional a torretas en rango.'); }, effects: { buffDamage: 0.45 }, special: 'fission', visual: 'repair_beacon' }
+            { cost: 48, get name() { return _t('turret.support.upgrade.power.4.name', 'Fisión tropical'); }, get desc() { return _t('turret.support.upgrade.power.4.desc', '+45% de daño adicional a torretas en rango.'); }, effects: { buffDamage: 0.45 }, special: 'fission', visual: 'repair_beacon' }
           ]
         },
         {
           id: 'radar', get name() { return _t('turret.support.path.radar.name', 'RADAR Y ALCANCE'); }, color: 0x6f8f9c,
           upgrades: [
             { cost: 6, get name() { return _t('turret.support.upgrade.radar.1.name', 'Antena de rastreo'); }, get desc() { return _t('turret.support.upgrade.radar.1.desc', '+20% de alcance a torretas cercanas.'); }, effects: { buffRange: 0.20 } },
-            { cost: 14, get name() { return _t('turret.support.upgrade.radar.2.name', 'Sensor multiespectral'); }, get desc() { return _t('turret.support.upgrade.radar.2.desc', '+25% de alcance y +15% de chatarra por bajas cercanas.'); }, effects: { buffRange: 0.25, buffScrap: 0.15 }, special: 'sensor_sweep', visual: 'dome' },
+            { cost: 14, get name() { return _t('turret.support.upgrade.radar.2.name', 'Sensor multiespectral'); }, get desc() { return _t('turret.support.upgrade.radar.2.desc', '+25% de alcance y +15% de madera por bajas cercanas.'); }, effects: { buffRange: 0.25, buffScrap: 0.15 }, special: 'sensor_sweep', visual: 'dome' },
             { cost: 24, get name() { return _t('turret.support.upgrade.radar.3.name', 'Faro de puntería'); }, get desc() { return _t('turret.support.upgrade.radar.3.desc', '+30% de alcance adicional.'); }, effects: { buffRange: 0.30 } },
-            { cost: 45, get name() { return _t('turret.support.upgrade.radar.4.name', 'Red de mando orbital'); }, get desc() { return _t('turret.support.upgrade.radar.4.desc', '+50% de alcance masivo y +25% de chatarra global.'); }, effects: { buffRange: 0.50, buffScrap: 0.25 }, special: 'orbital_link', visual: 'barrier_ring' }
+            { cost: 45, get name() { return _t('turret.support.upgrade.radar.4.name', 'Red de mando orbital'); }, get desc() { return _t('turret.support.upgrade.radar.4.desc', '+50% de alcance masivo y +25% de madera global.'); }, effects: { buffRange: 0.50, buffScrap: 0.25 }, special: 'orbital_link', visual: 'barrier_ring' }
           ]
         }
       ]
@@ -253,9 +253,9 @@ export const TURRETS = {
       get role() { return _t('turret.tesla.role', 'CADENA ELÉCTRICA'); },
       icon: 'turret_tesla',
       spriteKey: 'turret_tesla',
-      get description() { return _t('turret.tesla.desc', 'Descarga arcos entre varios hostiles. Excelente contra grupos compactos.'); },
+      get description() { return _t('turret.tesla.desc', 'Descarga arcos entre varios cangrejos. Excelente contra grupos compactos.'); },
       cost: 28,
-      color: 0x6fa8c8,
+      color: 0x65e6e9,
       spriteSize: 1.6,
       base: {
         damage: 12, range: 8, fireRate: 1.6, hp: 240,
@@ -275,10 +275,10 @@ export const TURRETS = {
         {
           id: 'voltage', get name() { return _t('turret.tesla.path.voltage.name', 'VOLTAJE'); }, color: 0xd8b45a,
           upgrades: [
-            { cost: 10, get name() { return _t('turret.tesla.upgrade.voltage.1.name', 'Núcleo de cobre'); }, get desc() { return _t('turret.tesla.upgrade.voltage.1.desc', '+4 de daño.'); }, effects: { damageFlat: 4 } },
+            { cost: 10, get name() { return _t('turret.tesla.upgrade.voltage.1.name', 'Despensa de cobre'); }, get desc() { return _t('turret.tesla.upgrade.voltage.1.desc', '+4 de daño.'); }, effects: { damageFlat: 4 } },
             { cost: 20, get name() { return _t('turret.tesla.upgrade.voltage.2.name', 'Sobretensión'); }, get desc() { return _t('turret.tesla.upgrade.voltage.2.desc', '+30% de daño.'); }, effects: { damageMult: 1.3 } },
             { cost: 34, get name() { return _t('turret.tesla.upgrade.voltage.3.name', 'Arco paralizante'); }, get desc() { return _t('turret.tesla.upgrade.voltage.3.desc', 'Los impactos aturden brevemente.'); }, effects: { freezeDuration: 0.25 }, visual: 'tesla_capacitor' },
-            { cost: 58, get name() { return _t('turret.tesla.upgrade.voltage.4.name', 'Descarga industrial'); }, get desc() { return _t('turret.tesla.upgrade.voltage.4.desc', '+50% de daño y aturdimiento mayor.'); }, effects: { damageMult: 1.5, freezeDuration: 0.35 } }
+            { cost: 58, get name() { return _t('turret.tesla.upgrade.voltage.4.name', 'Descarga tropical'); }, get desc() { return _t('turret.tesla.upgrade.voltage.4.desc', '+50% de daño y aturdimiento mayor.'); }, effects: { damageMult: 1.5, freezeDuration: 0.35 } }
           ]
         },
         {
@@ -301,7 +301,7 @@ export const TURRETS = {
       spriteKey: 'turret_incinerator',
       get description() { return _t('turret.incinerator.desc', 'Cono de fuego a corta distancia. La quemadura compensa su alcance limitado.'); },
       cost: 24,
-      color: 0xa54a2a,
+      color: 0xff8a4c,
       spriteSize: 1.55,
       base: {
         damage: 6, range: 5.5, fireRate: 8, hp: 260,
@@ -347,7 +347,7 @@ export const TURRETS = {
       spriteKey: 'turret_railgun',
       get description() { return _t('turret.railgun.desc', 'Disparo lento y devastador contra un único objetivo prioritario. Sin área.'); },
       cost: 46,
-      color: 0x9fc3c9,
+      color: 0xffe08a,
       spriteSize: 1.7,
       base: {
         damage: 110, range: 24, fireRate: 0.45, hp: 220,
@@ -359,7 +359,7 @@ export const TURRETS = {
           id: 'caliber', get name() { return _t('turret.railgun.path.caliber.name', 'CALIBRE'); }, color: 0xc8c2ac,
           upgrades: [
             { cost: 12, get name() { return _t('turret.railgun.upgrade.caliber.1.name', 'Proyectil pesado'); }, get desc() { return _t('turret.railgun.upgrade.caliber.1.desc', '+20% de daño.'); }, effects: { damageMult: 1.2 } },
-            { cost: 24, get name() { return _t('turret.railgun.upgrade.caliber.2.name', 'Núcleo de tungsteno'); }, get desc() { return _t('turret.railgun.upgrade.caliber.2.desc', '+25 de daño.'); }, effects: { damageFlat: 25 }, visual: 'long_rail' },
+            { cost: 24, get name() { return _t('turret.railgun.upgrade.caliber.2.name', 'Despensa de tungsteno'); }, get desc() { return _t('turret.railgun.upgrade.caliber.2.desc', '+25 de daño.'); }, effects: { damageFlat: 25 }, visual: 'long_rail' },
             { cost: 40, get name() { return _t('turret.railgun.upgrade.caliber.3.name', 'Perforador cinético'); }, get desc() { return _t('turret.railgun.upgrade.caliber.3.desc', '+35% de daño.'); }, effects: { damageMult: 1.35 } },
             { cost: 64, get name() { return _t('turret.railgun.upgrade.caliber.4.name', 'Ejecutor de placas'); }, get desc() { return _t('turret.railgun.upgrade.caliber.4.desc', '+50% de daño contra el objetivo.'); }, effects: { damageMult: 1.5 } }
           ]
@@ -387,13 +387,13 @@ export const TURRETS = {
 
     collector: {
       id: 'collector',
-      get name() { return _t('turret.collector.name', 'RECOLECTOR DE CHATARRA'); },
+      get name() { return _t('turret.collector.name', 'RECOLECTOR DE MADERA'); },
       get role() { return _t('turret.collector.role', 'ECONOMÍA'); },
       icon: 'turret_collector',
       spriteKey: 'turret_collector',
-      get description() { return _t('turret.collector.desc', 'No ataca. Genera chatarra al completar oleadas y mediante su ciclo de reciclaje.'); },
+      get description() { return _t('turret.collector.desc', 'No ataca. Genera madera al completar oleadas y mediante su ciclo de reciclaje.'); },
       cost: 32,
-      color: 0xb89c46,
+      color: 0xc9f26f,
       spriteSize: 1.5,
       base: {
         damage: 0, range: 3, fireRate: 1, hp: 300,
@@ -404,28 +404,28 @@ export const TURRETS = {
         {
           id: 'yield', get name() { return _t('turret.collector.path.yield.name', 'RENDIMIENTO'); }, color: 0xd8b45a,
           upgrades: [
-            { cost: 10, get name() { return _t('turret.collector.upgrade.yield.1.name', 'Contenedor extra'); }, get desc() { return _t('turret.collector.upgrade.yield.1.desc', '+3 de chatarra por oleada.'); }, effects: { scrapPerWave: 3 } },
-            { cost: 20, get name() { return _t('turret.collector.upgrade.yield.2.name', 'Clasificador'); }, get desc() { return _t('turret.collector.upgrade.yield.2.desc', '+4 de chatarra por oleada.'); }, effects: { scrapPerWave: 4 }, visual: 'scrap_bin' },
-            { cost: 34, get name() { return _t('turret.collector.upgrade.yield.3.name', 'Línea de fundición'); }, get desc() { return _t('turret.collector.upgrade.yield.3.desc', '+5 de chatarra por oleada.'); }, effects: { scrapPerWave: 5 } },
-            { cost: 58, get name() { return _t('turret.collector.upgrade.yield.4.name', 'Fundición industrial'); }, get desc() { return _t('turret.collector.upgrade.yield.4.desc', '+8 de chatarra por oleada.'); }, effects: { scrapPerWave: 8 } }
+            { cost: 10, get name() { return _t('turret.collector.upgrade.yield.1.name', 'Contenedor extra'); }, get desc() { return _t('turret.collector.upgrade.yield.1.desc', '+3 de madera por oleada.'); }, effects: { scrapPerWave: 3 } },
+            { cost: 20, get name() { return _t('turret.collector.upgrade.yield.2.name', 'Clasificador'); }, get desc() { return _t('turret.collector.upgrade.yield.2.desc', '+4 de madera por oleada.'); }, effects: { scrapPerWave: 4 }, visual: 'scrap_bin' },
+            { cost: 34, get name() { return _t('turret.collector.upgrade.yield.3.name', 'Línea de fundición'); }, get desc() { return _t('turret.collector.upgrade.yield.3.desc', '+5 de madera por oleada.'); }, effects: { scrapPerWave: 5 } },
+            { cost: 58, get name() { return _t('turret.collector.upgrade.yield.4.name', 'Fundición tropical'); }, get desc() { return _t('turret.collector.upgrade.yield.4.desc', '+8 de madera por oleada.'); }, effects: { scrapPerWave: 8 } }
           ]
         },
         {
           id: 'logistics', get name() { return _t('turret.collector.path.logistics.name', 'LOGÍSTICA'); }, color: 0x6f8f9c,
           upgrades: [
-            { cost: 10, get name() { return _t('turret.collector.upgrade.logistics.1.name', 'Cinta rápida'); }, get desc() { return _t('turret.collector.upgrade.logistics.1.desc', '+1 de chatarra por ciclo.'); }, effects: { scrapAmount: 1 } },
+            { cost: 10, get name() { return _t('turret.collector.upgrade.logistics.1.name', 'Cinta rápida'); }, get desc() { return _t('turret.collector.upgrade.logistics.1.desc', '+1 de madera por ciclo.'); }, effects: { scrapAmount: 1 } },
             { cost: 20, get name() { return _t('turret.collector.upgrade.logistics.2.name', 'Turno doble'); }, get desc() { return _t('turret.collector.upgrade.logistics.2.desc', 'Ciclos más frecuentes.'); }, effects: { scrapInterval: 8 }, visual: 'crane' },
-            { cost: 34, get name() { return _t('turret.collector.upgrade.logistics.3.name', 'Cadena automatizada'); }, get desc() { return _t('turret.collector.upgrade.logistics.3.desc', '+2 de chatarra por ciclo.'); }, effects: { scrapAmount: 2 } },
+            { cost: 34, get name() { return _t('turret.collector.upgrade.logistics.3.name', 'Cadena automatizada'); }, get desc() { return _t('turret.collector.upgrade.logistics.3.desc', '+2 de madera por ciclo.'); }, effects: { scrapAmount: 2 } },
             { cost: 58, get name() { return _t('turret.collector.upgrade.logistics.4.name', 'Reciclaje continuo'); }, get desc() { return _t('turret.collector.upgrade.logistics.4.desc', 'Ciclos aún más frecuentes.'); }, effects: { scrapInterval: 6 } }
           ]
         },
         {
           id: 'reserve', get name() { return _t('turret.collector.path.reserve.name', 'RESERVA'); }, color: 0xa54a2a,
           upgrades: [
-            { cost: 10, get name() { return _t('turret.collector.upgrade.reserve.1.name', 'Reserva de emergencia'); }, get desc() { return _t('turret.collector.upgrade.reserve.1.desc', '+2 de chatarra por oleada.'); }, effects: { scrapPerWave: 2 } },
-            { cost: 20, get name() { return _t('turret.collector.upgrade.reserve.2.name', 'Baliza de suministros'); }, get desc() { return _t('turret.collector.upgrade.reserve.2.desc', '+1 de chatarra por ciclo y +9s de intervalo.'); }, effects: { scrapAmount: 1, scrapInterval: 9 }, visual: 'beacon' },
-            { cost: 34, get name() { return _t('turret.collector.upgrade.reserve.3.name', 'Almacén blindado'); }, get desc() { return _t('turret.collector.upgrade.reserve.3.desc', '+4 de chatarra por oleada.'); }, effects: { scrapPerWave: 4 } },
-            { cost: 58, get name() { return _t('turret.collector.upgrade.reserve.4.name', 'Red de salvamento'); }, get desc() { return _t('turret.collector.upgrade.reserve.4.desc', '+2 de chatarra por ciclo y +7s de intervalo.'); }, effects: { scrapAmount: 2, scrapInterval: 7 } }
+            { cost: 10, get name() { return _t('turret.collector.upgrade.reserve.1.name', 'Reserva de emergencia'); }, get desc() { return _t('turret.collector.upgrade.reserve.1.desc', '+2 de madera por oleada.'); }, effects: { scrapPerWave: 2 } },
+            { cost: 20, get name() { return _t('turret.collector.upgrade.reserve.2.name', 'Baliza de suministros'); }, get desc() { return _t('turret.collector.upgrade.reserve.2.desc', '+1 de madera por ciclo y +9s de intervalo.'); }, effects: { scrapAmount: 1, scrapInterval: 9 }, visual: 'beacon' },
+            { cost: 34, get name() { return _t('turret.collector.upgrade.reserve.3.name', 'Almacén blindado'); }, get desc() { return _t('turret.collector.upgrade.reserve.3.desc', '+4 de madera por oleada.'); }, effects: { scrapPerWave: 4 } },
+            { cost: 58, get name() { return _t('turret.collector.upgrade.reserve.4.name', 'Red de salvamento'); }, get desc() { return _t('turret.collector.upgrade.reserve.4.desc', '+2 de madera por ciclo y +7s de intervalo.'); }, effects: { scrapAmount: 2, scrapInterval: 7 } }
           ]
         }
       ]
@@ -439,7 +439,7 @@ export const TURRETS = {
       spriteKey: 'turret_press',
       get description() { return _t('turret.press.desc', 'Golpea el suelo a muy corta distancia con una prensa hidráulica. Empuja y aturde.'); },
       cost: 20,
-      color: 0xd8b45a,
+      color: 0xffd166,
       spriteSize: 1.45,
       base: {
         damage: 55, range: 2.2, fireRate: 0.45, hp: 280,
@@ -470,7 +470,7 @@ export const TURRETS = {
           upgrades: [
             { cost: 8, get name() { return _t('turret.press.upgrade.weight.1.name', 'Lastre de hierro'); }, get desc() { return _t('turret.press.upgrade.weight.1.desc', 'Aturdimiento de 0.9s.'); }, effects: { freezeDuration: 0.9 } },
             { cost: 16, get name() { return _t('turret.press.upgrade.weight.2.name', 'Contrapeso'); }, get desc() { return _t('turret.press.upgrade.weight.2.desc', '+12 de daño.'); }, effects: { damageFlat: 12 }, visual: 'hazard_plate' },
-            { cost: 28, get name() { return _t('turret.press.upgrade.weight.3.name', 'Yunque de vía'); }, get desc() { return _t('turret.press.upgrade.weight.3.desc', 'Aturdimiento de 1.2s.'); }, effects: { freezeDuration: 1.2 } },
+            { cost: 28, get name() { return _t('turret.press.upgrade.weight.3.name', 'Yunque de senda'); }, get desc() { return _t('turret.press.upgrade.weight.3.desc', 'Aturdimiento de 1.2s.'); }, effects: { freezeDuration: 1.2 } },
             { cost: 50, get name() { return _t('turret.press.upgrade.weight.4.name', 'Impacto sísmico'); }, get desc() { return _t('turret.press.upgrade.weight.4.desc', '+40% de daño y aturdimiento de 1.5s.'); }, effects: { damageMult: 1.4, freezeDuration: 1.5 } }
           ]
         }
@@ -483,9 +483,9 @@ export const TURRETS = {
       get role() { return _t('turret.ejector.role', 'DESPLAZAMIENTO'); },
       icon: 'turret_ejector',
       spriteKey: 'turret_ejector',
-      get description() { return _t('turret.ejector.desc', 'Válvula de presión que empuja a los hostiles hacia atrás por la ruta. Daño bajo.'); },
+      get description() { return _t('turret.ejector.desc', 'Válvula de presión que empuja a los cangrejos hacia atrás por la ruta. Daño bajo.'); },
       cost: 18,
-      color: 0x6f8f9c,
+      color: 0x8bffdd,
       spriteSize: 1.4,
       base: {
         damage: 10, range: 2.5, fireRate: 1.3, hp: 260,

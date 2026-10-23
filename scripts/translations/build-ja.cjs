@@ -415,7 +415,7 @@ import('../../locales/en.js').then(enMod => {
   }
 
   // Write locales/ja.js
-  const outLines = ['// Japanese localization dictionary for Traces of Rust.', 'export default {'];
+  const outLines = ['// Japanese localization dictionary for Crabs wants your food!.', 'export default {'];
   const keys = Object.keys(es);
   keys.forEach((k, idx) => {
     const isLast = idx === keys.length - 1;
@@ -509,7 +509,7 @@ function translateUiKeyJa(k, esVal, enVal) {
   if (k === 'ui.settings.crt') return 'CRTフィルター＆フィルム粒子：';
   if (k === 'ui.settings.crt_grain') return 'CRTフィルター＆フィルム粒子：';
   if (k === 'ui.settings.shadows') return '動的シャドウ：';
-  if (k === 'ui.settings.shadows_lantern') return 'フラッシュライトの動的影：';
+  if (k === 'ui.settings.shadows_lantern') return '動的な世界の影：';
   if (k === 'ui.settings.fps') return 'FPS表示：';
   if (k === 'ui.settings.fov') return '視野角 (FOV)：';
   if (k === 'ui.settings.controls_section') return '操作と視点';

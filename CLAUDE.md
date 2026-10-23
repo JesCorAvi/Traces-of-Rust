@@ -1,8 +1,8 @@
-# Traces of Rust
+# Crabs wants your food!
 
-Juego web 3D de terror/supervivencia + tower defense con Three.js.
+Juego web 3D de tower defense y supervivencia arcade ambientado en una playa tropical al atardecer, con Three.js. El objetivo es defender la despensa de comida del asalto de cangrejos ladrones.
 - Ejecutar en navegador: `python -m http.server 8000` en la raíz y abrir `http://localhost:8000`.
-- Ejecutar en Windows (con Steamworks Spacewar 480): `npm start` (o abrir `dist/Traces of Rust-win32-x64/Traces of Rust.exe`).
+- Ejecutar en Windows (con Steamworks Spacewar 480): `npm start` (o abrir `dist/Crabs wants your food!-win32-x64/Crabs wants your food!.exe`).
 - Empaquetar ejecutable Windows: `npm run build:win`.
 - Three.js r160 se carga por importmap desde unpkg.
 
@@ -14,22 +14,22 @@ Juego web 3D de terror/supervivencia + tower defense con Three.js.
 - `js/online/steamLobbyUI.js`: interfaz y gestor de salas multijugador privadas P2P (exclusivas por código/ID) e invitaciones por Steam Overlay (`Shift + Tab`).
 - `js/online/webRtcAdapter.js`: adaptador `window.steamOnline` para navegador (PeerJS dinámico + STUN público, salas de 6 caracteres, canales fiable/no fiable y auto-unión `?room=CODIGO`).
 - `js/online/multiplayerSync.js`: orquestador de sincronización P2P en tiempo real en partida (avatares remotos 3D `RemotePlayer`, posiciones a 20Hz, animación direccional de 8 ángulos, ataques, sincronización de torretas construidas/mejoradas/vendidas con retroactividad `TURRET_STATE_SYNC`, fases de oleadas y estado del núcleo).
-- `css/style.css`: base visual, HUD global, botones y barras. `css/hud_modes.css` agrega por `@import` las hojas `hud_core` (HUD en juego), `hud_menus` (menús/tienda/level-up), `hud_turrets` (torretas) y `hud_tutorial`.
+- `css/style.css`: base visual, HUD global, botones y barras. `css/hud_modes.css` agrega por `@import` las hojas `hud_core` (HUD en juego), `hud_menus` (menús/tienda/level-up), `hud_turrets` (torretas) y `hud_tutorial`. `css/tropical_theme.css` se carga después de `style.css` y aplica la paleta de playa, el título y los ajustes de HUD/menús.
 - `js/main.js`: bootstrap, runtime compartido, cámara, bucle de render y wiring de módulos.
 - `js/core/`: `saveState` (save/settings/carrera), `input` (teclado/ratón/pointer lock), `gameFlow` (inicio/fin/pausa/menú/botones).
 - `js/gameplay/`: `modifiers`, `pickups`, `combatRuntime`, `playerVisuals`, `levelUp`.
 - `js/config.js`: CONFIG global + reexport. `js/config/modesConfig.js`: catálogo, Supervivencia y capa de spawns TD. `js/config/enemiesConfig.js`: stats y habilidades de los enemigos TD nuevos (`runner`, `hulk`, `nest`, `regenerator`, `splitter`). `js/config/bossAI.js`: perfiles data-driven de ataques de jefes (wind-up/active/recovery/cooldown/rango/peso, fases y overrides). `js/config/coreDefense/`: `core`, `routes`, `waves`, `economy`, `placement`, `tutorial`, `turrets` (barrel en `coreDefenseConfig.js`).
 - `js/core/eventBus.js`: bus de eventos (`GameEvents`).
-- `js/world.js`: orquesta `world/` (`scene`, `materials`, `geometry`, `physics`, `lights`, `props`, `dust`, `routeClearance`).
+- `js/world.js`: orquesta `world/` (`scene`, `terrain`, `materials`, `geometry`, `physics`, `lights`, `props`, `dust`, `routeClearance`). El terreno de dunas comparte `terrainHeightAt` entre la malla y la física; la escena contiene cielo procedural de atardecer, océano, espuma y sol.
 - `js/entities.js`: barrel de `entities/` (`billboard`, `enemy`, `enemyPool`). `js/entities/bossController.js`: máquina de estados de jefes (`intro`, `chase`, `telegraph`, `active`, `recovery`, `phase_transition`, `player_dead`, `dead`), selector ponderado y API de telegraph/daño.
 - `js/combat.js`: barrel de `combat/` (`shared`, `weapons/*`, `bossAttacks`). Incluye las armas nuevas `chakram`, `welder`, `grenade`, `hammer` y `acid`; `playerProjectiles.js` gestiona bumeranes, granadas y nubes ácidas del jugador. `js/combat/bossAttacks.js` ejecuta hazards/proyectiles en `ACTIVE` y expone el wind-up visual.
 - `js/player/playerController.js`: actualización de armas del jugador; con `isDead` conserva hazards/proyectiles/VFX pero desactiva armas, orbitales y detección de minas. Las armas de proyectil respetan topes, hit sets por tramo y limpieza en muerte/reinicio. El `welder` mantiene su máquina de estados carga/ready/activo y replica una única `ATTACK` al descargar el haz.
 - `js/modes/`: `gameModeManager`, `survivalMode`, `coreDefenseMode`, `enemyLoop`.
-- `js/defense/`: `defensiveStructure` (base), `coreMachine`, `turret`, `turretSystem`, `allyUnit`, `enemyTargetAI`, `pathSystem`, `spawnPointSystem`, `exitPointSystem`, `mapGenerator`, `mapCatalog` (18 mapas: 6 fácil, 6 normal, 6 difícil), `routeThumbnailRenderer` (miniaturas 2D procedurales), `waveManager`, `defenseEventManager`; subcarpetas `turrets/` (modelos y combate nuevos: `tesla`, `incinerator`, `railgun`, `collector`, `press`, `ejector`) y `turretSystem/`.
+- `js/defense/`: `defensiveStructure` (base), `coreMachine`, `turret`, `turretSystem`, `allyUnit`, `enemyTargetAI`, `pathSystem`, `spawnPointSystem`, `exitPointSystem`, `mapGenerator`, `mapCatalog` (18 mapas de playa: 6 fácil, 6 normal, 6 difícil), `routeThumbnailRenderer` (miniaturas 2D procedurales), `foodDepotMarker` (baliza de la despensa), `waveManager`, `defenseEventManager`; subcarpetas `turrets/` (modelos y combate nuevos: `tesla`, `incinerator`, `railgun`, `collector`, `press`, `ejector`) y `turretSystem/`.
 - `js/sprites/`: `spritePalette` y subcarpetas `entity/`, `player/`, `turret/`, `ui/`; barrels `entitySprites.js`, `playerSprites.js`, `turretSprites.js`, `uiAtlasBuilder.js`; registro en `spritesheets.js`.
 - `js/ui/`: `hudController` + `hud/` (`stats`, `radar`), `menusAndShop`, `resultsScreen`, `turretBuildMenu`, `mapSelectorModal` (selector de mapas estilo Bloons TD 6), `settingsMenu` (pantalla completa híbrida Electron/Web con persistencia).
 - `js/tutorial/`: `towerDefenseTutorial` (orquestador y panel), `tutorialSteps` (datos de pasos), `tutorialMarkers` (anillos/haces 3D) y `practiceWave` (oleada de práctica).
-- `js/debug/debugOverlay.js`: debug de rutas/IA. `js/audio.js`: audio WebAudio sintetizado.
+- `js/debug/debugOverlay.js`: debug de rutas/IA. `js/audio.js`: audio WebAudio sintetizado, marea estéreo con rompientes y banda sonora tropical adaptativa (marimba, steel drum, ukelele, congas y shakers).
 - `js/utils/`: `routeMath` (proyección punto-segmento) y `dispose` (liberar Object3D).
 
 ## Sistemas

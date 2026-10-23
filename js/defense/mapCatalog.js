@@ -18,9 +18,9 @@ export const MAP_CATALOG = {
   easy_plaza: {
     id: 'easy_plaza',
     difficulty: 'facil',
-    get name() { return _t('map.easy_plaza.name', 'Plaza Central'); },
-    get badge() { return _t('map.easy_plaza.badge', 'FÁCIL // BUCLE 360°'); },
-    get desc() { return _t('map.easy_plaza.desc', 'Un recorrido largo con un bucle completo de 360° en el patio despejado. Máximo tiempo de impacto para torretas.'); },
+    get name() { return _t('map.easy_plaza.name', 'Playa del Faro'); },
+    get badge() { return _t('map.easy_plaza.badge', 'FÁCIL // BUCLE DE MAREA'); },
+    get desc() { return _t('map.easy_plaza.desc', 'Un paseo entre dunas con un bucle completo junto a la orilla. Los cangrejos rodean la despensa antes de huir.'); },
     entrances: 1,
     exits: 1,
     startingScrap: 10,
@@ -28,8 +28,8 @@ export const MAP_CATALOG = {
     routes: {
       path_main: {
         id: 'path_main',
-        name: 'Vía Principal',
-        color: 0x00e5ff,
+        name: 'Senda Principal',
+        color: 0x56e0d8,
         controlPoints: [
           { x: 0, z: -44 },
           { x: 10, z: -38 },
@@ -53,19 +53,19 @@ export const MAP_CATALOG = {
       }
     },
     spawnPoints: [
-      { id: 'sp_1', name: 'COMPUERTA NORTE', pathId: 'path_main', color: 0x00e5ff }
+      { id: 'sp_1', name: 'MADRIGUERA NORTE', pathId: 'path_main', color: 0x56e0d8 }
     ],
     exitPoints: [
-      { id: 'exit_1', name: 'ESCLUSA SUR', pathId: 'path_main', color: 0xff3b16 }
+      { id: 'exit_1', name: 'PASO SUR', pathId: 'path_main', color: 0xff7b5c }
     ]
   },
 
   easy_spiral: {
     id: 'easy_spiral',
     difficulty: 'facil',
-    get name() { return _t('map.easy_spiral.name', 'Espiral de Contención'); },
+    get name() { return _t('map.easy_spiral.name', 'Giro de la Marea'); },
     get badge() { return _t('map.easy_spiral.badge', 'FÁCIL // ESPIRAL'); },
-    get desc() { return _t('map.easy_spiral.desc', 'Doble circunvalación concéntrica alrededor del patio central. Las entidades giran hacia adentro antes de salir.'); },
+    get desc() { return _t('map.easy_spiral.desc', 'Dos vueltas concéntricas alrededor de la despensa, meciéndose con la brisa antes de llegar a la orilla.'); },
     entrances: 1,
     exits: 1,
     startingScrap: 10,
@@ -73,8 +73,8 @@ export const MAP_CATALOG = {
     routes: {
       path_main: {
         id: 'path_main',
-        name: 'Conducto Espiral',
-        color: 0x38ef7d,
+        name: 'Arroyo Espiral',
+        color: 0x7cdc7a,
         controlPoints: [
           { x: -42, z: -44 },
           { x: -42, z: -10 },
@@ -102,19 +102,19 @@ export const MAP_CATALOG = {
       }
     },
     spawnPoints: [
-      { id: 'sp_1', name: 'ACCESO NOROESTE', pathId: 'path_main', color: 0x38ef7d }
+      { id: 'sp_1', name: 'PASO NOROESTE', pathId: 'path_main', color: 0x7cdc7a }
     ],
     exitPoints: [
-      { id: 'exit_1', name: 'DESAGÜE SURESTE', pathId: 'path_main', color: 0xff3b16 }
+      { id: 'exit_1', name: 'CHARCO SURESTE', pathId: 'path_main', color: 0xff7b5c }
     ]
   },
 
   easy_serpentine: {
     id: 'easy_serpentine',
     difficulty: 'facil',
-    get name() { return _t('map.easy_serpentine.name', 'El Serpentín'); },
+    get name() { return _t('map.easy_serpentine.name', 'Serpentina de Dunas'); },
     get badge() { return _t('map.easy_serpentine.badge', 'FÁCIL // ZIGZAG'); },
-    get desc() { return _t('map.easy_serpentine.desc', 'Un sinuoso zigzag de tres pasadas horizontales cruzando la planta industrial de lado a lado.'); },
+    get desc() { return _t('map.easy_serpentine.desc', 'Un zigzag de arena que cruza las dunas de lado a lado y expone a los cangrejos a disparos cruzados.'); },
     entrances: 1,
     exits: 1,
     startingScrap: 10,
@@ -122,8 +122,8 @@ export const MAP_CATALOG = {
     routes: {
       path_main: {
         id: 'path_main',
-        name: 'Vía Zigzag',
-        color: 0x4facfe,
+        name: 'Senda Zigzag',
+        color: 0x63c7e8,
         controlPoints: [
           { x: -42, z: -44 },
           { x: -42, z: -41 },
@@ -149,19 +149,19 @@ export const MAP_CATALOG = {
       }
     },
     spawnPoints: [
-      { id: 'sp_1', name: 'COMPUERTA OESTE', pathId: 'path_main', color: 0x4facfe }
+      { id: 'sp_1', name: 'MADRIGUERA OESTE', pathId: 'path_main', color: 0x63c7e8 }
     ],
     exitPoints: [
-      { id: 'exit_1', name: 'SALIDA INDUSTRIAL', pathId: 'path_main', color: 0xff3b16 }
+      { id: 'exit_1', name: 'SALIDA DE LA PLAYA', pathId: 'path_main', color: 0xff7b5c }
     ]
   },
 
   easy_ramps: {
     id: 'easy_ramps',
     difficulty: 'facil',
-    get name() { return _t('map.easy_ramps.name', 'Rampa Perimetral'); },
+    get name() { return _t('map.easy_ramps.name', 'Dunas del Vigía'); },
     get badge() { return _t('map.easy_ramps.badge', 'FÁCIL // ELEVADA'); },
-    get desc() { return _t('map.easy_ramps.desc', 'Recorrido perimetral que asciende por la rampa oeste, cruza el mirador alto y desciende al patio sur.'); },
+    get desc() { return _t('map.easy_ramps.desc', 'Un sendero que sube por la duna oeste hasta el mirador de madera y baja al campamento entre palmeras.'); },
     entrances: 1,
     exits: 1,
     startingScrap: 10,
@@ -170,7 +170,7 @@ export const MAP_CATALOG = {
       path_main: {
         id: 'path_main',
         name: 'Pasarela Alta',
-        color: 0x00f2fe,
+        color: 0x6ee0df,
         controlPoints: [
           { x: 0, z: -44 },
           { x: -14, z: -41 },
@@ -197,19 +197,19 @@ export const MAP_CATALOG = {
       }
     },
     spawnPoints: [
-      { id: 'sp_1', name: 'RAMPA NORTE', pathId: 'path_main', color: 0x00f2fe }
+      { id: 'sp_1', name: 'DUNA NORTE', pathId: 'path_main', color: 0x6ee0df }
     ],
     exitPoints: [
-      { id: 'exit_1', name: 'ESCLUSA SUR', pathId: 'path_main', color: 0xff3b16 }
+      { id: 'exit_1', name: 'PASO SUR', pathId: 'path_main', color: 0xff7b5c }
     ]
   },
 
   easy_cooling: {
     id: 'easy_cooling',
     difficulty: 'facil',
-    get name() { return _t('map.easy_cooling.name', 'Circuito Enfriamiento'); },
+    get name() { return _t('map.easy_cooling.name', 'Charco de Coral'); },
     get badge() { return _t('map.easy_cooling.badge', 'FÁCIL // DOBLE S'); },
-    get desc() { return _t('map.easy_cooling.desc', 'Dos giros en forma de "S" trazados alrededor de las tuberías y depósitos de enfriamiento de la fábrica.'); },
+    get desc() { return _t('map.easy_cooling.desc', 'Dos giros en forma de S alrededor de charcos de coral y viejas neveras varadas en la arena.'); },
     entrances: 1,
     exits: 1,
     startingScrap: 10,
@@ -217,8 +217,8 @@ export const MAP_CATALOG = {
     routes: {
       path_main: {
         id: 'path_main',
-        name: 'Vía Tanques',
-        color: 0x43e97b,
+        name: 'Senda Tanques',
+        color: 0x8bdc78,
         controlPoints: [
           { x: 24, z: -44 },
           { x: 14, z: -41 },
@@ -236,19 +236,19 @@ export const MAP_CATALOG = {
       }
     },
     spawnPoints: [
-      { id: 'sp_1', name: 'VÁLVULA NORESTE', pathId: 'path_main', color: 0x43e97b }
+      { id: 'sp_1', name: 'MANANTIAL NORESTE', pathId: 'path_main', color: 0x8bdc78 }
     ],
     exitPoints: [
-      { id: 'exit_1', name: 'DRENAJE SUROESTE', pathId: 'path_main', color: 0xff3b16 }
+      { id: 'exit_1', name: 'CHARCO SUROESTE', pathId: 'path_main', color: 0xff7b5c }
     ]
   },
 
   easy_horseshoe: {
     id: 'easy_horseshoe',
     difficulty: 'facil',
-    get name() { return _t('map.easy_horseshoe.name', 'Paso de la Herradura'); },
+    get name() { return _t('map.easy_horseshoe.name', 'Herradura del Cangrejo'); },
     get badge() { return _t('map.easy_horseshoe.badge', 'FÁCIL // HERRADURA'); },
-    get desc() { return _t('map.easy_horseshoe.desc', 'Un bucle perimetral en "U" con un largo tramo recto central ideal para artillería y morteros pesados.'); },
+    get desc() { return _t('map.easy_horseshoe.desc', 'Un gran bucle en U junto a la orilla, con un tramo recto ideal para morteros de arena.'); },
     entrances: 1,
     exits: 1,
     startingScrap: 10,
@@ -257,7 +257,7 @@ export const MAP_CATALOG = {
       path_main: {
         id: 'path_main',
         name: 'Gran Herradura',
-        color: 0x38f9d7,
+        color: 0x6edbca,
         controlPoints: [
           { x: -42, z: -44 },
           { x: -42, z: -14 },
@@ -283,10 +283,10 @@ export const MAP_CATALOG = {
       }
     },
     spawnPoints: [
-      { id: 'sp_1', name: 'CANAL OESTE', pathId: 'path_main', color: 0x38f9d7 }
+      { id: 'sp_1', name: 'ARROYO OESTE', pathId: 'path_main', color: 0x6edbca }
     ],
     exitPoints: [
-      { id: 'exit_1', name: 'ESCLUSA CENTRAL', pathId: 'path_main', color: 0xff3b16 }
+      { id: 'exit_1', name: 'PASO CENTRAL', pathId: 'path_main', color: 0xff7b5c }
     ]
   },
 
@@ -296,9 +296,9 @@ export const MAP_CATALOG = {
   norm_twins: {
     id: 'norm_twins',
     difficulty: 'normal',
-    get name() { return _t('map.norm_twins.name', 'Conductos Gemelos'); },
+    get name() { return _t('map.norm_twins.name', 'Dos Mareas'); },
     get badge() { return _t('map.norm_twins.badge', 'NORMAL // CONVERGENTE'); },
-    get desc() { return _t('map.norm_twins.desc', 'Dos vías que se acercan en el patio a 7.6m formando un cuello de botella compartido antes de la salida.'); },
+    get desc() { return _t('map.norm_twins.desc', 'Dos senderos que se acercan entre las dunas y forman un cuello de botella frente a la despensa.'); },
     entrances: 2,
     exits: 1,
     startingScrap: 10,
@@ -306,8 +306,8 @@ export const MAP_CATALOG = {
     routes: {
       path_west: {
         id: 'path_west',
-        name: 'Conducto Oeste',
-        color: 0xffc107,
+        name: 'Arroyo Oeste',
+        color: 0xffc857,
         controlPoints: [
           { x: -24, z: -44 },
           { x: -20, z: -36 },
@@ -325,7 +325,7 @@ export const MAP_CATALOG = {
       path_east: {
         id: 'path_east',
         name: 'Pasarela Este',
-        color: 0xff3366,
+        color: 0xff7b6e,
         controlPoints: [
           { x: 24, z: -44 },
           { x: 20, z: -36 },
@@ -342,20 +342,20 @@ export const MAP_CATALOG = {
       }
     },
     spawnPoints: [
-      { id: 'sp_west', name: 'COMPUERTA NOROESTE', pathId: 'path_west', color: 0xffc107 },
-      { id: 'sp_east', name: 'COMPUERTA NORESTE', pathId: 'path_east', color: 0xff3366 }
+      { id: 'sp_west', name: 'MADRIGUERA NOROESTE', pathId: 'path_west', color: 0xffc857 },
+      { id: 'sp_east', name: 'MADRIGUERA NORESTE', pathId: 'path_east', color: 0xff7b6e }
     ],
     exitPoints: [
-      { id: 'exit_south', name: 'SALIDA INDUSTRIAL', pathId: 'path_west', color: 0xff3b16 }
+      { id: 'exit_south', name: 'SALIDA DE LA PLAYA', pathId: 'path_west', color: 0xff7b5c }
     ]
   },
 
   norm_pincer: {
     id: 'norm_pincer',
     difficulty: 'normal',
-    get name() { return _t('map.norm_pincer.name', 'Pinza Industrial'); },
+    get name() { return _t('map.norm_pincer.name', 'Las Pinzas'); },
     get badge() { return _t('map.norm_pincer.badge', 'NORMAL // PINZA'); },
-    get desc() { return _t('map.norm_pincer.desc', 'Entradas opuestas en los flancos este y oeste que avanzan hacia el centro de la planta en pinza.'); },
+    get desc() { return _t('map.norm_pincer.desc', 'Dos entradas opuestas avanzan como pinzas hacia el centro de la playa. Defiende ambos flancos.'); },
     entrances: 2,
     exits: 1,
     startingScrap: 10,
@@ -395,16 +395,16 @@ export const MAP_CATALOG = {
       { id: 'sp_r', name: 'ALA ESTE', pathId: 'path_pincer_r', color: 0xff4081 }
     ],
     exitPoints: [
-      { id: 'exit_s', name: 'ESCLUSA SUR', pathId: 'path_pincer_l', color: 0xff3b16 }
+      { id: 'exit_s', name: 'PASO SUR', pathId: 'path_pincer_l', color: 0xff7b5c }
     ]
   },
 
   norm_cross: {
     id: 'norm_cross',
     difficulty: 'normal',
-    get name() { return _t('map.norm_cross.name', 'Pasarelas Dobles'); },
+    get name() { return _t('map.norm_cross.name', 'Pasarelas del Arrecife'); },
     get badge() { return _t('map.norm_cross.badge', 'NORMAL // ALTURAS'); },
-    get desc() { return _t('map.norm_cross.desc', 'Un carril avanza por el suelo y el otro bordea la plataforma elevada este antes de converger al sur.'); },
+    get desc() { return _t('map.norm_cross.desc', 'Un carril serpentea por la arena mientras otro bordea la pasarela elevada hasta juntarse al sur.'); },
     entrances: 2,
     exits: 1,
     startingScrap: 10,
@@ -413,7 +413,7 @@ export const MAP_CATALOG = {
       path_ground: {
         id: 'path_ground',
         name: 'Ruta Inferior',
-        color: 0xf59e0b,
+        color: 0xffb45a,
         controlPoints: [
           { x: 0, z: -44 },
           { x: 6, z: -38 },
@@ -429,7 +429,7 @@ export const MAP_CATALOG = {
       path_elevated: {
         id: 'path_elevated',
         name: 'Ruta Elevada',
-        color: 0xec4899,
+        color: 0xff8ac0,
         controlPoints: [
           { x: -42, z: -44 },
           { x: -42, z: -14 },
@@ -446,20 +446,20 @@ export const MAP_CATALOG = {
       }
     },
     spawnPoints: [
-      { id: 'sp_g', name: 'TÚNEL NORTE', pathId: 'path_ground', color: 0xf59e0b },
-      { id: 'sp_e', name: 'PASARELA ALTA', pathId: 'path_elevated', color: 0xec4899 }
+      { id: 'sp_g', name: 'PASADIZO NORTE', pathId: 'path_ground', color: 0xffb45a },
+      { id: 'sp_e', name: 'PASARELA DEL ACANTILADO', pathId: 'path_elevated', color: 0xff8ac0 }
     ],
     exitPoints: [
-      { id: 'exit_s', name: 'EVACUACIÓN SUR', pathId: 'path_ground', color: 0xff3b16 }
+      { id: 'exit_s', name: 'PASARELA SUR', pathId: 'path_ground', color: 0xff7b5c }
     ]
   },
 
   norm_funnel: {
     id: 'norm_funnel',
     difficulty: 'normal',
-    get name() { return _t('map.norm_funnel.name', 'Embudo de Desagüe'); },
+    get name() { return _t('map.norm_funnel.name', 'Embudo de Arena'); },
     get badge() { return _t('map.norm_funnel.badge', 'NORMAL // EMBUDO'); },
-    get desc() { return _t('map.norm_funnel.desc', 'Dos rutas serpentean por pasillos de maquinaria hasta encajarse en un angosto embudo defensivo.'); },
+    get desc() { return _t('map.norm_funnel.desc', 'Dos rutas se retuercen entre rocas y palmeras antes de encajarse en un embudo defensivo.'); },
     entrances: 2,
     exits: 1,
     startingScrap: 10,
@@ -467,8 +467,8 @@ export const MAP_CATALOG = {
     routes: {
       path_f1: {
         id: 'path_f1',
-        name: 'Canal Norte',
-        color: 0xfbbf24,
+        name: 'Arroyo Norte',
+        color: 0xffcf6b,
         controlPoints: [
           { x: -14, z: -44 },
           { x: -14, z: -32 },
@@ -483,8 +483,8 @@ export const MAP_CATALOG = {
       },
       path_f2: {
         id: 'path_f2',
-        name: 'Canal Noreste',
-        color: 0xf43f5e,
+        name: 'Arroyo Noreste',
+        color: 0xff7a72,
         controlPoints: [
           { x: 14, z: -44 },
           { x: 14, z: -32 },
@@ -499,20 +499,20 @@ export const MAP_CATALOG = {
       }
     },
     spawnPoints: [
-      { id: 'sp_f1', name: 'REJILLA NORTE', pathId: 'path_f1', color: 0xfbbf24 },
-      { id: 'sp_f2', name: 'DUCTO NORESTE', pathId: 'path_f2', color: 0xf43f5e }
+      { id: 'sp_f1', name: 'ARENA NORTE', pathId: 'path_f1', color: 0xffcf6b },
+      { id: 'sp_f2', name: 'ARROYO NORESTE', pathId: 'path_f2', color: 0xff7a72 }
     ],
     exitPoints: [
-      { id: 'exit_s', name: 'COLECTOR SUR', pathId: 'path_f1', color: 0xff3b16 }
+      { id: 'exit_s', name: 'ARROYO SUR', pathId: 'path_f1', color: 0xff7b5c }
     ]
   },
 
   norm_braid: {
     id: 'norm_braid',
     difficulty: 'normal',
-    get name() { return _t('map.norm_braid.name', 'Vías Trenzadas'); },
+    get name() { return _t('map.norm_braid.name', 'Trenza de Espuma'); },
     get badge() { return _t('map.norm_braid.badge', 'NORMAL // TRENZADO'); },
-    get desc() { return _t('map.norm_braid.desc', 'Dos vías que serpentean en paralelo por el eje Z formando dos zonas de fuego cruzado continuo.'); },
+    get desc() { return _t('map.norm_braid.desc', 'Dos senderos paralelos que se cruzan como olas, creando zonas de fuego cruzado.'); },
     entrances: 2,
     exits: 1,
     startingScrap: 10,
@@ -521,7 +521,7 @@ export const MAP_CATALOG = {
       path_b1: {
         id: 'path_b1',
         name: 'Onda Alfa',
-        color: 0xd97706,
+        color: 0xe69a45,
         controlPoints: [
           { x: -14, z: -44 },
           { x: -14, z: -30 },
@@ -537,7 +537,7 @@ export const MAP_CATALOG = {
       path_b2: {
         id: 'path_b2',
         name: 'Onda Beta',
-        color: 0xe11d48,
+        color: 0xff7180,
         controlPoints: [
           { x: 14, z: -44 },
           { x: 14, z: -30 },
@@ -552,20 +552,20 @@ export const MAP_CATALOG = {
       }
     },
     spawnPoints: [
-      { id: 'sp_b1', name: 'VENTAJA OESTE', pathId: 'path_b1', color: 0xd97706 },
-      { id: 'sp_b2', name: 'VENTAJA ESTE', pathId: 'path_b2', color: 0xe11d48 }
+      { id: 'sp_b1', name: 'FLANCO OESTE', pathId: 'path_b1', color: 0xe69a45 },
+      { id: 'sp_b2', name: 'FLANCO ESTE', pathId: 'path_b2', color: 0xff7180 }
     ],
     exitPoints: [
-      { id: 'exit_s', name: 'ESCLUSA FINAL', pathId: 'path_b1', color: 0xff3b16 }
+      { id: 'exit_s', name: 'PASO FINAL', pathId: 'path_b1', color: 0xff7b5c }
     ]
   },
 
   norm_pit: {
     id: 'norm_pit',
     difficulty: 'normal',
-    get name() { return _t('map.norm_pit.name', 'El Foso Central'); },
-    get badge() { return _t('map.norm_pit.badge', 'NORMAL // FOSO'); },
-    get desc() { return _t('map.norm_pit.desc', 'Ambos frentes rodean la plaza central formando un anillo perimetral alrededor del bastión de torretas.'); },
+    get name() { return _t('map.norm_pit.name', 'La Poza Central'); },
+    get badge() { return _t('map.norm_pit.badge', 'NORMAL // POZA'); },
+    get desc() { return _t('map.norm_pit.desc', 'Los dos frentes rodean una gran poza de marea en el centro del campamento.'); },
     entrances: 2,
     exits: 1,
     startingScrap: 10,
@@ -573,8 +573,8 @@ export const MAP_CATALOG = {
     routes: {
       path_p1: {
         id: 'path_p1',
-        name: 'Flanco Oeste Foso',
-        color: 0xf59e0b,
+        name: 'Flanco Oeste Poza',
+        color: 0xffb45a,
         controlPoints: [
           { x: -42, z: -44 },
           { x: -42, z: -16 },
@@ -587,8 +587,8 @@ export const MAP_CATALOG = {
       },
       path_p2: {
         id: 'path_p2',
-        name: 'Flanco Este Foso',
-        color: 0xf43f5e,
+        name: 'Flanco Este Poza',
+        color: 0xff7a72,
         controlPoints: [
           { x: 42, z: -44 },
           { x: 42, z: -16 },
@@ -601,11 +601,11 @@ export const MAP_CATALOG = {
       }
     },
     spawnPoints: [
-      { id: 'sp_p1', name: 'PORTAL OESTE', pathId: 'path_p1', color: 0xf59e0b },
-      { id: 'sp_p2', name: 'PORTAL ESTE', pathId: 'path_p2', color: 0xf43f5e }
+      { id: 'sp_p1', name: 'MADRIGUERA OESTE', pathId: 'path_p1', color: 0xffb45a },
+      { id: 'sp_p2', name: 'MADRIGUERA ESTE', pathId: 'path_p2', color: 0xff7a72 }
     ],
     exitPoints: [
-      { id: 'exit_s', name: 'DRENAJE SUR', pathId: 'path_p1', color: 0xff3b16 }
+      { id: 'exit_s', name: 'CHARCO SUR', pathId: 'path_p1', color: 0xff7b5c }
     ]
   },
 
@@ -615,9 +615,9 @@ export const MAP_CATALOG = {
   hard_isolated: {
     id: 'hard_isolated',
     difficulty: 'dificil',
-    get name() { return _t('map.hard_isolated.name', 'Flancos Aislados'); },
+    get name() { return _t('map.hard_isolated.name', 'Islas Separadas'); },
     get badge() { return _t('map.hard_isolated.badge', 'DIFÍCIL // 2 FRENTES'); },
-    get desc() { return _t('map.hard_isolated.desc', 'Dos vías independientes en los extremos este y oeste separadas por más de 70 metros sin cruzarse jamás.'); },
+    get desc() { return _t('map.hard_isolated.desc', 'Dos senderos independientes en los extremos de la playa, separados por más de 70 metros de arena.'); },
     entrances: 2,
     exits: 2,
     startingScrap: 10,
@@ -626,7 +626,7 @@ export const MAP_CATALOG = {
       path_alpha: {
         id: 'path_alpha',
         name: 'Flanco Oeste (NW-SW)',
-        color: 0xff7700,
+        color: 0xff9a4d,
         controlPoints: [
           { x: -42, z: -44 },
           { x: -43, z: -26 },
@@ -641,7 +641,7 @@ export const MAP_CATALOG = {
       path_beta: {
         id: 'path_beta',
         name: 'Flanco Este (NE-SE)',
-        color: 0xd946ef,
+        color: 0xff8fd0,
         controlPoints: [
           { x: 42, z: -44 },
           { x: 43, z: -26 },
@@ -655,21 +655,21 @@ export const MAP_CATALOG = {
       }
     },
     spawnPoints: [
-      { id: 'sp_alpha', name: 'COMPUERTA NOROESTE', pathId: 'path_alpha', color: 0xff7700 },
-      { id: 'sp_beta', name: 'COMPUERTA NORESTE', pathId: 'path_beta', color: 0xd946ef }
+      { id: 'sp_alpha', name: 'MADRIGUERA NOROESTE', pathId: 'path_alpha', color: 0xff9a4d },
+      { id: 'sp_beta', name: 'MADRIGUERA NORESTE', pathId: 'path_beta', color: 0xff8fd0 }
     ],
     exitPoints: [
-      { id: 'exit_sw', name: 'BRECHA SUROESTE', pathId: 'path_alpha', color: 0xff3b16 },
-      { id: 'exit_se', name: 'BRECHA SURESTE', pathId: 'path_beta', color: 0xff3b16 }
+      { id: 'exit_sw', name: 'BRECHA SUROESTE', pathId: 'path_alpha', color: 0xff7b5c },
+      { id: 'exit_se', name: 'BRECHA SURESTE', pathId: 'path_beta', color: 0xff7b5c }
     ]
   },
 
   hard_diagonal: {
     id: 'hard_diagonal',
     difficulty: 'dificil',
-    get name() { return _t('map.hard_diagonal.name', 'Brecha Diagonal'); },
+    get name() { return _t('map.hard_diagonal.name', 'Corriente Cruzada'); },
     get badge() { return _t('map.hard_diagonal.badge', 'DIFÍCIL // DIAGONAL'); },
-    get desc() { return _t('map.hard_diagonal.desc', 'Ruta 1 cruza de Noroeste a Sureste; Ruta 2 cruza de Noreste a Suroeste en dos corredores aislados.'); },
+    get desc() { return _t('map.hard_diagonal.desc', 'Dos corrientes de cangrejos se cruzan en diagonal sin compartir tramo defensivo.'); },
     entrances: 2,
     exits: 2,
     startingScrap: 10,
@@ -678,7 +678,7 @@ export const MAP_CATALOG = {
       path_diag1: {
         id: 'path_diag1',
         name: 'Traza NW-SE',
-        color: 0xf97316,
+        color: 0xff9a48,
         controlPoints: [
           { x: -42, z: -44 },
           { x: -42, z: -14 },
@@ -707,21 +707,21 @@ export const MAP_CATALOG = {
       }
     },
     spawnPoints: [
-      { id: 'sp_d1', name: 'ACCESO NOROESTE', pathId: 'path_diag1', color: 0xf97316 },
-      { id: 'sp_d2', name: 'ACCESO NORESTE', pathId: 'path_diag2', color: 0xa855f7 }
+      { id: 'sp_d1', name: 'PASO NOROESTE', pathId: 'path_diag1', color: 0xff9a48 },
+      { id: 'sp_d2', name: 'PASO NORESTE', pathId: 'path_diag2', color: 0xa855f7 }
     ],
     exitPoints: [
-      { id: 'exit_se', name: 'ESCLUSA SURESTE', pathId: 'path_diag1', color: 0xff3b16 },
-      { id: 'exit_sw', name: 'ESCLUSA SUROESTE', pathId: 'path_diag2', color: 0xff3b16 }
+      { id: 'exit_se', name: 'PASO SURESTE', pathId: 'path_diag1', color: 0xff7b5c },
+      { id: 'exit_sw', name: 'PASO SUROESTE', pathId: 'path_diag2', color: 0xff7b5c }
     ]
   },
 
   hard_express: {
     id: 'hard_express',
     difficulty: 'dificil',
-    get name() { return _t('map.hard_express.name', 'Líneas Rápidas'); },
+    get name() { return _t('map.hard_express.name', 'Arenas Rápidas'); },
     get badge() { return _t('map.hard_express.badge', 'DIFÍCIL // VELOCIDAD'); },
-    get desc() { return _t('map.hard_express.desc', 'Trazados con pocas curvas que bajan a gran velocidad hacia salidas independientes. Ralentización crítica.'); },
+    get desc() { return _t('map.hard_express.desc', 'Senderos rectos y veloces que llegan al mar por salidas independientes. Ralentizarlos es crítico.'); },
     entrances: 2,
     exits: 2,
     startingScrap: 10,
@@ -751,21 +751,21 @@ export const MAP_CATALOG = {
       }
     },
     spawnPoints: [
-      { id: 'sp_el', name: 'COMPUERTA OESTE', pathId: 'path_exp_l', color: 0xef4444 },
-      { id: 'sp_er', name: 'COMPUERTA ESTE', pathId: 'path_exp_r', color: 0xc084fc }
+      { id: 'sp_el', name: 'MADRIGUERA OESTE', pathId: 'path_exp_l', color: 0xef4444 },
+      { id: 'sp_er', name: 'MADRIGUERA ESTE', pathId: 'path_exp_r', color: 0xc084fc }
     ],
     exitPoints: [
-      { id: 'exit_el', name: 'DESAGÜE OESTE', pathId: 'path_exp_l', color: 0xff3b16 },
-      { id: 'exit_er', name: 'DESAGÜE ESTE', pathId: 'path_exp_r', color: 0xff3b16 }
+      { id: 'exit_el', name: 'CHARCO OESTE', pathId: 'path_exp_l', color: 0xff7b5c },
+      { id: 'exit_er', name: 'CHARCO ESTE', pathId: 'path_exp_r', color: 0xff7b5c }
     ]
   },
 
   hard_split_level: {
     id: 'hard_split_level',
     difficulty: 'dificil',
-    get name() { return _t('map.hard_split_level.name', 'División de Alturas'); },
+    get name() { return _t('map.hard_split_level.name', 'Acantilados Gemelos'); },
     get badge() { return _t('map.hard_split_level.badge', 'DIFÍCIL // 2 ALTURAS'); },
-    get desc() { return _t('map.hard_split_level.desc', 'Un frente corre por el piso industrial inferior mientras el otro transcurre elevado por plataformas.'); },
+    get desc() { return _t('map.hard_split_level.desc', 'Un frente recorre la arena baja y el otro avanza por las pasarelas altas de los acantilados.'); },
     entrances: 2,
     exits: 2,
     startingScrap: 10,
@@ -773,7 +773,7 @@ export const MAP_CATALOG = {
     routes: {
       path_low: {
         id: 'path_low',
-        name: 'Conducto Bajo',
+        name: 'Arroyo Bajo',
         color: 0xff6600,
         controlPoints: [
           { x: -14, z: -44 },
@@ -801,21 +801,21 @@ export const MAP_CATALOG = {
       }
     },
     spawnPoints: [
-      { id: 'sp_low', name: 'ACCESO NIVEL 0', pathId: 'path_low', color: 0xff6600 },
-      { id: 'sp_high', name: 'ACCESO NIVEL 1', pathId: 'path_high', color: 0x9333ea }
+      { id: 'sp_low', name: 'PASO NIVEL 0', pathId: 'path_low', color: 0xff6600 },
+      { id: 'sp_high', name: 'PASO NIVEL 1', pathId: 'path_high', color: 0x9333ea }
     ],
     exitPoints: [
-      { id: 'exit_low', name: 'BRECHA INFERIOR', pathId: 'path_low', color: 0xff3b16 },
-      { id: 'exit_high', name: 'BRECHA ELEVADA', pathId: 'path_high', color: 0xff3b16 }
+      { id: 'exit_low', name: 'BRECHA INFERIOR', pathId: 'path_low', color: 0xff7b5c },
+      { id: 'exit_high', name: 'BRECHA ELEVADA', pathId: 'path_high', color: 0xff7b5c }
     ]
   },
 
   hard_blind_alleys: {
     id: 'hard_blind_alleys',
     difficulty: 'dificil',
-    get name() { return _t('map.hard_blind_alleys.name', 'Pasajes Ciegos'); },
+    get name() { return _t('map.hard_blind_alleys.name', 'Callejones de Palmeras'); },
     get badge() { return _t('map.hard_blind_alleys.badge', 'DIFÍCIL // OBSTÁCULOS'); },
-    get desc() { return _t('map.hard_blind_alleys.desc', 'Curvas cerradas entre densas columnas de cajas que rompen la línea de tiro de torretas.'); },
+    get desc() { return _t('map.hard_blind_alleys.desc', 'Curvas cerradas entre palmeras y rocas que rompen la línea de tiro de las torretas.'); },
     entrances: 2,
     exits: 2,
     startingScrap: 10,
@@ -824,7 +824,7 @@ export const MAP_CATALOG = {
       path_blind_l: {
         id: 'path_blind_l',
         name: 'Pasillo de Cajas O',
-        color: 0xe11d48,
+        color: 0xff7180,
         controlPoints: [
           { x: -14, z: -44 },
           { x: -14, z: -41 },
@@ -851,21 +851,21 @@ export const MAP_CATALOG = {
       }
     },
     spawnPoints: [
-      { id: 'sp_bl', name: 'DUCTO CIEGO OESTE', pathId: 'path_blind_l', color: 0xe11d48 },
-      { id: 'sp_br', name: 'DUCTO CIEGO ESTE', pathId: 'path_blind_r', color: 0x7c3aed }
+      { id: 'sp_bl', name: 'ARROYO CIEGO OESTE', pathId: 'path_blind_l', color: 0xff7180 },
+      { id: 'sp_br', name: 'ARROYO CIEGO ESTE', pathId: 'path_blind_r', color: 0x7c3aed }
     ],
     exitPoints: [
-      { id: 'exit_bl', name: 'ESCLUSA CIEGA O', pathId: 'path_blind_l', color: 0xff3b16 },
-      { id: 'exit_br', name: 'ESCLUSA CIEGA E', pathId: 'path_blind_r', color: 0xff3b16 }
+      { id: 'exit_bl', name: 'PASO CIEGO O', pathId: 'path_blind_l', color: 0xff7b5c },
+      { id: 'exit_br', name: 'PASO CIEGO E', pathId: 'path_blind_r', color: 0xff7b5c }
     ]
   },
 
   hard_dual_breach: {
     id: 'hard_dual_breach',
     difficulty: 'dificil',
-    get name() { return _t('map.hard_dual_breach.name', 'Doble Brecha Crítica'); },
+    get name() { return _t('map.hard_dual_breach.name', 'Doble Robo Crítico'); },
     get badge() { return _t('map.hard_dual_breach.badge', 'DIFÍCIL // MÁXIMA PRESIÓN'); },
-    get desc() { return _t('map.hard_dual_breach.desc', 'Invasión simultánea a través de dos compuertas principales hacia dos esclusas distantes.'); },
+    get desc() { return _t('map.hard_dual_breach.desc', 'Dos madrigueras expulsan cangrejos simultáneamente hacia dos pasos de fuga distintos.'); },
     entrances: 2,
     exits: 2,
     startingScrap: 10,
@@ -899,12 +899,12 @@ export const MAP_CATALOG = {
       }
     },
     spawnPoints: [
-      { id: 'sp_cr_l', name: 'FALLA COMPUERTA 1', pathId: 'path_cr_l', color: 0xdc2626 },
-      { id: 'sp_cr_r', name: 'FALLA COMPUERTA 2', pathId: 'path_cr_r', color: 0x9333ea }
+      { id: 'sp_cr_l', name: 'FALLA MADRIGUERA 1', pathId: 'path_cr_l', color: 0xdc2626 },
+      { id: 'sp_cr_r', name: 'FALLA MADRIGUERA 2', pathId: 'path_cr_r', color: 0x9333ea }
     ],
     exitPoints: [
-      { id: 'exit_cr_l', name: 'ESCLUSA ROTA 1', pathId: 'path_cr_l', color: 0xff3b16 },
-      { id: 'exit_cr_r', name: 'ESCLUSA ROTA 2', pathId: 'path_cr_r', color: 0xff3b16 }
+      { id: 'exit_cr_l', name: 'PASO ROTO 1', pathId: 'path_cr_l', color: 0xff7b5c },
+      { id: 'exit_cr_r', name: 'PASO ROTO 2', pathId: 'path_cr_r', color: 0xff7b5c }
     ]
   }
 };

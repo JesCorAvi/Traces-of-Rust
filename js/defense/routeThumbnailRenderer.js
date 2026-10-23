@@ -1,5 +1,5 @@
 // Generador procedural de miniaturas 2D para rutas de mapas estilo Bloons TD 6.
-// Dibuja en un canvas 2D el plano esquemático de la fábrica, obstáculos y trazados de spline.
+// Dibuja en un canvas 2D el plano esquemático de la playa, dunas y trazados de spline.
 // Exports: renderMapThumbnailCanvas, renderMapThumbnailDataURL.
 
 /**
@@ -79,71 +79,81 @@ export function renderMapThumbnailCanvas(mapData, width = 240, height = 110) {
   const ctx = canvas.getContext('2d');
   ctx.imageSmoothingEnabled = false;
 
-  // 1. Suelo base industrial oscuro
-  ctx.fillStyle = '#060a07';
+  // 1. Arena cálida con mar al norte y espuma en la orilla.
+  const sandGrad = ctx.createLinearGradient(0, 0, 0, height);
+  sandGrad.addColorStop(0, '#2b7f8d');
+  sandGrad.addColorStop(0.16, '#8fd4cd');
+  sandGrad.addColorStop(0.2, '#e8c489');
+  sandGrad.addColorStop(0.62, '#d9ad72');
+  sandGrad.addColorStop(1, '#b98957');
+  ctx.fillStyle = sandGrad;
   ctx.fillRect(0, 0, width, height);
 
-  // 2. Rejilla sutil de fábrica
-  ctx.strokeStyle = '#0e1610';
+  // Ondulaciones de dunas.
+  ctx.strokeStyle = 'rgba(255, 240, 203, 0.26)';
   ctx.lineWidth = 1;
-  const gridStep = 18;
-  for (let gx = 0; gx < width; gx += gridStep) {
+  for (let gy = height * 0.28; gy < height; gy += 14) {
     ctx.beginPath();
-    ctx.moveTo(gx, 0);
-    ctx.lineTo(gx, height);
-    ctx.stroke();
-  }
-  for (let gy = 0; gy < height; gy += gridStep) {
-    ctx.beginPath();
-    ctx.moveTo(0, gy);
-    ctx.lineTo(width, gy);
+    for (let gx = 0; gx <= width; gx += 7) {
+      const yy = gy + Math.sin(gx * 0.13 + gy * 0.07) * 2.2;
+      if (gx === 0) ctx.moveTo(gx, yy); else ctx.lineTo(gx, yy);
+    }
     ctx.stroke();
   }
 
-  // 2b. Límite perimetral táctico del sector
+  // 2b. Límite perimetral de la playa.
   const arenaTL = worldToCanvas(-46, -46, width, height);
   const arenaBR = worldToCanvas(46, 46, width, height);
   ctx.save();
-  ctx.strokeStyle = 'rgba(39, 56, 42, 0.4)';
+  ctx.strokeStyle = 'rgba(28, 99, 94, 0.55)';
   ctx.lineWidth = 1;
   ctx.setLineDash([3, 3]);
   ctx.strokeRect(arenaTL.px, arenaTL.py, arenaBR.px - arenaTL.px, arenaBR.py - arenaTL.py);
   ctx.restore();
 
-  // 3. Obstáculos / Plataformas principales de la fábrica
-  // Plataforma Norte (-22z), Plataforma Sur (+22z) y bloques perimetrales
+  // 3. Dunas elevadas y palmeras.
   const platforms = [
-    { x: -10, z: -28, w: 20, d: 12 }, // Plataforma Norte
-    { x: -10, z: 16,  w: 20, d: 12 }, // Plataforma Sur
-    { x: -38, z: -10, w: 10, d: 20 }, // Bloque Oeste
-    { x: 28,  z: -10, w: 10, d: 20 }  // Bloque Este
+    { x: -10, z: -28, w: 20, d: 12 },
+    { x: -10, z: 16,  w: 20, d: 12 },
+    { x: -38, z: -10, w: 10, d: 20 },
+    { x: 28,  z: -10, w: 10, d: 20 }
   ];
 
-  ctx.fillStyle = '#0f1711';
-  ctx.strokeStyle = '#1e2d21';
-  ctx.lineWidth = 1;
   platforms.forEach(p => {
-    const tl = worldToCanvas(p.x, p.z, width, height);
-    const br = worldToCanvas(p.x + p.w, p.z + p.d, width, height);
-    const pw = br.px - tl.px;
-    const ph = br.py - tl.py;
-    ctx.fillRect(tl.px, tl.py, pw, ph);
-    ctx.strokeRect(tl.px, tl.py, pw, ph);
+    const c = worldToCanvas(p.x + p.w / 2, p.z + p.d / 2, width, height);
+    const rx = Math.max(6, Math.abs(worldToCanvas(p.x + p.w, 0, width, height).px - worldToCanvas(p.x, 0, width, height).px) * 0.5);
+    const ry = Math.max(3, Math.abs(worldToCanvas(0, p.z + p.d, width, height).py - worldToCanvas(0, p.z, width, height).py) * 0.5);
+    ctx.fillStyle = 'rgba(190, 143, 91, 0.55)';
+    ctx.beginPath();
+    ctx.ellipse(c.px, c.py, rx, ry, 0.12, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255, 231, 180, 0.35)';
+    ctx.stroke();
+    ctx.fillStyle = '#397c4f';
+    for (let t = 0; t < 3; t++) {
+      ctx.fillRect(c.px - rx * 0.45 + t * rx * 0.45, c.py - 1 + (t % 2), 2, 2);
+    }
   });
 
-  // 4. Zona del Reactor Biomecánico Central (Centro del mapa)
+  // 4. Despensa central: cesta dorada.
   const centerPos = worldToCanvas(0, 0, width, height);
-  ctx.fillStyle = 'rgba(240, 201, 84, 0.12)';
+  ctx.fillStyle = 'rgba(255, 200, 87, 0.22)';
   ctx.beginPath();
-  ctx.arc(centerPos.px, centerPos.py, 10, 0, Math.PI * 2);
+  ctx.arc(centerPos.px, centerPos.py, 11, 0, Math.PI * 2);
   ctx.fill();
 
-  ctx.strokeStyle = 'rgba(240, 201, 84, 0.4)';
-  ctx.lineWidth = 1;
+  ctx.strokeStyle = 'rgba(255, 232, 166, 0.85)';
+  ctx.lineWidth = 1.5;
   ctx.stroke();
 
-  ctx.fillStyle = '#f0c954';
-  ctx.fillRect(centerPos.px - 2, centerPos.py - 2, 4, 4);
+  ctx.fillStyle = '#7a472c';
+  ctx.fillRect(centerPos.px - 4, centerPos.py - 2, 8, 5);
+  ctx.fillStyle = '#ffc857';
+  ctx.fillRect(centerPos.px - 3, centerPos.py - 1, 6, 2);
+  ctx.fillStyle = '#ff8165';
+  ctx.fillRect(centerPos.px - 2, centerPos.py - 4, 2, 2);
+  ctx.fillStyle = '#77c75a';
+  ctx.fillRect(centerPos.px + 1, centerPos.py - 3, 2, 2);
 
   // 5. Rutas / Trazados Spline
   if (mapData.routes) {
@@ -209,7 +219,7 @@ export function renderMapThumbnailCanvas(mapData, width = 240, height = 110) {
     });
   }
 
-  // 6. Balizas de Entrada (Spawn Points - Verde Neón)
+  // 6. Madrigueras de Entrada (turquesa)
   if (mapData.spawnPoints) {
     mapData.spawnPoints.forEach(sp => {
       let x = sp.position?.x;
@@ -225,21 +235,21 @@ export function renderMapThumbnailCanvas(mapData, width = 240, height = 110) {
       if (x === undefined || z === undefined) return;
       const pos = worldToCanvas(x, z, width, height);
       // Anillo exterior pulsante
-      ctx.strokeStyle = '#8ef77b';
+      ctx.strokeStyle = '#65e6e9';
       ctx.lineWidth = 1.5;
       ctx.beginPath();
       ctx.arc(pos.px, pos.py, 4.5, 0, Math.PI * 2);
       ctx.stroke();
 
-      // Núcleo verde
-      ctx.fillStyle = '#8ef77b';
+      // Núcleo turquesa
+      ctx.fillStyle = '#65e6e9';
       ctx.beginPath();
       ctx.arc(pos.px, pos.py, 2, 0, Math.PI * 2);
       ctx.fill();
     });
   }
 
-  // 7. Balizas de Salida (Exit Points - Rojo Peligro)
+  // 7. Pasos de fuga (coral)
   if (mapData.exitPoints) {
     mapData.exitPoints.forEach(ep => {
       let x = ep.position?.x;
@@ -256,14 +266,14 @@ export function renderMapThumbnailCanvas(mapData, width = 240, height = 110) {
       if (x === undefined || z === undefined) return;
       const pos = worldToCanvas(x, z, width, height);
       // Anillo exterior
-      ctx.strokeStyle = '#ff3b16';
+      ctx.strokeStyle = '#ff7b5c';
       ctx.lineWidth = 1.5;
       ctx.beginPath();
       ctx.arc(pos.px, pos.py, 4.5, 0, Math.PI * 2);
       ctx.stroke();
 
-      // Núcleo rojo
-      ctx.fillStyle = '#ff3b16';
+      // Núcleo coral
+      ctx.fillStyle = '#ff7b5c';
       ctx.beginPath();
       ctx.arc(pos.px, pos.py, 2, 0, Math.PI * 2);
       ctx.fill();
@@ -271,11 +281,11 @@ export function renderMapThumbnailCanvas(mapData, width = 240, height = 110) {
   }
 
   // 8. Marco perimetral y efecto scanline
-  ctx.strokeStyle = '#27382a';
+  ctx.strokeStyle = '#1f6a66';
   ctx.lineWidth = 1;
   ctx.strokeRect(0, 0, width, height);
 
-  ctx.fillStyle = 'rgba(0, 0, 0, 0.15)';
+  ctx.fillStyle = 'rgba(8, 45, 49, 0.12)';
   for (let sy = 0; sy < height; sy += 2) {
     ctx.fillRect(0, sy, width, 1);
   }

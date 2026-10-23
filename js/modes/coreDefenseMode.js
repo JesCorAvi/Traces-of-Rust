@@ -1,4 +1,4 @@
-// Modo Defender el Núcleo: sistemas de defensa, oleadas, economía y torretas.
+// Modo Defender la Despensa: sistemas de defensa, oleadas, economía y torretas.
 // Exports: CoreDefenseMode.
 import * as THREE from 'three';
 import { MODES_CONFIG, CORE_DEFENSE_CONFIG } from '../config.js';
@@ -13,11 +13,12 @@ import { WaveManager } from '../defense/waveManager.js';
 import { TurretSystem } from '../defense/turretSystem.js';
 import { TowerDefenseTutorial } from '../tutorial/towerDefenseTutorial.js';
 import { DefenseEventManager } from '../defense/defenseEventManager.js';
+import { FoodDepotMarker } from '../defense/foodDepotMarker.js';
 import { updateEnemies } from './enemyLoop.js';
 import { t } from '../core/i18n.js';
 
 // ============================================================================
-// MODO 2: DEFENDER LAS INSTALACIONES (Tower Defense estilo Bloons TD 6)
+// MODO 2: DEFENDER LAS LA PLAYA (Tower Defense estilo Bloons TD 6)
 // ============================================================================
 
 export class CoreDefenseMode {
@@ -25,6 +26,7 @@ export class CoreDefenseMode {
     this.id = 'core_defense';
     this.meta = MODES_CONFIG.CATALOG.core_defense;
     this.coreMachine = null;
+    this.depotMarker = null;
     this.pathSystem = null;
     this.spawnPointSystem = null;
     this.exitPointSystem = null;
@@ -33,7 +35,7 @@ export class CoreDefenseMode {
     this.defenseEventManager = null;
     this.tutorial = null;
     this.tutorialActive = false;
-    this.extraStructures = []; // Tropas aliadas (los enemigos ya no atacan torretas)
+    this.extraStructures = []; // Tropas aliadas (los cangrejos ya no atacan torretas)
     this.scrap = 0;
     this.initialScrapTotal = 0;
     this.net = null;
@@ -71,7 +73,7 @@ export class CoreDefenseMode {
     this.lives = this.mapData.maxLives;
     this.maxLives = this.mapData.maxLives;
     this.initialScrapTotal = this.mapData.startingScrap;
-    // Economía de suma cero: la chatarra inicial se reparte entre Host y Cliente.
+    // Economía de suma cero: la madera inicial se reparte entre Host y Cliente.
     this.scrap = this.initialScrapTotal;
     if (this.isNetworked) {
       const hostShare = Math.floor(this.initialScrapTotal / 2);
@@ -80,7 +82,7 @@ export class CoreDefenseMode {
     this.spawnPoints = this.mapData.spawnPoints;
     this.exitPoints = this.mapData.exitPoints;
 
-    // Sistema de contención global (vidas estilo Bloons TD 6)
+    // Sistema de contención global (comidas estilo Bloons TD 6)
     this.coreMachine = {
       hp: this.lives,
       maxHp: this.maxLives,
@@ -110,6 +112,7 @@ export class CoreDefenseMode {
     };
 
     this.pathSystem = new PathSystem(ctx.scene, ctx.worldPhysics, this.mapData.routes);
+    this.depotMarker = new FoodDepotMarker(ctx.scene, ctx.worldPhysics);
     this.spawnPointSystem = new SpawnPointSystem(ctx.scene, ctx.worldPhysics, ctx.vfx, this.mapData.spawnPoints);
     this.exitPointSystem = new ExitPointSystem(ctx.scene, ctx.worldPhysics, ctx.vfx, this.mapData.exitPoints);
     this.waveManager = new WaveManager(
@@ -142,15 +145,16 @@ export class CoreDefenseMode {
     const gy = ctx.worldPhysics.getGroundHeight(startPos.x, startPos.z, 0);
     ctx.playerGroup.position.set(startPos.x, gy, startPos.z);
 
-    ctx.scene.fog.color.setHex(0x040604);
-    ctx.scene.fog.density = 0.035;
-    ctx.ambientLight.color.setHex(0x212b20);
+    ctx.scene.fog.color.setHex(0xf6aa8b);
+    ctx.scene.fog.density = 0.0042;
+    ctx.ambientLight.color.setHex(0xffc8a2);
     document.body.classList.remove('endgame-mode');
     AudioSys.setEndgameDrone(false);
 
-    // Suscripciones a eventos del Núcleo y las Oleadas
+    // Suscripciones a eventos de la Despensa y las Oleadas
     this.unsubscribers.push(
       GameEvents.on('core:damaged', payload => {
+        this.depotMarker?.flashDamage?.();
         ctx.onCoreDamaged(payload);
       }),
       GameEvents.on('core:alert_under_attack', payload => {
@@ -186,7 +190,7 @@ export class CoreDefenseMode {
         ctx.triggerScare?.(0.32);
       }),
       GameEvents.on('defense:event_completed', payload => {
-        ctx.onCoreUnderAttackAlert?.(`¡${payload.title}! +${payload.scrapReward} CHATARRA`);
+        ctx.onCoreUnderAttackAlert?.(`¡${payload.title}! +${payload.scrapReward} MADERA`);
         AudioSys.setMusicState('PREP');
         AudioSys.playUISelect();
       })
@@ -212,9 +216,9 @@ export class CoreDefenseMode {
 
   getDamageStateLabel() {
     const ratio = this.lives / Math.max(1, this.maxLives);
-    if (ratio <= 0.25) return 'CRÍTICO';
-    if (ratio <= 0.5) return 'ALERTA';
-    return 'ESTABLE';
+    if (ratio <= 0.25) return 'COMIDA CRÍTICA';
+    if (ratio <= 0.5) return 'DESPENSA EN ALERTA';
+    return 'DESPENSA A SALVO';
   }
 
   handleEnemyLeak(enemy, ctx) {
@@ -232,22 +236,22 @@ export class CoreDefenseMode {
       this.exitPointSystem.triggerLeakEffect(ep.id);
     }
 
-    ctx.onCoreUnderAttackAlert?.(`¡FUGA DETECTADA! -${leakLives} ${leakLives === 1 ? 'VIDA' : 'VIDAS'}`);
+    ctx.onCoreUnderAttackAlert?.(`¡FUGA DETECTADA! -${leakLives} ${leakLives === 1 ? 'COMIDA' : 'COMIDAS'}`);
     ctx.triggerScare?.(0.25);
 
     const coreRatio = this.lives / Math.max(1, this.maxLives);
     if (enemy.isBoss || leakLives >= 3 || coreRatio <= 0.25) {
       ctx?.hudController?.showKineticAlertBanner?.({
-        tag: 'BRECHA EN EL NÚCLEO // FUGA DETECTADA',
-        title: `¡DAÑO CRÍTICO AL NÚCLEO! -${leakLives} ${leakLives === 1 ? 'VIDA' : 'VIDAS'}`,
-        sub: coreRatio <= 0.25 ? '¡INTEGRIDAD CRÍTICA DEL NÚCLEO! PROTOCOLO DE EMERGENCIA' : 'INVASIÓN DE CONTENCIÓN // CUBRE LAS ESCLUSAS',
+        tag: 'BRECHA EN LA DESPENSA // FUGA DETECTADA',
+        title: `¡DAÑO CRÍTICO A LA DESPENSA! -${leakLives} ${leakLives === 1 ? 'COMIDA' : 'COMIDAS'}`,
+        sub: coreRatio <= 0.25 ? '¡LA DESPENSA SE QUEDA SIN COMIDA! PROTOCOLO DE EMERGENCIA' : 'OLEADA DE CANGREJOS // CUBRE LOS PASOS',
         theme: 'critical',
         durationMs: 3500
       });
-      AudioSys.playIndustrialSiren?.();
+      AudioSys.playTropicalSiren?.();
     }
 
-    // Solo el Host resta vidas. El Cliente recibe el HP real por CORE_SYNC.
+    // Solo el Host resta comidas. El Cliente recibe el HP real por CORE_SYNC.
     if (!this.isNetworked || this.isNetworkHost) {
       this.applyCoreDamage(leakLives, ctx, 'leak');
     }
@@ -278,9 +282,9 @@ export class CoreDefenseMode {
       victory: false,
       modeId: 'core_defense',
       mapId: this.mapId,
-      mapName: this.mapData?.mapName || 'Sector Industrial',
-      title: 'BRECHA DE CONTENCIÓN',
-      cause: 'CAUSA: LOS HOSTILES ESCAPARON DE LAS INSTALACIONES Y DESBORDARON EL PERÍMETRO',
+      mapName: this.mapData?.mapName || 'Playa de la Despensa',
+      title: 'LA DESPENSA HA SIDO SAQUEADA',
+      cause: 'CAUSA: LOS CANGREJOS ESCAPARON DE LA PLAYA Y DESBORDARON EL PERÍMETRO',
       wavesCompleted: this.waveManager ? this.waveManager.wavesCompleted : 0,
       currentWave: this.waveManager ? this.waveManager.currentWaveNumber : 1,
       totalWaves: this.waveManager ? this.waveManager.totalWaves : 12,
@@ -301,7 +305,7 @@ export class CoreDefenseMode {
     this.coreMachine.currentDamageState = { label: this.getDamageStateLabel() };
   }
 
-  // Aplica daño al Núcleo con autoridad local. En co-op solo se invoca en el Host.
+  // Aplica daño a la Despensa con autoridad local. En co-op solo se invoca en el Host.
   applyCoreDamage(amount, ctx = this._ctx, reason = 'core') {
     // El Cliente nunca modifica mode.lives por su cuenta: espera CORE_SYNC.
     if (this.isNetworked && !this.isNetworkHost) return;
@@ -360,9 +364,9 @@ export class CoreDefenseMode {
       victory: true,
       modeId: 'core_defense',
       mapId: this.mapId,
-      mapName: this.mapData?.mapName || 'Sector Industrial',
-      title: 'INSTALACIONES ASEGURADAS',
-      cause: `PROTOCOLO DE CONTENCIÓN COMPLETADO // ${this.lives} VIDAS PRESERVADAS (${diffName})`,
+      mapName: this.mapData?.mapName || 'Playa de la Despensa',
+      title: 'PLAYA ASEGURADA',
+      cause: `PROTOCOLO DE LA DESPENSA COMPLETADO // ${this.lives} COMIDAS PRESERVADAS (${diffName})`,
       wavesCompleted: payload.wavesCompleted,
       currentWave: payload.wavesCompleted,
       totalWaves: payload.totalWaves,
@@ -396,13 +400,17 @@ export class CoreDefenseMode {
         playerGroup.position.set(startPos.x, gy, startPos.z);
         ctx.hudController?.hidePlayerDownOverlay?.();
         ctx.revivePlayerAfterPenalty(CORE_DEFENSE_CONFIG.PLAYER_DEATH_POLICY.respawnInvulnSec);
-        // El mismo frame ya puede reanudar la persecución y el ataque al Núcleo.
+        // El mismo frame ya puede reanudar la persecución y el ataque a la Despensa.
         playerAlive = true;
       }
     }
 
     const isPrep = !!(this.waveManager && !this.tutorialActive && this.waveManager.state === 'PREP');
     if (this.coreMachine) this.coreMachine.update(dt, camera.position);
+    if (this.depotMarker) {
+      this.depotMarker.setRatio(this.lives / Math.max(1, this.maxLives));
+      this.depotMarker.update(dt);
+    }
     if (this.pathSystem) this.pathSystem.update(dt, isPrep);
     if (this.spawnPointSystem) this.spawnPointSystem.update(dt);
     if (this.exitPointSystem) this.exitPointSystem.update(dt);
@@ -443,7 +451,7 @@ export class CoreDefenseMode {
         // sobre el daño que recibe su propio jugador.
         if (playerAlive && attacker.netTargetIsLocal !== false) ctx.dealDamageToPlayer(attacker.dmg);
       },
-      // `playerAlive` del callback se ajusta por enemigo en updateEnemies.
+      // `playerAlive` del callback se ajusta por cangrejo en updateEnemies.
       onBurnTick: (burningEnemy, burnDmg) => ctx.damageEnemy(
         burningEnemy, burnDmg, null, true,
         { visualOnly: isNetworkClient }
@@ -534,7 +542,7 @@ export class CoreDefenseMode {
       const chestDrop = ctx.spawnLorePickup(enemy.group.position, 'chest');
       if (chestDrop) enemy._networkDrop = { type: 'chest', pickupNetId: chestDrop.pickupNetId };
 
-      // Los bosses sueltan un caché de chatarra repartido alrededor
+      // Los bosses sueltan un caché de madera repartido alrededor
       const chunks = 5;
       const valueEach = Math.max(1, Math.round((scrapCfg.bossDropValue || 15) / chunks));
       for (let i = 0; i < chunks; i++) {
@@ -557,12 +565,12 @@ export class CoreDefenseMode {
   }
 
   // --------------------------------------------------------------------------
-  // ECONOMÍA Y TORRETAS (CHATARRA)
+  // ECONOMÍA Y TORRETAS (MADERA)
   // --------------------------------------------------------------------------
 
   addScrap(amount, options = {}) {
     if (!amount || amount <= 0) return;
-    // En co-op el Host reparte al 50% toda la chatarra generada por la partida.
+    // En co-op el Host reparte al 50% toda la madera generada por la partida.
     // Los ingresos de red (transferencias, SCRAP_GAIN) y los reembolsos locales
     // no pasan por el divisor.
     if (this.isNetworked && !options.fromTransfer && !options.local) {
@@ -639,7 +647,7 @@ export class CoreDefenseMode {
   }
 
   // Las armas del jugador solo están activas durante una oleada, su limpieza
-  // o un evento. En preparación/exploración/victoria el operario baja las armas
+  // o un evento. En preparación/exploración/victoria el socorrista baja las armas
   // y las recupera automáticamente al empezar la siguiente ronda.
   isPlayerCombatActive() {
     if (this.tutorialActive) return true;
@@ -670,8 +678,8 @@ export class CoreDefenseMode {
       ctx.triggerRunEnd({
         victory: false,
         modeId: 'core_defense',
-        title: 'DEFENSOR ABATIDO',
-        cause: 'CAUSA: EL OPERARIO CAYÓ DEJANDO EL NÚCLEO DESPROTEGIDO',
+        title: 'SOCORRISTA ABATIDO',
+        cause: 'CAUSA: EL SOCORRISTA CAYÓ DEJANDO LA DESPENSA DESPROTEGIDA',
         wavesCompleted: this.waveManager ? this.waveManager.wavesCompleted : 0,
         currentWave: this.waveManager ? this.waveManager.currentWaveNumber : 1,
         totalWaves: this.waveManager ? this.waveManager.totalWaves : 12,
@@ -682,8 +690,8 @@ export class CoreDefenseMode {
       return true;
     }
 
-    // Reconstrucción de emergencia: el jugador queda abatido unos segundos, los enemigos que
-    // lo perseguían vuelven a la ruta hacia el Núcleo, y el Núcleo sufre una sobrecarga.
+    // Reconstrucción de emergencia: el jugador queda abatido unos segundos, los cangrejos que
+    // lo perseguían vuelven a la ruta hacia la Despensa, y la Despensa sufre una sobrecarga.
     this.playerDownTimer = policy.respawnDelaySec;
     if (this.coreMachine && !this.coreMachine.destroyed) {
       if (this.isNetworked && !this.isNetworkHost) {
@@ -723,7 +731,7 @@ export class CoreDefenseMode {
 
     const coreHp = this.coreMachine ? Math.ceil(this.coreMachine.hp) : 0;
     const coreMax = this.coreMachine ? this.coreMachine.maxHp : 1500;
-    const stateLabel = this.coreMachine ? this.coreMachine.currentDamageState.label : 'ESTABLE';
+    const stateLabel = this.coreMachine ? this.coreMachine.currentDamageState.label : 'DESPENSA A SALVO';
     const nearbyTurret = ctx && ctx.playerGroup && this.turretSystem
       ? this.turretSystem.findNearbyTurret(ctx.playerGroup.position)
       : null;
@@ -801,6 +809,11 @@ export class CoreDefenseMode {
       this.coreMachine.destroy();
     }
     this.coreMachine = null;
+
+    if (this.depotMarker) {
+      this.depotMarker.destroy();
+      this.depotMarker = null;
+    }
 
     if (this.pathSystem) {
       this.pathSystem.destroy();

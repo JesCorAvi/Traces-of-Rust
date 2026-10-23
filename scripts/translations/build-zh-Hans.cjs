@@ -569,7 +569,7 @@ for (const k of Object.keys(es)) {
 
 // Write out locales/zh-Hans.js
 const outputPath = path.resolve(__dirname, '../../locales/zh-Hans.js');
-const outLines = ['// Simplified Chinese localization dictionary for Traces of Rust.', 'export default {'];
+const outLines = ['// Simplified Chinese localization dictionary for Crabs wants your food!.', 'export default {'];
 const keys = Object.keys(es);
 keys.forEach((k, idx) => {
   const isLast = idx === keys.length - 1;

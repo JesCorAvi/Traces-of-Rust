@@ -29,14 +29,16 @@ export const SYSTEM_ICONS = {
     px(9, 8, 2, 3, '#e6d7a5');
   },
   tooth: px => {
-    px(4, 2, 3, 3, '#e6d7a5');
-    px(9, 2, 3, 3, '#e6d7a5');
-    px(4, 4, 8, 5, '#e6d7a5');
-    px(5, 5, 6, 3, '#c8c2ac');
-    px(4, 9, 3, 4, '#b89c46');
-    px(9, 9, 3, 4, '#b89c46');
-    px(4, 12, 2, 2, '#a52020');
-    px(10, 12, 2, 2, '#a52020');
+    // Concha de mar: moneda de la playa y recuerdo de cada incursión.
+    px(6, 3, 4, 2, '#e6d7a5');
+    px(5, 5, 6, 2, '#fff0c7');
+    px(4, 7, 8, 5, '#f2c988');
+    px(3, 9, 10, 4, '#d99a63');
+    px(5, 8, 2, 5, '#fff0c7');
+    px(8, 8, 2, 5, '#e6d7a5');
+    px(11, 8, 2, 4, '#c4774f');
+    px(4, 12, 8, 2, '#8f4a38');
+    px(7, 14, 2, 1, '#ffe9b9');
   },
   skull: px => {
     px(4, 2, 8, 7, '#c8c2ac');
@@ -92,14 +94,19 @@ export const SYSTEM_ICONS = {
     px(5, 11, 6, 3, '#b89c46');
   },
   core: px => {
-    // Reactor industrial con corazón brillante
-    px(3, 1, 10, 3, '#4a2518');
-    px(2, 4, 12, 8, '#364832');
-    px(3, 12, 10, 3, '#4a2518');
-    px(4, 5, 8, 6, '#121812');
-    px(5, 6, 6, 4, '#d4af37');
-    px(6, 7, 4, 2, '#fff6e0');
-    px(7, 2, 2, 2, '#a52020');
+    // Despensa de playa: cesta de mimbre cerrada con comida brillante.
+    px(4, 1, 8, 2, '#877a5c');
+    px(5, 3, 6, 2, '#b89c46');
+    px(3, 6, 10, 8, '#4a2518');
+    px(4, 7, 8, 6, '#743718');
+    for (let y = 8; y <= 12; y += 2) px(4, y, 8, 1, '#b8763e');
+    px(2, 5, 2, 8, '#5c2c16');
+    px(12, 5, 2, 8, '#5c2c16');
+    px(6, 8, 4, 4, '#d4af37');
+    px(7, 9, 2, 2, '#fff6e0');
+    px(1, 13, 14, 1, '#3b2014');
+    px(5, 4, 2, 1, '#ffe699');
+    px(9, 4, 2, 1, '#ffb3a0');
   },
   screw_0: px => drawScrew0(px, 'screw_0'),
   screw_1: px => drawScrew0(px, 'screw_1'),
@@ -149,23 +156,18 @@ export const SYSTEM_ICONS = {
     px(5, 11, 6, 3, '#4a2518');
   },
   scrap: px => {
-    // Dientes del engranaje (en óxido visible para que se lea sobre fondo oscuro)
-    px(6, 1, 4, 2, '#4a2518');
-    px(6, 13, 4, 2, '#4a2518');
-    px(1, 6, 2, 4, '#4a2518');
-    px(13, 6, 2, 4, '#4a2518');
-    px(3, 3, 2, 2, '#4a2518');
-    px(11, 3, 2, 2, '#4a2518');
-    px(3, 11, 2, 2, '#4a2518');
-    px(11, 11, 2, 2, '#4a2518');
-    // Cuerpo y buje
-    px(4, 4, 8, 8, '#877a5c');
-    px(5, 5, 6, 6, '#63533b');
-    px(6, 6, 4, 4, '#b89c46');
-    px(7, 7, 2, 2, '#050605');
-    // Reflejos
-    px(5, 5, 2, 1, '#e6d7a5');
-    px(11, 10, 2, 2, '#e6d7a5');
-    px(12, 9, 2, 2, '#a54a2a');
+    // Tronco de madera de construcción (moneda de la run).
+    px(1, 5, 2, 6, '#8f5a32');
+    px(3, 4, 10, 8, '#5c2c16');
+    px(4, 5, 9, 6, '#9a6238');
+    px(4, 5, 9, 1, '#d99a63');
+    px(4, 9, 9, 1, '#4a2518');
+    px(11, 3, 3, 10, '#4a2518');
+    px(12, 4, 1, 8, '#c88d58');
+    px(12, 5, 1, 1, '#ffe0a2');
+    px(6, 6, 2, 1, '#b8763e');
+    px(7, 8, 3, 1, '#3d2115');
+    px(2, 10, 3, 2, '#6b8f3f');
+    px(1, 11, 2, 2, '#55c06a');
   },
 };

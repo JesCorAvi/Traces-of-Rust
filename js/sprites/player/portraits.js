@@ -30,15 +30,25 @@ export function drawCharacterPortrait(ctx, charId = 'otto') {
     ctx.fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h));
   };
 
-  // Fondo oscuro del retrato
-  ctx.fillStyle = '#060906';
+  // Fondo de atardecer: mar turquesa y franja coral.
+  const bg = ctx.createLinearGradient(0, 0, 0, 32);
+  bg.addColorStop(0, '#215a76');
+  bg.addColorStop(0.52, '#f2a077');
+  bg.addColorStop(1, '#7c4f43');
+  ctx.fillStyle = bg;
   ctx.fillRect(0, 0, 32, 32);
-
-  // Marco biselado sutil
-  px(0, 0, 32, 1, '#182418');
-  px(0, 0, 1, 32, '#182418');
-  px(31, 0, 1, 32, '#0c120c');
-  px(0, 31, 32, 1, '#0c120c');
+  // Palmera lejana y sol.
+  px(25, 2, 4, 4, '#ffe3a1');
+  px(3, 8, 2, 8, '#3c2a1e');
+  px(1, 8, 2, 1, '#3f7b4e');
+  px(5, 7, 3, 1, '#4c8a53');
+  px(2, 5, 2, 3, '#3f7b4e');
+  px(4, 6, 2, 3, '#4c8a53');
+  // Marco de madera clara.
+  px(0, 0, 32, 1, '#ffd889');
+  px(0, 0, 1, 32, '#caa064');
+  px(31, 0, 1, 32, '#6e462e');
+  px(0, 31, 32, 1, '#4a2e22');
 
   // Hombros y abrigo
   px(4, 25, 24, 7, theme.coatDark);

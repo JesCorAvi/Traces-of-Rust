@@ -201,9 +201,14 @@ export class Turret extends DefensiveStructure {
       }
     }
 
-    // Rotación continua de antena / radar en support
+    // Rotación continua de antena / radar en support.
     if (this.radarDishMesh) {
       this.radarDishMesh.rotation.y += dt * 2.2;
+    }
+
+    // Aspas, ventiladores y rotores de las torretas artesanales.
+    if (this.spinnerMesh) {
+      this.spinnerMesh.rotation.z += dt * (this.spinnerSpeed || 2.2);
     }
 
     // Retroceso mecánico suave del cañón

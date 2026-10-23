@@ -1,8 +1,8 @@
-// Economía de chatarra del modo Defensa.
+// Economía de madera del modo Defensa.
 // Exports: SCRAP.
 
-  // 7. ECONOMÍA DE PARTIDA: CHATARRA
-  // Moneda exclusiva del modo Defensa; no se suma a los Dientes permanentes al terminar.
+  // 7. ECONOMÍA DE PARTIDA: MADERA
+  // Moneda exclusiva del modo Defensa; no se suma a los Conchas permanentes al terminar.
 export const SCRAP = {
     startingScrap: 10,
     normalDropChance: 0.45,

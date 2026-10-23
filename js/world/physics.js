@@ -1,6 +1,8 @@
 // Física del mundo: alturas, rampas, cajas, cilindros y colisión.
 // Exports: createWorldPhysics.
 
+import { terrainHeightAt } from './terrain.js';
+
 export function createWorldPhysics() {
   const walkableBoxes = [];
   const ramps = [];
@@ -29,8 +31,14 @@ export function createWorldPhysics() {
       return false;
     },
 
+    getTerrainHeight(x, z) {
+      return terrainHeightAt(x, z);
+    },
+
     getGroundHeight(x, z, currentY = 0, ignoreStepLimit = false, structuralOnly = false) {
-      let h = 0;
+      // La duna es la superficie base del mundo. Cajas, cubiertas y rampas se
+      // elevan por encima de ella cuando su cota es superior.
+      let h = terrainHeightAt(x, z);
       const stepTolerance = 0.82;
 
       for (const r of ramps) {

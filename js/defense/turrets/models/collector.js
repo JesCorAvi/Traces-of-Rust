@@ -1,65 +1,77 @@
-// Modelo 3D del recolector: contenedores de chatarra, grúa y baliza de suministros.
+// Modelo 3D del Recolector de Cocos: cesta de mimbre, palmera y grúa de recogida.
 // Exports: buildCollectorModel.
 
 import * as THREE from 'three';
+import {
+  addCoconut,
+  addPalmLeaf,
+  addBambooPole,
+  addRopeBand,
+  addEnergyRing,
+  addShellDish,
+  addGlowPearl
+} from './parts.js';
 
 export function buildCollectorModel(turret) {
-  turret.addPart(new THREE.BoxGeometry(0.72, 0.32, 0.72), turret.bodyMat, 0, 0.58, 0);
-  turret.addPart(new THREE.BoxGeometry(0.06, 0.28, 0.66), turret.panelMat, -0.38, 0.58, 0);
-  turret.addPart(new THREE.BoxGeometry(0.06, 0.28, 0.66), turret.panelMat, 0.38, 0.58, 0);
+  // Cesta/nevera de mimbre con cocos.
+  turret.addPart(new THREE.CylinderGeometry(0.48, 0.58, 0.34, 10), turret.bambooDarkMat, 0, 0.64, 0);
+  addShellDish(turret, 0, 0.84, 0, {
+    sx: 0.52, sy: 0.3, sz: 0.52, rx: Math.PI
+  });
+  const coconutPositions = [[-0.22, 0.84, -0.08], [0.18, 0.86, 0.04], [0.02, 0.9, 0.22], [-0.16, 0.88, 0.2]];
+  for (const [x, y, z] of coconutPositions) {
+    addCoconut(turret, x, y, z, 0.11, { glow: false });
+  }
+  addRopeBand(turret, 0, 0.68, 0, 0.5, { rx: Math.PI / 2 });
 
-  // Contenedor central con franjas de peligro.
-  turret.addPart(new THREE.BoxGeometry(0.5, 0.34, 0.5), turret.darkMat, 0, 0.9, 0);
-  turret.addPart(new THREE.BoxGeometry(0.52, 0.08, 0.52), turret.hazardMat, 0, 1.08, 0);
-
-  // Chatarra visible en el contenedor.
-  for (let i = 0; i < 5; i++) {
-    turret.addPart(
-      new THREE.BoxGeometry(0.12, 0.1, 0.16),
-      i % 2 === 0 ? turret.rustMat : turret.accentMat,
-      (Math.random() - 0.5) * 0.36, 1.16 + Math.random() * 0.12, (Math.random() - 0.5) * 0.36,
-      0, Math.random() * Math.PI, 0
-    );
+  // Palmera pequeña de soporte y contrapeso.
+  addBambooPole(turret, 0.4, 0.6, 0.18, 0.38, 1.5, 0.12, 0.06, {
+    material: turret.bambooDarkMat
+  });
+  for (let i = 0; i < 4; i++) {
+    const a = (i / 4) * Math.PI * 2 + 0.3;
+    addPalmLeaf(turret, 0.38 + Math.cos(a) * 0.08, 1.5, 0.12 + Math.sin(a) * 0.08, {
+      sx: 0.08, sy: 0.5, sz: 0.08, rx: 0.4, rz: Math.cos(a) * 0.8,
+      light: i % 2 === 0
+    });
   }
 
-  const decal = new THREE.Mesh(new THREE.PlaneGeometry(0.38, 0.19), turret.decalMat);
-  decal.position.set(-0.4, 0.58, 0.02);
-  decal.rotation.y = -Math.PI / 2;
-  turret.modelRoot.add(decal);
-
-  // Mástil de grúa y brazo giratorio.
-  turret.addPart(new THREE.CylinderGeometry(0.07, 0.09, 0.9, 8), turret.rustMat, 0.32, 1.22, 0);
+  // Grúa giratoria de recogida.
   const crane = new THREE.Group();
-  crane.position.set(0.32, 1.66, 0);
+  crane.position.set(0.38, 1.58, 0.12);
   turret.modelRoot.add(crane);
   turret.radarDishMesh = crane;
-  const arm = new THREE.Mesh(new THREE.BoxGeometry(0.72, 0.08, 0.08), turret.accentMat);
-  arm.position.set(-0.34, 0, 0);
-  crane.add(arm);
-  const claw = new THREE.Mesh(new THREE.ConeGeometry(0.12, 0.22, 6), turret.glowMat);
-  claw.rotation.z = Math.PI;
-  claw.position.set(-0.68, -0.2, 0);
-  crane.add(claw);
+  addBambooPole(turret, 0, 0, 0, -0.68, 0.16, 0, 0.04, {
+    parent: crane, material: turret.bambooMat
+  });
+  addBambooPole(turret, -0.68, 0.16, 0, -0.68, -0.12, 0, 0.018, {
+    parent: crane, material: turret.ropeMat
+  });
+  addCoconut(turret, -0.68, -0.24, 0, 0.11, { parent: crane });
+  addEnergyRing(turret, 0, 0.12, 0, 0.2, { parent: crane, rx: Math.PI / 2 });
 
   // Baliza de suministros.
-  turret.addPart(new THREE.CylinderGeometry(0.04, 0.06, 0.5, 6), turret.glowMat, -0.28, 1.28, 0.18);
+  addBambooPole(turret, -0.4, 0.6, 0.28, -0.4, 1.25, 0.28, 0.025);
+  addGlowPearl(turret, -0.4, 1.3, 0.28, 0.1);
+  addEnergyRing(turret, -0.4, 1.3, 0.28, 0.18, { rx: Math.PI / 2 });
 
+  // Mejoras: cesta extra, grúa reforzada y baliza.
   turret.addHiddenPart(
     'scrap_bin',
-    new THREE.BoxGeometry(0.7, 0.28, 0.42),
-    turret.hazardMat, 0, 0.5, -0.42
+    new THREE.BoxGeometry(0.7, 0.26, 0.4),
+    turret.bambooMat, 0, 0.52, -0.42
   );
   turret.addHiddenPart(
     'crane',
-    new THREE.BoxGeometry(0.92, 0.06, 0.06),
-    turret.glowMat, -0.28, 1.82, 0
+    new THREE.BoxGeometry(0.9, 0.055, 0.055),
+    turret.coconutFleshMat, -0.2, 1.84, 0.12
   );
   turret.addHiddenPart(
     'beacon',
-    new THREE.CylinderGeometry(0.09, 0.09, 0.16, 8),
-    turret.accentMat, -0.28, 1.58, 0.18
+    new THREE.CylinderGeometry(0.08, 0.08, 0.14, 8),
+    turret.accentMat, -0.4, 1.48, 0.28
   );
 
   turret.muzzleHeight = 1.3;
-  turret.muzzleForward = 0.2;
+  turret.muzzleForward = 0.25;
 }

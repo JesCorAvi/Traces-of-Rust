@@ -1,7 +1,7 @@
 # Sistema de Localización e Internacionalización (i18n)
-**Traces of Rust — Tactical Horror: Core Defense & Survival**
+**Crabs wants your food! — Tactical Horror: Core Defense & Survival**
 
-El sistema de localización de *Traces of Rust* soporta 9 idiomas con carga bajo demanda, fallback en caliente a español, pluralización CLDR, fuentes tipográficas dinámicas para glifos no latinos (CJK y Cirílico), pantalla de selección en primer arranque y selector dinámico en el menú de Ajustes.
+El sistema de localización de *Crabs wants your food!* soporta 9 idiomas con carga bajo demanda, fallback en caliente a español, pluralización CLDR, fuentes tipográficas dinámicas para glifos no latinos (CJK y Cirílico), pantalla de selección en primer arranque y selector dinámico en el menú de Ajustes.
 
 ---
 

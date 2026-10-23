@@ -2,6 +2,7 @@
 // Exports: buildMasterUIAtlas.
 
 import { CONFIG } from '../config.js';
+import { applyTropicalUIRemap } from './spritePalette.js';
 import { drawPanels } from './ui/panels.js';
 import { drawBars } from './ui/bars.js';
 import { drawBadges } from './ui/badges.js';
@@ -26,6 +27,10 @@ export function buildMasterUIAtlas() {
 
   drawBadges(ctx, UI);
   drawCursors(ctx, UI);
+
+  // Un único pase de color tropical mantiene coherente todo el atlas sin
+  // reescribir cada glifo, panel y borde de la interfaz.
+  applyTropicalUIRemap(ctx, UI.ATLAS_W, UI.ATLAS_H);
 
   return {
     name: 'ui_master_atlas',

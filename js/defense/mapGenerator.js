@@ -15,7 +15,7 @@ export const DIFFICULTIES = {
     startingScrap: 10,
     entrances: 1,
     exits: 1,
-    desc: 'FÁCIL: 1 Entrada · 1 Salida · 150 Vidas · 10 Chatarra · Rutas largas con bucles'
+    desc: 'FÁCIL: 1 Entrada · 1 Salida · 150 Comidas · 10 Madera · Senderos largos con bucles'
   },
   normal: {
     id: 'normal',
@@ -24,7 +24,7 @@ export const DIFFICULTIES = {
     startingScrap: 10,
     entrances: 2,
     exits: 1,
-    desc: 'NORMAL: 2 Entradas · 1 Salida · 100 Vidas · 10 Chatarra · Carriles convergentes'
+    desc: 'NORMAL: 2 Entradas · 1 Salida · 100 Comidas · 10 Madera · Senderos convergentes'
   },
   dificil: {
     id: 'dificil',
@@ -33,7 +33,7 @@ export const DIFFICULTIES = {
     startingScrap: 10,
     entrances: 2,
     exits: 2,
-    desc: 'DIFÍCIL: 2 Entradas · 2 Salidas · 75 Vidas · 10 Chatarra · Frentes simultáneos'
+    desc: 'DIFÍCIL: 2 Entradas · 2 Salidas · 75 Comidas · 10 Madera · Frentes simultáneos'
   }
 };
 
@@ -54,7 +54,7 @@ function buildSplineRoute(controlPoints, worldPhysics, sampleCount = 65) {
     return gy > 0.05 ? gy : 0;
   });
 
-  // Suavizado lineal de altura únicamente donde existan pendientes de rampas
+  // Suavizado lineal de altura únicamente donde existan penconchas de rampas
   const smoothHeights = [...surfaceHeights];
   for (let pass = 0; pass < 2; pass++) {
     for (let i = 1; i < smoothHeights.length - 1; i++) {
@@ -125,7 +125,7 @@ export function generateProceduralMap(diffKey = 'normal', worldPhysics = null, m
       const endWp = (wps && wps.length > 0) ? wps[wps.length - 1] : { x: 0, y: 0, z: 44 };
       exitPoints.push({
         id: ep.id || `exit_${idx}`,
-        name: ep.name || `ESCLUSA // SALIDA ${idx + 1}`,
+        name: ep.name || `PASO // SALIDA ${idx + 1}`,
         position: { x: endWp.x, y: endWp.y, z: endWp.z },
         pathId: ep.pathId,
         color: ep.color || 0xff3b16

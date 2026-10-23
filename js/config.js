@@ -123,7 +123,7 @@ export const CONFIG = {
       crit:         { col: 7, row: 1 },
       magnet:       { col: 8, row: 1 },
 
-      // Suministros, Moneda e Iconos de Sistema + Núcleo (Fila 2)
+      // Suministros, Moneda e Iconos de Sistema + Despensa (Fila 2)
       heal_pack:    { col: 0, row: 2 },
       teeth_bag:    { col: 1, row: 2 },
       tooth:        { col: 2, row: 2 },
@@ -219,83 +219,83 @@ export const CONFIG = {
   DIFFICULTY: MODES_CONFIG.SURVIVAL.DIFFICULTY,
   SKILLS: {
     slash: {
-      get name() { return _t('weapon.slash.name', 'Sierra de Amputación'); }, icon: 'slash',
+      get name() { return _t('weapon.slash.name', 'Machete de Cocotero'); }, icon: 'slash',
       baseDmg: 28, baseCd: 0.88, baseRange: 4.5, scalePerLvl: 0.25,
       usesMultishot: false,
       get desc() { return _t('weapon.slash.desc', 'Arco de sierra dentada con estela de sangre, destello 3D y empuje. (No afectada por +Proyectiles).'); }
     },
     shotgun: {
-      get name() { return _t('weapon.shotgun.name', 'Escopeta Calibre 12'); }, icon: 'shotgun',
+      get name() { return _t('weapon.shotgun.name', 'Escopeta de Sal Marina'); }, icon: 'shotgun',
       baseDmg: 10.0, baseCd: 1.4, baseRange: 14.5, scalePerLvl: 0.24,
       usesMultishot: true,
       get desc() { return _t('weapon.shotgun.desc', 'Abanico de postas físicas con fogonazo y expulsión de cartucho.'); }
     },
     flamethrower: {
-      get name() { return _t('weapon.flamethrower.name', 'Soplete Incinerador'); }, icon: 'flamethrower',
+      get name() { return _t('weapon.flamethrower.name', 'Soplete de Asador'); }, icon: 'flamethrower',
       baseDmg: 8.5, baseCd: 2.8, activeSec: 2.6, tickSec: 0.085, baseRange: 8.2, scalePerLvl: 0.25,
       usesMultishot: false,
-      get desc() { return _t('weapon.flamethrower.desc', 'Descarga un torrente continuo de fuego durante varios segundos que calcina a los enemigos, y luego entra en enfriamiento. (No afectada por +Proyectiles).'); }
+      get desc() { return _t('weapon.flamethrower.desc', 'Descarga un torrente continuo de fuego durante varios segundos que calcina a los cangrejos, y luego entra en enfriamiento. (No afectada por +Proyectiles).'); }
     },
     aura: {
-      get name() { return _t('weapon.aura.name', 'Incensario de Bilis'); }, icon: 'aura',
+      get name() { return _t('weapon.aura.name', 'Aura de Marea'); }, icon: 'aura',
       baseDmg: 15, baseCd: 0.34, baseRange: 3.5, scalePerLvl: 0.22,
       usesMultishot: false,
       get desc() { return _t('weapon.aura.desc', 'Campo corrosivo alrededor del jugador que daña y frena a la horda. (No afectada por +Proyectiles).'); }
     },
     mines: {
-      get name() { return _t('weapon.mines.name', 'Minas de Metralla'); }, icon: 'mines',
+      get name() { return _t('weapon.mines.name', 'Minas de Erizo'); }, icon: 'mines',
       baseDmg: 55, baseCd: 2.4, baseRange: 3.3, scalePerLvl: 0.28,
       usesMultishot: true,
       get desc() { return _t('weapon.mines.desc', 'Arroja minas con sensor rojo que detonan en área al pisarlas.'); }
     },
     harpoon: {
-      get name() { return _t('weapon.harpoon.name', 'Arpón Neumático'); }, icon: 'harpoon',
+      get name() { return _t('weapon.harpoon.name', 'Arpón de Pesca'); }, icon: 'harpoon',
       baseDmg: 44, baseCd: 1.55, baseRange: 18.0, scalePerLvl: 0.26,
       usesMultishot: true,
-      get desc() { return _t('weapon.harpoon.desc', 'Proyectil perforante que atraviesa en línea recta a múltiples enemigos.'); }
+      get desc() { return _t('weapon.harpoon.desc', 'Proyectil perforante que atraviesa en línea recta a múltiples cangrejos.'); }
     },
     orbital: {
-      get name() { return _t('weapon.orbital.name', 'Jaula de Carnicero'); }, icon: 'orbital',
+      get name() { return _t('weapon.orbital.name', 'Aros de Salvamento'); }, icon: 'orbital',
       baseDmg: 26, baseCd: 0.2, baseRange: 3.3, scalePerLvl: 0.25,
       usesMultishot: true,
       get desc() { return _t('weapon.orbital.desc', 'Jaulas con cráneos y ganchos giran dejando estela y desgarrando.'); }
     },
     bolt: {
-      get name() { return _t('weapon.bolt.name', 'Desfibrilador Roto'); }, icon: 'bolt',
+      get name() { return _t('weapon.bolt.name', 'Anguila Eléctrica'); }, icon: 'bolt',
       baseDmg: 27, baseCd: 1.8, baseRange: 13.0, scalePerLvl: 0.25,
       usesMultishot: false,
       get desc() { return _t('weapon.bolt.desc', 'Descarga eléctrica de alto voltaje que salta entre varios cuerpos. (No afectada por +Proyectiles).'); }
     },
     chakram: {
-      get name() { return _t('weapon.chakram.name', 'Bumerán de Chatarra'); }, icon: 'chakram',
+      get name() { return _t('weapon.chakram.name', 'Bumerán de Madera'); }, icon: 'chakram',
       baseDmg: 24, baseCd: 1.15, baseRange: 9.0, scalePerLvl: 0.22,
       usesMultishot: true,
-      get desc() { return _t('weapon.chakram.desc', 'Disco de sierra que sale, perfora y vuelve al operario dañando en ambos tramos.'); }
+      get desc() { return _t('weapon.chakram.desc', 'Disco de sierra que sale, perfora y vuelve al socorrista dañando en ambos tramos.'); }
     },
     welder: {
-      get name() { return _t('weapon.welder.name', 'Soldador de Arco'); }, icon: 'welder',
+      get name() { return _t('weapon.welder.name', 'Rayo de Sol'); }, icon: 'welder',
       baseDmg: 10, baseCd: 0.12, baseRange: 10.0, scalePerLvl: 0.18,
       chargeSec: 2.4, activeSec: 1.6, tickSec: 0.12, beamWidth: 1.2,
       usesMultishot: false,
-      get desc() { return _t('weapon.welder.desc', 'Se carga durante 2.4s y descarga un haz concentrado durante 1.6s hacia la mayor concentración de enemigos. Después vuelve a cargar. (No afectada por +Proyectiles).'); }
+      get desc() { return _t('weapon.welder.desc', 'Se carga durante 2.4s y descarga un haz concentrado durante 1.6s hacia la mayor concentración de cangrejos. Después vuelve a cargar. (No afectada por +Proyectiles).'); }
     },
     grenade: {
-      get name() { return _t('weapon.grenade.name', 'Lanzagranadas de Peregrino'); }, icon: 'grenade',
+      get name() { return _t('weapon.grenade.name', 'Coco Explosivo'); }, icon: 'grenade',
       baseDmg: 42, baseCd: 2.2, baseRange: 11.0, scalePerLvl: 0.26,
       usesMultishot: true,
       get desc() { return _t('weapon.grenade.desc', 'Granada balística que explota en área y se divide en submuniciones al mejorar.'); }
     },
     hammer: {
-      get name() { return _t('weapon.hammer.name', 'Martillo de Pistón'); }, icon: 'hammer',
+      get name() { return _t('weapon.hammer.name', 'Mazo de Cocotero'); }, icon: 'hammer',
       baseDmg: 38, baseCd: 1.7, baseRange: 3.8, scalePerLvl: 0.24,
       usesMultishot: false,
       get desc() { return _t('weapon.hammer.desc', 'Onda de presión radial con empuje fuerte y aturdimiento. (No afectada por +Proyectiles).'); }
     },
     acid: {
-      get name() { return _t('weapon.acid.name', 'Frasco de Ácido'); }, icon: 'acid',
+      get name() { return _t('weapon.acid.name', 'Frasco de Medusa'); }, icon: 'acid',
       baseDmg: 14, baseCd: 2.0, baseRange: 9.0, scalePerLvl: 0.20,
       usesMultishot: true,
-      get desc() { return _t('weapon.acid.desc', 'Frasco que estalla en una nube corrosiva persistente, quemando y frenando a los hostiles.'); }
+      get desc() { return _t('weapon.acid.desc', 'Frasco que estalla en una nube corrosiva persistente, quemando y frenando a los cangrejos.'); }
     }
   },
   PASSIVES: {
@@ -330,7 +330,7 @@ export const CONFIG = {
       get desc() { return _t('passive.regen.desc', 'Regenera +0.9 de Pulso por segundo de forma continua.'); }
     },
     moveSpd: {
-      get name() { return _t('passive.moveSpd.name', 'Efedrina Industrial'); }, icon: 'moveSpd', perLevel: 0.08,
+      get name() { return _t('passive.moveSpd.name', 'Efedrina Tropical'); }, icon: 'moveSpd', perLevel: 0.08,
       targetType: 'player_stat',
       format: lvl => _t('passive.format.moveSpd', '+{pct}% VEL.').replace('{pct}', Math.round(lvl * 8)),
       get desc() { return _t('passive.moveSpd.desc', 'Aumenta la velocidad de movimiento un +8% por nivel.'); }
@@ -351,12 +351,12 @@ export const CONFIG = {
       get name() { return _t('passive.magnet.name', 'Imán de Grúa'); }, icon: 'magnet', perLevel: 1.6,
       targetType: 'player_stat',
       format: lvl => _t('passive.format.magnet', '+{val}M IMÁN').replace('{val}', (lvl * 1.6).toFixed(1)),
-      get desc() { return _t('passive.magnet.desc', 'Aumenta el radio de recogida de suero y dientes.'); }
+      get desc() { return _t('passive.magnet.desc', 'Aumenta el radio de recogida de agua de coco y conchas.'); }
     }
   },
   FALLBACK_REWARDS: [
     { id: 'heal_pack', get name() { return _t('reward.heal_pack.name', 'Transfusión de Emergencia'); }, icon: 'heal_pack', get desc() { return _t('reward.heal_pack.desc', 'Restaura +75 de Pulso inmediatamente.'); } },
-    { id: 'teeth_bag', get name() { return _t('reward.teeth_bag.name', 'Bolsa de Dientes Extraídos'); }, icon: 'teeth_bag', get desc() { return _t('reward.teeth_bag.desc', 'Obtienes +15 Dientes adicionales para la Mesa del Cirujano.'); } }
+    { id: 'teeth_bag', get name() { return _t('reward.teeth_bag.name', 'Bolsa de Conchas'); }, icon: 'teeth_bag', get desc() { return _t('reward.teeth_bag.desc', 'Obtienes +15 conchas adicionales para la tienda de playa.'); } }
   ],
   SHOP: [
     { id: 'dmg',    get name() { return _t('shop.dmg.name', 'Pólvora Refinada'); },     icon: 'dmg',     perLevel: 0.03,  get desc() { return _t('shop.dmg.desc', '+3% Daño Base permanente por nivel'); },         cost: 6 },

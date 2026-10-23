@@ -6,67 +6,67 @@ import { renderWeaponByDirection } from './weapons.js';
 
 export const CHARACTER_THEMES = {
   otto: {
-    // Dr. Otto "El Serrucho": Cirujano de guerra desquiciado
-    coatBase: '#cfc3ab', coatHi: '#e8dcbe', coatDark: '#a3947c', coatTrim: '#8a1414',
-    belt: '#5a3520', buckle: '#b89c46',
-    legs: '#182a20', boots: '#0a0e0a', bootTrim: '#2a3b2a',
-    maskBase: '#0d120d', maskHi: '#202a1e', eyeGlow: '#ffffff',
+    // Otto "Salvavidas": camisa de lino clara y visera de socorrista al atardecer.
+    coatBase: '#f2d7a6', coatHi: '#fff0c7', coatDark: '#c08b5a', coatTrim: '#e4574d',
+    belt: '#2a6b68', buckle: '#ffcf68',
+    legs: '#24565b', boots: '#17393d', bootTrim: '#63c8bd',
+    maskBase: '#8c4b32', maskHi: '#d99b6a', eyeGlow: '#5ff3e3',
     feature: 'head_mirror'
   },
   mack: {
-    // Sargento Mack "Retroceso": Armario blindado con casco y puro
-    coatBase: '#3b4a2c', coatHi: '#54683e', coatDark: '#232d1a', coatTrim: '#738c55',
-    belt: '#3a2010', buckle: '#e6b342',
-    legs: '#382a1c', boots: '#120e09', bootTrim: '#4a3825',
-    maskBase: '#3b4a2c', maskHi: '#54683e', eyeGlow: '#ff5500',
+    // Mack "Pescador": camisa de faena caqui, sombrero de fieltro y puro.
+    coatBase: '#5f8a56', coatHi: '#8bb86f', coatDark: '#35543c', coatTrim: '#ffd06b',
+    belt: '#603a23', buckle: '#ffe08a',
+    legs: '#425b36', boots: '#263024', bootTrim: '#8fae68',
+    maskBase: '#d2a36f', maskHi: '#f0c894', eyeGlow: '#ffb347',
     feature: 'cigar_helmet'
   },
   pepe: {
-    // Pyro-Pepe "Chispazo": Piromaníaco encorvado con traje ignífugo
-    coatBase: '#c87a18', coatHi: '#e89a24', coatDark: '#7a4008', coatTrim: '#24180c',
-    belt: '#3a1808', buckle: '#e6b342',
-    legs: '#7a4010', boots: '#140d05', bootTrim: '#381c08',
-    maskBase: '#1a1008', maskHi: '#382410', eyeGlow: '#3fe0f5',
+    // Pepe "Parrilla": delantal coral y gafas de sol turquesa frente al asador.
+    coatBase: '#ff8a46', coatHi: '#ffc46b', coatDark: '#a94a26', coatTrim: '#fff0c7',
+    belt: '#4f2b1b', buckle: '#ffe08a',
+    legs: '#c66b32', boots: '#462617', bootTrim: '#ffbd66',
+    maskBase: '#5a3323', maskHi: '#a8643b', eyeGlow: '#6df4e8',
     feature: 'goggles_tank'
   },
   morbo: {
-    // Sor Morbo (La Flagelante): Monja gótica espectral con hábito
-    coatBase: '#181022', coatHi: '#2a1c3b', coatDark: '#0e0814', coatTrim: '#e6ddc8',
-    belt: '#120a1a', buckle: '#877a5c',
-    legs: '#12081a', boots: '#08040d', bootTrim: '#201030',
-    maskBase: '#08040d', maskHi: '#e6ddc8', eyeGlow: '#55e038',
+    // Morbo "Marea": vidente del arrecife con velo de espuma y algas.
+    coatBase: '#2a8b86', coatHi: '#6ed6c4', coatDark: '#135453', coatTrim: '#fff0c7',
+    belt: '#1d4849', buckle: '#ffd06b',
+    legs: '#163f49', boots: '#0d2832', bootTrim: '#57b7ac',
+    maskBase: '#e8d6b4', maskHi: '#fff0d4', eyeGlow: '#a9ff8c',
     feature: 'nun_veil'
   },
   bob: {
-    // Boomer Bob (El Demoledor): Técnico de cantera con peto naranja y casco
-    coatBase: '#de5d12', coatHi: '#ff7c2a', coatDark: '#8a3408', coatTrim: '#ffffff',
-    belt: '#281408', buckle: '#f0c954',
-    legs: '#22354a', boots: '#10141a', bootTrim: '#344e6b',
-    maskBase: '#f0c954', maskHi: '#ffe078', eyeGlow: '#ffffff',
+    // Bob "Castillos": chaleco coral de socorrista y casco amarillo de obra.
+    coatBase: '#ff7a4e', coatHi: '#ffb15d', coatDark: '#a23e2b', coatTrim: '#fff0c7',
+    belt: '#3e2c1c', buckle: '#ffe08a',
+    legs: '#39758a', boots: '#173a46', bootTrim: '#6fd1dd',
+    maskBase: '#ffd06b', maskHi: '#fff0c7', eyeGlow: '#ffffff',
     feature: 'hardhat'
   },
   krauss: {
-    // Capitán Krauss (El Balenero): Chubasquero marino y ojo biónico
-    coatBase: '#9c8828', coatHi: '#b8a436', coatDark: '#5c5014', coatTrim: '#f0c954',
-    belt: '#3a3010', buckle: '#f0c954',
-    legs: '#1e2428', boots: '#0e1215', bootTrim: '#c8c2ac',
-    maskBase: '#151a1e', maskHi: '#28323a', eyeGlow: '#ff2222',
+    // Krauss "Capitán": gorra marina azul y chubasquero amarillo de tormenta.
+    coatBase: '#e4b53f', coatHi: '#ffd66f', coatDark: '#9a6c1f', coatTrim: '#f5f0d0',
+    belt: '#2c3e4a', buckle: '#ffcf68',
+    legs: '#243a46', boots: '#122730', bootTrim: '#f7e4b0',
+    maskBase: '#a66742', maskHi: '#dfab7c', eyeGlow: '#ff6a52',
     feature: 'captain_cap'
   },
   axel: {
-    // Axel "Trituradora" Hogg: Delantal de carnicero con máscara de cuero
-    coatBase: '#4a151b', coatHi: '#6e2028', coatDark: '#280a0e', coatTrim: '#8a1a1a',
-    belt: '#2a1012', buckle: '#c8c2ac',
-    legs: '#2a1b15', boots: '#0e0806', bootTrim: '#4a2b20',
-    maskBase: '#352018', maskHi: '#4a3024', eyeGlow: '#ff3b3b',
+    // Axel "Escualo": socorrista de élite con máscara de buceo y neopreno coral.
+    coatBase: '#d34d48', coatHi: '#ff8a68', coatDark: '#7e2832', coatTrim: '#ffe2a6',
+    belt: '#31211b', buckle: '#d8d2b8',
+    legs: '#1e4a50', boots: '#102d34', bootTrim: '#63c8bd',
+    maskBase: '#673b2e', maskHi: '#b77350', eyeGlow: '#ff8a68',
     feature: 'butcher_mask'
   },
   tesla: {
-    // Tesla Vance (Voltio Loco): Traje aislante con cables y pelo erizado
-    coatBase: '#16222c', coatHi: '#26394a', coatDark: '#0c141a', coatTrim: '#c87a32',
-    belt: '#101820', buckle: '#3fe0f5',
-    legs: '#101820', boots: '#0a0f14', bootTrim: '#3fe0f5',
-    maskBase: '#0c141a', maskHi: '#1e2e3b', eyeGlow: '#3fe0f5',
+    // Tesla "Tormenta": técnico de tormentas con aislamiento turquesa y chispas.
+    coatBase: '#1d7c82', coatHi: '#51c9bd', coatDark: '#0d4149', coatTrim: '#ffcf68',
+    belt: '#102f36', buckle: '#6df4e8',
+    legs: '#123b44', boots: '#0b242c', bootTrim: '#6df4e8',
+    maskBase: '#7a4d34', maskHi: '#bd8b64', eyeGlow: '#6df4e8',
     feature: 'electric_sparks'
   }
 };
@@ -277,49 +277,75 @@ export function drawPlayer8DirCell(ctx, gCtx, dir, stateIdx, col, ox, oy, skills
 
   // ACCESORIOS DECORATIVOS EXCLUSIVOS POR OPERADOR
   if (theme.feature === 'head_mirror') {
-    // Dr. Otto: Espejo frontal reflectante
-    glow(27, 7, 4, 3, '#ffffff');
-    px(28, 7, 2, 3, '#c8c2ac');
-  } else if (theme.feature === 'cigar_helmet') {
-    // Mack: Casco blindado y puro encendido
-    px(22, 6, 14, 3, '#54683e');
-    if (!isBackView) glow(facingSign > 0 ? 32 : 23, 17, 2, 2, '#ff5500');
-  } else if (theme.feature === 'goggles_tank') {
-    // Pepe: Gafas de soldador con lente cian
+    // Otto: visera de socorrista y gafas de sol.
+    px(21, 6, 16, 2, '#ffe8b0');
+    px(22, 4, 14, 3, '#f4c56b');
+    px(23, 3, 12, 2, '#fff0c7');
     if (!isBackView) {
-      glow(25, 12, 3, 3, '#3fe0f5');
-      glow(30, 12, 3, 3, '#3fe0f5');
+      px(24, 11, 5, 3, '#17393d');
+      px(31, 11, 5, 3, '#17393d');
+      px(29, 12, 2, 1, '#17393d');
+      glow(25, 12, 2, 1, '#5ff3e3');
+      glow(32, 12, 2, 1, '#5ff3e3');
+    }
+  } else if (theme.feature === 'cigar_helmet') {
+    // Mack: sombrero de pescador y puro encendido.
+    px(21, 6, 16, 2, '#31543a');
+    px(23, 3, 12, 4, '#4f7548');
+    px(25, 2, 8, 2, '#80a66d');
+    if (!isBackView) glow(facingSign > 0 ? 32 : 23, 17, 2, 2, '#ff8a45');
+  } else if (theme.feature === 'goggles_tank') {
+    // Pepe: gafas de sol coral con lente turquesa.
+    if (!isBackView) {
+      px(23, 11, 6, 4, '#4f2b1b');
+      px(30, 11, 6, 4, '#4f2b1b');
+      glow(25, 12, 3, 2, '#6df4e8');
+      glow(31, 12, 3, 2, '#6df4e8');
+      px(28, 12, 2, 1, '#ffe08a');
     }
   } else if (theme.feature === 'nun_veil') {
-    // Morbo: Velo blanco de monja y espinas verdes
-    px(22, 9, 2, 10, '#e6ddc8');
-    px(34, 9, 2, 10, '#e6ddc8');
-    glow(28, 6, 2, 2, '#55e038');
+    // Morbo: velo de espuma marina y algas bioluminiscentes.
+    px(22, 9, 2, 10, '#fff0d4');
+    px(34, 9, 2, 10, '#fff0d4');
+    px(23, 6, 12, 2, '#fff0d4');
+    glow(27, 6, 2, 2, '#a9ff8c');
+    glow(31, 7, 2, 2, '#6ed6c4');
   } else if (theme.feature === 'hardhat') {
-    // Boomer Bob: Casco amarillo de cantera
-    px(22, 5, 14, 4, '#f0c954');
-    px(24, 4, 10, 2, '#ffe078');
-    glow(27, 7, 4, 2, '#ffffff');
+    // Bob: casco de obra amarillo con cinta reflectante.
+    px(22, 5, 14, 4, '#ffcf68');
+    px(24, 4, 10, 2, '#fff0c7');
+    px(21, 8, 16, 1, '#ff8a46');
+    glow(27, 6, 4, 1, '#ffffff');
   } else if (theme.feature === 'captain_cap') {
-    // Krauss: Gorra de capitán con insignia y visor biónico
-    px(22, 6, 14, 3, '#151a1e');
-    px(27, 6, 4, 2, '#f0c954');
-    if (!isBackView) glow(facingSign > 0 ? 31 : 25, 13, 3, 3, '#ff2222');
+    // Krauss: gorra de capitán con ancla y visor biónico.
+    px(22, 6, 14, 3, '#1b3440');
+    px(27, 6, 4, 2, '#ffcf68');
+    px(21, 8, 16, 1, '#0d1f28');
+    if (!isBackView) glow(facingSign > 0 ? 31 : 25, 13, 3, 3, '#ff6a52');
   } else if (theme.feature === 'butcher_mask') {
-    // Axel: Máscara de cuero de verdugo
-    px(23, 8, 12, 11, '#352018');
-    px(28, 10, 2, 8, '#151515');
+    // Axel: máscara de buceo con cristal turquesa.
+    px(23, 8, 12, 10, '#31211b');
+    px(24, 9, 10, 6, '#17393d');
+    px(25, 10, 8, 4, '#2a7d7c');
     if (!isBackView) {
-      glow(25, 12, 3, 2, '#ff3b3b');
-      glow(30, 12, 3, 2, '#ff3b3b');
+      glow(26, 11, 3, 2, '#ff8a68');
+      glow(31, 11, 3, 2, '#ff8a68');
     }
+    px(24, 15, 10, 2, '#d8d2b8');
   } else if (theme.feature === 'electric_sparks') {
-    // Tesla: Pelo chamuscado erizado y chispas azules
-    px(23, 4, 2, 4, '#121216');
-    px(27, 3, 3, 5, '#121216');
-    px(32, 4, 2, 4, '#121216');
-    glow(22, 6, 2, 2, '#3fe0f5');
-    glow(34, 6, 2, 2, '#3fe0f5');
+    // Tesla: pelo de tormenta y chispas turquesa.
+    px(23, 4, 2, 4, '#17393d');
+    px(27, 3, 3, 5, '#17393d');
+    px(32, 4, 2, 4, '#17393d');
+    glow(22, 6, 2, 2, '#6df4e8');
+    glow(34, 6, 2, 2, '#6df4e8');
+  }
+
+  // Flor de hibisco en la solapa: firma visual del equipo de la playa.
+  if (!isBackView && (effectiveDir === 3 || effectiveDir === 4 || effectiveDir === 5)) {
+    px(22, 27, 2, 2, '#ff7d66');
+    px(24, 26, 1, 1, '#ffd06b');
+    px(23, 29, 1, 1, '#fff0c7');
   }
 
   // Brazos

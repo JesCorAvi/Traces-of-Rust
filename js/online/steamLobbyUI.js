@@ -487,7 +487,7 @@ export function startCoopCharacterSelectionFlow(matchData, isHost) {
   }
 
   const mapObj = matchData.mapId ? getMapById(matchData.mapId) : null;
-  const mapTitle = mapObj ? mapObj.name : (matchData.mode === 'core_defense' ? 'DEFENSA DE NÚCLEO' : 'SUPERVIVENCIA');
+  const mapTitle = mapObj ? mapObj.name : (matchData.mode === 'core_defense' ? 'DEFENSA DE LA DESPENSA' : 'SUPERVIVENCIA');
 
   openCharacterSelectorModal({
     isCoop: true,

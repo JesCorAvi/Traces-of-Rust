@@ -23,17 +23,18 @@ export const SHARED_GEO = {
 };
 
 export const SHARED_MAT = {
-  sparkBlood:  new THREE.MeshBasicMaterial({ color: 0xa52020 }),
-  bloodDark:   new THREE.MeshBasicMaterial({ color: 0x6e1414 }),
-  bloodGore:   new THREE.MeshBasicMaterial({ color: 0x4a1212 }),
-  bloodRust:   new THREE.MeshBasicMaterial({ color: 0x4a2518 }),
-  dissolveAsh: new THREE.MeshBasicMaterial({ color: 0x241814 }),
-  puddleMat:   new THREE.MeshBasicMaterial({ color: 0x3d0b0b, depthWrite: false }),
+  // Fragmentos de caparazón y espuma de marea en lugar de sangre industrial.
+  sparkBlood:  new THREE.MeshBasicMaterial({ color: 0xff7a5c }),
+  bloodDark:   new THREE.MeshBasicMaterial({ color: 0xd84a44 }),
+  bloodGore:   new THREE.MeshBasicMaterial({ color: 0xffd166 }),
+  bloodRust:   new THREE.MeshBasicMaterial({ color: 0xb46a3c }),
+  dissolveAsh: new THREE.MeshBasicMaterial({ color: 0x6ea89e }),
+  puddleMat:   new THREE.MeshBasicMaterial({ color: 0x2f6f70, depthWrite: false }),
   sparkGold:   new THREE.MeshBasicMaterial({ color: 0xffe699 }),
   shellRed:    new THREE.MeshBasicMaterial({ color: 0xa52020 }),
-  mineBody:    new THREE.MeshStandardMaterial({ color: 0x3b2316, roughness: 0.85 }),
-  mineLed:     new THREE.MeshBasicMaterial({ color: 0xff2222 }),
-  enemyProj:   new THREE.MeshBasicMaterial({ color: 0xff3b16 }),
+  mineBody:    new THREE.MeshStandardMaterial({ color: 0x6b432b, roughness: 0.9, flatShading: true }),
+  mineLed:     new THREE.MeshBasicMaterial({ color: 0xff8a68 }),
+  enemyProj:   new THREE.MeshBasicMaterial({ color: 0xff9a70 }),
   slashMat:    null,
   orbitalMat:  null
 };
@@ -115,7 +116,7 @@ export function spawnEnemyProjectile(scene, projectiles, origin, dir, speed, dmg
   });
 }
 
-// Genera rociada direccional de gotas y trozos de sangre al recibir daño
+// Genera una rociada direccional de fragmentos de caparazón y espuma al recibir daño.
 export function spawnHitBlood(scene, vfx, pos, opts = {}) {
   if (!scene || !Array.isArray(vfx) || !pos) return;
   if (vfx.length > 250) return;
@@ -159,7 +160,7 @@ export function spawnHitBlood(scene, vfx, pos, opts = {}) {
   }
 }
 
-// Explosión visceral de gore, sangre y charco expansivo al morir una unidad
+// Estallido de caparazón, arena y espuma al morir un cangrejo.
 export function spawnEnemyDeathGore(scene, vfx, pos, opts = {}) {
   if (!scene || !Array.isArray(vfx) || !pos) return;
   if (vfx.length > 250) return;

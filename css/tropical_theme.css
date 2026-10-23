@@ -1,0 +1,791 @@
+/* ==========================================================================
+   CRABS WANTS YOUR FOOD! · TEMA COSTA AL ATARDECER
+   Capa de acabado cargada al final: recolorea la interfaz industrial existente
+   sin alterar su estructura, estados ni accesibilidad.
+   ========================================================================== */
+
+:root {
+  --rust-iron-dark: #071f26;
+  --rust-iron-plate: #0d333a;
+  --rust-iron-light: #185352;
+  --rust-iron-edge: #3d8b82;
+  --rust-brown-deep: #43271b;
+  --rust-brown: #8a4a2b;
+  --rust-brown-light: #c37a49;
+  --rust-brass: #ffc857;
+  --rust-brass-bright: #ffe08a;
+  --rust-hazard-amber: #ffb35c;
+  --rust-hazard-black: #10343a;
+  --rust-blood-dark: #6f2a30;
+  --rust-blood: #d84a44;
+  --rust-blood-bright: #ff7b62;
+  --rust-steel-dim: #aecbc4;
+  --rust-text-main: #fff6e2;
+  --rust-text-gold: #ffe08a;
+  --rust-text-dim: #c4d9cf;
+
+  --tropical-sea: #2f8c91;
+  --tropical-lagoon: #59d6c8;
+  --tropical-coral: #ff8165;
+  --tropical-sun: #ffd166;
+  --tropical-sand: #f1d5aa;
+  --tropical-shell: #fff0c7;
+  --tropical-ink: #07181c;
+  --tropical-wood: #9b613a;
+
+  --shadow-heavy-plate: 0 16px 38px rgba(3, 19, 23, 0.88), 0 4px 0 #06181d;
+  --shadow-lift: 0 8px 22px rgba(3, 19, 23, 0.7), 2px 2px 0 #06181d;
+  --shadow-inset-well: inset 0 3px 8px rgba(3, 18, 22, 0.8), inset 0 0 15px rgba(5, 35, 37, 0.45);
+}
+
+html,
+body {
+  background: #08242b;
+  color: var(--tropical-shell);
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(circle at 72% 40%, rgba(255, 220, 140, 0.18), transparent 34%),
+    linear-gradient(180deg, rgba(18, 88, 111, 0.16), rgba(255, 129, 101, 0.08));
+}
+
+::-webkit-scrollbar-track { background: #0a2a30; border-color: #1d4d4d; }
+::-webkit-scrollbar-thumb { background: #7b4d2d; border-color: #c38a52; }
+::-webkit-scrollbar-thumb:hover { background: #b4743d; border-color: #ffe08a; }
+::-webkit-scrollbar-thumb:active { background: #ffc857; }
+::-webkit-scrollbar-corner { background: #0a2a30; border-color: #1d4d4d; }
+
+/* --------------------------------------------------------------------------
+   Post-procesado: atardecer luminoso, menos túnel industrial.
+   -------------------------------------------------------------------------- */
+#crt-overlay {
+  opacity: 0.18;
+  background:
+    linear-gradient(rgba(255, 196, 128, 0) 50%, rgba(14, 42, 49, 0.3) 50%),
+    repeating-linear-gradient(90deg, rgba(255, 196, 128, 0.018), rgba(89, 214, 200, 0.012) 2px, rgba(37, 73, 91, 0.02) 4px);
+  background-size: 100% 4px, 6px 100%;
+}
+
+#grain-overlay { opacity: 0.032; }
+
+#vignette-overlay {
+  background: radial-gradient(circle at 52% 45%, transparent 40%, rgba(9, 49, 54, 0.32) 78%, rgba(5, 23, 28, 0.7) 100%);
+}
+
+body.endgame-mode #vignette-overlay {
+  background: radial-gradient(circle at 50% 45%, transparent 24%, rgba(90, 28, 30, 0.55) 72%, rgba(28, 8, 12, 0.92) 100%);
+}
+
+#damage-flash {
+  background: radial-gradient(circle, rgba(255, 129, 101, 0.16) 20%, rgba(168, 48, 48, 0.72) 100%);
+}
+
+/* --------------------------------------------------------------------------
+   Menús, ventanas y notas de papel.
+   -------------------------------------------------------------------------- */
+.overlay {
+  background: rgba(5, 31, 37, 0.76);
+  backdrop-filter: blur(2px);
+}
+
+.metal-plate,
+.boss-plate {
+  filter: drop-shadow(0 16px 26px rgba(2, 17, 21, 0.8));
+}
+
+.paper-note {
+  color: #f2e2c5;
+  text-shadow: 1px 1px 0 #173a3a;
+}
+
+.paper-note b { color: var(--tropical-shell); }
+
+.tape-strip,
+.tape-label {
+  color: #2b1b13;
+  text-shadow: none;
+}
+
+.rust-btn {
+  color: var(--tropical-shell);
+  text-shadow: 2px 2px 0 #0b272c;
+}
+
+.rust-btn:hover:not(:disabled) {
+  color: #173439;
+  text-shadow: none;
+}
+
+.rust-btn.primary {
+  color: #fff8e7;
+  text-shadow: 2px 2px 0 #6b241f;
+  box-shadow: 0 0 18px rgba(255, 162, 102, 0.4), 2px 3px 0 #07181c;
+}
+
+.rust-btn.primary:hover:not(:disabled) {
+  color: #2c1a10;
+  text-shadow: none;
+  box-shadow: 0 8px 28px rgba(255, 196, 104, 0.62), 2px 4px 0 #07181c;
+}
+
+.rust-btn:focus-visible,
+select:focus-visible {
+  outline-color: var(--tropical-lagoon);
+}
+
+/* --------------------------------------------------------------------------
+   Pantalla de inicio sobre la playa 3D.
+   -------------------------------------------------------------------------- */
+.desktop-start-overlay {
+  background:
+    linear-gradient(90deg, rgba(4, 28, 34, 0.78) 0%, rgba(4, 28, 34, 0.38) 31%, rgba(4, 28, 34, 0.04) 58%, rgba(12, 30, 32, 0.26) 100%)
+    , radial-gradient(ellipse at 72% 62%, rgba(255, 186, 107, 0.18), transparent 46%) !important;
+  padding: 16px 24px !important;
+}
+
+.desktop-start-overlay::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse at 70% 72%, transparent 35%, rgba(7, 28, 32, 0.24) 100%);
+  z-index: -1;
+}
+
+.start-nav-column {
+  max-width: 560px;
+}
+
+.start-dossier-column {
+  max-width: 365px;
+}
+
+.launcher-header-group {
+  margin-bottom: 5px;
+}
+
+.desktop-main-title {
+  font-size: clamp(24px, 3.1vw, 39px) !important;
+  line-height: 1.22 !important;
+  margin: 0 0 6px !important;
+  letter-spacing: 1px;
+  color: var(--tropical-shell);
+  text-shadow:
+    2px 2px 0 #8f432e,
+    4px 4px 0 #5e2b22,
+    6px 6px 0 rgba(7, 24, 28, 0.9),
+    0 0 26px rgba(255, 198, 112, 0.5);
+}
+
+.title-line {
+  display: block;
+}
+
+.title-accent {
+  color: var(--tropical-coral);
+  text-shadow:
+    2px 2px 0 #7e2e29,
+    4px 4px 0 #4b1d21,
+    6px 6px 0 rgba(7, 24, 28, 0.9),
+    0 0 28px rgba(255, 121, 93, 0.5);
+}
+
+.launcher-genre-tag {
+  color: var(--tropical-sun);
+  font-size: 8px;
+  letter-spacing: 2.2px;
+  text-shadow: 1px 1px 0 #07181c;
+}
+
+.start-top-bar {
+  margin-bottom: 14px;
+}
+
+.start-souls-badge,
+.start-currency-pill {
+  color: var(--tropical-shell);
+}
+
+.start-top-btn {
+  font-size: 8px !important;
+}
+
+/* Cápsulas de modo: campaña de despensa y marea arcade. */
+.mode-card-hero,
+.mode-card-secondary {
+  box-shadow: 0 5px 16px rgba(2, 18, 22, 0.68), 2px 2px 0 #07181c;
+}
+
+.mode-card-hero.is-active-mode {
+  box-shadow: 0 0 24px rgba(89, 214, 200, 0.45), 0 5px 18px rgba(2, 18, 22, 0.72), 2px 2px 0 #07181c;
+}
+
+.mode-card-secondary.is-active-mode {
+  box-shadow: 0 0 24px rgba(255, 129, 101, 0.45), 0 5px 18px rgba(2, 18, 22, 0.72), 2px 2px 0 #07181c;
+}
+
+.badge-primary {
+  background: var(--tropical-sun);
+  color: #203135;
+}
+
+.badge-secondary {
+  background: #4b2c31;
+  color: #ffb19d;
+}
+
+.mode-capsule-status,
+.mode-capsule-sub {
+  color: #b9ded5;
+}
+
+.mode-card-hero.is-active-mode .mode-capsule-status,
+.mode-card-hero.is-active-mode .mode-capsule-title {
+  color: var(--tropical-lagoon);
+  text-shadow: 0 0 10px rgba(89, 214, 200, 0.4);
+}
+
+.mode-card-secondary.is-active-mode .mode-capsule-status,
+.mode-card-secondary.is-active-mode .mode-capsule-title {
+  color: var(--tropical-coral);
+  text-shadow: 0 0 10px rgba(255, 129, 101, 0.4);
+}
+
+.mode-capsule-title { color: var(--tropical-shell); }
+.mode-capsule-sub { color: #b9ded5; }
+.mode-card-secondary .mode-capsule-sub { color: #e0b9ab; }
+
+.play-btn-title {
+  color: var(--tropical-shell);
+  font-size: clamp(10px, 1.35vw, 14px) !important;
+  letter-spacing: 0.6px;
+}
+
+.play-hero-btn:hover .play-btn-title { color: #223436; }
+
+.play-btn-sub {
+  color: var(--tropical-lagoon);
+  text-shadow: 1px 1px 0 #133f3d;
+}
+
+.play-hero-btn:hover .play-btn-sub { color: #3b3321; }
+
+.td-tutorial-banner-btn {
+  color: var(--tropical-sun) !important;
+}
+
+.btn-highlight-shop {
+  color: var(--tropical-sun) !important;
+  box-shadow: 0 0 12px rgba(255, 200, 87, 0.22);
+}
+
+.start-dossier-card {
+  box-shadow: 0 14px 34px rgba(2, 18, 22, 0.55);
+}
+
+.dossier-card-header {
+  color: var(--tropical-sun);
+  border-bottom-color: rgba(89, 214, 200, 0.35);
+}
+
+.stats-report-table .report-row {
+  color: var(--tropical-shell);
+  border-bottom-color: rgba(89, 214, 200, 0.22);
+}
+
+.dossier-directive-box {
+  color: #c9e5dd;
+}
+
+.dossier-directive-box b {
+  color: var(--tropical-sun);
+}
+
+.desktop-quick-controls,
+.desktop-version-footer {
+  color: #a9d1c8;
+  border-top-color: rgba(89, 214, 200, 0.24);
+}
+
+.desktop-version-footer { color: #c9a778; }
+
+/* --------------------------------------------------------------------------
+   HUD en partida: lectura clara sobre arena y cielo.
+   -------------------------------------------------------------------------- */
+#hud {
+  color: var(--tropical-shell);
+  text-shadow: 1px 1px 0 rgba(5, 27, 31, 0.9);
+}
+
+.core-wave-counter,
+.core-state-tag,
+.led-val,
+.stat-label-row-compact,
+.hostiles-pill,
+.objective-pill,
+.prep-skip-pill,
+.turret-prompt-pill,
+.floating-counter-item,
+.ciclo-badge-compact {
+  color: var(--tropical-shell);
+}
+
+.core-wave-counter {
+  color: var(--tropical-sun);
+  text-shadow: 1px 1px 0 #07181c;
+}
+
+.core-state-tag {
+  color: var(--tropical-lagoon);
+}
+
+.core-state-tag.critical {
+  color: #ff9d82;
+}
+
+.prep-skip-pill {
+  border-color: rgba(89, 214, 200, 0.55);
+  background: rgba(6, 38, 43, 0.68);
+  color: var(--tropical-lagoon);
+}
+
+.prep-skip-pill:hover {
+  background: rgba(18, 72, 73, 0.86);
+  color: var(--tropical-shell);
+}
+
+.prep-skip-pill .key-cap,
+.key-cap {
+  background: var(--tropical-sun);
+  color: #21363a;
+  border-color: #fff0c7;
+}
+
+.core-bar-frame,
+.bar-frame,
+.hp-frame-compact,
+.segmented-bar {
+  filter: saturate(1.1);
+}
+
+.objective-pill {
+  color: #ffe6b0;
+  border-color: rgba(255, 200, 87, 0.36);
+}
+
+.hostiles-pill {
+  color: #ffb7a0;
+}
+
+.radio-scanner-plate,
+.radar-scanner-plate {
+  border-color: rgba(89, 214, 200, 0.48);
+  background: radial-gradient(circle at 50% 50%, rgba(19, 90, 91, 0.45), rgba(3, 25, 31, 0.82));
+}
+
+.radar-sweeper {
+  background: conic-gradient(from 0deg, rgba(89, 214, 200, 0.45), transparent 28%, transparent 100%);
+}
+
+.radar-dot.enemy-approx { background: var(--tropical-coral); }
+.radar-dot.boss-approx { background: #ff5b55; }
+.radar-dot.core-approx { background: var(--tropical-sun); }
+.radar-dot.coop-approx { background: var(--tropical-lagoon); }
+
+.hazard-stripe-top,
+.hazard-stripe-bottom {
+  background: repeating-linear-gradient(45deg, #ff8165 0 8px, #ffe08a 8px 16px) !important;
+}
+
+/* Paneles, torretas y notas del juego. */
+#turret-build-modal .paper-note,
+#level-up-screen .paper-note,
+#results-screen .paper-note,
+#settings-screen .paper-note,
+#manual-modal .paper-note {
+  color: #f4e5c7;
+}
+
+.turret-card,
+.level-card,
+.map-card,
+.character-card {
+  box-shadow: 0 5px 14px rgba(2, 18, 22, 0.6);
+}
+
+.turret-card:hover,
+.level-card:hover,
+.map-card:hover,
+.character-card:hover {
+  box-shadow: 0 0 18px rgba(255, 200, 87, 0.3), 0 6px 16px rgba(2, 18, 22, 0.7);
+}
+
+/* --------------------------------------------------------------------------
+   Pantalla de carga: mar, sol y arena.
+   -------------------------------------------------------------------------- */
+.loading-screen {
+  background:
+    radial-gradient(circle at 70% 58%, rgba(255, 240, 174, 0.95) 0 2.5%, rgba(255, 213, 118, 0.55) 4%, transparent 14%),
+    radial-gradient(ellipse at 70% 62%, rgba(255, 177, 112, 0.55), transparent 42%),
+    linear-gradient(180deg, #315fa9 0%, #6a7bc2 28%, #f0a39d 49%, #ffc18a 55%, #2c7d8d 55.6%, #0e4758 100%);
+  color: var(--tropical-shell);
+}
+
+.loading-scanlines {
+  opacity: 0.16;
+  background: linear-gradient(rgba(255, 202, 132, 0) 50%, rgba(8, 42, 49, 0.25) 50%);
+  background-size: 100% 4px;
+}
+
+.loading-vignette {
+  background: radial-gradient(ellipse at 55% 52%, transparent 50%, rgba(4, 28, 34, 0.5) 100%);
+}
+
+.loading-content {
+  padding: 28px 34px 30px;
+  border-radius: 2px;
+  background: linear-gradient(180deg, rgba(5, 36, 42, 0.28), rgba(5, 28, 33, 0.52));
+  border: 1px solid rgba(255, 232, 190, 0.16);
+  box-shadow: 0 30px 80px rgba(2, 19, 24, 0.45);
+  backdrop-filter: blur(2px);
+}
+
+.loading-main-title {
+  font-size: clamp(20px, 2.7vw, 30px) !important;
+  line-height: 1.3;
+  color: var(--tropical-shell);
+  text-shadow:
+    2px 2px 0 #8f432e,
+    4px 4px 0 #4b1d21,
+    6px 6px 0 #07181c,
+    0 0 24px rgba(255, 203, 113, 0.55);
+  letter-spacing: 0.6px;
+}
+
+.loading-main-title .title-accent {
+  color: var(--tropical-coral);
+}
+
+.loading-genre-tag {
+  color: var(--tropical-sun);
+  text-shadow: 1px 1px 0 #07181c;
+}
+
+.loading-status-text,
+.loading-percent-text,
+.loading-footer-tip {
+  color: var(--tropical-shell);
+  text-shadow: 1px 1px 0 #07181c;
+}
+
+.loading-bar-frame {
+  border-color: rgba(255, 240, 199, 0.36);
+  background: rgba(4, 27, 32, 0.75);
+}
+
+.loading-bar-fill {
+  background: linear-gradient(90deg, #ff8165, #ffc857 52%, #59d6c8) !important;
+  box-shadow: 0 0 16px rgba(255, 200, 87, 0.55);
+}
+
+.loading-dot {
+  background: var(--tropical-lagoon);
+  box-shadow: 0 0 9px var(--tropical-lagoon);
+}
+
+/* --------------------------------------------------------------------------
+   Ajustes finos para pantallas pequeñas.
+   -------------------------------------------------------------------------- */
+@media (max-width: 950px) {
+  .desktop-main-title { font-size: clamp(20px, 4.2vw, 30px) !important; }
+  .start-nav-column { max-width: 100%; }
+  .start-dossier-column { max-width: 100%; }
+}
+
+/* ==========================================================================
+   AJUSTES DE LEGIBILIDAD Y COLOR SOBRE EL MUNDO 3D
+   ========================================================================== */
+html,
+body { background: #0a2a31; }
+
+#vignette-overlay {
+  background: radial-gradient(circle at 52% 45%, transparent 48%, rgba(8, 42, 47, 0.22) 82%, rgba(4, 20, 25, 0.55) 100%);
+}
+
+.desktop-start-overlay {
+  background:
+    linear-gradient(90deg, rgba(4, 28, 34, 0.7) 0%, rgba(4, 28, 34, 0.28) 33%, rgba(4, 28, 34, 0.01) 57%, rgba(12, 30, 32, 0.14) 100%),
+    radial-gradient(ellipse at 72% 58%, rgba(255, 200, 115, 0.1), transparent 48%) !important;
+}
+
+.launcher-header-group { margin-bottom: 7px; }
+
+.desktop-main-title {
+  line-height: 1.1 !important;
+  color: #fff4d4;
+  text-shadow:
+    2px 2px 0 #91402b,
+    4px 4px 0 #5b281f,
+    6px 6px 0 rgba(5, 24, 28, 0.92),
+    0 0 30px rgba(255, 203, 116, 0.6);
+}
+
+.launcher-genre-tag {
+  display: block;
+  max-width: 530px;
+  font-size: 7px;
+  line-height: 1.5;
+  letter-spacing: 1.1px;
+  color: #ffe08a;
+}
+
+.start-dossier-card { background: rgba(6, 36, 41, 0.58); }
+
+/* HUD: barras de comida y vigor con paleta de arrecife. */
+.core-compact-header {
+  background: rgba(5, 33, 38, 0.8);
+  border-color: rgba(255, 200, 87, 0.38);
+  box-shadow: 0 5px 18px rgba(2, 19, 24, 0.7);
+}
+
+.core-hp-bar-frame,
+.core-bar-frame {
+  background-color: rgba(4, 26, 31, 0.95) !important;
+  border-color: rgba(255, 223, 161, 0.34) !important;
+  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.8);
+}
+
+#core-hp-bar {
+  background-color: #ffc857 !important;
+  background-image: linear-gradient(90deg, #ff8a5c, #ffc857 55%, #ffe9a8) !important;
+  box-shadow: 0 0 9px rgba(255, 183, 94, 0.55), inset 0 1px 0 rgba(255, 248, 217, 0.7);
+}
+
+#core-hp-bar-ghost { background: #7b3a2d !important; }
+#hp-bar { background-color: #e9564c !important; background-image: linear-gradient(90deg, #ce3d45, #ff8165) !important; }
+#hp-bar-ghost { background: #6e2c31 !important; }
+#exp-bar {
+  background-color: #59d6c8 !important;
+  background-image: linear-gradient(90deg, #2f9c99, #59d6c8 55%, #c7ffed) !important;
+  box-shadow: inset 0 1px 0 #e9fff9, 0 0 8px rgba(89, 214, 200, 0.45);
+}
+#stam-bar {
+  background-color: #74d7a4 !important;
+  background-image: linear-gradient(90deg, #3aa77d, #8ce7b5) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45), 0 0 6px rgba(116, 215, 164, 0.5);
+}
+#stam-bar.low-energy { background: #ffc857 !important; }
+
+.core-state-tag {
+  color: #a9fff2;
+  background: rgba(89, 214, 200, 0.12);
+  border-color: rgba(89, 214, 200, 0.45);
+}
+.core-state-tag.critical {
+  color: #ffd0a0;
+  background: rgba(255, 123, 92, 0.18);
+  border-color: #ff8a68;
+}
+.range-toggle-pill {
+  background: rgba(7, 48, 52, 0.82);
+  border-color: #65e6e9;
+  color: #b9fff7;
+}
+.range-toggle-pill.is-active {
+  background: rgba(30, 116, 112, 0.82);
+  border-color: #a4fff2;
+  color: #ffffff;
+  box-shadow: 0 0 9px rgba(89, 214, 200, 0.55);
+}
+.range-toggle-pill .key-cap { background: #08282e; border-color: #65e6e9; color: #d5fffa; }
+.prep-skip-pill {
+  background: rgba(80, 52, 20, 0.86);
+  border-color: #ffc857;
+  color: #ffe6a8;
+}
+.prep-skip-pill:hover { background: rgba(116, 76, 26, 0.92); color: #fff7d8; }
+
+.turret-prompt-pill {
+  background: rgba(5, 35, 40, 0.82) !important;
+  border-color: rgba(89, 214, 200, 0.5) !important;
+  color: #d9fff8 !important;
+}
+.key-cap {
+  background: #ffd166 !important;
+  border-color: #fff0c7 !important;
+  color: #17363b !important;
+}
+
+#boss-alert,
+#core-attack-banner {
+  color: #fff1c6;
+  text-shadow: 1px 1px 0 #07181c;
+}
+
+#kinetic-event-banner {
+  border-color: rgba(255, 129, 101, 0.65);
+}
+
+/* Selector de mapas: tablero de madera y arena. */
+.map-select-plate { background: rgba(6, 34, 39, 0.84); }
+.map-select-header .tape-label { color: #2c1d13; }
+.map-screen-title {
+  color: #fff1c7;
+  text-shadow: 2px 2px 0 #8a432d, 4px 4px 0 #07181c;
+}
+.map-diff-bar { border-bottom-color: rgba(89, 214, 200, 0.3); }
+.map-diff-tab {
+  background: rgba(9, 45, 50, 0.72) !important;
+  border-color: rgba(89, 214, 200, 0.25) !important;
+}
+.map-diff-tab:hover { border-color: rgba(255, 200, 87, 0.7) !important; }
+.map-diff-tab.is-active-tab {
+  background: rgba(20, 82, 78, 0.9) !important;
+  border-color: #ffd166 !important;
+  box-shadow: 0 0 14px rgba(89, 214, 200, 0.28);
+}
+.map-diff-tab .tab-name { color: #fff1c7; }
+.map-diff-tab.is-active-tab .tab-name { color: #ffd978; }
+.map-diff-tab .tab-sub { color: #b7ddd3; }
+.map-diff-tab.diff-easy.is-active-tab { border-color: #65e6e9 !important; }
+.map-diff-tab.diff-normal.is-active-tab { border-color: #ffd166 !important; }
+.map-diff-tab.diff-hard.is-active-tab { border-color: #ff8a68 !important; }
+
+.map-card {
+  background: rgba(8, 40, 44, 0.85) !important;
+  box-shadow: 0 5px 14px rgba(2, 18, 22, 0.7), 2px 2px 0 #07181c;
+}
+.map-card-thumb { background: #357e83; }
+.map-card:hover {
+  box-shadow: 0 8px 22px rgba(255, 200, 87, 0.25), 2px 4px 0 #07181c !important;
+}
+.map-card.is-selected {
+  box-shadow: 0 0 22px rgba(89, 214, 200, 0.38), 0 8px 22px rgba(2, 18, 22, 0.75), 2px 4px 0 #07181c !important;
+}
+.map-card-title { color: #fff1c7; }
+.map-card.is-selected .map-card-title { color: #ffdc8c; }
+.map-card-badge { color: #a9dace; }
+.map-card-routetag {
+  background: rgba(5, 37, 41, 0.82) !important;
+  color: #a9fff1 !important;
+}
+.map-card-medal.is-completed {
+  background: rgba(11, 58, 53, 0.94);
+  border-color: #8df0d4;
+  color: #d6fff4;
+  text-shadow: 0 0 4px #4dd8bb;
+}
+.map-card-medal.is-in-progress {
+  background: rgba(72, 51, 16, 0.92);
+  border-color: #ffc857;
+  color: #ffe29b;
+}
+.map-card-medal.is-unbeaten {
+  background: rgba(8, 42, 46, 0.9);
+  border-color: #3d8b82;
+  color: #b8ded5;
+}
+.map-footer-panel {
+  background: rgba(6, 34, 39, 0.82) !important;
+  border-color: rgba(89, 214, 200, 0.28) !important;
+}
+.map-detail-name { color: #ffd978; }
+.map-detail-badge-chip { color: #ffd978; border-color: rgba(255, 200, 87, 0.5); }
+.map-detail-text { color: #e6e0c8; }
+.map-stat-chip { background: rgba(10, 49, 53, 0.86); border-color: rgba(89, 214, 200, 0.25); }
+.map-stat-chip .chip-label { color: #a2cfc4; }
+.map-stat-chip .chip-val { color: #fff1c7; }
+.map-stat-chip .chip-val.lives { color: #ffd166; }
+.map-stat-chip .chip-val.scrap { color: #bde58b; }
+
+.map-deploy-hero-btn {
+  min-width: 310px;
+  height: 58px;
+  background: rgba(33, 67, 54, 0.45);
+}
+.map-deploy-hero-btn:hover {
+  box-shadow: 0 0 20px rgba(255, 200, 87, 0.48) !important;
+}
+.deploy-main-txt {
+  font-size: 9px;
+  color: #fff4d3;
+  text-shadow: 1px 1px 0 #102b2f, 0 0 6px rgba(255, 220, 150, 0.55);
+}
+.deploy-sub-txt {
+  font-size: 7px;
+  color: #ffd978;
+  letter-spacing: 0.3px;
+  text-shadow: 1px 1px 0 #102b2f;
+}
+.map-deploy-hero-btn:hover .deploy-main-txt,
+.map-deploy-hero-btn:hover .deploy-sub-txt {
+  color: #193237;
+  text-shadow: none;
+}
+
+/* Pestañas de dificultad sin nine-slice: evita que el relleno índigo original
+   tape la paleta de playa y mejora el contraste a baja resolución. */
+.map-diff-tab,
+.map-diff-tab.diff-easy,
+.map-diff-tab.diff-normal,
+.map-diff-tab.diff-hard {
+  border: 2px solid rgba(89, 214, 200, 0.28) !important;
+  border-image: none !important;
+  background: rgba(7, 44, 49, 0.9) !important;
+  clip-path: var(--chamfer-6px);
+  padding: 7px 6px;
+}
+.map-diff-tab:hover {
+  border-color: rgba(255, 200, 87, 0.72) !important;
+  background: rgba(13, 61, 62, 0.95) !important;
+}
+.map-diff-tab.is-active-tab,
+.map-diff-tab.diff-easy.is-active-tab,
+.map-diff-tab.diff-normal.is-active-tab,
+.map-diff-tab.diff-hard.is-active-tab {
+  background: rgba(21, 88, 82, 0.96) !important;
+  border-color: #ffd166 !important;
+  box-shadow: 0 0 14px rgba(89, 214, 200, 0.28) !important;
+  transform: translateY(-1px);
+}
+.map-diff-tab.diff-easy.is-active-tab .tab-name { color: #a9fff1; text-shadow: 0 0 7px rgba(89, 214, 200, 0.7); }
+.map-diff-tab.diff-normal.is-active-tab .tab-name { color: #ffd978; text-shadow: 0 0 7px rgba(255, 200, 87, 0.7); }
+.map-diff-tab.diff-hard.is-active-tab .tab-name { color: #ffad8e; text-shadow: 0 0 7px rgba(255, 129, 101, 0.7); }
+.map-diff-tab .tab-badge { color: #ffdf9a; }
+.map-diff-tab .tab-sub { color: #c4e4da; }
+
+/* El botón de despliegue usa una tipografía algo menor para que las dos líneas
+   respiren dentro del marco a resoluciones bajas. */
+.map-deploy-hero-btn { min-width: 300px; height: 60px; }
+.deploy-main-txt { font-size: 8.5px; }
+.deploy-sub-txt { font-size: 6.5px; }
+
+.weapon-slot {
+  background: rgba(5, 38, 43, 0.7) !important;
+  border-color: rgba(255, 200, 87, 0.45) !important;
+}
+.weapon-slot:hover { border-color: #ffd166 !important; box-shadow: 0 4px 10px rgba(255, 200, 87, 0.28); }
+.passives-row .passive-slot {
+  background: rgba(5, 38, 43, 0.65) !important;
+  border-color: rgba(89, 214, 200, 0.35) !important;
+}
+.passives-row .passive-slot:hover { border-color: #65e6e9 !important; }
+.hp-frame-compact { border-color: rgba(255, 129, 101, 0.55) !important; background-color: rgba(24, 18, 22, 0.9) !important; }
+.core-hp-bar-frame { background-color: rgba(4, 28, 32, 0.92) !important; }
+
+/* La etiqueta de género del menú de carga es más larga en el nuevo branding:
+   se ajusta el interletrado para que quepa en una sola línea. */
+.loading-genre-tag {
+  max-width: 560px;
+  margin: 4px auto 0;
+  font-size: 6.5px;
+  line-height: 1.6;
+  letter-spacing: 0.9px;
+}
+.loading-title-group { margin-bottom: 20px; }

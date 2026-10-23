@@ -22,7 +22,7 @@ system.placementState = {
   cost: cfg.cost,
   position: null,
   valid: false,
-  reason: 'APUNTA AL SUELO'
+  reason: 'APUNTA A LA ARENA'
 };
 if (system.ghostRangeGroup) {
   const r = cfg.base?.range || 10;
@@ -63,7 +63,7 @@ if (!system.placingType || !system.placementState || !system.placementState.vali
 const cfg = system.placingType;
 if (!system.mode.spendScrap(cfg.cost)) {
   system.placementState.valid = false;
-  system.placementState.reason = 'CHATARRA INSUFICIENTE';
+  system.placementState.reason = 'MADERA INSUFICIENTE';
   AudioSys.playUIError();
   return false;
 }

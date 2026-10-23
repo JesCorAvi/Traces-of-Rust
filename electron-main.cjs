@@ -474,7 +474,7 @@ function createWindow() {
     height: 720,
     minWidth: 960,
     minHeight: 540,
-    title: 'Traces of Rust - Tactical Horror',
+    title: 'Crabs wants your food! - Sunset Beach Defense',
     backgroundColor: '#050705',
     autoHideMenuBar: true,
     webPreferences: {

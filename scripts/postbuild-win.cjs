@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const targetDir = path.join(__dirname, '..', 'dist', 'Traces of Rust-win32-x64');
+const targetDir = path.join(__dirname, '..', 'dist', 'Crabs wants your food!-win32-x64');
 if (!fs.existsSync(targetDir)) {
   console.warn('[POST-BUILD] Directorio destino no encontrado:', targetDir);
   process.exit(0);

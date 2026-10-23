@@ -1,7 +1,7 @@
 // Módulo de sincronización en tiempo real para partidas multijugador online P2P sobre Steamworks.
 // Sincroniza: avatares de compañeros (RemotePlayers), posiciones 3D a 20Hz con seq, animación
-// direccional, disparos/ataques, torretas colocadas/mejoradas/vendidas, economía de chatarra
-// (reparto de suma cero + transferencias) y, con Host autoritativo, oleadas y estado del núcleo.
+// direccional, disparos/ataques, torretas colocadas/mejoradas/vendidas, economía de madera
+// (reparto de suma cero + transferencias) y, con Host autoritativo, oleadas y estado del despensa.
 
 import * as THREE from 'three';
 import { createBillboardSprite } from '../entities.js';
@@ -101,18 +101,6 @@ class RemotePlayer {
     // Vinculación directa al grupo del billboard para cálculos correctos de faceCamera()
     this.group = this.billboard.group;
 
-    // Luz de linterna sutil del compañero para distinguirlo en la niebla y oscuridad
-    this.lanternLight = new THREE.PointLight(0x75f085, 22, 8.5, 1.4);
-    this.lanternLight.position.set(0, 1.4, 0);
-    this.group.add(this.lanternLight);
-
-    // Haz direccional que sigue yaw/pitch del compañero.
-    this.flashlight = new THREE.SpotLight(0x75f085, 28, 26, 0.62, 0.5, 1.2);
-    this.flashlight.position.set(0, 1.5, 0);
-    this.flashlightTarget = new THREE.Object3D();
-    this.group.add(this.flashlight, this.flashlightTarget);
-    this.flashlight.target = this.flashlightTarget;
-
     // Etiqueta flotante con salud y rol (depthTest: false garantiza visibilidad permanente)
     const shortId = steamId.length > 6 ? steamId.slice(-4) : steamId;
     this.nameplate = createNameplateSprite(`CO-OP #${shortId}`);
@@ -189,7 +177,7 @@ class RemotePlayer {
     if (down !== this.isDown) {
       this.setDownState(down, this.downTimer);
       if (down && !prevDown) {
-        MultiplayerSync.ctx?.hudController?.showTeammateDownAlert?.('¡COMPAÑERO ABATIDO! -10 VIDAS AL NÚCLEO');
+        MultiplayerSync.ctx?.hudController?.showTeammateDownAlert?.('¡COMPAÑERO ABATIDO! -10 COMIDAS A LA DESPENSA');
         AudioSys.playTacticalAlarm?.();
       }
     } else if (hpChanged || (this.isDown && downSecChanged)) {
@@ -217,9 +205,6 @@ class RemotePlayer {
     glowMat.transparent = true;
     glowMat.opacity = this.isDown ? 0.12 : 1.0;
     glowMat.needsUpdate = true;
-
-    this.lanternLight.intensity = this.isDown ? 3 : 22;
-    this.flashlight.intensity = this.isDown ? 0 : 28;
 
     this.nameplate.draw(this.hp, this.maxHp, this.isDown, this.downTimer);
     this.nameplate.texture.needsUpdate = true;
@@ -278,19 +263,6 @@ class RemotePlayer {
 
     this.billboard.facingYaw = this.facingYaw;
     this.billboard.faceCamera(camera.position);
-
-    // Linterna verde orientada por yaw/pitch.
-    if (this.flashlight.intensity > 0) {
-      const cp = Math.cos(this.pitch || 0);
-      const dir = new THREE.Vector3(
-        -Math.sin(this.facingYaw) * cp,
-        Math.sin(this.pitch || 0),
-        -Math.cos(this.facingYaw) * cp
-      );
-      this.flashlightTarget.position
-        .set(0, 1.5, 0)
-        .addScaledVector(dir, 6);
-    }
 
     // Flash rojo breve al recibir daño.
     if (this.hurtFlashTimer > 0) {
@@ -356,7 +328,7 @@ class RemotePlayer {
 
 // Paquetes de estado que pueden llegar mientras el modo local aún carga.
 // Se bufferizan y se reaplican en onLocalModeReady() para no perder torretas,
-// oleadas, núcleo ni ingresos de chatarra.
+// oleadas, despensa ni ingresos de madera.
 // Paquetes válidos fuera de una partida activa (menú/lobby).
 const PRE_MATCH_PACKET_TYPES = new Set([
   'START_MATCH',
@@ -708,7 +680,7 @@ export const MultiplayerSync = {
       }, true);
     }
 
-    // Última instantánea de posiciones/HP para alinear a los enemigos ya vivos.
+    // Última instantánea de posiciones/HP para alinear a los cangrejos ya vivos.
     this.sendEnemyBatch(targetPeerId);
 
     // Marca explícita de fin de snapshot (aunque no haya torretas).
@@ -761,7 +733,7 @@ export const MultiplayerSync = {
   },
 
   // --------------------------------------------------------------------------
-  // ENEMIGOS AUTORITATIVOS DEL HOST
+  // CANGREJOS AUTORITATIVOS DEL HOST
   // --------------------------------------------------------------------------
   buildEnemySpawnPayload(enemy) {
     const pos = enemy.group.position;
@@ -864,7 +836,7 @@ export const MultiplayerSync = {
     this.enemyBatchSeq++;
 
     // Unreliable de Steam limita el paquete a ~1200 bytes: se trocea en
-    // bloques de 20 enemigos con el mismo seq. El Cliente aplica cada parte.
+    // bloques de 20 cangrejos con el mismo seq. El Cliente aplica cada parte.
     const CHUNK = 20;
     const chunks = [];
     if (list.length === 0) {
@@ -1145,7 +1117,7 @@ export const MultiplayerSync = {
   },
 
   // --------------------------------------------------------------------------
-  // RÉPLICAS DE ENEMIGOS, PICKUPS Y ATAQUES EN EL CLIENTE
+  // RÉPLICAS DE CANGREJOS, PICKUPS Y ATAQUES EN EL CLIENTE
   // --------------------------------------------------------------------------
   spawnReplicatedEnemy(data) {
     const pool = this.ctx?.enemyPool;
@@ -1264,7 +1236,7 @@ export const MultiplayerSync = {
     }
   },
 
-  // Cancela en el Cliente los ataques pendientes del jefe que acaba de morir/fugar.
+  // Cancela en el Cliente los ataques penconchas del jefe que acaba de morir/fugar.
   cleanupBossAttacks(bossNetId) {
     if (bossNetId == null) return;
     const scene = this.ctx?.scene;
@@ -1816,7 +1788,7 @@ export const MultiplayerSync = {
     this.ctx?.hudController?.showWaveAnnouncement?.(_t('ui.online.peer_disconnected_announcement', 'COMPAÑERO DESCONECTADO // MISIÓN EN SOLITARIO'));
     AudioSys.playUIError?.();
 
-    // Ocultar botón y atajo de enviar chatarra (T)
+    // Ocultar botón y atajo de enviar madera (T)
     const coopTransfer = document.getElementById('coop-scrap-transfer');
     if (coopTransfer) coopTransfer.classList.add('hidden');
     const coopDot = document.querySelector('.radar-dot.coop-approx');
@@ -1863,7 +1835,7 @@ export const MultiplayerSync = {
     this.eventUnsubs.length = 0;
   },
 
-  // Reparto 50/50 de la chatarra generada por la partida. El residuo impar
+  // Reparto 50/50 de la madera generada por la partida. El residuo impar
   // alterna entre Host y Cliente para que la suma sea exactamente la misma
   // que en una partida de un solo jugador.
   handleScrapIncome(mode, amount) {
@@ -1872,7 +1844,7 @@ export const MultiplayerSync = {
     if (!this.isHost()) return true; // el Cliente no genera ingresos propios
 
     // Reajuste dinámico de Economía: Como ya no hay compañero conectado (remotePlayers.size === 0),
-    // handleScrapIncome() pasa automáticamente a darle el 100% de la chatarra generada al Host
+    // handleScrapIncome() pasa automáticamente a darle el 100% de la madera generada al Host
     if (this.remotePlayers.size === 0) {
       mode.scrap += amount;
       return true;
@@ -1919,17 +1891,17 @@ export const MultiplayerSync = {
     const mode = ModeManager?.activeMode;
     if (!mode || typeof mode.spendScrap !== 'function') return false;
     if (mode.getScrap() < value || !mode.spendScrap(value)) {
-      this.ctx?.hudController?.showScrapTransferToast?.(_t('ui.online.scrap_insufficient', 'CHATARRA INSUFICIENTE'), 'error');
+      this.ctx?.hudController?.showScrapTransferToast?.(_t('ui.online.scrap_insufficient', 'MADERA INSUFICIENTE'), 'error');
       AudioSys.playUIError?.();
       return false;
     }
 
     if (!this.sendToPeer(peerId, 'SCRAP_TRANSFER', { amount: value }, true)) {
       mode.addScrap(value, { local: true }); // devolución si el envío falla
-      this.ctx?.hudController?.showScrapTransferToast?.(_t('ui.online.scrap_send_failed', 'NO SE PUDO ENVIAR LA CHATARRA'), 'error');
+      this.ctx?.hudController?.showScrapTransferToast?.(_t('ui.online.scrap_send_failed', 'NO SE PUDO ENVIAR LA MADERA'), 'error');
       return false;
     }
-    this.ctx?.hudController?.showScrapTransferToast?.(_t('ui.online.scrap_sent', '-{value} CHATARRA ENVIADA', { value }), 'send');
+    this.ctx?.hudController?.showScrapTransferToast?.(_t('ui.online.scrap_sent', '-{value} MADERA ENVIADA', { value }), 'send');
     AudioSys.playScrapTransfer?.(value >= 5);
     return true;
   },
@@ -2025,7 +1997,7 @@ export const MultiplayerSync = {
       if (this.isApplyingRemote || !this.isOnline() || !this.isHost()) return;
       this.sendWaveSnapshot();
       // Este listener se registra después del modo, así que el heal de fin de
-      // oleada ya se aplicó; el snapshot del Núcleo lleva el HP curado.
+      // oleada ya se aplicó; el snapshot de la Despensa lleva el HP curado.
       this.sendCoreSnapshot();
     });
 
@@ -2056,7 +2028,7 @@ export const MultiplayerSync = {
       }, true);
     });
 
-    // Sincronización de daño al Núcleo (emitido por el Host)
+    // Sincronización de daño a la Despensa (emitido por el Host)
     on('core:damaged', payload => {
       if (this.isApplyingRemote || !this.isOnline() || !this.isHost()) return;
       const currentHp = payload?.currentHp ?? payload?.hp;
@@ -2239,7 +2211,7 @@ export const MultiplayerSync = {
         case 'ECONOMY_SYNC': {
           const mode = ModeManager?.activeMode;
           if (mode && data.initial && Number.isFinite(data.scrap)) {
-            // Solo aplica la chatarra inicial si el Cliente aún no ha tocado su bolsillo.
+            // Solo aplica la madera inicial si el Cliente aún no ha tocado su bolsillo.
             const initial = typeof mode.getInitialNetworkScrapShare === 'function'
               ? mode.getInitialNetworkScrapShare()
               : data.scrap;
@@ -2263,7 +2235,7 @@ export const MultiplayerSync = {
           const amount = Math.floor(Number(data.amount) || 0);
           if (mode && amount > 0 && amount <= 9999) {
             mode.addScrap(amount, { fromTransfer: true });
-            this.ctx?.hudController?.showScrapTransferToast?.(_t('ui.online.scrap_received', '+{amount} CHATARRA RECIBIDA', { amount }), 'receive');
+            this.ctx?.hudController?.showScrapTransferToast?.(_t('ui.online.scrap_received', '+{amount} MADERA RECIBIDA', { amount }), 'receive');
             AudioSys.playScrapTransfer?.(amount >= 5);
           }
           break;
@@ -2718,7 +2690,7 @@ export const MultiplayerSync = {
       }
     }
 
-    // 1d. Latido autoritativo: corrige oleada, cola, Núcleo y evento aunque
+    // 1d. Latido autoritativo: corrige oleada, cola, Despensa y evento aunque
     // se pierda algún evento puntual (reliable, 1 Hz).
     this.stateHeartbeat += dt;
     if (this.stateHeartbeat >= 1.0) {

@@ -6,6 +6,7 @@ import { openCharacterSelectorModal } from '../ui/characterSelectorModal.js';
 import { getMapById } from '../defense/mapGenerator.js';
 import { GameEvents } from './eventBus.js';
 import { MultiplayerSync } from '../online/multiplayerSync.js';
+import { t } from './i18n.js';
 
 export function setupGameFlow(rt) {
 function clearSharedRunState() {
@@ -265,9 +266,12 @@ function requestStartGame() {
       const mapData = getMapById(chosenMapId);
       const mapName = mapData ? mapData.name : 'MISIÓN';
       openCharacterSelectorModal({
-        title: 'MESA DE ASIGNACIÓN // SELECCIÓN DE OPERADOR',
-        sub: `Selecciona tu superviviente para desplegar en ${mapName} (${(chosenDiff || currentDiff).toUpperCase()}):`,
-        confirmText: '[ ASIGNAR Y COMENZAR MISIÓN ]',
+        title: t('ui.char_modal.title'),
+        sub: t('ui.char_modal.sub_td', {
+          map: mapName,
+          diff: t(`diff.${chosenDiff || currentDiff}`)
+        }),
+        confirmText: t('ui.char_modal.confirm'),
         onConfirm: () => {
           startGame({ tutorial: false });
         },
@@ -283,9 +287,9 @@ function requestStartGame() {
   }
 
   openCharacterSelectorModal({
-    title: 'MESA DE ASIGNACIÓN // SELECCIÓN DE OPERADOR',
-    sub: 'Selecciona tu superviviente para la incursión táctica:',
-    confirmText: '[ ASIGNAR Y DESPLEGAR ]',
+    title: t('ui.char_modal.title'),
+    sub: t('ui.char_modal.sub_surv'),
+    confirmText: t('ui.char_modal.confirm'),
     onConfirm: () => {
       startGame({ tutorial: false });
     }

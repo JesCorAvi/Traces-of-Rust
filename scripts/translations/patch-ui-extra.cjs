@@ -450,10 +450,10 @@ const uiTranslations = {
 };
 
 const files = [
-  { file: '../../locales/fr.js', langKey: 'fr', header: '// French localization dictionary for Traces of Rust.' },
-  { file: '../../locales/pt-BR.js', langKey: 'pt', header: '// Portuguese (Brazil) localization dictionary for Traces of Rust.' },
-  { file: '../../locales/ru.js', langKey: 'ru', header: '// Russian localization dictionary for Traces of Rust.' },
-  { file: '../../locales/ja.js', langKey: 'ja', header: '// Japanese localization dictionary for Traces of Rust.' }
+  { file: '../../locales/fr.js', langKey: 'fr', header: '// French localization dictionary for Crabs wants your food!.' },
+  { file: '../../locales/pt-BR.js', langKey: 'pt', header: '// Portuguese (Brazil) localization dictionary for Crabs wants your food!.' },
+  { file: '../../locales/ru.js', langKey: 'ru', header: '// Russian localization dictionary for Crabs wants your food!.' },
+  { file: '../../locales/ja.js', langKey: 'ja', header: '// Japanese localization dictionary for Crabs wants your food!.' }
 ];
 
 async function run() {

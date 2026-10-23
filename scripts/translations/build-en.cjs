@@ -12,7 +12,7 @@ function set(key, val) {
 }
 
 // ==================== UI & MENUS ====================
-set("ui.loading.title", "Traces of Rust");
+set("ui.loading.title", "Crabs wants your food!");
 set("ui.loading.sub", "TACTICAL HORROR · CORE DEFENSE & SURVIVAL");
 set("ui.loading.status_init", "CALIBRATING BIO-CONTAINMENT SENSORS...");
 set("ui.loading.tip", "TIP: Position turrets near choke points and collect scrap promptly.");
@@ -28,7 +28,7 @@ set("ui.topbar.fps", "FPS: --");
 set("ui.topbar.souls_title", "Souls collected");
 set("ui.topbar.teeth_title", "Extracted teeth (Clinic currency)");
 
-set("ui.menu.title", "Traces of Rust");
+set("ui.menu.title", "Crabs wants your food!");
 set("ui.menu.tagline", "TACTICAL HORROR · CORE DEFENSE & SURVIVAL");
 set("ui.menu.mode_badge", "CAMPAIGN // CORE DEFENSE");
 set("ui.menu.mode_card_title", "TACTICAL DEFENSE");
@@ -93,7 +93,7 @@ set("ui.settings.ui_scale_125x", "x1.25 (COMFORTABLE · DEFAULT)");
 set("ui.settings.ui_scale_14x", "x1.4 (LARGE · 1440p+)");
 set("ui.settings.fov", "FIELD OF VIEW (FOV):");
 set("ui.settings.fov_sub", "(Camera zoom: lower = tactical combat, higher = panoramic awareness)");
-set("ui.settings.shadows_lantern", "DYNAMIC FLASHLIGHT SHADOWS:");
+set("ui.settings.shadows_lantern", "DYNAMIC WORLD SHADOWS:");
 set("ui.settings.crt_grain", "CRT FILTER & FILM GRAIN:");
 set("ui.settings.toggle_on", "[ON]");
 set("ui.settings.toggle_off", "[OFF]");
@@ -1245,7 +1245,7 @@ if (missing.length > 0) {
 }
 
 // Generate locales/en.js
-const outLines = ['// English localization dictionary for Traces of Rust.', 'export default {'];
+const outLines = ['// English localization dictionary for Crabs wants your food!.', 'export default {'];
 const keys = Object.keys(en);
 keys.forEach((k, idx) => {
   const isLast = idx === keys.length - 1;

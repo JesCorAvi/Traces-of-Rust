@@ -1,5 +1,5 @@
 // scripts/test-all.mjs
-// Ejecuta la suite completa de auditorías y validaciones de Traces of Rust.
+// Ejecuta la suite completa de auditorías y validaciones de Crabs wants your food!.
 
 import { execFileSync } from 'node:child_process';
 import path from 'node:path';
@@ -21,7 +21,7 @@ const steps = [
   { name: 'Estabilidad y rendimiento', cmd: 'node', args: ['scripts/test-performance-stability.mjs'] },
 ];
 
-console.log('🧪 Iniciando suite de pruebas completas de Traces of Rust...\n');
+console.log('🧪 Iniciando suite de pruebas completas de Crabs wants your food!...\n');
 let failed = 0;
 
 for (const step of steps) {

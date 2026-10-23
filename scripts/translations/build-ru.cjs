@@ -417,7 +417,7 @@ import('../../locales/en.js').then(enMod => {
   }
 
   // Write locales/ru.js
-  const outLines = ['// Russian localization dictionary for Traces of Rust.', 'export default {'];
+  const outLines = ['// Russian localization dictionary for Crabs wants your food!.', 'export default {'];
   const keys = Object.keys(es);
   keys.forEach((k, idx) => {
     const isLast = idx === keys.length - 1;
@@ -542,7 +542,7 @@ function translateUiKeyRu(k, esVal, enVal) {
   if (k === 'ui.settings.crt') return 'ЭЛТ-ФИЛЬТР И ЗЕРНИСТОСТЬ:';
   if (k === 'ui.settings.crt_grain') return 'ЭЛТ-ФИЛЬТР И ЗЕРНИСТОСТЬ ПЛЕНКИ:';
   if (k === 'ui.settings.shadows') return 'ДИНАМИЧЕСКИЕ ТЕНИ:';
-  if (k === 'ui.settings.shadows_lantern') return 'ДИНАМИЧЕСКИЕ ТЕНИ ФОНАРЯ:';
+  if (k === 'ui.settings.shadows_lantern') return 'ДИНАМИЧЕСКИЕ ТЕНИ МИРА:';
   if (k === 'ui.settings.fps') return 'СЧЕТЧИК FPS:';
   if (k === 'ui.settings.fov') return 'ПОЛЕ ЗРЕНИЯ (FOV):';
   if (k === 'ui.settings.controls_section') return 'УПРАВЛЕНИЕ И КАМЕРА';

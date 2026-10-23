@@ -558,7 +558,7 @@ import('../../locales/ja.js').then(jaMod => {
 
   // Save locales/ko.js
   const outputPath = path.resolve(__dirname, '../../locales/ko.js');
-  const outLines = ['// Korean localization dictionary for Traces of Rust.', 'export default {'];
+  const outLines = ['// Korean localization dictionary for Crabs wants your food!.', 'export default {'];
   const keys = Object.keys(es);
   keys.forEach((k, idx) => {
     const isLast = idx === keys.length - 1;

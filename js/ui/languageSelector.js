@@ -1,4 +1,4 @@
-// Selector de idiomas unificado para Traces of Rust.
+// Selector de idiomas unificado para Crabs wants your food!.
 // Usado en:
 //  (A) Pantalla de selección en el primer arranque (#first-boot-lang-screen)
 //  (B) Opción "Idioma" en el menú de Ajustes (#settings-screen)

@@ -1,4 +1,4 @@
-// Compuertas de aparición, efectos de emergencia y luces de portal.
+// Madrigueras de aparición de cangrejos, efectos de emergencia y luces de marea.
 // Exports: SpawnPointSystem.
 import * as THREE from 'three';
 import { CORE_DEFENSE_CONFIG } from '../config/coreDefenseConfig.js';
@@ -7,7 +7,7 @@ import { SHARED_GEO, SHARED_MAT } from '../combat.js';
 import { disposeObject3D } from '../utils/dispose.js';
 
 // ============================================================================
-// PUNTOS DE APARICIÓN INDUSTRIALES (Grietas / Compuertas en Modo Defensa)
+// MADRIGUERAS DE CANGREJOS (Pozas de marea en Modo Defensa)
 // ============================================================================
 
 export class SpawnPointSystem {
@@ -35,74 +35,89 @@ export class SpawnPointSystem {
         : 0;
       group.position.set(spCfg.position.x, gy, spCfg.position.z);
 
-      // Orientar la compuerta mirando hacia el centro del mapa (Núcleo)
+      // La poza mira hacia la despensa central.
       const angleToCenter = Math.atan2(-spCfg.position.x, -spCfg.position.z);
       group.rotation.y = angleToCenter;
 
       const frameMat = new THREE.MeshStandardMaterial({
         map: metalTex,
-        color: 0x3b281c,
-        roughness: 0.85,
-        metalness: 0.4
+        color: 0xd6a46d,
+        roughness: 0.94,
+        metalness: 0.02
       });
       const doorMat = new THREE.MeshStandardMaterial({
         map: crateTex,
-        color: 0x261a14,
-        roughness: 0.9
+        color: 0x9a6841,
+        roughness: 0.94
+      });
+      const wetSandMat = new THREE.MeshStandardMaterial({
+        color: 0x8f6a4a,
+        roughness: 1,
+        flatShading: true
       });
 
-      // Marco de compuerta en el suelo + foso abisal oscuro
-      const rim = new THREE.Mesh(new THREE.RingGeometry(1.6, 2.45, 8), frameMat);
+      // Pozo de marea: aro de arena húmeda y agua oscura.
+      const rim = new THREE.Mesh(new THREE.RingGeometry(1.55, 2.7, 9), wetSandMat);
       rim.rotation.x = -Math.PI / 2;
       rim.position.y = 0.05;
       group.add(rim);
 
       const abyssDisc = new THREE.Mesh(
-        new THREE.CircleGeometry(1.65, 8),
-        new THREE.MeshBasicMaterial({ color: 0x040202 })
+        new THREE.CircleGeometry(1.66, 9),
+        new THREE.MeshBasicMaterial({ color: 0x10323b })
       );
       abyssDisc.rotation.x = -Math.PI / 2;
       abyssDisc.position.y = 0.03;
       group.add(abyssDisc);
 
-      // Grieta luminosa biomecánica en el centro del foso
+      // Remolino bioluminiscente de la marea.
       const riftMat = new THREE.MeshBasicMaterial({
-        color: spCfg.color || 0xc42020,
+        color: spCfg.color || 0xff6b5a,
         transparent: true,
         opacity: 0.75,
         side: THREE.DoubleSide
       });
-      const riftRing = new THREE.Mesh(new THREE.RingGeometry(0.45, 1.35, 6), riftMat);
+      const riftRing = new THREE.Mesh(new THREE.RingGeometry(0.45, 1.35, 8), riftMat);
       riftRing.rotation.x = -Math.PI / 2;
       riftRing.position.y = 0.06;
       group.add(riftRing);
 
-      // Dos hojas de compuerta abiertas en ángulo a los lados
-      const hatchL = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.16, 2.4), doorMat);
-      hatchL.position.set(-1.75, 0.45, 0);
-      hatchL.rotation.z = 0.65;
-      const hatchR = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.16, 2.4), doorMat);
-      hatchR.position.set(1.75, 0.45, 0);
-      hatchR.rotation.z = -0.65;
+      // Troncos inclinados que enmarcan la entrada a la madriguera.
+      const hatchL = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.19, 2.5, 6), doorMat);
+      hatchL.position.set(-1.75, 0.55, 0);
+      hatchL.rotation.z = 0.95;
+      hatchL.castShadow = true;
+      const hatchR = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.19, 2.5, 6), doorMat);
+      hatchR.position.set(1.75, 0.55, 0);
+      hatchR.rotation.z = -0.95;
+      hatchR.castShadow = true;
       group.add(hatchL, hatchR);
 
-      // Arco industrial superior con luz de alarma
-      const pillarL = new THREE.Mesh(new THREE.BoxGeometry(0.45, 3.4, 0.45), frameMat);
-      pillarL.position.set(-2.1, 1.7, -0.6);
-      const pillarR = new THREE.Mesh(new THREE.BoxGeometry(0.45, 3.4, 0.45), frameMat);
-      pillarR.position.set(2.1, 1.7, -0.6);
-      const topBeam = new THREE.Mesh(new THREE.BoxGeometry(4.8, 0.5, 0.6), frameMat);
-      topBeam.position.set(0, 3.5, -0.6);
+      // Arco de troncos y conchas que señala la entrada.
+      const pillarL = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.23, 3.3, 6), frameMat);
+      pillarL.position.set(-2.1, 1.65, -0.6);
+      pillarL.rotation.z = -0.1;
+      const pillarR = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.23, 3.3, 6), frameMat);
+      pillarR.position.set(2.1, 1.65, -0.6);
+      pillarR.rotation.z = 0.1;
+      const topBeam = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 4.8, 6), frameMat);
+      topBeam.position.set(0, 3.35, -0.6);
+      topBeam.rotation.z = Math.PI / 2;
       group.add(pillarL, pillarR, topBeam);
+      for (const xx of [-2.1, 2.1]) {
+        const shell = new THREE.Mesh(new THREE.IcosahedronGeometry(0.18, 0), new THREE.MeshStandardMaterial({ color: 0xffe4bd, roughness: 0.8 }));
+        shell.position.set(xx, 3.36, -0.6);
+        group.add(shell);
+      }
 
       const portalLight = new THREE.PointLight(spCfg.color || 0xc42020, 26, 14, 1.5);
       portalLight.position.set(0, 2.2, 0);
       group.add(portalLight);
 
-      // Columna de luz vertical (Skybeam) hacia el cielo, visible desde cualquier distancia (fog: false)
+      // Columna de marea vertical visible desde cualquier distancia (fog: false)
       const beamGeo = new THREE.CylinderGeometry(1.6, 0.5, 60, 16, 1, true);
       const beamMat = new THREE.MeshBasicMaterial({
-        color: spCfg.color || 0x00e5ff,
+        color: spCfg.color || 0x56e0d8,
         transparent: true,
         opacity: 0.35,
         depthWrite: false,
@@ -131,17 +146,27 @@ export class SpawnPointSystem {
       const holoGroup = new THREE.Group();
       holoGroup.position.set(0, 6.5, 0);
 
-      const glyphGeo = new THREE.OctahedronGeometry(0.85, 0);
+      // Holograma de cangrejo: caparazón, pinzas y ojos flotantes.
       const glyphMat = new THREE.MeshBasicMaterial({
-        color: spCfg.color || 0x00e5ff,
+        color: spCfg.color || 0x56e0d8,
         fog: false
       });
-      const glyphMesh = new THREE.Mesh(glyphGeo, glyphMat);
-      holoGroup.add(glyphMesh);
+      const holoBody = new THREE.Mesh(new THREE.DodecahedronGeometry(0.62, 0), glyphMat);
+      holoBody.scale.set(1.3, 0.75, 0.9);
+      holoGroup.add(holoBody);
+      for (const side of [-1, 1]) {
+        const claw = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.28, 0.3), glyphMat);
+        claw.position.set(side * 0.85, -0.18, 0.12);
+        claw.rotation.z = side * 0.4;
+        holoGroup.add(claw);
+        const eye = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.5, 5), glyphMat);
+        eye.position.set(side * 0.24, 0.58, 0);
+        holoGroup.add(eye);
+      }
 
       const ringGeo = new THREE.TorusGeometry(1.3, 0.06, 8, 24);
       const ringMat = new THREE.MeshBasicMaterial({
-        color: spCfg.color || 0x00e5ff,
+        color: spCfg.color || 0x56e0d8,
         transparent: true,
         opacity: 0.85,
         fog: false

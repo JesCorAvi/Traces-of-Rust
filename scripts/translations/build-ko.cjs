@@ -389,7 +389,7 @@ async function run() {
 
   // Save locales/ko.js
   const outputPath = path.resolve(__dirname, '../../locales/ko.js');
-  const fileContent = `// 한국어 (Korean) localization dictionary for Traces of Rust
+  const fileContent = `// 한국어 (Korean) localization dictionary for Crabs wants your food!
 export default ${JSON.stringify(ko, null, 2)};
 `;
 

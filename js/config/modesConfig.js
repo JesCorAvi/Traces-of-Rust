@@ -15,27 +15,27 @@ export const MODES_CONFIG = {
   CATALOG: {
     core_defense: {
       id: 'core_defense',
-      get title() { return _t('mode.core_defense.title', 'TOWER DEFENSE'); },
-      get subtitle() { return _t('mode.core_defense.subtitle', 'DEFENDER EL NÚCLEO'); },
-      get badge() { return _t('mode.core_defense.badge', '★ MODO PRINCIPAL // CAMPAÑA'); },
+      get title() { return _t('mode.core_defense.title', 'DEFIENDE LA DESPENSA'); },
+      get subtitle() { return _t('mode.core_defense.subtitle', 'ASALTO CANGREJO'); },
+      get badge() { return _t('mode.core_defense.badge', '★ MODO PRINCIPAL // CAMPAÑA DE PLAYA'); },
       isPrimary: true,
-      get shortTitle() { return _t('mode.core_defense.shortTitle', 'TOWER DEFENSE'); },
+      get shortTitle() { return _t('mode.core_defense.shortTitle', 'DEFIENDE'); },
       icon: 'core',
-      get tagline() { return _t('mode.core_defense.tagline', 'Construye defensas en las vías industriales, sobrevive a 12 oleadas letales y protege el reactor biomecánico.'); },
+      get tagline() { return _t('mode.core_defense.tagline', 'El sol cae y la marea trae cangrejos ladrones. Construye defensas de madera y protege la comida durante 12 oleadas.'); },
       get objectiveTitle() { return _t('mode.core_defense.objectiveTitle', 'PROTOCOLO DE DEFENSA'); },
-      get objectiveDefault() { return _t('mode.core_defense.objectiveDefault', 'Impide que las entidades alcancen la esclusa del Núcleo'); }
+      get objectiveDefault() { return _t('mode.core_defense.objectiveDefault', 'Impide que los cangrejos escapen con la comida de la despensa'); }
     },
     survival: {
       id: 'survival',
-      get title() { return _t('mode.survival.title', 'SUPERVIVENCIA'); },
-      get subtitle() { return _t('mode.survival.subtitle', 'HORDA INFINITA'); },
+      get title() { return _t('mode.survival.title', 'MAREA ARCADE'); },
+      get subtitle() { return _t('mode.survival.subtitle', 'CANGREJOS INFINITOS'); },
       get badge() { return _t('mode.survival.badge', 'MODO SECUNDARIO // ARCADE'); },
       isPrimary: false,
-      get shortTitle() { return _t('mode.survival.shortTitle', 'SUPERVIVENCIA'); },
+      get shortTitle() { return _t('mode.survival.shortTitle', 'MAREA'); },
       icon: 'skull',
-      get tagline() { return _t('mode.survival.tagline', 'Modo secundario de acción rápida: combate directo sin torretas, recoge suero y purga a los 5 jefes de planta.'); },
-      get objectiveTitle() { return _t('mode.survival.objectiveTitle', 'OBJETIVO DE PLANTA'); },
-      get objectiveDefault() { return _t('mode.survival.objectiveDefault', 'Encuentra y purga a los jefes de planta'); }
+      get tagline() { return _t('mode.survival.tagline', 'Sobrevive a una marea interminable de cangrejos en la arena y derriba a los cinco jefes de marea.'); },
+      get objectiveTitle() { return _t('mode.survival.objectiveTitle', 'OBJETIVO DE MAREA'); },
+      get objectiveDefault() { return _t('mode.survival.objectiveDefault', 'Resiste la marea y derrota a los jefes de marea'); }
     }
   },
 
@@ -69,7 +69,7 @@ export const MODES_CONFIG = {
       {
         time: 180,
         id: 'boss_butcher',
-        get name() { return _t('boss.boss_butcher.name', 'EL AMPUTADOR DE PLANTA'); },
+        get name() { return _t('boss.boss_butcher.name', 'EL CANGREJO CARNICERO'); },
         hp: 850,
         dmg: 26,
         speed: 4.3,
@@ -80,7 +80,7 @@ export const MODES_CONFIG = {
       {
         time: 360,
         id: 'boss_siren',
-        get name() { return _t('boss.boss_siren.name', 'LA MADRE DE ALAMBRE'); },
+        get name() { return _t('boss.boss_siren.name', 'LA REINA DE LAS PINZAS'); },
         hp: 1650,
         dmg: 32,
         speed: 4.6,
@@ -91,7 +91,7 @@ export const MODES_CONFIG = {
       {
         time: 540,
         id: 'boss_furnace',
-        get name() { return _t('boss.boss_furnace.name', 'AUTÓMATA CREMATORIO N.º 09'); },
+        get name() { return _t('boss.boss_furnace.name', 'EL CANGREJO VOLCÁNICO'); },
         hp: 2800,
         dmg: 38,
         speed: 4.1,
@@ -102,7 +102,7 @@ export const MODES_CONFIG = {
       {
         time: 720,
         id: 'boss_apostle',
-        get name() { return _t('boss.boss_apostle.name', 'EL FALSO CIRUJANO'); },
+        get name() { return _t('boss.boss_apostle.name', 'EL CANGREJO PROFETA'); },
         hp: 4200,
         dmg: 45,
         speed: 5.0,
@@ -113,7 +113,7 @@ export const MODES_CONFIG = {
       {
         time: 900,
         id: 'boss_warden',
-        get name() { return _t('boss.boss_warden.name', 'EL RECAUDADOR DEL ABISMO'); },
+        get name() { return _t('boss.boss_warden.name', 'EL GUARDIÁN DEL ARRECIFE'); },
         hp: 6500,
         dmg: 55,
         speed: 5.4,

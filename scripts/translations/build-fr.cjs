@@ -414,7 +414,7 @@ import('../../locales/en.js').then(enMod => {
   }
 
   // Write locales/fr.js
-  const outLines = ['// French localization dictionary for Traces of Rust.', 'export default {'];
+  const outLines = ['// French localization dictionary for Crabs wants your food!.', 'export default {'];
   const keys = Object.keys(es);
   keys.forEach((k, idx) => {
     const isLast = idx === keys.length - 1;
@@ -538,7 +538,7 @@ function translateUiKeyFr(k, esVal, enVal) {
   if (k === 'ui.settings.crt') return 'FILTRE CRT & GRAIN DU FILM :';
   if (k === 'ui.settings.crt_grain') return 'FILTRE CRT & GRAIN DU FILM :';
   if (k === 'ui.settings.shadows') return 'OMBRES DYNAMIQUES :';
-  if (k === 'ui.settings.shadows_lantern') return 'OMBRES DYNAMIQUES DE LAMPE :';
+  if (k === 'ui.settings.shadows_lantern') return 'OMBRES DYNAMIQUES DU MONDE :';
   if (k === 'ui.settings.fps') return 'AFFICHER LE COMPTEUR DE FPS :';
   if (k === 'ui.settings.fov') return 'CHAMP DE VISION (FOV) :';
   if (k === 'ui.settings.controls_section') return 'COMMANDES & CAMÉRA';

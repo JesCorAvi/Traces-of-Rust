@@ -1,5 +1,5 @@
 // Full 345 turret translations dictionary for all languages
-// Traces of Rust
+// Crabs wants your food!
 
 module.exports = {
   // Stats

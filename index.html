@@ -4,9 +4,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Traces of Rust</title>
+  <title>Crabs wants your food!</title>
   <link rel="icon" href="data:,">
   <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/tropical_theme.css">
   <script type="importmap">
     {
       "imports": {
@@ -27,8 +28,8 @@
         <img id="loading-logo" src="assets/sandwish_studio.png" alt="Sandwish Studio" class="loading-logo-img">
       </div>
       <div class="loading-title-group">
-        <h1 id="loading-title" class="buckshot-title loading-main-title" data-i18n="ui.loading.title">Traces of Rust</h1>
-        <div id="loading-sub" class="loading-genre-tag" data-i18n="ui.loading.sub">TACTICAL HORROR · CORE DEFENSE &amp; SURVIVAL</div>
+        <h1 id="loading-title" class="buckshot-title loading-main-title"><span class="title-line">Crabs wants</span><span class="title-line title-accent">your food!</span></h1>
+        <div id="loading-sub" class="loading-genre-tag" data-i18n="ui.loading.sub">SUNSET BEACH DEFENSE · TOWER DEFENSE &amp; CRAB SIEGE</div>
       </div>
       <div class="loading-progress-block">
         <div class="loading-bar-header">
@@ -40,17 +41,17 @@
         </div>
         <div class="loading-footer-tip">
           <span class="loading-dot"></span>
-          <span data-i18n="ui.loading.tip">SECTOR INDUSTRIAL 07 // PROTOCOLO DE ARRANQUE EN CURSO</span>
+          <span data-i18n="ui.loading.tip">PLAYA DE LA DESPENSA // EL SOL CAE, LOS CANGREJOS LLEGAN</span>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Capas de Post-Procesado estilo Buckshot Roulette -->
+  <!-- Capas de post-procesado: grano cálido y viñeta de atardecer -->
   <div id="crt-overlay"></div>
   <div id="grain-overlay"></div>
   <div id="vignette-overlay"></div>
-  <!-- Overlay a pantalla completa de operador abatido / reconstrucción (Modo Defensa) -->
+  <!-- Overlay de socorrista abatido / reconstrucción en la despensa -->
   <div id="player-down-overlay" class="player-down-overlay hidden">
     <div class="player-down-vignette"></div>
     <div class="player-down-noise"></div>
@@ -59,12 +60,12 @@
       <div class="player-down-body">
         <div class="player-down-tag">
           <span class="ui-icon sm" data-ui-icon="warning"></span>
-          <span>SISTEMA CRÍTICO // FALLO VITAL</span>
+          <span>SISTEMA CRÍTICO // SOCORRISTA CAÍDO</span>
           <span class="ui-icon sm" data-ui-icon="warning"></span>
         </div>
-        <h2 class="player-down-title">[ OPERADOR ABATIDO // SOBRECARGA DEL NÚCLEO -10 VIDAS ]</h2>
-        <div class="player-down-sub">SEÑAL VITAL PERDIDA // PROTOCOLO DE RECONSTRUCCIÓN EN CURSO</div>
-        <div class="player-down-countdown" id="player-down-countdown">RECONSTRUYENDO EN 5.0s...</div>
+        <h2 class="player-down-title">[ SOCORRISTA ABATIDO // LA DESPENSA PIERDE 10 COMIDAS ]</h2>
+        <div class="player-down-sub">SEÑAL VITAL PERDIDA // RECONSTRUCCIÓN EN LA SOMBRILLA</div>
+        <div class="player-down-countdown" id="player-down-countdown">RECUPERANDO EL ALIENTO EN 5.0s...</div>
         <div class="player-down-bar-frame">
           <div class="player-down-bar-fill" id="player-down-progress-bar"></div>
         </div>
@@ -86,15 +87,15 @@
   <!-- HUD en partida adaptable por modo -->
   <div id="hud" class="hidden">
 
-    <!-- BARRA SUPERIOR TOTAL: DOSIS DE SUERO (EXP) -->
-    <div id="hud-top-progress-container" title="Dosis de suero (XP) para el próximo Ciclo">
+    <!-- BARRA SUPERIOR TOTAL: SORBOS DE COCO (XP) -->
+    <div id="hud-top-progress-container" title="Sorbos de coco (XP) para el próximo ciclo">
       <div class="segmented-bar exp-frame-top">
         <div id="exp-bar"></div>
         <div class="bar-grid-overlay"></div>
       </div>
     </div>
 
-    <!-- SECTOR ARRIBA-CENTRO: CABECERA MINIMALISTA DE OLEADA Y REACTOR (Modo Defensa) -->
+    <!-- CABECERA DE OLEADA Y DESPENSA (Modo Defensa) -->
     <div id="hud-top-center">
       <span id="timer-text" class="hidden" style="display:none;">00:00</span>
 
@@ -118,7 +119,7 @@
           <div id="core-hp-bar-ghost" class="hp-ghost-bar"></div>
           <div id="core-hp-bar"></div>
           <div class="stat-label-row-compact">
-            <span id="core-hp-text" class="led-val">150/150 INTEGRIDAD</span>
+            <span id="core-hp-text" class="led-val">150/150 COMIDA</span>
           </div>
         </div>
         <span id="coop-scrap-transfer" style="display:none"></span>
@@ -148,7 +149,7 @@
         <div class="boss-header">
           <span class="boss-title-wrap">
             <span class="ui-icon sm" data-ui-icon="boss_skull"></span>
-            <span id="boss-name">// EL AMPUTADOR DE PLANTA</span>
+            <span id="boss-name">// EL CANGREJO CARNICERO</span>
           </span>
           <span id="boss-phase" class="phase-tag">FASE I</span>
         </div>
@@ -163,14 +164,14 @@
     <!-- Banner de Fase Final (Supervivencia Minuto 15+) -->
     <div id="endgame-banner" class="hidden">
       <span class="ui-icon sm" data-ui-icon="warning"></span>
-      <span>FALLO DE CONTENCIÓN TOTAL // PROTOCOLO DE EXTERMINIO ACTIVO</span>
+      <span>LA MAREA SE DESBORDA // TODOS LOS CANGREJOS AL ASALTO</span>
       <span class="ui-icon sm" data-ui-icon="warning"></span>
     </div>
 
-    <!-- Banner de Alerta de Ataque al Núcleo (Modo Defensa) -->
+    <!-- Banner de Alerta de Ataque a la Despensa (Modo Defensa) -->
     <div id="core-attack-banner" class="hidden">
       <span class="ui-icon sm" data-ui-icon="warning"></span>
-      <span>¡NÚCLEO BAJO ATAQUE!</span>
+      <span>¡DESPENSA BAJO ATAQUE!</span>
       <span class="ui-icon sm" data-ui-icon="warning"></span>
     </div>
 
@@ -178,7 +179,7 @@
     <div id="kinetic-event-banner" class="kinetic-event-banner hidden">
       <div class="hazard-stripe-top"></div>
       <div class="kinetic-banner-body">
-        <div class="kinetic-banner-tag" id="kinetic-banner-tag">ALERTA DE SECTOR</div>
+        <div class="kinetic-banner-tag" id="kinetic-banner-tag">ALERTA DE MAREA</div>
         <div class="kinetic-banner-title" id="kinetic-banner-title">EVENTO DE CONTENCIÓN INICIADO</div>
         <div class="kinetic-banner-sub" id="kinetic-banner-sub">SOBREVIVE AL ASALTO // 120S</div>
       </div>
@@ -186,13 +187,13 @@
     </div>
 
 
-    <!-- Marcador direccional en pantalla hacia el Núcleo (Modo Defensa) -->
+    <!-- Marcador direccional hacia la despensa (Modo Defensa) -->
     <div id="core-direction-indicator" class="hidden" style="display: none;">
       <span class="core-dir-arrow">▲</span>
-      <span class="core-dir-dist">NÚCLEO 0M</span>
+      <span class="core-dir-dist">DESPENSA 0M</span>
     </div>
 
-    <!-- SECTOR ARRIBA-IZQUIERDA: RECURSOS FLOTANTES, VIDA, INVENTARIO Y OBJETIVO -->
+    <!-- RECURSOS, VIDA, INVENTARIO Y OBJETIVO -->
     <div id="hud-top-left">
       <!-- 1. Fila superior de iconos flotantes (sin caja de fondo) -->
       <div class="counters-row-floating">
@@ -200,11 +201,11 @@
           <span class="ui-icon sm" data-ui-icon="clock"></span>
           <span id="compact-time-indicator">00:00</span>
         </div>
-        <div class="floating-counter-item" title="Chatarra">
+        <div class="floating-counter-item" title="Madera">
           <span class="ui-icon sm" data-ui-icon="scrap"></span>
           <span id="core-scrap-counter">0</span>
         </div>
-        <div class="floating-counter-item" title="Bajas totales">
+        <div class="floating-counter-item" title="Cangrejos ahuyentados">
           <span class="ui-icon sm" data-ui-icon="skull"></span>
           <span id="kills-text">0</span>
         </div>
@@ -226,7 +227,7 @@
         </div>
       </div>
 
-      <!-- 3. Armas e Implantes en 2 filas compactas (36x36px) -->
+      <!-- 3. Armas y trucos en 2 filas compactas -->
       <div class="inventory-compact-container">
         <div class="slots-row-compact weapons-row" id="skills-bar"></div>
         <div class="slots-row-compact passives-row" id="passives-bar"></div>
@@ -236,12 +237,12 @@
       <!-- 4. Objetivo tipo Píldora de una sola línea -->
       <div id="hud-objective-tracker" class="objective-pill">
         <span class="checkbox-box">[ ]</span>
-        <span id="objective-task-desc">Contén la brecha</span>
+        <span id="objective-task-desc">Protege la comida</span>
         <span id="next-boss-text" style="display:none"></span>
       </div>
     </div>
 
-    <!-- SECTOR ARRIBA-DERECHA: RADAR LIMPIO Y HOSTILES -->
+    <!-- RADAR Y CANGREJOS -->
     <div id="hud-top-right">
       <div class="telemetry-compact">
         <div class="radar-header-row">
@@ -253,7 +254,7 @@
             <div class="radar-sweeper"></div>
             <div class="radar-dot enemy-approx"></div>
             <div class="radar-dot boss-approx"></div>
-            <div class="radar-dot core-approx" title="Posición del Núcleo"></div>
+            <div class="radar-dot core-approx" title="Posición de la despensa"></div>
             <div class="radar-dot coop-approx" title="Compañero Co-Op"></div>
           </div>
         </div>
@@ -265,7 +266,7 @@
       </div>
     </div>
 
-    <!-- SECTOR MEDIO-DERECHA: NOTIFICACIONES DE BOSSES -->
+    <!-- NOTIFICACIONES DE JEFES -->
     <div id="hud-alert-overlay-right">
       <div id="boss-killed-alert" class="hidden">
         <span class="ui-icon sm" data-ui-icon="boss_skull"></span>
@@ -301,7 +302,7 @@
 
     <div id="boss-alert" class="hidden">
       <span class="ui-icon sm" data-ui-icon="warning"></span>
-      <span>ALERTA SÍSMICA: PRESENCIA HOSTIL DETECTADA</span>
+      <span>LA MAREA SE AGITA: CANGREJOS DETECTADOS</span>
       <span class="ui-icon sm" data-ui-icon="warning"></span>
     </div>
 
@@ -335,14 +336,14 @@
     </div>
   </div>
 
-  <!-- PANTALLA DE INICIO CON FONDO 3D DE LA FÁBRICA VISIBLE (ESTILO POKÉBONK / MEGABONK / VAMPIRE SURVIVORS) -->
+  <!-- PANTALLA DE INICIO CON FONDO 3D DE LA PLAYA AL ATARDECER -->
   <div id="start-screen" class="overlay desktop-start-overlay">
     <!-- BARRA SUPERIOR FLOTANTE CON MONEDAS Y AJUSTES -->
     <header class="start-top-bar">
       <div class="start-top-right">
-        <div class="start-souls-badge start-currency-pill" data-i18n-attr="title:ui.topbar.teeth_title" title="Dientes recolectados en planta">
+        <div class="start-souls-badge start-currency-pill" data-i18n-attr="title:ui.topbar.teeth_title" title="Conchas recogidas en la orilla">
           <span class="ui-icon sm" data-ui-icon="tooth"></span>
-          <span><span data-i18n="ui.topbar.teeth">DIENTES:</span> <b id="start-souls" style="color:#f0c954">0</b></span>
+          <span><span data-i18n="ui.topbar.teeth">CONCHAS:</span> <b id="start-souls" style="color:#f0c954">0</b></span>
         </div>
         <button type="button" class="rust-btn sm start-top-btn" id="btn-open-settings">
           <span class="ui-icon sm" data-ui-icon="atkSpd"></span>
@@ -356,8 +357,8 @@
       <!-- COLUMNA IZQUIERDA: TÍTULO, SELECTOR DE MODO DUAL, DIFICULTAD Y JUGAR -->
       <section class="start-nav-column">
         <div class="launcher-header-group">
-          <h1 class="buckshot-title desktop-main-title">Traces of Rust</h1>
-          <div class="launcher-genre-tag" data-i18n="ui.loading.sub">TACTICAL HORROR · CORE DEFENSE &amp; SURVIVAL</div>
+          <h1 class="buckshot-title desktop-main-title"><span class="title-line">Crabs wants</span><span class="title-line title-accent">your food!</span></h1>
+          <div class="launcher-genre-tag" data-i18n="ui.loading.sub">SUNSET BEACH DEFENSE · TOWER DEFENSE &amp; CRAB SIEGE</div>
         </div>
 
         <!-- Selector de Modo Dual (PokéBonk Style: Tower Defense Principal + Supervivencia Arcade) -->
@@ -380,8 +381,8 @@
         <!-- BOTÓN GIGANTE PRINCIPAL DE JUGAR (PokéBonk JUGAR / Vampire Survivors COMENZAR / Megabonk PLAY) -->
         <div class="desktop-main-action-wrap">
           <button type="button" class="rust-btn primary play-hero-btn" id="btn-start">
-            <span class="play-btn-title" id="btn-start-label" data-i18n="ui.menu.play_td">[ JUGAR : TOWER DEFENSE ]</span>
-            <span class="play-btn-sub" id="btn-start-sub">★ CAMPAÑA PRINCIPAL // 12 OLEADAS // DIFICULTAD NORMAL</span>
+            <span class="play-btn-title" id="btn-start-label" data-i18n="ui.menu.play_td">[ DEFENDER LA COMIDA ]</span>
+            <span class="play-btn-sub" id="btn-start-sub">★ CAMPAÑA DE PLAYA // 12 OLEADAS // DIFICULTAD NORMAL</span>
           </button>
         </div>
 
@@ -395,7 +396,7 @@
         <div class="desktop-sub-menu-grid">
           <button type="button" class="rust-btn desktop-sub-menu-btn btn-highlight-shop" id="btn-open-shop">
             <span class="ui-icon sm" data-ui-icon="tooth"></span>
-            <span data-i18n="ui.menu.btn_shop">[ CLÍNICA / IMPLANTES ]</span>
+            <span data-i18n="ui.menu.btn_shop">[ TIENDA DE PLAYA ]</span>
           </button>
           <button type="button" class="rust-btn desktop-sub-menu-btn" id="btn-open-steam-modal" style="border-color:#3e6338;">
             <span class="ui-icon sm" data-ui-icon="core"></span>
@@ -403,12 +404,12 @@
           </button>
           <button type="button" class="rust-btn desktop-sub-menu-btn" id="btn-open-manual">
             <span class="ui-icon sm" data-ui-icon="level"></span>
-            <span data-i18n="ui.menu.btn_manual">[ MANUAL Y CONTROLES ]</span>
+            <span data-i18n="ui.menu.btn_manual">[ GUÍA DE PLAYA ]</span>
           </button>
         </div>
 
         <div class="desktop-version-footer">
-          <span>BUILD DESKTOP-64 · TD EDITION</span>
+          <span>BUILD PLAYA-64 · CRAB DEFENSE</span>
         </div>
       </section>
 
@@ -420,7 +421,7 @@
         <div class="start-dossier-card">
           <div class="dossier-card-header">
             <span class="ui-icon sm" data-ui-icon="core"></span>
-            <span id="dossier-mode-label">EXPEDIENTE // TOWER DEFENSE</span>
+            <span id="dossier-mode-label">EXPEDIENTE // DEFENSA DE LA DESPENSA</span>
           </div>
 
           <div class="stats-report-table">
@@ -433,15 +434,15 @@
               <b id="career-runs" style="color:#f5ecd3">0</b>
             </div>
             <div class="report-row">
-              <span data-i18n="ui.dossier.kills">ENTIDADES ELIMINADAS:</span>
+              <span data-i18n="ui.dossier.kills">CANGREJOS AHUYENTADOS:</span>
               <b id="career-total-kills" style="color:#ff6b6b">0</b>
             </div>
             <div class="report-row">
-              <span data-i18n="ui.dossier.bosses">JEFES PURGADOS:</span>
+              <span data-i18n="ui.dossier.bosses">JEFES DE MAREA:</span>
               <b id="career-total-bosses" style="color:#f0c954">0</b>
             </div>
             <div class="report-row">
-              <span data-i18n="ui.dossier.implants">IMPLANTES ADQUIRIDOS:</span>
+              <span data-i18n="ui.dossier.implants">MEJORAS DE PLAYA:</span>
               <b id="career-upgrades-count" style="color:#a8c499">0</b>
             </div>
           </div>
@@ -456,7 +457,7 @@
       <div class="plate-header">
         <span class="tape-label">
           <span class="ui-icon sm" data-ui-icon="atkSpd"></span>
-          <span data-i18n="ui.settings.title">CONFIGURACIÓN Y AJUSTES DEL SISTEMA</span>
+          <span data-i18n="ui.settings.title">CONFIGURACIÓN DE LA PLAYA</span>
         </span>
         <button class="rust-btn sm" id="btn-close-settings"><span data-i18n="ui.settings.save_return">[ GUARDAR Y VOLVER ]</span></button>
       </div>
@@ -465,7 +466,7 @@
         <div class="paper-note settings-section">
           <div class="settings-section-title">
             <span class="ui-icon sm" data-ui-icon="area"></span>
-            <span data-i18n="ui.settings.audio_section">SUBSISTEMA DE AUDIO</span>
+            <span data-i18n="ui.settings.audio_section">SONIDO DEL CAMPAMENTO</span>
           </div>
           <div class="setting-row">
             <label for="set-master-vol"><span data-i18n="ui.settings.master_vol">VOLUMEN MAESTRO:</span> <b id="val-master-vol">85%</b></label>
@@ -492,7 +493,7 @@
         <div class="paper-note settings-section">
           <div class="settings-section-title">
             <span class="ui-icon sm" data-ui-icon="crit"></span>
-            <span data-i18n="ui.settings.video_section">VÍDEO Y RENDERIZADO 3D</span>
+            <span data-i18n="ui.settings.video_section">VÍDEO Y ATARDECER 3D</span>
           </div>
           <div class="setting-row">
             <label for="set-res-scale" data-i18n="ui.settings.res_scale">RESOLUCIÓN PIXEL-ART 3D:</label>
@@ -520,7 +521,7 @@
             <button class="rust-btn sm" id="btn-toggle-fullscreen" aria-pressed="true"><span id="fullscreen-state-text">ACTIVADA</span></button>
           </div>
           <div class="setting-row">
-            <span data-i18n="ui.settings.shadows_lantern">SOMBRAS DINÁMICAS DE LINTERNA:</span>
+            <span data-i18n="ui.settings.shadows_lantern">SOMBRAS DINÁMICAS DEL MUNDO:</span>
             <button class="rust-btn sm" id="btn-toggle-shadows"><span>ACTIVADAS</span></button>
           </div>
           <div class="setting-row">
@@ -566,7 +567,7 @@
             <span data-i18n="ui.settings.reset_section">RESTABLECER AJUSTES O BORRAR PARTIDA GUARDADA:</span>
             <div style="display:flex; gap:8px; flex-wrap:wrap;">
               <button class="rust-btn sm" id="btn-reset-defaults"><span data-i18n="ui.settings.btn_reset_defaults">[ AJUSTES POR DEFECTO ]</span></button>
-              <button class="rust-btn primary sm" id="btn-wipe-save"><span data-i18n="ui.settings.btn_wipe_save">[ BORRAR PROGRESO Y DIENTES ]</span></button>
+              <button class="rust-btn primary sm" id="btn-wipe-save"><span data-i18n="ui.settings.btn_wipe_save">[ BORRAR PROGRESO Y CONCHAS ]</span></button>
             </div>
           </div>
         </div>
@@ -580,11 +581,11 @@
       <div class="plate-header">
         <span class="tape-label">
           <span class="ui-icon sm" data-ui-icon="level"></span>
-          <span id="char-modal-title">MESA DE ASIGNACIÓN // OPERADORES DE PLANTA</span>
+          <span id="char-modal-title">MESA DE ASIGNACIÓN // SOCORRISTAS</span>
         </span>
         <button type="button" class="rust-btn sm" id="btn-close-characters"><span>[X] CERRAR</span></button>
       </div>
-      <p class="plate-sub" id="char-modal-sub">Selecciona tu superviviente. Cada operador está especializado en su arma insignia y cuenta con pasivas únicas de impacto y supervivencia:</p>
+      <p class="plate-sub" id="char-modal-sub">Elige a tu socorrista. Cada uno domina un arma de playa y una pasiva única:</p>
       <div id="character-grid" class="character-grid"></div>
 
       <!-- Estado de espera en modo Cooperativo -->
@@ -594,7 +595,7 @@
       </div>
 
       <div class="btn-group" style="margin-top:14px;">
-        <button type="button" class="rust-btn primary" id="btn-confirm-character"><span>[ ASIGNAR OPERADOR Y CONTINUAR ]</span></button>
+        <button type="button" class="rust-btn primary" id="btn-confirm-character"><span>[ ASIGNAR Y DESPLEGAR ]</span></button>
       </div>
     </div>
   </div>
@@ -711,18 +712,18 @@
       <div class="plate-header">
         <span class="tape-label">
           <span class="ui-icon sm" data-ui-icon="level"></span>
-          <span data-i18n="ui.manual.title">MANUAL OPERATIVO // MODOS DE OPERACIÓN</span>
+          <span data-i18n="ui.manual.title">GUÍA DE SUPERVIVENCIA // MODOS DE PLAYA</span>
         </span>
         <button class="rust-btn sm" id="btn-close-manual"><span data-i18n="ui.manual.close">[X] CERRAR</span></button>
       </div>
       <div class="paper-note" style="font-size:20px; line-height:1.45;">
         <b>1. CONTROLES Y MOVIMIENTO:</b><br>
-        • <b>WASD</b> mover, <b>ESPACIO</b> saltar, <b>SHIFT</b> Dash invulnerable, <b>RATÓN</b> apuntar linterna, <b>B / F3</b> Modo Debug.<br><br>
+        • <b>WASD</b> mover, <b>ESPACIO</b> saltar, <b>SHIFT</b> Dash invulnerable, <b>RATÓN</b> apuntar / atacar, <b>B / F3</b> Modo Debug.<br><br>
         <b>2. MODO SUPERVIVENCIA:</b><br>
-        • Resiste todo el tiempo posible. Cada 3 minutos emerge un Jefe de Planta.<br><br>
-        <b>3. MODO DEFENDER EL NÚCLEO:</b><br>
-        • Protege el Reactor Biomecánico Central durante 12 oleadas. Los enemigos avanzan por las vías industriales hacia el Núcleo, pero te perseguirán si te acercas demasiado.<br>
-        • Recoge <b>CHATARRA</b> de los hostiles abatidos. Pulsa <b>E</b> para abrir el terminal, elige una torreta y colócala libremente apuntando al suelo con la cámara (anillo verde = válido). Acércate a una torreta y pulsa <b>E</b> para mejorarla o venderla. Cada torreta tiene 3 rutas de mejora y solo una puede superar el nivel 2. El tutorial interactivo opcional enseña todo esto y las sinergias principales.
+        • Resiste todo el tiempo posible. Cada 3 minutos emerge un Jefe de Marea.<br><br>
+        <b>3. MODO DEFIENDE LA DESPENSA:</b><br>
+        • La marea trae cangrejos ladrones. Protege la despensa de comida durante 12 oleadas mientras cruzan los senderos de la playa; algunos te perseguirán si te acercas.<br>
+        • Recoge <b>MADERA</b> de los cangrejos ahuyentados. Pulsa <b>E</b> para abrir el terminal, elige una torreta y colócala libremente apuntando al suelo con la cámara (anillo verde = válido). Acércate a una torreta y pulsa <b>E</b> para mejorarla o venderla. Cada torreta tiene 3 rutas de mejora y solo una puede superar el nivel 2. El tutorial interactivo opcional enseña todo esto y las sinergias principales.
       </div>
     </div>
   </div>
@@ -732,7 +733,7 @@
     <div class="metal-plate main-menu-plate" style="max-width:520px;">
       <div class="tape-strip">
         <span class="ui-icon sm" data-ui-icon="clock"></span>
-        <span>PROTOCOLO DE PAUSA // PLANTA INDUSTRIAL</span>
+        <span>DESCANSO EN LA PLAYA // PAUSA</span>
       </div>
       <h1 class="buckshot-title" style="font-size:22px;" data-i18n="ui.pause.title">JUEGO EN PAUSA</h1>
       <p class="plate-sub" data-i18n="ui.pause.sub">Sistemas de soporte vital congelados temporalmente.</p>
@@ -758,9 +759,9 @@
         <div class="map-select-title-group">
           <span class="tape-label">
             <span class="ui-icon sm" data-ui-icon="core"></span>
-            <span data-i18n="ui.map_select.header_tape">EXPEDIENTE TÁCTICO // SECTORES INDUSTRIALES</span>
+            <span data-i18n="ui.map_select.header_tape">MAPA DE LA COSTA // ZONAS DE DESPENSA</span>
           </span>
-          <h2 class="buckshot-title map-screen-title" data-i18n="ui.map_select.title">SELECCIÓN DE SECTOR DE DESPLIEGUE</h2>
+          <h2 class="buckshot-title map-screen-title" data-i18n="ui.map_select.title">ELIGE TU TRAMO DE PLAYA</h2>
         </div>
         <button type="button" class="rust-btn sm" id="btn-map-back" data-i18n-attr="title:ui.map_select.back" title="Volver al menú principal">
           <span data-i18n="ui.map_select.back">[ ◄ VOLVER AL MENÚ ]</span>
@@ -770,17 +771,17 @@
       <!-- Pestañas de Dificultad (BTD6 Style) -->
       <div class="map-diff-bar" id="map-diff-tabs" role="tablist">
         <button type="button" class="map-diff-tab diff-easy" id="tab-map-facil" data-diff="facil" role="tab" aria-selected="false">
-          <span class="tab-badge" data-i18n="ui.map_select.tab_easy_badge">SECTOR APERTURA</span>
+          <span class="tab-badge" data-i18n="ui.map_select.tab_easy_badge">ZONA TRANQUILA</span>
           <span class="tab-name" data-i18n="ui.map_select.tab_easy">FÁCIL</span>
           <span class="tab-sub" data-i18n="ui.map_select.tab_easy_sub">150 VIDAS · 1 ENTRADA</span>
         </button>
         <button type="button" class="map-diff-tab diff-normal is-active-tab" id="tab-map-normal" data-diff="normal" role="tab" aria-selected="true">
-          <span class="tab-badge" data-i18n="ui.map_select.tab_norm_badge">SECTOR ESTÁNDAR</span>
+          <span class="tab-badge" data-i18n="ui.map_select.tab_norm_badge">ZONA ESTÁNDAR</span>
           <span class="tab-name" data-i18n="ui.map_select.tab_norm">NORMAL</span>
           <span class="tab-sub" data-i18n="ui.map_select.tab_norm_sub">100 VIDAS · 2 ENTRADAS</span>
         </button>
         <button type="button" class="map-diff-tab diff-hard" id="tab-map-dificil" data-diff="dificil" role="tab" aria-selected="false">
-          <span class="tab-badge" data-i18n="ui.map_select.tab_hard_badge">SECTOR CRÍTICO</span>
+          <span class="tab-badge" data-i18n="ui.map_select.tab_hard_badge">ZONA CRÍTICA</span>
           <span class="tab-name" data-i18n="ui.map_select.tab_hard">DIFÍCIL</span>
           <span class="tab-sub" data-i18n="ui.map_select.tab_hard_sub">75 VIDAS · 2 SALIDAS</span>
         </button>
@@ -810,7 +811,7 @@
         <div class="map-detail-right">
           <button type="button" class="rust-btn primary map-deploy-hero-btn" id="btn-launch-map">
             <div class="deploy-btn-inner">
-              <span class="deploy-main-txt" data-i18n="ui.map_select.deploy_btn">[ DESPLEGAR EN ESTE SECTOR ► ]</span>
+              <span class="deploy-main-txt" data-i18n="ui.map_select.deploy_btn">[ DESPLEGAR AQUÍ ► ]</span>
               <span class="deploy-sub-txt" data-i18n="ui.map_select.deploy_sub">INICIAR OPERACIÓN // 12 OLEADAS</span>
             </div>
           </button>
@@ -830,7 +831,7 @@
       <p class="plate-sub">
         Es tu primer contrato de defensa. Puedes realizar un tutorial interactivo:
         aprenderás a colocar torretas libremente, mejorarlas con rutas estilo BTD6,
-        recoger CHATARRA y combinar sinergias como Escarcha + Bombarda.
+        recoger MADERA y combinar sinergias como Cubo Helado + Mortero de Arena.
       </p>
       <p class="plate-sub" style="color:#877a5c;">
         Esta elección solo se pregunta la primera vez. Después podrás repetirlo desde el menú principal.
@@ -853,34 +854,34 @@
         <div class="turret-build-header-actions">
           <span class="turret-scrap-balance" id="turret-modal-scrap-pill">
             <span class="ui-icon sm" data-ui-icon="scrap"></span>
-            <b><span id="turret-modal-scrap-val">0</span></b> <span data-i18n="ui.turret_modal.scrap_pill">CHATARRA</span>
+            <b><span id="turret-modal-scrap-val">0</span></b> <span data-i18n="ui.turret_modal.scrap_pill">MADERA</span>
           </span>
           <button class="rust-btn sm hidden" id="btn-skip-prep-build"><span data-i18n="ui.turret_modal.skip_prep">[ INICIAR OLEADA (F) ]</span></button>
           <button class="rust-btn sm" id="btn-close-turret-build"><span data-i18n="ui.turret_modal.close">[ CERRAR (E) ]</span></button>
         </div>
       </div>
       <div id="turret-build-content"></div>
-      <div class="turret-build-footer" data-i18n="ui.turret_modal.footer_tip">CONSTRUYE Y MEJORA CON LA CHATARRA RECOGIDA DE LOS HOSTILES. SOLO UNA RUTA DE MEJORA PUEDE SUPERAR EL NIVEL 2.</div>
+      <div class="turret-build-footer" data-i18n="ui.turret_modal.footer_tip">CONSTRUYE Y MEJORA CON LA MADERA RECOGIDA DE LOS CANGREJOS. SOLO UNA RUTA DE MEJORA PUEDE SUPERAR EL NIVEL 2.</div>
     </div>
   </div>
 
-  <!-- Tienda Permanente (Mesa del Cirujano) -->
+  <!-- Tienda de playa (mejoras permanentes) -->
   <div id="shop-screen" class="overlay hidden">
     <div class="metal-plate main-menu-plate">
       <div class="plate-header">
         <span class="tape-label">
           <span class="ui-icon sm" data-ui-icon="tooth"></span>
-          <span data-i18n="ui.shop.title">MESA DEL CIRUJANO (MEJORAS PERMANENTES)</span>
+          <span data-i18n="ui.shop.title">TIENDA DE PLAYA (MEJORAS PERMANENTES)</span>
         </span>
         <span class="led-val amber">
           <span class="ui-icon sm" data-ui-icon="tooth"></span>
           <span><span data-i18n="ui.shop.reserve">RESERVA:</span> <span id="shop-souls">0</span></span>
         </span>
       </div>
-      <p class="plate-sub" data-i18n="ui.shop.sub">Intercambia los dientes extraídos en tus partidas por implantes permanentes:</p>
+      <p class="plate-sub" data-i18n="ui.shop.sub">Cambia las conchas recogidas en tus partidas por mejoras permanentes para el campamento:</p>
       <div id="shop-list" class="shop-container"></div>
       <div class="btn-group" style="margin-top:14px;">
-        <button class="rust-btn primary" id="btn-shop-play"><span data-i18n="ui.shop.play_now">[ ENTRAR DIRECTO A PLANTA ]</span></button>
+        <button class="rust-btn primary" id="btn-shop-play"><span data-i18n="ui.shop.play_now">[ VOLVER A LA PLAYA ]</span></button>
         <button class="rust-btn" id="btn-close-shop"><span data-i18n="ui.shop.back">[ VOLVER ]</span></button>
       </div>
     </div>
@@ -892,7 +893,7 @@
       <div class="plate-header">
         <span class="tape-label">
           <span class="ui-icon sm" data-ui-icon="level"></span>
-          <span data-i18n="ui.levelup.title">SELECCIONA MUTACIÓN, ARMA O IMPLANTE PASIVO</span>
+          <span data-i18n="ui.levelup.title">ELIGE UNA MEJORA, ARMA O TRUCO DE PLAYA</span>
         </span>
         <span id="lvlup-slots-info" class="led-val amber">ARMAS: 1/4 | PASIVAS: 0/4</span>
       </div>
@@ -916,17 +917,17 @@
     <div class="metal-plate gameover-plate">
       <div class="tape-strip">
         <span class="ui-icon sm" data-ui-icon="skull"></span>
-        <span data-i18n="ui.results.report_title_surv_defeat">CERTIFICADO DE DEFUNCIÓN // EXPEDIENTE CERRADO</span>
+        <span data-i18n="ui.results.report_title_surv_defeat">PARTE DE INCIDENCIA // EXPEDIENTE CERRADO</span>
       </div>
-      <h1 class="buckshot-title dead-title" data-i18n="ui.results.defeat_headline">PACIENTE EXPIRADO</h1>
-      <p id="go-cause" class="plate-sub" data-i18n="ui.results.cause_default">CAUSA: DESMEMBRAMIENTO EN PLANTA INDUSTRIAL</p>
+      <h1 class="buckshot-title dead-title" data-i18n="ui.results.defeat_headline">SOCORRISTA AGOTADO</h1>
+      <p id="go-cause" class="plate-sub" data-i18n="ui.results.cause_default">CAUSA: LA MAREA DE CANGREJOS DESBORDÓ LA PLAYA</p>
 
       <div class="paper-note stats-report">
-        <div class="report-row"><span data-i18n="ui.results.time_label">TIEMPO EN PLANTA:</span><b id="go-time">00:00</b></div>
+        <div class="report-row"><span data-i18n="ui.results.time_label">TIEMPO EN LA PLAYA:</span><b id="go-time">00:00</b></div>
         <div class="report-row"><span data-i18n="ui.results.bosses_label">JEFES DERROTADOS:</span><b id="go-bosses" style="color:#f0c954">0 / 5</b></div>
-        <div class="report-row"><span data-i18n="ui.results.kills_label">ENEMIGOS ELIMINADOS:</span><b id="go-kills" style="color:#ff6b6b">0</b></div>
-        <div class="report-row"><span data-i18n="ui.results.run_teeth_label">DIENTES EXTRAÍDOS EN PARTIDA:</span><b id="go-souls" style="color:#f0c954">+0</b></div>
-        <div class="report-row"><span data-i18n="ui.results.total_teeth_label">RESERVA TOTAL DE DIENTES:</span><b id="go-total-souls" style="color:#f0c954">0</b></div>
+        <div class="report-row"><span data-i18n="ui.results.kills_label">CANGREJOS AHUYENTADOS:</span><b id="go-kills" style="color:#ff6b6b">0</b></div>
+        <div class="report-row"><span data-i18n="ui.results.run_teeth_label">CONCHAS RECOGIDAS EN LA PARTIDA:</span><b id="go-souls" style="color:#f0c954">+0</b></div>
+        <div class="report-row"><span data-i18n="ui.results.total_teeth_label">RESERVA TOTAL DE CONCHAS:</span><b id="go-total-souls" style="color:#f0c954">0</b></div>
         <div class="report-row"><span data-i18n="ui.results.cycle_label">CICLO ALCANZADO:</span><b id="go-level">CICLO 1</b></div>
         <div class="report-row"><span id="go-mode-extra-label" data-i18n="ui.results.surv_status_label">ESTADO DE FASE FINAL:</span><b id="go-endgame" data-i18n="ui.results.surv_endgame_not_reached">NO ALCANZADA</b></div>
         <div class="report-loadout" id="go-loadout"></div>

@@ -10,19 +10,19 @@ import { t } from '../../core/i18n.js';
 const _t = (k, fb) => (typeof t === 'function' ? t(k) : fb);
 
 export const SHORT_WEAPON_NAMES = {
-  get slash()        { return _t('weapon.short.slash', 'Sierra'); },
-  get shotgun()      { return _t('weapon.short.shotgun', 'Escopeta'); },
-  get flamethrower() { return _t('weapon.short.flamethrower', 'Soplete'); },
-  get aura()         { return _t('weapon.short.aura', 'Incensario'); },
-  get mines()        { return _t('weapon.short.mines', 'Minas'); },
+  get slash()        { return _t('weapon.short.slash', 'Machete'); },
+  get shotgun()      { return _t('weapon.short.shotgun', 'Sal'); },
+  get flamethrower() { return _t('weapon.short.flamethrower', 'Asador'); },
+  get aura()         { return _t('weapon.short.aura', 'Marea'); },
+  get mines()        { return _t('weapon.short.mines', 'Erizos'); },
   get harpoon()      { return _t('weapon.short.harpoon', 'Arpón'); },
-  get orbital()      { return _t('weapon.short.orbital', 'Jaula'); },
-  get bolt()         { return _t('weapon.short.bolt', 'Desfibril.'); },
+  get orbital()      { return _t('weapon.short.orbital', 'Aros'); },
+  get bolt()         { return _t('weapon.short.bolt', 'Anguila'); },
   get chakram()      { return _t('weapon.short.chakram', 'Bumerán'); },
-  get welder()       { return _t('weapon.short.welder', 'Soldador'); },
-  get grenade()      { return _t('weapon.short.grenade', 'Granadas'); },
-  get hammer()       { return _t('weapon.short.hammer', 'Martillo'); },
-  get acid()         { return _t('weapon.short.acid', 'Ácido'); }
+  get welder()       { return _t('weapon.short.welder', 'Rayo'); },
+  get grenade()      { return _t('weapon.short.grenade', 'Coco'); },
+  get hammer()       { return _t('weapon.short.hammer', 'Mazo'); },
+  get acid()         { return _t('weapon.short.acid', 'Medusa'); }
 };
 
 export function updateStatsAndModeHUD(stats, kills, runSouls, rerollsLeft, activeBoss, modeTelemetry) {
@@ -84,7 +84,7 @@ if (chkBox) chkBox.textContent = modeTelemetry.objectiveCheck || '[ ]';
 if (nextBossText) nextBossText.textContent = modeTelemetry.subTaskText || '';
 if (waveText) waveText.textContent = modeTelemetry.waveBadgeText || '';
 
-// Elementos exclusivos del modo Defensa del Núcleo
+// Elementos exclusivos del modo Defensa de la Despensa
 if (typeof modeTelemetry.coreHp === 'number') {
   const corePct = Math.min(100, Math.max(0, modeTelemetry.coreRatio * 100));
   const coreBar = document.getElementById('core-hp-bar');
@@ -110,7 +110,7 @@ if (typeof modeTelemetry.coreHp === 'number') {
   if (coreVal) {
     const displayHp = Math.ceil(Number(modeTelemetry.coreHp) || 0);
     const displayMax = Math.round(Number(modeTelemetry.coreMaxHp) || 100);
-    coreVal.textContent = _t('hud.core.integrity', '{hp}/{max} INTEGRIDAD').replace('{hp}', displayHp).replace('{max}', displayMax);
+    coreVal.textContent = _t('hud.core.integrity', '{hp}/{max} COMIDA').replace('{hp}', displayHp).replace('{max}', displayMax);
   }
   if (coreWave) {
     if (modeTelemetry.eventBadge) {
@@ -121,9 +121,9 @@ if (typeof modeTelemetry.coreHp === 'number') {
   }
   if (coreRem) {
     if (modeTelemetry.isFirstWavePrep || modeTelemetry.isPrep) {
-      coreRem.textContent = _t('hud.core.hostiles_counter', 'HOSTILES: {count}').replace('{count}', '0');
+      coreRem.textContent = _t('hud.core.hostiles_counter', 'CANGREJOS: {count}').replace('{count}', '0');
     } else {
-      coreRem.textContent = _t('hud.core.hostiles_counter', 'HOSTILES: {count}').replace('{count}', modeTelemetry.remainingEnemies || 0);
+      coreRem.textContent = _t('hud.core.hostiles_counter', 'CANGREJOS: {count}').replace('{count}', modeTelemetry.remainingEnemies || 0);
     }
   }
   if (coreStatus) {
@@ -243,7 +243,7 @@ if (typeof modeTelemetry.coreHp === 'number') {
       if (keyCap) keyCap.textContent = 'LMB';
       if (promptText) {
         promptText.textContent = placement.valid
-          ? _t('hud.turret.place_valid', 'COLOCAR {name} · {cost} CHATARRA · [ESC] CANCELAR').replace('{name}', placement.typeName).replace('{cost}', placement.cost)
+          ? _t('hud.turret.place_valid', 'COLOCAR {name} · {cost} MADERA · [ESC] CANCELAR').replace('{name}', placement.typeName).replace('{cost}', placement.cost)
           : _t('hud.turret.place_invalid', '{reason} · [ESC] CANCELAR').replace('{reason}', placement.reason);
       }
     } else if (nearby) {
@@ -307,7 +307,7 @@ for (let i = 0; i < CONFIG.LIMITS.MAX_PASSIVES; i++) {
       </div>`;
   } else {
     pHtml += `
-      <div class="passive-slot empty" title="${_t('hud.slot.passive_empty', 'Ranura de implante disponible')}"></div>`;
+      <div class="passive-slot empty" title="${_t('hud.slot.passive_empty', 'Ranura de truco disponible')}"></div>`;
   }
 }
 document.getElementById('passives-bar').innerHTML = pHtml;

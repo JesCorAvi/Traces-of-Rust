@@ -207,8 +207,6 @@ export function updateMenuBattleDemo(ctx) {
     camera,
     playerGroup,
     playerBillboard,
-    flashlight,
-    playerLanternLight,
     propBillboards,
     dust,
     enemyPool,
@@ -422,15 +420,18 @@ export function updateMenuBattleDemo(ctx) {
     : 0;
 
   // Órbita cinemática de la cámara (perspectiva táctica elevada en TD, rasante en Supervivencia)
-  camOrbitT += dt * 0.20;
-  const camDist = isTD ? 13.5 : 11.5;
-  const camHeight = isTD ? 4.5 + Math.sin(camOrbitT * 0.5) * 0.35 : 3.6 + Math.sin(camOrbitT * 0.5) * 0.38;
-  const camCenter = isTD ? new THREE.Vector3(0, 1.3, 2.5) : new THREE.Vector3(playerGroup.position.x, 1.25, playerGroup.position.z);
+  camOrbitT += dt * 0.075;
+  const camDist = isTD ? 16.0 : 13.5;
+  const camHeight = isTD
+    ? 5.1 + Math.sin(camOrbitT * 0.55) * 0.35
+    : 4.2 + Math.sin(camOrbitT * 0.55) * 0.38;
+  const camCenter = isTD ? new THREE.Vector3(0, 1.6, 1.0) : new THREE.Vector3(playerGroup.position.x, 1.35, playerGroup.position.z);
+  const orbit = 0.5 + Math.sin(camOrbitT * 0.55) * 0.55;
 
   camera.position.set(
-    camCenter.x + Math.sin(camOrbitT) * camDist,
+    camCenter.x + Math.sin(orbit) * camDist,
     camHeight,
-    camCenter.z + Math.cos(camOrbitT) * camDist
+    camCenter.z + Math.cos(orbit) * camDist
   );
 
   if (camShake > 0) {
@@ -482,7 +483,7 @@ export function updateMenuBattleDemo(ctx) {
   );
   playerBillboard.applyJuiceTransforms(squashX, squashY, playerTiltZ, 0);
 
-  // Orientación de props, polvo, linterna y farol
+  // Orientación de props y polvo
   const camAngle = Math.atan2(
     camera.position.x - playerGroup.position.x,
     camera.position.z - playerGroup.position.z
@@ -490,15 +491,6 @@ export function updateMenuBattleDemo(ctx) {
   propBillboards.forEach(p => { p.rotation.y = camAngle; });
   dust.position.copy(playerGroup.position);
 
-  const aimDir = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), playerFacingYaw);
-  flashlight.position.copy(playerGroup.position).addScaledVector(aimDir, 0.45).add(new THREE.Vector3(0, 1.5, 0));
-  flashlight.target.position.copy(flashlight.position).add(aimDir);
-
-  playerLanternLight.position.set(
-    playerGroup.position.x + Math.sin(camOrbitT * 1.5) * 1.2,
-    playerGroup.position.y + 2.2,
-    playerGroup.position.z + Math.cos(camOrbitT * 1.5) * 1.2
-  );
 
   // Navegación de enemigos (siguen vía en TD, persiguen jugador en Supervivencia)
   const camFwd = new THREE.Vector3().subVectors(playerGroup.position, camera.position).setY(0).normalize();

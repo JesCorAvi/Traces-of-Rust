@@ -1,5 +1,5 @@
 # Notas de Revisión y Cadenas con Matices / Localization Review Notes
-**Traces of Rust — 8 Locales**
+**Crabs wants your food! — 8 Locales**
 
 Este documento recopila términos, juegos de palabras, limitaciones de espacio en interfaz y decisiones específicas tomadas durante la traducción para su revisión editorial humana.
 

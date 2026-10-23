@@ -1,4 +1,4 @@
-// HUD del radar y marcador direccional del Núcleo.
+// HUD del radar y marcador direccional de la Despensa.
 // Exports: updateCoreDirectionIndicator, updateRadarHUD.
 
 import * as THREE from 'three';
@@ -49,7 +49,7 @@ if (arrowEl) {
   arrowEl.style.transform = `rotate(${deg.toFixed(0)}deg)`;
 }
 if (distEl) {
-  distEl.textContent = `NÚCLEO ${dist.toFixed(0)}M`;
+  distEl.textContent = `DESPENSA ${dist.toFixed(0)}M`;
 }
 indicator.classList.toggle('under-attack', coreRatio < 0.45);
 }
@@ -83,7 +83,7 @@ if (coopDot) {
   }
 }
 
-// Punto del Núcleo en el radar (si estamos en modo Defensa)
+// Punto de la Despensa en el radar (si estamos en modo Defensa)
 if (coreDot) {
   if (corePos) {
     coreDot.style.display = 'block';
@@ -149,7 +149,7 @@ if (threatLabel) {
     threatLabel.textContent = 'PROXIMIDAD CRÍTICA';
     threatLabel.style.color = '#f0c954';
   } else {
-    threatLabel.textContent = `HOSTILES: ${activeEnemies.length}`;
+    threatLabel.textContent = `CANGREJOS: ${activeEnemies.length}`;
     threatLabel.style.color = '#a8c499';
   }
 }

@@ -1,4 +1,4 @@
-// Compuertas de salida y brechas de contención (Modo Defensa Bloons TD 6).
+// Pasadizos de fuga de los cangrejos cargados con comida (Modo Defensa).
 // Exports: ExitPointSystem.
 
 import * as THREE from 'three';
@@ -31,17 +31,22 @@ export class ExitPointSystem {
 
       group.position.set(pos.x, gy, pos.z);
 
-      // Marco de compuerta de evacuación
-      const pillarGeo = new THREE.BoxGeometry(0.75, 4.2, 0.75);
-      const beamGeo = new THREE.BoxGeometry(4.4, 0.85, 0.85);
+      // Arco de marea de la fuga, construido con troncos y cuerdas.
+      const pillarGeo = new THREE.CylinderGeometry(0.22, 0.35, 4.2, 6);
+      const beamGeo = new THREE.CylinderGeometry(0.28, 0.28, 4.7, 6);
       const frameMat = new THREE.MeshStandardMaterial({
         map: metalTex,
-        color: 0x3d281a,
-        roughness: 0.85,
-        metalness: 0.4
+        color: 0xbb8555,
+        roughness: 0.94,
+        metalness: 0.02
+      });
+      const warningMat = new THREE.MeshStandardMaterial({
+        color: 0xff7b62,
+        roughness: 0.75,
+        emissive: 0x5a1b20,
+        emissiveIntensity: 0.45
       });
 
-      // Pilar izquierdo y pilar derecho
       const pillarL = new THREE.Mesh(pillarGeo, frameMat);
       pillarL.position.set(-1.8, 2.1, 0);
       pillarL.castShadow = true;
@@ -52,40 +57,40 @@ export class ExitPointSystem {
       pillarR.castShadow = true;
       group.add(pillarR);
 
-      // Viga superior
       const beam = new THREE.Mesh(beamGeo, frameMat);
       beam.position.set(0, 4.2, 0);
+      beam.rotation.z = Math.PI / 2;
       beam.castShadow = true;
       group.add(beam);
 
-      // Barrera de advertencia láser (campo de fuerza translúcido rojo)
+      // Red de pesca de advertencia (campo de fuerza translúcido coral).
       const fieldGeo = new THREE.PlaneGeometry(3.2, 3.8);
       const fieldMat = new THREE.MeshBasicMaterial({
-        color: 0xff2222,
+        color: 0xff7b62,
         transparent: true,
-        opacity: 0.35,
+        opacity: 0.28,
         side: THREE.DoubleSide
       });
       const fieldMesh = new THREE.Mesh(fieldGeo, fieldMat);
       fieldMesh.position.set(0, 1.9, 0);
       group.add(fieldMesh);
 
-      // Luz de baliza de emergencia superior (roja)
-      const beaconLight = new THREE.PointLight(0xff2222, 2.2, 16, 1.4);
+      // Farolillo de aviso.
+      const beaconLight = new THREE.PointLight(0xff7b5c, 2.2, 16, 1.4);
       beaconLight.position.set(0, 4.8, 0);
       group.add(beaconLight);
 
       const beaconMesh = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.24, 0.24, 0.35, 8),
-        new THREE.MeshBasicMaterial({ color: 0xff3333 })
+        new THREE.CylinderGeometry(0.24, 0.28, 0.35, 8),
+        warningMat
       );
       beaconMesh.position.set(0, 4.8, 0);
       group.add(beaconMesh);
 
-      // Marca de advertencia en el suelo (anillo con franjas)
+      // Anillo de conchas de aviso en la arena.
       const rimMat = new THREE.MeshStandardMaterial({
-        color: 0x5a1818,
-        roughness: 0.9,
+        color: 0xb85a4a,
+        roughness: 0.92,
         polygonOffset: true,
         polygonOffsetFactor: -1
       });
@@ -94,12 +99,34 @@ export class ExitPointSystem {
       rim.position.y = 0.04;
       group.add(rim);
 
+      // Cajas de comida que los cangrejos intentan arrastrar por esta salida.
+      const foodCrateMat = new THREE.MeshStandardMaterial({
+        map: SpriteSheets.env.crate.tex,
+        color: 0xe0b17a,
+        roughness: 0.92
+      });
+      for (const [ox, oz] of [[-2.7, 0.6], [2.8, -0.3]]) {
+        const crate = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.8, 0.8), foodCrateMat);
+        crate.position.set(ox, 0.44, oz);
+        crate.rotation.y = ox < 0 ? 0.3 : -0.4;
+        crate.castShadow = true;
+        group.add(crate);
+        for (let f = 0; f < 3; f++) {
+          const fruit = new THREE.Mesh(
+            new THREE.IcosahedronGeometry(0.14, 0),
+            new THREE.MeshStandardMaterial({ color: f === 0 ? 0xff8a5e : (f === 1 ? 0xffd15a : 0x7ac76b), roughness: 0.7 })
+          );
+          fruit.position.set(ox - 0.2 + f * 0.2, 0.94, oz);
+          group.add(fruit);
+        }
+      }
+
       // Columna de luz vertical (Skybeam de emergencia rojo) hacia el cielo, visible desde lejos (fog: false)
       const skyBeamGeo = new THREE.CylinderGeometry(1.8, 0.6, 60, 16, 1, true);
       const beamMat = new THREE.MeshBasicMaterial({
-        color: 0xff1e1e,
+        color: 0xff7b5c,
         transparent: true,
-        opacity: 0.38,
+        opacity: 0.32,
         depthWrite: false,
         side: THREE.DoubleSide,
         fog: false
@@ -110,9 +137,9 @@ export class ExitPointSystem {
 
       const coreBeamGeo = new THREE.CylinderGeometry(0.38, 0.15, 60, 8, 1, true);
       const coreBeamMat = new THREE.MeshBasicMaterial({
-        color: 0xff6666,
+        color: 0xffc3a0,
         transparent: true,
-        opacity: 0.75,
+        opacity: 0.7,
         depthWrite: false,
         side: THREE.DoubleSide,
         fog: false
@@ -125,9 +152,9 @@ export class ExitPointSystem {
       const holoGroup = new THREE.Group();
       holoGroup.position.set(0, 7.0, 0);
 
-      const glyphGeo = new THREE.OctahedronGeometry(1.0, 0);
+      const glyphGeo = new THREE.DodecahedronGeometry(0.9, 0);
       const glyphMat = new THREE.MeshBasicMaterial({
-        color: 0xff2222,
+        color: 0xff7b5c,
         fog: false
       });
       const glyphMesh = new THREE.Mesh(glyphGeo, glyphMat);
@@ -135,7 +162,7 @@ export class ExitPointSystem {
 
       const ringGeo = new THREE.TorusGeometry(1.5, 0.07, 8, 24);
       const ringMat = new THREE.MeshBasicMaterial({
-        color: 0xff3333,
+        color: 0xffa080,
         transparent: true,
         opacity: 0.85,
         fog: false
@@ -217,7 +244,7 @@ export class ExitPointSystem {
         if (ep.flashTimer <= 0) {
           if (ep.beaconLight) {
             ep.beaconLight.intensity = 2.2;
-            ep.beaconLight.color.setHex(0xff2222);
+            ep.beaconLight.color.setHex(0xff7b5c);
           }
           if (ep.fieldMesh && ep.fieldMesh.material) {
             ep.fieldMesh.material.opacity = 0.35;

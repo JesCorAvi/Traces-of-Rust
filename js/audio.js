@@ -1,5 +1,5 @@
-// Audio procedural: buses de mezcla, reverb industrial, saturación, música
-// adaptativa y SFX multicapa sintetizados en tiempo real con WebAudio.
+// Audio procedural: buses de mezcla, reverb cálida, música tropical adaptativa
+// y SFX multicapa sintetizados en tiempo real con WebAudio.
 // Exports: AudioSys, MUSIC_STATES, setupAudioUI.
 
 export const MUSIC_STATES = Object.freeze({
@@ -19,11 +19,40 @@ const MUSIC_MIX = Object.freeze({
 });
 
 const MUSIC_BPM = Object.freeze({
-  MENU: 58,
-  PREP: 62,
-  COMBAT: 106,
-  CLIMAX: 136
+  MENU: 76,
+  PREP: 90,
+  COMBAT: 116,
+  CLIMAX: 132
 });
+
+// Progresión de atardecer en Do mayor: Cmaj7 · Am7 · Fmaj7 · G6.
+// Las capas de fondo usan Do/Sol/Mi, consonantes con los cuatro acordes.
+const TROPICAL_CHORDS = Object.freeze([
+  {
+    root: 130.81,
+    pad: [130.81, 196.00, 329.63, 246.94],
+    arp: [523.25, 659.25, 783.99, 987.77],
+    strum: [261.63, 329.63, 392.00, 523.25]
+  },
+  {
+    root: 110.00,
+    pad: [110.00, 164.81, 261.63, 392.00],
+    arp: [440.00, 523.25, 659.25, 783.99],
+    strum: [220.00, 261.63, 329.63, 440.00]
+  },
+  {
+    root: 87.31,
+    pad: [87.31, 130.81, 220.00, 329.63],
+    arp: [349.23, 440.00, 523.25, 659.25],
+    strum: [174.61, 220.00, 261.63, 349.23]
+  },
+  {
+    root: 98.00,
+    pad: [98.00, 146.83, 246.94, 329.63],
+    arp: [392.00, 493.88, 587.33, 659.25],
+    strum: [196.00, 246.94, 293.66, 392.00]
+  }
+]);
 
 // Escala menor armónica (semitonos) usada por la racha de pickups.
 const PICKUP_SCALE = [0, 2, 3, 5, 7, 8, 11, 12, 14, 15, 17, 19, 20, 23, 24];
@@ -43,7 +72,7 @@ export const AudioSys = {
   noiseBuffer: null,
   pinkBuffer: null,
 
-  // Hum legado del ambiente/menú de reconstrucción.
+  // Subgrave cálido de la marea.
   humOsc: null,
   humGain: null,
 
@@ -70,6 +99,8 @@ export const AudioSys = {
   _listener: { x: 0, y: 0, z: 0, rightX: 1, rightZ: 0 },
   _pickupStreak: 0,
   _lastPickupAt: -10,
+  _ambienceWaveTimer: null,
+  ambienceSurf: null,
 
   init() {
     if (!this.ctx) {
@@ -155,7 +186,7 @@ export const AudioSys = {
     this.noiseBuffer = this._createNoiseBuffer(false);
     this.pinkBuffer = this._createNoiseBuffer(true);
 
-    // Reverb industrial metálica generada en memoria.
+    // Reverb cálida de muelle generada en memoria.
     const impulse = this._createImpulseResponse(2.5, 2.7);
     const convolver = ctx.createConvolver();
     convolver.buffer = impulse;
@@ -312,7 +343,7 @@ export const AudioSys = {
 
   updateDroneVolume() {
     if (!this.humGain || !this.ctx) return;
-    const base = this.isEndgameActive ? 0.055 : 0.024;
+    const base = this.isEndgameActive ? 0.016 : 0.006;
     const target = this.muted ? 0 : base;
     const now = this.ctx.currentTime;
     this.humGain.gain.cancelScheduledValues(now);
@@ -324,7 +355,7 @@ export const AudioSys = {
     if (this.humOsc && this.ctx) {
       const now = this.ctx.currentTime;
       this.humOsc.frequency.cancelScheduledValues(now);
-      this.humOsc.frequency.setTargetAtTime(active ? 38 : 56, now, 0.3);
+      this.humOsc.frequency.setTargetAtTime(active ? 29 : 43, now, 0.3);
     }
     this.updateDroneVolume();
     if (active && this.musicState !== MUSIC_STATES.MENU) {
@@ -762,7 +793,7 @@ export const AudioSys = {
   },
 
   // ---------------------------------------------------------------------------
-  // Torretas, núcleo y oleadas
+  // Torretas, despensa y oleadas
   // ---------------------------------------------------------------------------
 
   playBuildTurret() {
@@ -904,6 +935,10 @@ export const AudioSys = {
   // ---------------------------------------------------------------------------
   // Ambiente, eventos y jugador
   // ---------------------------------------------------------------------------
+
+  playTropicalSiren() {
+    return this.playIndustrialSiren();
+  },
 
   playIndustrialSiren() {
     if (!this._allow('ambience:siren', 700)) return;
@@ -1054,52 +1089,141 @@ export const AudioSys = {
 
   _startLegacyHum() {
     const ctx = this.ctx;
+
+    // Colchón subgrave muy suave: calor de atardecer, sin zumbido industrial.
     this.humOsc = ctx.createOscillator();
     this.humGain = ctx.createGain();
-    const filter = ctx.createBiquadFilter();
-    this.humOsc.type = 'sawtooth';
-    this.humOsc.frequency.value = 56;
-    filter.type = 'lowpass';
-    filter.frequency.value = 155;
+    const humFilter = ctx.createBiquadFilter();
+    this.humOsc.type = 'sine';
+    this.humOsc.frequency.value = 43;
+    humFilter.type = 'lowpass';
+    humFilter.frequency.value = 105;
     this.humGain.gain.value = 0.0001;
-    this.humOsc.connect(filter);
-    filter.connect(this.humGain);
+    this.humOsc.connect(humFilter);
+    humFilter.connect(this.humGain);
     this.humGain.connect(this.ambienceGain);
     this.humOsc.start();
 
-    // Viento metálico y zumbido eléctrico de la fábrica abandonada.
-    const wind = ctx.createBufferSource();
-    wind.buffer = this.pinkBuffer;
-    wind.loop = true;
-    const windFilter = ctx.createBiquadFilter();
-    windFilter.type = 'lowpass';
-    windFilter.frequency.value = 360;
-    windFilter.Q.value = 0.6;
-    const windGain = ctx.createGain();
-    windGain.gain.value = 0.018;
-    const windLfo = ctx.createOscillator();
-    const windLfoGain = ctx.createGain();
-    windLfo.frequency.value = 0.05;
-    windLfoGain.gain.value = 140;
-    wind.connect(windFilter);
-    windFilter.connect(windGain);
-    windGain.connect(this.ambienceGain);
-    windLfo.connect(windLfoGain);
-    windLfoGain.connect(windFilter.frequency);
-    wind.start();
-    windLfo.start();
+    // Marea continua: ruido rosa filtrado, con vaivén lento de volumen y brillo.
+    const surf = ctx.createBufferSource();
+    surf.buffer = this.pinkBuffer;
+    surf.loop = true;
+    const surfFilter = ctx.createBiquadFilter();
+    surfFilter.type = 'lowpass';
+    surfFilter.frequency.value = 760;
+    surfFilter.Q.value = 0.45;
+    const surfGain = ctx.createGain();
+    surfGain.gain.value = 0.034;
+    const surfPan = typeof ctx.createStereoPanner === 'function' ? ctx.createStereoPanner() : null;
+    surf.connect(surfFilter);
+    surfFilter.connect(surfGain);
+    if (surfPan) {
+      surfPan.pan.value = 0.12;
+      surfGain.connect(surfPan);
+      surfPan.connect(this.ambienceGain);
+    } else {
+      surfGain.connect(this.ambienceGain);
+    }
 
-    const buzz = ctx.createOscillator();
-    const buzzGain = ctx.createGain();
-    buzz.type = 'triangle';
-    buzz.frequency.value = 120;
-    buzzGain.gain.value = 0.004;
-    buzz.connect(buzzGain);
-    buzzGain.connect(this.ambienceGain);
-    buzz.start();
+    const surfSwell = ctx.createOscillator();
+    const surfSwellGain = ctx.createGain();
+    surfSwell.frequency.value = 0.085;
+    surfSwellGain.gain.value = 0.012;
+    surfSwell.connect(surfSwellGain);
+    surfSwellGain.connect(surfGain.gain);
 
-    this.ambienceWind = { source: wind, lfo: windLfo, buzz };
+    const surfLfo = ctx.createOscillator();
+    const surfLfoGain = ctx.createGain();
+    surfLfo.frequency.value = 0.06;
+    surfLfoGain.gain.value = 240;
+    surfLfo.connect(surfLfoGain);
+    surfLfoGain.connect(surfFilter.frequency);
+
+    surf.start();
+    surfSwell.start();
+    surfLfo.start();
+
+    // Espuma fina que acompaña al romper de la ola.
+    const foam = ctx.createBufferSource();
+    foam.buffer = this.pinkBuffer;
+    foam.loop = true;
+    const foamFilter = ctx.createBiquadFilter();
+    foamFilter.type = 'highpass';
+    foamFilter.frequency.value = 2800;
+    foamFilter.Q.value = 0.5;
+    const foamGain = ctx.createGain();
+    foamGain.gain.value = 0.006;
+    const foamPan = typeof ctx.createStereoPanner === 'function' ? ctx.createStereoPanner() : null;
+    foam.connect(foamFilter);
+    foamFilter.connect(foamGain);
+    if (foamPan) {
+      foamPan.pan.value = -0.18;
+      foamGain.connect(foamPan);
+      foamPan.connect(this.ambienceGain);
+    } else {
+      foamGain.connect(this.ambienceGain);
+    }
+    const foamSwell = ctx.createOscillator();
+    const foamSwellGain = ctx.createGain();
+    foamSwell.frequency.value = 0.12;
+    foamSwellGain.gain.value = 0.003;
+    foamSwell.connect(foamSwellGain);
+    foamSwellGain.connect(foamGain.gain);
+    foam.start();
+    foamSwell.start();
+
+    this.ambienceSurf = {
+      source: surf,
+      filter: surfFilter,
+      gain: surfGain,
+      swell: surfSwell,
+      lfo: surfLfo,
+      foam,
+      foamFilter,
+      foamGain
+    };
+
+    // Aire cálido muy tenue sobre la marea.
+    const breeze = ctx.createBufferSource();
+    breeze.buffer = this.pinkBuffer;
+    breeze.loop = true;
+    const breezeFilter = ctx.createBiquadFilter();
+    breezeFilter.type = 'lowpass';
+    breezeFilter.frequency.value = 680;
+    breezeFilter.Q.value = 0.35;
+    const breezeGain = ctx.createGain();
+    breezeGain.gain.value = 0.014;
+    breeze.connect(breezeFilter);
+    breezeFilter.connect(breezeGain);
+    breezeGain.connect(this.ambienceGain);
+    breeze.start();
+
+    this.ambienceWind = { source: breeze, filter: breezeFilter, gain: breezeGain };
+
+    // Rompientes periódicas con paneo aleatorio para dar amplitud a la orilla.
+    if (!this._ambienceWaveTimer) {
+      this._ambienceWaveTimer = setInterval(() => this._playWaveCrash(), 8500);
+      if (this._ambienceWaveTimer && typeof this._ambienceWaveTimer.unref === 'function') {
+        this._ambienceWaveTimer.unref();
+      }
+    }
+
     this.updateDroneVolume();
+  },
+
+  _playWaveCrash() {
+    if (!this.ctx || this.ctx.state !== 'running' || this.muted || this.ambVol <= 0) return;
+    const t = this.ctx.currentTime + 0.06;
+    const pan = (Math.random() - 0.5) * 0.55;
+    const vol = 0.034 + Math.random() * 0.018;
+    this._noise(t, 1.55, vol, {
+      pink: true, filter: 'lowpass', freq: 900, endFreq: 140,
+      q: 0.4, attack: 0.24, bus: 'ambience', pan
+    });
+    this._noise(t + 0.08, 0.65, vol * 0.22, {
+      filter: 'highpass', freq: 2300, q: 0.5,
+      attack: 0.12, bus: 'ambience', pan: pan * -0.6
+    });
   },
 
   _startMusicEngine() {
@@ -1115,44 +1239,48 @@ export const AudioSys = {
     const ctx = this.ctx;
     const defs = [
       {
-        name: 'menu', base: 0.26,
+        name: 'menu', base: 0.2,
         voices: [
-          { type: 'sawtooth', freq: 55, detune: -7, amp: 0.13 },
-          { type: 'sawtooth', freq: 55, detune: 9, amp: 0.13 },
-          { type: 'sine', freq: 27.5, amp: 0.28 }
+          { type: 'sine', freq: 65.41, amp: 0.055 },
+          { type: 'sine', freq: 98.00, amp: 0.035 },
+          { type: 'triangle', freq: 130.81, amp: 0.028 },
+          { type: 'triangle', freq: 196.00, amp: 0.018 }
         ],
-        filter: { freq: 220, q: 1.4 },
-        lfo: { rate: 0.06, depth: 110 },
-        vinyl: true
+        filter: { freq: 540, q: 0.55 },
+        lfo: { rate: 0.035, depth: 100 }
       },
       {
-        name: 'prep', base: 0.15,
+        name: 'prep', base: 0.14,
         voices: [
-          { type: 'sine', freq: 60, amp: 0.18 },
-          { type: 'square', freq: 120, amp: 0.035 },
-          { type: 'sawtooth', freq: 30, amp: 0.16 }
+          { type: 'sine', freq: 65.41, amp: 0.04 },
+          { type: 'triangle', freq: 130.81, amp: 0.03 },
+          { type: 'triangle', freq: 196.00, amp: 0.02 },
+          { type: 'sine', freq: 329.63, amp: 0.012 }
         ],
-        filter: { freq: 190, q: 0.9 },
-        lfo: { rate: 0.18, depth: 45 }
+        filter: { freq: 760, q: 0.6 },
+        lfo: { rate: 0.06, depth: 90 }
       },
       {
-        name: 'combat', base: 0.2,
+        name: 'combat', base: 0.12,
         voices: [
-          { type: 'sawtooth', freq: 36.7, amp: 0.2 },
-          { type: 'sine', freq: 73.4, amp: 0.12 }
+          { type: 'sine', freq: 65.41, amp: 0.04 },
+          { type: 'triangle', freq: 130.81, amp: 0.028 },
+          { type: 'triangle', freq: 196.00, amp: 0.018 },
+          { type: 'sine', freq: 261.63, amp: 0.01 }
         ],
-        filter: { freq: 170, q: 1.1 },
-        lfo: { rate: 0.35, depth: 55 }
+        filter: { freq: 900, q: 0.7 },
+        lfo: { rate: 0.12, depth: 70 }
       },
       {
-        name: 'climax', base: 0.24,
+        name: 'climax', base: 0.15,
         voices: [
-          { type: 'sawtooth', freq: 41.2, amp: 0.2 },
-          { type: 'sawtooth', freq: 41.2, detune: 16, amp: 0.12 },
-          { type: 'sine', freq: 20.6, amp: 0.3 }
+          { type: 'sine', freq: 65.41, amp: 0.05 },
+          { type: 'triangle', freq: 130.81, amp: 0.035 },
+          { type: 'triangle', freq: 196.00, amp: 0.025 },
+          { type: 'sine', freq: 329.63, amp: 0.012 }
         ],
-        filter: { freq: 250, q: 1.6 },
-        lfo: { rate: 0.5, depth: 85 },
+        filter: { freq: 1200, q: 0.8 },
+        lfo: { rate: 0.2, depth: 80 },
         saturate: true
       }
     ];
@@ -1251,47 +1379,116 @@ export const AudioSys = {
     }
   },
 
-  _scheduleMusicStep(step, time) {
+  _scheduleMusicStep(step, time, stepDur = 0.16) {
     const state = this.musicState;
-    const intensity = this.getMusicIntensity();
     const barStep = step % 16;
+    const bar = Math.floor(step / 16) % TROPICAL_CHORDS.length;
+    const chord = TROPICAL_CHORDS[bar];
+    const intensity = this.getMusicIntensity();
+    const boost = 1 + intensity * 0.22;
 
     if (state === MUSIC_STATES.MENU) {
-      if (step % 32 === 0) this._musicSubPulse(time, 0.1);
-      if (Math.random() < 0.025) this._musicMetal(time, 0.014, (Math.random() - 0.5) * 1.1);
+      if (barStep === 0) {
+        this._musicPadChord(chord, time, stepDur * 15.4, 0.018, -0.06);
+        this._musicUkeStrum(chord, time, 0.013, -0.28);
+        this._musicBass(chord.root, time, stepDur * 7, 0.043, -0.15);
+      }
+
+      const melodySteps = [0, 3, 6, 10, 12, 14];
+      const melodyIndex = melodySteps.indexOf(barStep);
+      if (melodyIndex >= 0) {
+        const noteIndex = [0, 2, 1, 3, 2, 1][melodyIndex];
+        this._musicMarimba(
+          chord.arp[noteIndex % chord.arp.length],
+          time, 0.72, 0.018 + (melodyIndex === 3 ? 0.004 : 0), melodyIndex % 2 ? 0.3 : -0.3
+        );
+      }
+      if (barStep === 8) this._musicShaker(time, 0.007, 0.35);
+      if (barStep === 4 || barStep === 12) this._musicClave(time, 0.005, -0.2);
       return;
     }
 
     if (state === MUSIC_STATES.PREP) {
-      if (barStep === 0) this._musicSubPulse(time, 0.13);
-      if (barStep === 8) this._musicSubPulse(time, 0.07);
-      if (barStep === 4) this._musicThump(time, 0.08);
-      if (Math.random() < 0.018) this._musicMetal(time, 0.016, (Math.random() - 0.5) * 1.2);
-      return;
-    }
-
-    const boost = 1 + intensity * 0.3;
-
-    if (state === MUSIC_STATES.COMBAT) {
-      if (barStep % 4 === 0) this._musicKick(time, 0.42 * boost);
-      if (barStep === 4 || barStep === 12) this._musicMetal(time, 0.035 * boost, 0.2);
-      if (barStep % 2 === 1) this._musicHat(time, 0.012 * boost, (Math.random() - 0.5) * 0.7);
-      if (barStep % 2 === 0) {
-        const pattern = [41.2, 41.2, 43.65, 41.2, 49, 41.2, 58.27, 55];
-        this._musicBass(pattern[(barStep / 2) % pattern.length], time, 0.13, 0.09 * boost);
+      if (barStep === 0) {
+        this._musicPadChord(chord, time, stepDur * 15.4, 0.016, -0.04);
+        this._musicUkeStrum(chord, time, 0.015, -0.24);
+        this._musicBass(chord.root, time, stepDur * 7, 0.04, -0.12);
+      } else if (barStep === 8) {
+        this._musicUkeStrum(chord, time, 0.01, 0.28);
       }
-      if (barStep === 0 && step % 32 === 0) this._musicLead(82.41, time, 0.5, 0.028);
+
+      const melodySteps = [0, 2, 3, 6, 10, 11, 14];
+      const melodyIndex = melodySteps.indexOf(barStep);
+      if (melodyIndex >= 0) {
+        const noteIndex = [0, 2, 1, 3, 2, 1, 0][melodyIndex];
+        this._musicMarimba(
+          chord.arp[noteIndex % chord.arp.length],
+          time, 0.46, 0.014 + (melodyIndex === 3 ? 0.003 : 0), melodyIndex % 2 ? 0.26 : -0.26
+        );
+      }
+      if (barStep === 4 || barStep === 12) this._musicKick(time, 0.045);
+      if (barStep % 2 === 0) this._musicShaker(time, 0.005, 0.25);
+      if (barStep === 6 || barStep === 14) this._musicConga(time, 0.022, 1, -0.2);
       return;
     }
 
-    // CLIMAX
-    if (barStep % 4 === 0 || barStep === 3 || barStep === 11) this._musicKick(time, 0.46 * boost);
-    if (barStep === 4 || barStep === 12) this._musicMetal(time, 0.05 * boost, -0.2);
-    if (barStep % 2 === 1) this._musicHat(time, 0.016 * boost, (Math.random() - 0.5) * 0.9);
-    const climaxPattern = [41.2, 41.2, 43.65, 41.2, 49, 43.65, 58.27, 55];
-    this._musicBass(climaxPattern[barStep % climaxPattern.length], time, 0.1, 0.1 * boost);
-    if (barStep === 0 && step % 32 === 0) this._musicLead(82.41, time, 0.7, 0.035);
-    if (barStep === 8 && step % 64 === 8) this._musicLead(87.31, time, 0.45, 0.026);
+    const isCombat = state === MUSIC_STATES.COMBAT;
+
+    if (barStep === 0) {
+      this._musicPadChord(chord, time, stepDur * (isCombat ? 15 : 15.2), isCombat ? 0.015 : 0.019, -0.05);
+      this._musicUkeStrum(chord, time, isCombat ? 0.016 : 0.022, 0.28);
+      this._musicBass(chord.root, time, stepDur * 5.5, (isCombat ? 0.05 : 0.055) * boost, -0.15);
+    } else if (barStep === 8) {
+      this._musicPadChord(chord, time, stepDur * 7, isCombat ? 0.01 : 0.012, 0.12);
+      this._musicBass(chord.root * 1.5, time, stepDur * 2.5, (isCombat ? 0.028 : 0.032) * boost, 0.15);
+    }
+
+    // Steel drum principal: melodía de arpegio del acorde.
+    if (barStep % 2 === 0) {
+      const noteIndex = (barStep / 2) % chord.arp.length;
+      this._musicSteelDrum(
+        chord.arp[noteIndex],
+        time,
+        isCombat ? 0.42 : 0.35,
+        (isCombat ? 0.022 : 0.027) * boost,
+        noteIndex % 2 ? 0.28 : -0.28
+      );
+    } else if (!isCombat) {
+      // En el clímax, respuesta de marimba en los contratiempos.
+      const noteIndex = Math.floor(barStep / 2) % chord.arp.length;
+      this._musicMarimba(
+        chord.arp[noteIndex] * 0.5,
+        time,
+        0.3,
+        0.016 * boost,
+        barStep % 4 === 1 ? -0.32 : 0.32
+      );
+    }
+
+    // Ritmo de tambores de mano.
+    if (barStep === 0 || barStep === 4 || barStep === 8 || barStep === 12) {
+      this._musicKick(time, (isCombat ? 0.06 : 0.075) * boost);
+    }
+    if (barStep === 3 || barStep === 7 || barStep === 11 || barStep === 15) {
+      this._musicConga(time, (isCombat ? 0.026 : 0.035) * boost, barStep === 7 ? 1.18 : 1, barStep === 11 ? -0.25 : 0.25);
+    }
+    if (barStep === 6 || barStep === 14) {
+      this._musicClave(time, (isCombat ? 0.01 : 0.014) * boost, 0.2);
+    }
+    if (isCombat) {
+      if (barStep % 2 === 1) this._musicShaker(time, 0.005, 0.3);
+    } else {
+      this._musicShaker(time, 0.007, barStep % 2 ? -0.35 : 0.35);
+      if (barStep === 1 || barStep === 5 || barStep === 9 || barStep === 13) {
+        this._musicMarimba(
+          chord.arp[Math.floor(barStep / 4) % chord.arp.length] * 2,
+          time,
+          0.28,
+          0.013 * boost,
+          -0.3
+        );
+      }
+    }
   },
 
   getMusicIntensity() {
@@ -1299,66 +1496,134 @@ export const AudioSys = {
     return Math.max(this.isEndgameActive ? 1 : 0, this._bossMusicActive ? 0.8 : 0);
   },
 
-  _musicKick(time, vol = 0.4) {
-    this._osc('sine', 118, time, 0.3, vol, { endFreq: 40, attack: 0.002, bus: 'music' });
-    this._osc('sine', 58, time, 0.22, vol * 0.35, { endFreq: 32, attack: 0.002, bus: 'music' });
-    this._noise(time, 0.03, 0.024, { filter: 'lowpass', freq: 900, bus: 'music' });
+  _musicPadChord(chord, time, dur, vol, pan = 0) {
+    if (!chord) return;
+    for (let i = 0; i < chord.pad.length; i++) {
+      this._osc('sine', chord.pad[i], time, dur, vol * (i === 0 ? 1.15 : 0.82), {
+        attack: 0.34,
+        bus: 'music',
+        pan: pan + (i % 2 === 0 ? -0.05 : 0.05)
+      });
+    }
   },
 
-  _musicBass(freq, time, dur, vol) {
-    const now = Math.max(time, this.ctx.currentTime);
-    const osc = this.ctx.createOscillator();
-    const filter = this.ctx.createBiquadFilter();
-    const gain = this.ctx.createGain();
-    osc.type = 'sawtooth';
-    osc.frequency.setValueAtTime(freq, now);
-    filter.type = 'lowpass';
-    filter.Q.value = 5;
-    filter.frequency.setValueAtTime(560, now);
-    filter.frequency.exponentialRampToValueAtTime(220, now + dur);
-    gain.gain.setValueAtTime(0.0001, now);
-    gain.gain.exponentialRampToValueAtTime(Math.max(0.0002, vol), now + 0.006);
-    gain.gain.exponentialRampToValueAtTime(0.0001, now + dur);
-    osc.connect(filter);
-    filter.connect(gain);
-    gain.connect(this.musicGain);
-    osc.start(now);
-    osc.stop(now + dur + 0.02);
-    this._registerSource(osc, [filter, gain]);
+  _musicUkeStrum(chord, time, vol, pan = 0) {
+    if (!chord) return;
+    const direction = Math.random() < 0.5 ? 1 : -1;
+    for (let i = 0; i < chord.strum.length; i++) {
+      const note = chord.strum[direction > 0 ? i : chord.strum.length - 1 - i];
+      this._musicPluck(note, time + i * 0.026, 0.32, vol, pan + (i - 1.5) * 0.08);
+    }
   },
 
-  _musicLead(freq, time, dur, vol) {
-    this._osc('sawtooth', freq, time, dur, vol, {
-      endFreq: freq * 0.995, attack: 0.03, bus: 'music', detune: 0
+  _musicPluck(freq, time, dur, vol, pan = 0) {
+    this._osc('triangle', freq, time, dur, vol, {
+      endFreq: freq * 0.992,
+      attack: 0.003,
+      bus: 'music',
+      pan
     });
-    this._osc('square', freq * 2.005, time, dur * 0.8, vol * 0.25, {
-      endFreq: freq * 1.99, attack: 0.03, bus: 'music'
+    this._noise(time, 0.022, vol * 0.16, {
+      filter: 'bandpass', freq: 1800, q: 2, bus: 'music', pan
     });
   },
 
-  _musicMetal(time, vol, pan = 0) {
-    this._noise(time, 0.08, vol, {
-      filter: 'highpass', freq: 3400, q: 5, bus: 'music', pan
+  _musicMarimba(freq, time, dur, vol, pan = 0) {
+    this._osc('sine', freq, time, dur, vol, {
+      endFreq: freq * 0.995,
+      attack: 0.003,
+      bus: 'music',
+      pan
     });
-    this._osc('triangle', 1180 + Math.random() * 420, time, 0.12, vol * 0.45, {
-      endFreq: 900, bus: 'music', pan
+    this._osc('sine', freq * 2.01, time, dur * 0.52, vol * 0.34, {
+      endFreq: freq * 1.99,
+      attack: 0.002,
+      bus: 'music',
+      pan
+    });
+    this._osc('triangle', freq * 3.02, time, dur * 0.24, vol * 0.1, {
+      endFreq: freq * 3.0,
+      attack: 0.002,
+      bus: 'music',
+      pan
+    });
+    this._noise(time, 0.022, vol * 0.12, {
+      filter: 'bandpass', freq: 2100, q: 4, bus: 'music', pan
     });
   },
 
-  _musicHat(time, vol, pan = 0) {
-    this._noise(time, 0.035, vol, {
-      filter: 'highpass', freq: 6000, q: 1.2, bus: 'music', pan
+  _musicSteelDrum(freq, time, dur, vol, pan = 0) {
+    this._osc('sine', freq, time, dur, vol, {
+      endFreq: freq * 0.994,
+      attack: 0.006,
+      bus: 'music',
+      pan
+    });
+    this._osc('triangle', freq * 2.01, time, dur * 0.56, vol * 0.3, {
+      endFreq: freq * 2.0,
+      attack: 0.004,
+      bus: 'music',
+      pan
+    });
+    this._osc('sine', freq * 3.03, time, dur * 0.28, vol * 0.12, {
+      endFreq: freq * 3.0,
+      attack: 0.003,
+      bus: 'music',
+      pan
+    });
+    this._noise(time, 0.035, vol * 0.2, {
+      filter: 'bandpass', freq: 2600, q: 5, bus: 'music', pan
     });
   },
 
-  _musicThump(time, vol) {
-    this._osc('sine', 70, time, 0.16, vol, { endFreq: 42, attack: 0.004, bus: 'music' });
+  _musicShaker(time, vol, pan = 0) {
+    this._noise(time, 0.048, vol, {
+      filter: 'highpass', freq: 4500, q: 0.8, bus: 'music', pan, attack: 0.004
+    });
   },
 
-  _musicSubPulse(time, vol) {
-    this._osc('sine', 55, time, 0.7, vol, { endFreq: 27, attack: 0.03, bus: 'music' });
-    this._osc('triangle', 110, time, 0.5, vol * 0.25, { endFreq: 55, attack: 0.02, bus: 'music' });
-  }
+  _musicClave(time, vol, pan = 0) {
+    this._osc('triangle', 820, time, 0.065, vol, {
+      endFreq: 760, attack: 0.001, bus: 'music', pan
+    });
+    this._noise(time, 0.025, vol * 0.55, {
+      filter: 'bandpass', freq: 1700, q: 3, bus: 'music', pan
+    });
+  },
+
+  _musicConga(time, vol, pitch = 1, pan = 0) {
+    this._osc('sine', 185 * pitch, time, 0.15, vol, {
+      endFreq: 92 * pitch, attack: 0.002, bus: 'music', pan
+    });
+    this._noise(time, 0.04, vol * 0.22, {
+      filter: 'bandpass', freq: 600, q: 1.2, bus: 'music', pan
+    });
+  },
+
+  _musicKick(time, vol = 0.05) {
+    this._osc('sine', 96, time, 0.27, vol, {
+      endFreq: 44, attack: 0.003, bus: 'music'
+    });
+    this._noise(time, 0.045, vol * 0.18, {
+      filter: 'lowpass', freq: 260, q: 0.6, bus: 'music'
+    });
+  },
+
+  _musicBass(freq, time, dur, vol, pan = 0) {
+    this._osc('triangle', freq, time, dur, vol, {
+      endFreq: freq * 0.988,
+      attack: 0.01,
+      bus: 'music',
+      pan
+    });
+    this._osc('sine', freq * 0.5, time, dur * 0.88, vol * 0.35, {
+      endFreq: freq * 0.494,
+      attack: 0.012,
+      bus: 'music',
+      pan
+    });
+  },
+
 };
 
 // Desbloqueo perezoso: el AudioContext solo se crea tras un gesto del usuario.

@@ -1,5 +1,5 @@
 # Glosario de Términos / Terminology Glossary
-**Traces of Rust — Tower Defense + Survivors Roguelite**
+**Crabs wants your food! — Tower Defense + Survivors Roguelite**
 
 Este glosario define los términos técnicos, de juego y de género para mantener consistencia absoluta entre los 9 idiomas soportados:
 - **es**: Español (Idioma original)

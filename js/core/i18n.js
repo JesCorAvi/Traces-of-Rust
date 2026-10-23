@@ -1,4 +1,4 @@
-// Gestor de Internacionalización y Localización para Traces of Rust.
+// Gestor de Internacionalización y Localización para Crabs wants your food!.
 // Soporta 9 idiomas, carga bajo demanda, fallback en caliente a español,
 // interpolación de variables {param}, plurales CLDR con Intl.PluralRules y refresco del DOM.
 

@@ -26,9 +26,9 @@ export function drawBars(ctx, UI) {
     ctx.restore();
   };
 
-  drawBarFill(UI.BAR_FILLS.hp,   '#ff9e9e', '#d62828', '#6e1414', 12);
-  drawBarFill(UI.BAR_FILLS.exp,  '#fff6e0', '#e0b646', '#5c3818', 16);
-  drawBarFill(UI.BAR_FILLS.stam, '#b8d8a0', '#5c8a4e', '#243022', 8);
-  drawBarFill(UI.BAR_FILLS.boss, '#ffb3b3', '#b82525', '#4a2518', 10);
-  drawBarFill(UI.BAR_FILLS.core, '#ffe699', '#d97724', '#4a2518', 8);
+  drawBarFill(UI.BAR_FILLS.hp,   '#ffc0a1', '#e9564c', '#7b2b2e', 12);
+  drawBarFill(UI.BAR_FILLS.exp,  '#e9fff9', '#59d6c8', '#1e5e63', 16);
+  drawBarFill(UI.BAR_FILLS.stam, '#d4f7c8', '#74d7a4', '#205a48', 8);
+  drawBarFill(UI.BAR_FILLS.boss, '#ffd0b4', '#e9564c', '#6e2227', 10);
+  drawBarFill(UI.BAR_FILLS.core, '#fff3b8', '#ffc857', '#8a4426', 8);
 }

@@ -8,7 +8,7 @@ const esKeys = Object.keys(esDict);
 
 const TARGET_LANGS = ['en', 'pt-BR', 'fr', 'ja', 'zh-Hans', 'zh-Hant', 'ko', 'ru'];
 
-console.log(`Verificador de Localización — Traces of Rust`);
+console.log(`Verificador de Localización — Crabs wants your food!`);
 console.log(`Claves maestras en español (es.js): ${esKeys.length}\n`);
 
 let allOk = true;

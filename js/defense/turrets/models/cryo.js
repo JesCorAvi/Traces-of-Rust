@@ -1,89 +1,99 @@
-// Modelo 3D de la torreta cryo: proyector criogénico con calcomanías, núcleo y tubos de escarcha.
+// Modelo 3D del Cubo Helado: almeja criogénica, cocos refrigerantes y cristal de escarcha.
 // Exports: buildCryoModel.
 
 import * as THREE from 'three';
+import {
+  addCoconut,
+  addPalmLeaf,
+  addBambooPole,
+  addRopeBand,
+  addEnergyRing,
+  addShellDish,
+  addGlowPearl
+} from './parts.js';
 
 export function buildCryoModel(turret) {
-  // Chasis criogénico aislado
-  turret.addPart(new THREE.CylinderGeometry(0.44, 0.48, 0.52, 8), turret.bodyMat, 0, 0.58, 0);
+  // Corona de bambú que sostiene la almeja.
+  turret.addPart(new THREE.CylinderGeometry(0.34, 0.44, 0.36, 8), turret.bambooMat, 0, 0.6, 0);
+  for (let i = 0; i < 4; i++) {
+    const a = (i / 4) * Math.PI * 2 + Math.PI / 4;
+    addBambooPole(
+      turret,
+      Math.cos(a) * 0.25, 0.52, Math.sin(a) * 0.25,
+      Math.cos(a) * 0.48, 0.92, Math.sin(a) * 0.48,
+      0.045,
+      { material: turret.bambooDarkMat }
+    );
+  }
 
-  // Placas de protección térmica con textura técnica
-  turret.addPart(new THREE.BoxGeometry(0.06, 0.38, 0.48), turret.panelMat, -0.44, 0.62, 0);
-  turret.addPart(new THREE.BoxGeometry(0.06, 0.38, 0.48), turret.panelMat, 0.44, 0.62, 0);
+  // Dos cocos de refrigerante en la parte trasera.
+  addCoconut(turret, -0.24, 0.9, 0.26, 0.14);
+  addCoconut(turret, 0.24, 0.9, 0.26, 0.14);
+  addRopeBand(turret, 0, 0.99, 0.26, 0.2, { rx: Math.PI / 2 });
 
-  // Calcomanía de peligro criogénico
-  const decalMesh = new THREE.Mesh(new THREE.PlaneGeometry(0.36, 0.18), turret.decalMat);
-  decalMesh.position.set(-0.48, 0.62, 0.02);
-  decalMesh.rotation.y = -Math.PI / 2;
-  turret.modelRoot.add(decalMesh);
+  // Almeja emisora: dos valvas abiertas y un horno de escarcha.
+  addShellDish(turret, 0, 0.9, -0.22, {
+    sx: 0.48, sy: 0.26, sz: 0.46, rx: 0.2
+  });
+  addShellDish(turret, 0, 1.18, -0.22, {
+    sx: 0.42, sy: 0.22, sz: 0.4, rx: Math.PI - 0.3
+  });
+  addEnergyRing(turret, 0, 1.04, -0.52, 0.25, { rx: Math.PI / 2 });
+  addEnergyRing(turret, 0, 1.04, -0.52, 0.18, { rz: Math.PI / 2 });
 
-  // Termómetro de temperatura bajo cero en la parte posterior
-  const gaugeMesh = new THREE.Mesh(new THREE.PlaneGeometry(0.22, 0.22), turret.gaugeMat);
-  gaugeMesh.position.set(0, 0.68, 0.45);
-  gaugeMesh.rotation.y = Math.PI;
-  turret.modelRoot.add(gaugeMesh);
-
-  // Doble tanque de refrigerante en la parte trasera
-  turret.addPart(new THREE.CylinderGeometry(0.13, 0.13, 0.58, 8), turret.rustMat, -0.22, 0.88, 0.26);
-  turret.addPart(new THREE.CylinderGeometry(0.13, 0.13, 0.58, 8), turret.rustMat, 0.22, 0.88, 0.26);
-
-  // Cámara de compresión intermedia
-  turret.addPart(new THREE.CylinderGeometry(0.32, 0.36, 0.44, 8), turret.darkMat, 0, 0.96, -0.05);
-
-  // Bocina / proyector criogénico acampanado apuntando hacia el frente
   const horn = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.28, 0.15, 0.52, 10),
-    turret.accentMat
+    new THREE.CylinderGeometry(0.27, 0.1, 0.42, 10, 1, true),
+    turret.coconutFleshMat
   );
   horn.rotation.x = Math.PI / 2;
-  horn.position.set(0, 1.05, -0.42);
+  horn.position.set(0, 1.04, -0.48);
+  horn.castShadow = true;
   turret.modelRoot.add(horn);
+  addGlowPearl(turret, 0, 1.04, -0.55, 0.17, { material: turret.crystalMat });
 
-  // Núcleo criogénico luminoso interior
-  const coreMesh = new THREE.Mesh(new THREE.OctahedronGeometry(0.14, 0), turret.glowMat);
-  coreMesh.position.set(0, 1.05, -0.38);
-  turret.modelRoot.add(coreMesh);
+  // Aletas/hojas de la almeja y carámbanos de coral.
+  for (const side of [-1, 1]) {
+    addPalmLeaf(turret, side * 0.44, 1.02, -0.08, {
+      sx: 0.12, sy: 0.55, sz: 0.12, rx: 0.7, rz: side * 0.75, light: true
+    });
+    addShellDish(turret, side * 0.34, 1.08, 0.05, {
+      sx: 0.18, sy: 0.12, sz: 0.28, ry: side * 0.4
+    });
+  }
 
-  // Anillo de peligro en el borde del proyector
-  const hornRing = new THREE.Mesh(
-    new THREE.TorusGeometry(0.28, 0.03, 6, 16),
-    turret.hazardMat
-  );
-  hornRing.position.set(0, 1.05, -0.68);
-  turret.modelRoot.add(hornRing);
-
-  // Piezas de mejora (ocultas)
+  // Mejoras: bobinas de escarcha, radiador de palma, cristal, púas,
+  // cristal de fractura y anillo de ventisca.
   turret.addHiddenPart(
     'frost_coils',
-    new THREE.TorusGeometry(0.36, 0.045, 6, 16),
-    turret.glowMat, 0, 1.05, -0.15, 0, 0, 0
+    new THREE.TorusGeometry(0.32, 0.04, 6, 16),
+    turret.glowMat, 0, 1.04, -0.28, 0, 0, 0
   );
   turret.addHiddenPart(
     'radiator_fins',
-    new THREE.BoxGeometry(0.78, 0.46, 0.08),
-    turret.rustMat, 0, 1.02, 0.36
+    new THREE.BoxGeometry(0.7, 0.42, 0.08),
+    turret.bambooDarkMat, 0, 1.02, 0.38
   );
   turret.addHiddenPart(
     'crystal_core',
-    new THREE.IcosahedronGeometry(0.24, 0),
-    turret.glowMat, 0, 1.05, -0.45
+    new THREE.IcosahedronGeometry(0.25, 0),
+    turret.crystalMat, 0, 1.08, -0.48
   );
   turret.addHiddenPart(
     'ice_spikes',
-    new THREE.ConeGeometry(0.12, 0.55, 6),
-    turret.glowMat, 0.36, 1.15, -0.22, 0, 0, -0.4
+    new THREE.ConeGeometry(0.1, 0.5, 6),
+    turret.crystalMat, 0.34, 1.16, -0.28, 0, 0, -0.4
   );
   turret.addHiddenPart(
     'shatter_crystal',
-    new THREE.OctahedronGeometry(0.32, 0),
-    turret.glowMat, 0, 1.45, 0
+    new THREE.OctahedronGeometry(0.28, 0),
+    turret.crystalMat, 0, 1.4, 0.02
   );
   turret.addHiddenPart(
     'blizzard_core',
-    new THREE.TorusGeometry(0.55, 0.065, 6, 20),
-    turret.glowMat, 0, 1.05, -0.42, 0, 0, 0
+    new THREE.TorusGeometry(0.52, 0.055, 6, 20),
+    turret.glowMat, 0, 1.04, -0.42, 0, 0, 0
   );
 
-  turret.muzzleHeight = 1.05;
-  turret.muzzleForward = 0.75;
+  turret.muzzleHeight = 1.04;
+  turret.muzzleForward = 0.78;
 }

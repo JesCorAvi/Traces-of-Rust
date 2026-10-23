@@ -1,4 +1,4 @@
-// Tienda permanente (Mesa del Cirujano): compra de mejoras con dientes.
+// Tienda permanente (Mesa del Cirujano): compra de mejoras con conchas.
 // Exports: renderShopUI.
 
 import { CONFIG } from '../config.js';

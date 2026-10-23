@@ -2,25 +2,25 @@
 // Exports: P, px, drawTurretMount.
 
 export const P = {
-  black: '#050605',
-  ink: '#0a0d0a',
-  dark: '#121812',
-  greenDark: '#182018',
-  green: '#243022',
-  greenMid: '#364832',
-  rustDark: '#4a2518',
-  rust: '#743718',
-  blood: '#a52020',
-  steelDark: '#63533b',
-  steel: '#877a5c',
-  steelLight: '#c8c2ac',
-  brass: '#b89c46',
-  bone: '#e6d7a5',
-  iceDark: '#2c4148',
-  ice: '#4a6b73',
-  iceMid: '#6f8f9c',
-  iceLight: '#9fc3c9',
-  moss: '#68863a'
+  black: '#07181c',
+  ink: '#0b2226',
+  dark: '#123235',
+  greenDark: '#163f40',
+  green: '#1f5a55',
+  greenMid: '#32776d',
+  rustDark: '#6b3823',
+  rust: '#a85832',
+  blood: '#d84a44',
+  steelDark: '#8a6845',
+  steel: '#b8976c',
+  steelLight: '#f1e0b2',
+  brass: '#ffc857',
+  bone: '#fff0c7',
+  iceDark: '#275b62',
+  ice: '#3f7d83',
+  iceMid: '#7cbfc2',
+  iceLight: '#c7ece6',
+  moss: '#5fa45a'
 };
 
 export function px(ctx, x, y, w, h, color) {

@@ -58,15 +58,15 @@ export class DefenseEventManager {
 
     let subTaskText = '';
     if (ev.playerInRadius) {
-      subTaskText = `SUPERVIVENCIA: ${timeStr} · ${aliveCount} HOSTILES`;
+      subTaskText = `SUPERVIVENCIA: ${timeStr} · ${aliveCount} CANGREJOS`;
     } else {
       const distOutside = Math.max(1, Math.round(ev.distToPlayer - ev.radius));
       subTaskText = `¡VUELVE AL PERÍMETRO! // A ${distOutside}m`;
     }
 
-    let badgeText = 'ASALTO DE CONTENCIÓN';
+    let badgeText = 'ASALTO DE CANGREJOS';
     if (ev.intensityPhase === 3) {
-      badgeText = '¡CLÍMAX DE SUPERVIVENCIA!';
+      badgeText = '¡LA MAREA ARRECIA!';
     } else if (ev.intensityPhase === 2) {
       badgeText = 'ENJAMBRE EN AUMENTO';
     }
@@ -98,15 +98,15 @@ export class DefenseEventManager {
     if (options.position && Number.isFinite(options.position.x)) {
       targetPos = new THREE.Vector3(options.position.x, options.position.y, options.position.z);
       loc = {
-        name: options.targetName || 'ZONA DE CONTENCIÓN',
+        name: options.targetName || 'POZA DE MAREA',
         article: options.article || 'la'
       };
     } else {
       const locations = [
-        { x: 22, z: -16, name: 'SUBESTACIÓN ESTE', article: 'la' },
-        { x: -22, z: 14, name: 'GENERADOR OESTE', article: 'el' },
-        { x: 0, z: -26, name: 'CONSOLA NORTE', article: 'la' },
-        { x: 18, z: 22, name: 'RELÉ SUR', article: 'el' }
+        { x: 22, z: -16, name: 'DUNAS DEL ESTE', article: 'la' },
+        { x: -22, z: 14, name: 'FARO DEL OESTE', article: 'el' },
+        { x: 0, z: -26, name: 'MIRADOR NORTE', article: 'la' },
+        { x: 18, z: 22, name: 'ARRECIFE SUR', article: 'el' }
       ];
       loc = locations[Math.floor(Math.random() * locations.length)];
       const gy = this.worldPhysics ? this.worldPhysics.getGroundHeight(loc.x, loc.z, 0, true) : 0;
@@ -140,12 +140,12 @@ export class DefenseEventManager {
 
     if (this.activeEvent.intensityPhase === 3) {
       this.activateRedAtmosphere(this.lastCtx);
-        AudioSys.playIndustrialSiren?.();
+        AudioSys.playTropicalSiren?.();
         const networkHud = this.lastCtx?.hudController || this.mode?.net?.ctx?.hudController;
         networkHud?.showKineticAlertBanner?.({
-          tag: '¡ALERTA MÁXIMA // CLÍMAX DE CONTENCIÓN!',
+          tag: '¡ALERTA MÁXIMA // MAREA MÁXIMA!',
           title: 'FASE 3: PURGA DE WEEPERS (ÚLTIMOS 40s)',
-          sub: 'HOSTILES EN MÁXIMA AGRESIVIDAD // SOBREVIVE',
+          sub: 'CANGREJOS EN MÁXIMA AGRESICOMIDAD // SOBREVIVE',
           theme: 'critical',
           durationMs: 3800
         });
@@ -163,11 +163,11 @@ export class DefenseEventManager {
 
     // Alarma inicial de evento de emergencia
     AudioSys.setMusicState?.('CLIMAX');
-    AudioSys.playIndustrialSiren?.();
-    const eventLocationName = (options.targetName || loc.name || 'ZONA DE CONTENCIÓN').toUpperCase();
+    AudioSys.playTropicalSiren?.();
+    const eventLocationName = (options.targetName || loc.name || 'POZA DE MAREA').toUpperCase();
     const hudCtrl = this.lastCtx?.hudController || this.mode?.net?.ctx?.hudController;
     hudCtrl?.showKineticAlertBanner?.({
-      tag: 'ALERTA DE SECTOR // PROTOCOLO DE CONTENCIÓN',
+      tag: 'ALERTA DE MAREA // CANGREJOS EN LA ORILLA',
       title: `¡EVENTO ESPECIAL INICIADO! (${Math.round(duration)}s)`,
       sub: `SOBREVIVE AL ASALTO EN ${eventLocationName}`,
       theme: 'hazard',
@@ -395,11 +395,11 @@ export class DefenseEventManager {
       if (!ev.warnedPhase3) {
         ev.warnedPhase3 = true;
         this.activateRedAtmosphere(ctx);
-        AudioSys.playIndustrialSiren?.();
+        AudioSys.playTropicalSiren?.();
         ctx?.hudController?.showKineticAlertBanner?.({
-          tag: '¡ALERTA MÁXIMA // CLÍMAX DE CONTENCIÓN!',
+          tag: '¡ALERTA MÁXIMA // MAREA MÁXIMA!',
           title: 'FASE 3: PURGA DE WEEPERS (ÚLTIMOS 40s)',
-          sub: 'HOSTILES EN MÁXIMA AGRESIVIDAD // SOBREVIVE',
+          sub: 'CANGREJOS EN MÁXIMA AGRESICOMIDAD // SOBREVIVE',
           theme: 'critical',
           durationMs: 3800
         });
@@ -436,7 +436,7 @@ export class DefenseEventManager {
       dmgMult = waveDmgMult * 1.2;
     }
 
-    // Limpiar enemigos muertos del array
+    // Limpiar cangrejos muertos del array
     this.eventEnemies = this.eventEnemies.filter(e => e.active && e.state !== 'dead');
 
     // Generación de oleadas envolventes alrededor del perímetro
@@ -453,7 +453,7 @@ export class DefenseEventManager {
   }
 
   /**
-   * Spawnea enemigos de asalto distribuidos por todo el mapa (compuertas y sectores amplios)
+   * Spawnea cangrejos de asalto distribuidos por todo el mapa (compuertas y sectores amplios)
    * dirigiéndose hacia la posición del jugador, otorgando espacio táctico para maniobrar y esquivar.
    */
   spawnPerimeterAssaultWave(ctx, ev, hpMult, spdMult, dmgMult, maxAlive = 10) {
@@ -491,7 +491,7 @@ export class DefenseEventManager {
 
       const sy = this.worldPhysics ? this.worldPhysics.getGroundHeight(sx, sz, 0, true) : 0;
 
-      // Composición de enemigos según la fase
+      // Composición de cangrejos según la fase
       const weights = ev.intensityPhase === 1
         ? { zombie: 0.55, worm: 0.25, runner: 0.20 }
         : ev.intensityPhase === 2
@@ -526,7 +526,7 @@ export class DefenseEventManager {
       if (enemy) {
         enemy.group.position.set(sx, sy, sz);
         enemy.isEventEnemy = true;
-        enemy.defenseAI = null; // No siguen vías de escape
+        enemy.defenseAI = null; // No siguen sendas de escape
         this.eventEnemies.push(enemy);
       }
     }
@@ -627,7 +627,7 @@ export class DefenseEventManager {
     AudioSys.play(380, 0.25, 'triangle', 0.09);
     AudioSys.play(520, 0.35, 'sine', 0.1);
 
-    // Eliminar o pacificar enemigos del evento restantes
+    // Eliminar o pacificar cangrejos del evento restantes
     this.eventEnemies.forEach(e => {
       if (e.active && e.state !== 'dead') {
         e.hp = 0;
@@ -638,8 +638,8 @@ export class DefenseEventManager {
     this.eventEnemies.length = 0;
 
     const eventTitle = ev.type === 'repair'
-      ? 'SUBESTACIÓN DEFENDIDA'
-      : 'SECTOR PURGADO';
+      ? 'DUNAS DEFENDIDAS'
+      : 'MAREA CONTENIDA';
 
     GameEvents.emit('defense:event_completed', {
       type: ev.type,
@@ -649,8 +649,8 @@ export class DefenseEventManager {
 
     const completionHud = this.lastCtx?.hudController || this.mode?.net?.ctx?.hudController;
     completionHud?.showKineticAlertBanner?.({
-      tag: 'SECTOR ASEGURADO // RECOMPENSA OBTENIDA',
-      title: `¡EVENTO DE CONTENCIÓN SUPERADO! +${scrapReward} CHATARRA`,
+      tag: 'PLAYA ASEGURADA // RECOMPENSA OBTENIDA',
+      title: `¡ASALTO DE CANGREJOS SUPERADO! +${scrapReward} MADERA`,
       sub: 'ZONA PACIFICADA // SISTEMAS DEFENSIVOS REFORZADOS',
       theme: 'success',
       durationMs: 3800

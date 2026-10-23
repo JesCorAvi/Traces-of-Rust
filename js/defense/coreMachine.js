@@ -42,151 +42,265 @@ export class CoreMachine extends DefensiveStructure {
   }
 
   buildIndustrialMesh() {
-    const metalTex = SpriteSheets.env.metal.tex;
-    const crateTex = SpriteSheets.env.crate.tex;
+    const woodTex = SpriteSheets.env.crate.tex;
+    const plankTex = SpriteSheets.env.metal.tex;
+    const thatchTex = SpriteSheets.env.thatch.tex;
+    const fabricTex = SpriteSheets.env.fabric.tex;
 
     this.VisualRoot = new THREE.Group();
     this.group.add(this.VisualRoot);
 
     this.armorMat = new THREE.MeshStandardMaterial({
-      map: metalTex,
-      roughness: 0.8,
-      metalness: 0.5,
-      color: 0x6e6552
+      map: plankTex,
+      roughness: 0.9,
+      metalness: 0.03,
+      color: 0xd4a878
     });
 
     this.rustMat = new THREE.MeshStandardMaterial({
-      map: crateTex,
+      map: woodTex,
+      roughness: 0.94,
+      metalness: 0.02,
+      color: 0xa9663d
+    });
+
+    this.coolerMat = new THREE.MeshStandardMaterial({
+      map: woodTex,
       roughness: 0.88,
-      metalness: 0.3,
-      color: 0x5c2e1e
+      metalness: 0.02,
+      color: 0xf0d6ad
+    });
+
+    this.thatchMat = new THREE.MeshStandardMaterial({
+      map: thatchTex,
+      roughness: 0.98,
+      side: THREE.DoubleSide,
+      color: 0xf2d491
+    });
+
+    this.fabricMat = new THREE.MeshStandardMaterial({
+      map: fabricTex,
+      roughness: 0.9,
+      side: THREE.DoubleSide
     });
 
     this.glassCageMat = new THREE.MeshStandardMaterial({
-      color: 0x162216,
-      roughness: 0.3,
-      metalness: 0.2,
+      color: 0xa9f0df,
+      roughness: 0.18,
+      metalness: 0.05,
       transparent: true,
-      opacity: 0.52
+      opacity: 0.3,
+      depthWrite: false,
+      side: THREE.DoubleSide
     });
 
     this.heartMat = new THREE.MeshStandardMaterial({
-      color: 0xd4af37,
-      emissive: 0xd4af37,
-      emissiveIntensity: 1.6,
-      roughness: 0.35,
+      color: 0xffd15a,
+      emissive: 0xffc14d,
+      emissiveIntensity: 1.3,
+      roughness: 0.42,
+      flatShading: true
+    });
+
+    this.leafMat = new THREE.MeshStandardMaterial({
+      color: 0x4f9f5d,
+      roughness: 0.75,
       flatShading: true
     });
 
     this.crackMat = new THREE.MeshBasicMaterial({
-      color: 0xff3311,
+      color: 0xff6a52,
       transparent: true,
       opacity: 0.0,
       side: THREE.DoubleSide
     });
 
-    // 1. Pedestal octogonal pesado de fundición
+    // 1. Tarima circular de madera sobre la arena.
     const basePlinth = new THREE.Mesh(
-      new THREE.CylinderGeometry(2.25, 2.5, 1.15, 8),
+      new THREE.CylinderGeometry(2.35, 2.65, 0.42, 10),
       this.armorMat
     );
-    basePlinth.position.y = 0.575;
+    basePlinth.position.y = 0.21;
     basePlinth.castShadow = true;
     basePlinth.receiveShadow = true;
     this.VisualRoot.add(basePlinth);
 
-    // 2. Cámara de contención transparente y corazón biomecánico latente
-    const glassCylinder = new THREE.Mesh(
-      new THREE.CylinderGeometry(1.32, 1.32, 2.7, 8),
-      this.glassCageMat
-    );
-    glassCylinder.position.y = 2.5;
-    this.VisualRoot.add(glassCylinder);
-
-    this.heartMesh = new THREE.Mesh(
-      new THREE.IcosahedronGeometry(0.88, 1),
-      this.heartMat
-    );
-    this.heartMesh.position.y = 2.55;
-    this.VisualRoot.add(this.heartMesh);
-
-    // 3. Dos anillos giroscópicos oxidados que rodean el corazón
-    this.innerRing = new THREE.Mesh(
-      new THREE.TorusGeometry(1.12, 0.09, 6, 12),
+    const deckRim = new THREE.Mesh(
+      new THREE.TorusGeometry(2.4, 0.12, 6, 22),
       this.rustMat
     );
-    this.innerRing.position.y = 2.55;
+    deckRim.rotation.x = Math.PI / 2;
+    deckRim.position.y = 0.42;
+    this.VisualRoot.add(deckRim);
+
+    // 2. Nevera-mostrador con cúpula de cristal.
+    const counter = new THREE.Mesh(
+      new THREE.BoxGeometry(3.1, 1.55, 2.25),
+      this.coolerMat
+    );
+    counter.position.y = 1.2;
+    counter.castShadow = true;
+    counter.receiveShadow = true;
+    this.VisualRoot.add(counter);
+
+    const counterTop = new THREE.Mesh(
+      new THREE.BoxGeometry(3.35, 0.22, 2.45),
+      this.armorMat
+    );
+    counterTop.position.y = 2.05;
+    counterTop.castShadow = true;
+    this.VisualRoot.add(counterTop);
+
+    // Franjas de tela del mostrador.
+    for (const side of [-1, 1]) {
+      const stripe = new THREE.Mesh(
+        new THREE.PlaneGeometry(2.6, 1.25),
+        this.fabricMat
+      );
+      stripe.position.set(0, 1.22, side * 1.14);
+      stripe.rotation.y = side < 0 ? Math.PI : 0;
+      this.VisualRoot.add(stripe);
+    }
+
+    // 3. Cúpula de cristal que conserva la comida fresca.
+    const glass = new THREE.Mesh(
+      new THREE.BoxGeometry(2.25, 2.1, 1.7),
+      this.glassCageMat
+    );
+    glass.position.y = 3.2;
+    this.VisualRoot.add(glass);
+
+    const glassFrame = new THREE.Mesh(
+      new THREE.BoxGeometry(2.4, 0.12, 1.85),
+      this.rustMat
+    );
+    glassFrame.position.y = 4.28;
+    this.VisualRoot.add(glassFrame);
+
+    // 4. Piña luminosa: el corazón de la despensa.
+    this.heartMesh = new THREE.Group();
+    this.heartMesh.position.y = 3.15;
+    this.VisualRoot.add(this.heartMesh);
+
+    const pineappleBody = new THREE.Mesh(
+      new THREE.IcosahedronGeometry(0.72, 1),
+      this.heartMat
+    );
+    pineappleBody.scale.set(0.9, 1.35, 0.9);
+    this.heartMesh.add(pineappleBody);
+
+    for (let row = 0; row < 4; row++) {
+      for (let col = 0; col < 4; col++) {
+        const scale = new THREE.Mesh(
+          new THREE.BoxGeometry(0.16, 0.08, 0.06),
+          this.leafMat
+        );
+        const ang = (col / 4) * Math.PI * 2 + row * 0.5;
+        scale.position.set(
+          Math.cos(ang) * 0.55,
+          -0.45 + row * 0.3,
+          Math.sin(ang) * 0.55
+        );
+        scale.rotation.y = -ang;
+        this.heartMesh.add(scale);
+      }
+    }
+
+    for (let i = 0; i < 6; i++) {
+      const leaf = new THREE.Mesh(
+        new THREE.ConeGeometry(0.13, 0.72, 4),
+        this.leafMat
+      );
+      const ang = (i / 6) * Math.PI * 2;
+      leaf.position.set(Math.cos(ang) * 0.26, 0.9, Math.sin(ang) * 0.26);
+      leaf.rotation.z = Math.cos(ang) * 0.32;
+      leaf.rotation.x = Math.sin(ang) * 0.32;
+      this.heartMesh.add(leaf);
+    }
+
+    // 5. Anillo de cuerda luminosa alrededor de la piña.
+    this.innerRing = new THREE.Mesh(
+      new THREE.TorusGeometry(1.02, 0.065, 6, 18),
+      this.rustMat
+    );
+    this.innerRing.position.y = 3.15;
     this.VisualRoot.add(this.innerRing);
 
-    // 4. Cuatro columnas/tuberías verticales de enfriamiento y grietas de sobrecarga
+    // 6. Postes y sombrilla de paja que cubre la despensa.
+    for (const [px, pz] of [[-1.95, -1.35], [1.95, -1.35], [-1.95, 1.35], [1.95, 1.35]]) {
+      const post = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.1, 0.14, 4.15, 6),
+        this.rustMat
+      );
+      post.position.set(px, 2.4, pz);
+      post.castShadow = true;
+      this.VisualRoot.add(post);
+    }
+
+    const roof = new THREE.Mesh(
+      new THREE.ConeGeometry(3.2, 1.25, 8),
+      this.thatchMat
+    );
+    roof.position.y = 4.95;
+    roof.rotation.y = Math.PI / 8;
+    roof.castShadow = true;
+    roof.receiveShadow = true;
+    this.VisualRoot.add(roof);
+
+    const roofRim = new THREE.Mesh(
+      new THREE.CylinderGeometry(3.05, 3.05, 0.12, 8, 1, true),
+      this.thatchMat
+    );
+    roofRim.position.y = 4.36;
+    this.VisualRoot.add(roofRim);
+
+    for (let i = 0; i < 6; i++) {
+      const ang = (i / 6) * Math.PI * 2;
+      const flag = new THREE.Mesh(
+        new THREE.ConeGeometry(0.22, 0.55, 4),
+        this.fabricMat
+      );
+      flag.position.set(Math.cos(ang) * 2.85, 4.15, Math.sin(ang) * 2.85);
+      flag.rotation.z = Math.PI;
+      flag.rotation.y = -ang;
+      this.VisualRoot.add(flag);
+    }
+
+    // 7. Veleta de la despensa.
+    this.sirenSpinner = new THREE.Group();
+    this.sirenSpinner.position.set(0, 5.62, 0);
+    this.VisualRoot.add(this.sirenSpinner);
+
+    this.beaconMat = new THREE.MeshBasicMaterial({ color: 0xffc857 });
+    const vaneFlag = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.3, 0.18), this.beaconMat);
+    vaneFlag.position.x = 0.5;
+    const vaneTail = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.18, 0.12), this.beaconMat);
+    vaneTail.position.x = -0.65;
+    vaneTail.rotation.y = 0.5;
+    this.sirenSpinner.add(vaneFlag, vaneTail);
+
+    // 8. Luces cálidas del puesto.
+    this.coreLight = new THREE.PointLight(0xffc857, 38, 18, 1.5);
+    this.coreLight.position.set(0, 3.2, 0);
+    this.group.add(this.coreLight);
+
+    this.beaconLight = new THREE.PointLight(0xffcf68, 22, 26, 1.3);
+    this.beaconLight.position.set(0, 5.4, 0);
+    this.group.add(this.beaconLight);
+
+    // 9. Grietas de sobrecarga visibles con el daño, sobre la nevera.
     this.crackMeshes = [];
     for (let i = 0; i < 4; i++) {
       const ang = (i / 4) * Math.PI * 2 + Math.PI * 0.25;
-      const px = Math.cos(ang) * 1.68;
-      const pz = Math.sin(ang) * 1.68;
-
-      const pipe = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.24, 0.28, 4.2, 6),
-        this.rustMat
-      );
-      pipe.position.set(px, 2.6, pz);
-      pipe.castShadow = true;
-      this.VisualRoot.add(pipe);
-
-      // Grietas luminosas visibles cuando el núcleo pierde vida
       const crackPlane = new THREE.Mesh(
-        new THREE.PlaneGeometry(0.55, 2.2),
+        new THREE.PlaneGeometry(0.55, 1.6),
         this.crackMat
       );
-      crackPlane.position.set(Math.cos(ang) * 1.38, 2.5, Math.sin(ang) * 1.38);
+      crackPlane.position.set(Math.cos(ang) * 1.58, 1.3, Math.sin(ang) * 1.18);
       crackPlane.rotation.y = -ang + Math.PI / 2;
       this.VisualRoot.add(crackPlane);
       this.crackMeshes.push(crackPlane);
     }
-
-    // 5. Cúpula superior con chimeneas de escape
-    const topCap = new THREE.Mesh(
-      new THREE.CylinderGeometry(1.5, 2.0, 0.9, 8),
-      this.armorMat
-    );
-    topCap.position.y = 4.3;
-    topCap.castShadow = true;
-    this.VisualRoot.add(topCap);
-
-    const chimneyPositions = [
-      [-0.75, 5.2, -0.75],
-      [0.75, 5.4, 0.75],
-      [-0.75, 5.0, 0.75]
-    ];
-    chimneyPositions.forEach(([cx, cy, cz]) => {
-      const stack = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.22, 0.28, 1.5, 6),
-        this.rustMat
-      );
-      stack.position.set(cx, cy, cz);
-      this.VisualRoot.add(stack);
-    });
-
-    // 6. Sirena rotatoria y balizas de aviso en la cúspide (visibles desde lejos)
-    this.sirenSpinner = new THREE.Group();
-    this.sirenSpinner.position.set(0, 5.85, 0);
-    this.VisualRoot.add(this.sirenSpinner);
-
-    this.beaconMat = new THREE.MeshBasicMaterial({ color: 0xb89c46 });
-    const beaconLeft = new THREE.Mesh(new THREE.BoxGeometry(0.75, 0.36, 0.36), this.beaconMat);
-    beaconLeft.position.x = -0.35;
-    const beaconRight = new THREE.Mesh(new THREE.BoxGeometry(0.75, 0.36, 0.36), this.beaconMat);
-    beaconRight.position.x = 0.35;
-    this.sirenSpinner.add(beaconLeft, beaconRight);
-
-    // 7. Iluminación propia del reactor
-    this.coreLight = new THREE.PointLight(0xd4af37, 68, 22, 1.4);
-    this.coreLight.position.set(0, 3.0, 0);
-    this.group.add(this.coreLight);
-
-    this.beaconLight = new THREE.PointLight(0xb89c46, 35, 32, 1.2);
-    this.beaconLight.position.set(0, 6.2, 0);
-    this.group.add(this.beaconLight);
   }
 
   resolveDamageState() {
@@ -375,12 +489,12 @@ export class CoreMachine extends DefensiveStructure {
     // 5. Columnas de humo y chispas automáticas proporcionales al deterioro
     if (this.vfx) {
       this.smokeTimer -= dt;
-      if (this.smokeTimer <= 0) {
+      if (hpRatio < 0.9 && this.smokeTimer <= 0) {
         this.smokeTimer = st.smokeRate;
         const smoke = new THREE.Mesh(
           SHARED_GEO.spark,
           new THREE.MeshBasicMaterial({
-            color: hpRatio < 0.45 ? 0x261212 : 0x364035,
+            color: hpRatio < 0.45 ? 0x4a1e1e : 0x4f6258,
             transparent: true,
             opacity: 0.65
           })
@@ -388,7 +502,7 @@ export class CoreMachine extends DefensiveStructure {
         smoke.scale.setScalar(1.6);
         smoke.position.copy(this.group.position).add(new THREE.Vector3(
           (Math.random() - 0.5) * 1.5,
-          5.3,
+          4.9,
           (Math.random() - 0.5) * 1.5
         ));
         this.scene.add(smoke);

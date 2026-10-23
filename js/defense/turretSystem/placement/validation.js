@@ -76,10 +76,10 @@ const dxP = pos.x - player.x;
 const dzP = pos.z - player.z;
 const distPlayer = Math.hypot(dxP, dzP);
 
-if (distPlayer < P.minPlayerDistance - 0.05) return { valid: false, reason: 'DEMASIADO CERCA DEL OPERARIO' };
+if (distPlayer < P.minPlayerDistance - 0.05) return { valid: false, reason: 'DEMASIADO CERCA DEL SOCORRISTA' };
 if (distPlayer > P.maxPlayerDistance + 0.1) return { valid: false, reason: 'FUERA DE ALCANCE' };
 if (system.turrets.size >= P.maxTurrets) return { valid: false, reason: 'LÍMITE DE TORRETAS' };
-if (system.mode.getScrap() < cfg.cost) return { valid: false, reason: 'CHATARRA INSUFICIENTE' };
+if (system.mode.getScrap() < cfg.cost) return { valid: false, reason: 'MADERA INSUFICIENTE' };
 
 if (system.worldPhysics.isRampAt && system.worldPhysics.isRampAt(pos.x, pos.z)) {
   return { valid: false, reason: 'TERRENO INCLINADO' };
@@ -89,25 +89,25 @@ const core = system.mode.coreMachine;
 if (core && core.collisionRadius > 0 && !core.destroyed) {
   const minCore = core.collisionRadius + cfg.base.collisionRadius + P.minCorePadding;
   if (horizontalDistance(pos, core.position) < minCore) {
-    return { valid: false, reason: 'DEMASIADO CERCA DEL NÚCLEO' };
+    return { valid: false, reason: 'DEMASIADO CERCA DE LA DESPENSA' };
   }
 }
 
 if (distanceToRoutes(system, pos) < P.minPathDistance) {
-  return { valid: false, reason: 'BLOQUEA LA RUTA' };
+  return { valid: false, reason: 'BLOQUEA LA SENDA' };
 }
 
 const spawnList = system.mode?.spawnPoints || CORE_DEFENSE_CONFIG.SPAWN_POINTS;
 for (const sp of spawnList) {
   if (horizontalDistance(pos, sp.position) < P.spawnClearance) {
-    return { valid: false, reason: 'COMPUERTA DE ENTRADA' };
+    return { valid: false, reason: 'MADRIGUERA DE ENTRADA' };
   }
 }
 
 const exitList = system.mode?.exitPoints || [];
 for (const ep of exitList) {
   if (horizontalDistance(pos, ep.position) < P.spawnClearance) {
-    return { valid: false, reason: 'COMPUERTA DE SALIDA' };
+    return { valid: false, reason: 'PASO DE FUGA' };
   }
 }
 
@@ -126,7 +126,7 @@ for (let i = 0; i < enemies.length; i++) {
   const e = enemies[i];
   if (!e.active || e.state === 'dead') continue;
   if (horizontalDistance(pos, e.group.position) < P.enemyClearance) {
-    return { valid: false, reason: 'ENEMIGO ENCIMA' };
+    return { valid: false, reason: 'CANGREJO ENCIMA' };
   }
 }
 

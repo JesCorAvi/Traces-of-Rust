@@ -1,9 +1,10 @@
-// Hojas procedurales de pickups (suero, diente, cofre y chatarra).
+// Hojas procedurales de pickups tropicales: coco, concha, nevera y madera.
 // Exports: buildPickupSheets.
 
 import { applyCleanSpriteOutlineRect, makeTexture } from '../spritePalette.js';
 
 export function buildPickupSheets() {
+  // Coco con pajita: sustituye al suero de la vieja planta.
   const serumCan = document.createElement('canvas');
   serumCan.width = 256; serumCan.height = 64;
   const sCtx = serumCan.getContext('2d', { willReadFrequently: true });
@@ -12,40 +13,35 @@ export function buildPickupSheets() {
     sCtx.save();
     sCtx.translate(f * 64, 0);
     const px = (x, y, w, h, c) => { sCtx.fillStyle = c; sCtx.fillRect(x, y, w, h); };
+    const bob = f % 2 === 0 ? 0 : 1;
 
-    px(31, 6, 2, 8, '#c8c2ac');
-    px(31, 4, 2, 3, '#e6d7a5');
-    px(26, 13, 12, 4, '#877a5c');
-    px(24, 17, 16, 4, '#4a2518');
-    px(25, 18, 14, 2, '#b89c46');
+    px(30, 5 + bob, 3, 13, '#f4e1b7');
+    px(33, 4 + bob, 6, 3, '#fff4d2');
+    px(31, 8 + bob, 2, 2, '#ff9a6f');
 
-    px(21, 21, 22, 30, '#182018');
-    px(22, 22, 20, 28, '#243022');
+    px(20, 18 + bob, 25, 30, '#4a2b1d');
+    px(22, 19 + bob, 21, 27, '#6b432b');
+    px(24, 21 + bob, 17, 23, '#8f5d38');
+    px(25, 23 + bob, 15, 5, '#b97c4c');
+    px(23, 26 + bob, 19, 2, '#3b2116');
+    px(26, 29 + bob, 4, 4, '#3b2116');
+    px(34, 32 + bob, 3, 3, '#3b2116');
+    px(29, 35 + bob, 8, 2, '#3b2116');
 
-    const wave = (f % 2 === 0) ? 1 : -1;
-    px(23, 27 + wave, 18, 22 - wave, '#6e1414');
-    px(24, 28 + wave, 16, 20 - wave, '#a52020');
-    px(24, 27 + wave, 16, 3, '#b89c46');
-
-    const b1Y = 44 - f * 4;
-    const b2Y = 40 - ((f + 2) % 4) * 4;
-    px(27, b1Y, 3, 3, '#e6d7a5');
-    px(34, b2Y, 2, 2, '#b89c46');
-
-    px(24, 23, 2, 24, '#e6d7a5');
-    for (let m = 0; m < 4; m++) {
-      px(37, 25 + m * 6, 3, 1, '#c8c2ac');
+    // Agua de coco luminosa en la abertura.
+    px(25, 20 + bob, 15, 4, '#63e1c3');
+    px(27, 20 + bob, 11, 2, '#c7ffdf');
+    for (let b = 0; b < 3; b++) {
+      px(26 + b * 5, 16 + bob + (b % 2), 2, 2, '#d7fffa');
     }
-
-    px(24, 51, 16, 4, '#4a2518');
-    px(26, 52, 12, 2, '#877a5c');
-    if (f === 1 || f === 2) {
-      px(31, 56 + f, 2, 3, '#a52020');
-    }
+    px(22, 46 + bob, 21, 3, '#3b2116');
+    px(24, 49 + bob, 17, 2, '#6b432b');
+    sxFixGlow(sCtx, f, bob);
     sCtx.restore();
   }
   applyCleanSpriteOutlineRect(sCtx, 256, 64);
 
+  // Concha: moneda de recuerdo del equipo.
   const toothCan = document.createElement('canvas');
   toothCan.width = 256; toothCan.height = 64;
   const tCtx = toothCan.getContext('2d', { willReadFrequently: true });
@@ -54,37 +50,32 @@ export function buildPickupSheets() {
     tCtx.save();
     tCtx.translate(f * 64, 0);
     const px = (x, y, w, h, c) => { tCtx.fillStyle = c; tCtx.fillRect(x, y, w, h); };
+    const bob = f % 2 === 0 ? 0 : 1;
+    const glow = (x, y, w, h, c) => { px(x, y, w, h, c); };
 
-    px(19, 13, 11, 6, '#e6d7a5');
-    px(34, 13, 11, 6, '#e6d7a5');
-    px(18, 17, 28, 16, '#c8c2ac');
-    px(20, 15, 24, 14, '#e6d7a5');
-
-    px(29, 16, 2, 8, '#4a2518');
-    px(33, 16, 9, 7, '#b89c46');
+    // Valvas de vieira.
+    px(24, 10 + bob, 5, 5, '#d9a66a');
+    px(35, 10 + bob, 5, 5, '#d9a66a');
+    px(20, 15 + bob, 24, 25, '#8f4f38');
+    px(22, 16 + bob, 20, 22, '#e7b978');
+    px(24, 18 + bob, 16, 18, '#fff0c7');
+    px(28, 19 + bob, 2, 20, '#d9a66a');
+    px(33, 19 + bob, 2, 20, '#d9a66a');
+    px(24, 24 + bob, 17, 2, '#d9a66a');
+    px(26, 30 + bob, 13, 2, '#c9925e');
+    px(26, 38 + bob, 12, 3, '#7a3f31');
+    px(28, 42 + bob, 8, 3, '#573027');
+    glow(28, 12 + bob, 3, 3, '#fff7d1');
+    glow(38, 22 + bob, 2, 2, '#ffe09b');
     if (f % 2 === 0) {
-      px(35, 17, 5, 4, '#e6d7a5');
+      px(45, 16 + bob, 2, 2, '#fff0c7');
+      px(48, 24 + bob, 1, 1, '#ffe9b9');
     }
-
-    px(20, 31, 24, 5, '#b89c46');
-    px(21, 34, 22, 3, '#743718');
-
-    px(20, 36, 9, 16, '#c8c2ac');
-    px(22, 36, 6, 14, '#877a5c');
-    px(35, 36, 9, 16, '#c8c2ac');
-    px(36, 36, 6, 14, '#877a5c');
-
-    px(21, 46, 7, 8, '#a52020');
-    px(22, 52, 4, 4, '#6e1414');
-    px(36, 45, 7, 9, '#a52020');
-    px(38, 52, 4, 4, '#6e1414');
-
-    const dropY = 54 + f * 2;
-    px(24, dropY, 3, 3, '#a52020');
     tCtx.restore();
   }
   applyCleanSpriteOutlineRect(tCtx, 256, 64);
 
+  // Nevera de playa que se abre al recogerla.
   const chestCan = document.createElement('canvas');
   chestCan.width = 256; chestCan.height = 64;
   const cCtx = chestCan.getContext('2d', { willReadFrequently: true });
@@ -93,36 +84,43 @@ export function buildPickupSheets() {
     cCtx.save();
     cCtx.translate(f * 64, 0);
     const px = (x, y, w, h, c) => { cCtx.fillStyle = c; cCtx.fillRect(x, y, w, h); };
+    const lidLift = f === 1 || f === 2 ? 4 : 0;
 
-    px(25, 11, 14, 6, '#4a2518');
-    px(27, 13, 10, 4, '#050605');
+    px(25, 11 - lidLift, 14, 4, '#27545b');
+    px(27, 12 - lidLift, 10, 2, '#6fd1dd');
 
-    px(10, 17, 44, 36, '#243022');
-    px(12, 19, 40, 32, '#364832');
+    px(10, 17, 44, 36, '#173d44');
+    px(12, 19, 40, 32, '#2c7479');
+    px(14, 21, 36, 10, '#e8f7e7');
+    if (f === 1 || f === 2) {
+      // Interior fresco con latas, fruta y hielo.
+      px(17, 22, 30, 8, '#0f2c35');
+      for (let i = 0; i < 5; i++) {
+        px(18 + i * 6, 23, 4, 5, i % 2 ? '#ff8a68' : '#ffd06b');
+        px(19 + i * 6, 22, 2, 1, '#fff0c7');
+      }
+    } else {
+      px(17, 21, 30, 8, '#f4d8a0');
+      px(20, 23, 24, 4, '#c9925e');
+    }
 
-    px(10, 17, 7, 7, '#b89c46');
-    px(47, 17, 7, 7, '#b89c46');
-    px(10, 46, 7, 7, '#b89c46');
-    px(47, 46, 7, 7, '#b89c46');
+    // Cierre, asa y patas.
+    px(10, 31, 44, 3, '#102f36');
+    px(28, 33, 8, 4, '#c8d4c0');
+    px(12, 36, 40, 3, '#1d5960');
+    px(14, 45, 6, 5, '#e8f7e7');
+    px(44, 45, 6, 5, '#e8f7e7');
+    px(12, 49, 40, 4, '#10343a');
+    px(28, 7 - lidLift, 8, 4, '#6fd1dd');
 
-    px(18, 17, 5, 36, '#4a2518');
-    px(41, 17, 5, 36, '#4a2518');
-    px(17, 31, 7, 6, '#b89c46');
-    px(40, 31, 7, 6, '#b89c46');
-
-    px(25, 25, 14, 18, '#121812');
-    const crossCol = f % 2 === 0 ? '#a52020' : '#e6d7a5';
-    px(30, 27, 4, 14, crossCol);
-    px(27, 32, 10, 4, crossCol);
-
-    px(12, 34, 40, 2, '#050605');
-    px(26, 36, 12, 3, '#6e1414');
-    px(29, 38, 4, 6, '#a52020');
+    // Brillo de nevera.
+    px(14, 21, 3, 8, '#fffbe3');
+    px(48, 21, 2, 12, '#6fd1dd');
     cCtx.restore();
   }
   applyCleanSpriteOutlineRect(cCtx, 256, 64);
 
-  // Chatarra: engranaje roto que gira y suelta chispas
+  // Madera de construcción: tablones que giran y sueltan virutas.
   const scrapCan = document.createElement('canvas');
   scrapCan.width = 256; scrapCan.height = 64;
   const scCtx = scrapCan.getContext('2d', { willReadFrequently: true });
@@ -131,48 +129,45 @@ export function buildPickupSheets() {
     scCtx.save();
     scCtx.translate(f * 64, 0);
     const px = (x, y, w, h, c) => { scCtx.fillStyle = c; scCtx.fillRect(x, y, w, h); };
+    const tilt = f % 2 === 0 ? 0 : 1;
 
-    const cx = 32, cy = 30;
-    const angle = (f / 4) * Math.PI * 2;
-    const teeth = 8;
-    for (let t = 0; t < teeth; t++) {
-      const a = angle + (t / teeth) * Math.PI * 2;
-      const tx = Math.round(cx + Math.cos(a) * 19);
-      const ty = Math.round(cy + Math.sin(a) * 19);
-      px(tx - 3, ty - 3, 7, 7, '#050605');
-      px(tx - 2, ty - 2, 5, 5, '#877a5c');
-      px(tx - 1, ty - 1, 3, 3, '#b89c46');
-    }
+    // Tablón principal.
+    px(8, 22 + tilt, 48, 16, '#4a2a1a');
+    px(10, 23 + tilt, 44, 11, '#a5683c');
+    px(10, 23 + tilt, 44, 3, '#d6955d');
+    px(10, 31 + tilt, 44, 3, '#704027');
+    px(15, 26 + tilt, 2, 4, '#3b2116');
+    px(31, 26 + tilt, 2, 4, '#3b2116');
+    px(46, 26 + tilt, 2, 4, '#3b2116');
+    px(6, 24 + tilt, 3, 12, '#3b2116');
+    px(55, 24 + tilt, 3, 12, '#3b2116');
 
-    px(cx - 15, cy - 15, 31, 31, '#050605');
-    px(cx - 13, cy - 13, 27, 27, '#364832');
-    px(cx - 11, cy - 11, 23, 23, '#243022');
-    px(cx - 8, cy - 8, 17, 17, '#4a2518');
-    px(cx - 5, cy - 5, 11, 11, '#875a30');
-    px(cx - 2, cy - 2, 5, 5, '#b89c46');
+    // Tronco transversal.
+    px(24, 14 + tilt, 16, 14, '#6b432b');
+    px(26, 15 + tilt, 12, 11, '#8f5d38');
+    px(26, 15 + tilt, 12, 2, '#c48c56');
+    px(32, 14 + tilt, 2, 12, '#4a2a1a');
 
-    // Grietas y desgaste
-    px(cx - 12, cy + 8, 6, 2, '#050605');
-    px(cx + 7, cy - 11, 2, 5, '#050605');
-    px(cx + 9, cy + 9, 3, 3, '#a52020');
-
-    // Chispas según frame
-    if (f % 2 === 0) {
-      px(48, 12, 2, 2, '#e6d7a5');
-      px(53, 18, 2, 2, '#b89c46');
-    } else {
-      px(12, 17, 2, 2, '#b89c46');
-      px(9, 24, 2, 2, '#e6d7a5');
-    }
-
+    // Virutas y hojas.
+    px(14, 44 + tilt, 3, 2, '#d6955d');
+    px(44, 42 + tilt, 2, 2, '#e7b978');
+    px(9, 48 + tilt, 2, 2, '#70a84b');
     scCtx.restore();
   }
   applyCleanSpriteOutlineRect(scCtx, 256, 64);
 
   return {
-    serum: { name: 'pickup_serum_4f', canvas: serumCan, tex: makeTexture(serumCan) },
-    tooth: { name: 'pickup_tooth_4f', canvas: toothCan, tex: makeTexture(toothCan) },
-    chest: { name: 'pickup_chest_4f', canvas: chestCan, tex: makeTexture(chestCan) },
-    scrap:  { name: 'pickup_scrap_4f', canvas: scrapCan, tex: makeTexture(scrapCan) }
+    serum: { name: 'pickup_coconut_4f', canvas: serumCan, tex: makeTexture(serumCan) },
+    tooth: { name: 'pickup_shell_4f', canvas: toothCan, tex: makeTexture(toothCan) },
+    chest: { name: 'pickup_cooler_4f', canvas: chestCan, tex: makeTexture(chestCan) },
+    scrap:  { name: 'pickup_wood_4f', canvas: scrapCan, tex: makeTexture(scrapCan) }
   };
+}
+
+function sxFixGlow(ctx, frame, bob) {
+  // Pequeños destellos del coco en el canvas principal (el glow se pinta aparte
+  // con el atlas de billboard; aquí basta con acentos brillantes).
+  ctx.fillStyle = '#d7fffa';
+  ctx.fillRect(27 + frame, 17 + bob, 2, 2);
+  ctx.fillRect(39, 22 + bob + (frame % 2), 2, 2);
 }

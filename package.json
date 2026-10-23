@@ -1,21 +1,25 @@
 {
-  "name": "traces-of-rust",
+  "name": "crabs-wants-your-food",
   "version": "1.0.0",
-  "description": "Tactical Horror - Core Defense & Survival",
+  "description": "Crabs wants your food! - Tropical beach tower defense at sunset",
   "main": "electron-main.cjs",
   "scripts": {
     "start": "electron .",
     "test": "node scripts/test-all.mjs",
-    "build:win": "electron-packager . \"Traces of Rust\" --platform=win32 --arch=x64 --out=dist --overwrite --ignore=\"^/dist$\" && node scripts/postbuild-win.cjs",
+    "build:win": "electron-packager . \"Crabs wants your food!\" --platform=win32 --arch=x64 --out=dist --overwrite --ignore=\"^/dist$\" && node scripts/postbuild-win.cjs",
     "sync:skills": "node scripts/sync-skills.mjs",
     "validate:skills": "node scripts/validate-skills.mjs"
   },
   "keywords": [
-    "horror",
+    "tropical",
+    "beach",
+    "tower-defense",
     "survivor",
+    "crabs",
     "threejs",
     "steamworks"
   ],
+  "productName": "Crabs wants your food!",
   "author": "",
   "license": "ISC",
   "dependencies": {

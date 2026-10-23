@@ -1,15 +1,15 @@
-// Configuración del núcleo, política de muerte y puntos de aparición.
+// Configuración del despensa, política de muerte y puntos de aparición.
 // Exports: CORE, PLAYER_DEATH_POLICY, SPAWN_POINTS.
 
-  // 1. EL NÚCLEO (Objetivo central a defender)
+  // 1. LA DESPENSA (Objetivo central a defender)
 export const CORE = {
     id: 'main_reactor_core',
-    name: 'REACTOR BIOMECÁNICO CENTRAL',
+    name: 'DESPENSA DE LA PLAYA',
     position: { x: 0, y: 0, z: 0 },
     playerStartPos: { x: 0, y: 0, z: 6.5 },
     maxHp: 1500,
-    collisionRadius: 2.35,      // Sólido e impenetrable para jugador y enemigos
-    attackStopDistance: 3.15,   // Distancia a la que los enemigos se detienen a golpear el núcleo
+    collisionRadius: 2.35,      // Sólido e impenetrable para jugador y cangrejos
+    attackStopDistance: 3.15,   // Distancia a la que los cangrejos se detienen a golpear el despensa
     height: 6.2,
     heartbeatBaseBpm: 52,
     underAttackAlertCooldown: 2.2,
@@ -19,7 +19,7 @@ export const CORE = {
       {
         minPct: 0.75,
         id: 'stable',
-        label: 'ESTABLE',
+        label: 'DESPENSA A SALVO',
         heartColor: 0xd4af37,
         beaconColor: 0xb89c46,
         pulseSpeed: 2.2,
@@ -30,7 +30,7 @@ export const CORE = {
       {
         minPct: 0.45,
         id: 'strained',
-        label: 'FUGA DE PRESIÓN',
+        label: 'CANGREJOS SAQUEANDO',
         heartColor: 0xe67e22,
         beaconColor: 0xd95326,
         pulseSpeed: 4.0,
@@ -41,7 +41,7 @@ export const CORE = {
       {
         minPct: 0.20,
         id: 'critical',
-        label: 'CONTENCIÓN CRÍTICA',
+        label: 'COMIDA EN PELIGRO',
         heartColor: 0xd62828,
         beaconColor: 0xff2222,
         pulseSpeed: 6.8,
@@ -52,7 +52,7 @@ export const CORE = {
       {
         minPct: 0.0,
         id: 'meltdown',
-        label: 'COLAPSO INMINENTE',
+        label: 'DESPENSA VACÍA',
         heartColor: 0xff4444,
         beaconColor: 0xff0000,
         pulseSpeed: 11.0,
@@ -65,8 +65,8 @@ export const CORE = {
 
   // 2. REGLA DE MUERTE DEL JUGADOR EN MODO DEFENSA
   // Si el jugador cae a 0 HP, entra en reconstrucción de emergencia durante 5.0s,
-  // los enemigos que lo perseguían vuelven inmediatamente a su camino hacia el Núcleo,
-  // y el Núcleo sufre una sobrecarga de emergencia (-10 vidas) para mantener la tensión.
+  // los cangrejos que lo perseguían vuelven inmediatamente a su camino hacia la Despensa,
+  // y la Despensa sufre una sobrecarga de emergencia (-10 comidas) para mantener la tensión.
 export const PLAYER_DEATH_POLICY = {
     mode: 'respawn_with_penalty', // 'respawn_with_penalty' | 'instant_defeat'
     respawnDelaySec: 5.0,

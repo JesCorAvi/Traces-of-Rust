@@ -8,7 +8,7 @@ const _t = (k, fb) => (typeof t === 'function' ? t(k) : fb);
 export const ENEMY_TYPES = {
   runner: {
     id: 'runner',
-    get name() { return _t('enemy.runner.name', 'CORREDOR DE VÍA'); },
+    get name() { return _t('enemy.runner.name', 'CANGREJO CORREDOR'); },
     hp: 16,
     dmg: 8,
     speed: 7.2,
@@ -20,7 +20,7 @@ export const ENEMY_TYPES = {
   },
   hulk: {
     id: 'hulk',
-    get name() { return _t('enemy.hulk.name', 'PRENSA DE CARNE'); },
+    get name() { return _t('enemy.hulk.name', 'CANGREJO ACORAZADO'); },
     hp: 150,
     dmg: 30,
     speed: 2.5,
@@ -33,7 +33,7 @@ export const ENEMY_TYPES = {
   },
   nest: {
     id: 'nest',
-    get name() { return _t('enemy.nest.name', 'NIDO ANDANTE'); },
+    get name() { return _t('enemy.nest.name', 'CANGREJO NIDO'); },
     hp: 90,
     dmg: 12,
     speed: 2.8,
@@ -46,7 +46,7 @@ export const ENEMY_TYPES = {
   },
   regenerator: {
     id: 'regenerator',
-    get name() { return _t('enemy.regenerator.name', 'SUTURADOR DE PLAGA'); },
+    get name() { return _t('enemy.regenerator.name', 'CANGREJO CURANDERO'); },
     hp: 110,
     dmg: 14,
     speed: 3.0,
@@ -59,7 +59,7 @@ export const ENEMY_TYPES = {
   },
   splitter: {
     id: 'splitter',
-    get name() { return _t('enemy.splitter.name', 'GEMELO DE CARNE'); },
+    get name() { return _t('enemy.splitter.name', 'CANGREJO GEMELO'); },
     hp: 85,
     dmg: 18,
     speed: 3.4,

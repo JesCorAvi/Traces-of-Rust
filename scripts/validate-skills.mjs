@@ -168,7 +168,7 @@ const report = {
 if (JSON_OUT) {
   console.log(JSON.stringify(report, null, 2));
 } else {
-  console.log('Validación de skills — Traces of Rust');
+  console.log('Validación de skills — Crabs wants your food!');
   for (const skill of reportSkills) {
     console.log(`  OK ${skill.name}: ${skill.lines} líneas, ${skill.references} referencias, ${skill.scripts} scripts`);
   }

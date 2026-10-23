@@ -1,93 +1,103 @@
-// Modelo 3D de la torreta gunner: ametralladora pesada industrial con calcomanías y retroceso.
+// Modelo 3D del Lanzacoco: cañón de coco y bambú con núcleo bioluminiscente.
 // Exports: buildGunnerModel.
 
 import * as THREE from 'three';
+import {
+  addCoconut,
+  addPalmLeaf,
+  addBambooPole,
+  addRopeBand,
+  addEnergyRing,
+  addGlowPearl
+} from './parts.js';
 
 export function buildGunnerModel(turret) {
-  // Chasis blindado central
-  turret.addPart(new THREE.BoxGeometry(0.58, 0.36, 0.62), turret.bodyMat, 0, 0.62, 0);
+  // Cureña ligera de bambú.
+  addBambooPole(turret, -0.38, 0.52, 0.34, -0.38, 0.52, -0.38, 0.065);
+  addBambooPole(turret, 0.38, 0.52, 0.34, 0.38, 0.52, -0.38, 0.065);
+  turret.addPart(new THREE.CylinderGeometry(0.3, 0.38, 0.22, 10), turret.bambooMat, 0, 0.58, 0);
+  turret.addPart(new THREE.CylinderGeometry(0.16, 0.2, 0.26, 8), turret.coconutMat, 0, 0.77, 0.06);
 
-  // Placas laterales de blindaje con textura de panel técnico
-  turret.addPart(new THREE.BoxGeometry(0.06, 0.32, 0.58), turret.panelMat, -0.31, 0.62, 0);
-  turret.addPart(new THREE.BoxGeometry(0.06, 0.32, 0.58), turret.panelMat, 0.31, 0.62, 0);
+  // Cestones de cocos a ambos lados.
+  addCoconut(turret, 0.42, 0.62, 0.18, 0.12);
+  addCoconut(turret, -0.42, 0.6, 0.16, 0.11);
+  addRopeBand(turret, 0.42, 0.62, 0.18, 0.17, { rx: Math.PI / 2 });
+  addPalmLeaf(turret, 0.38, 0.72, 0.34, { sx: 0.11, sy: 0.52, sz: 0.11, rx: 0.8, rz: 0.4 });
 
-  // Placa de calcomanía en el flanco (calibre e iconos de proyectiles)
-  const decalMesh = new THREE.Mesh(new THREE.PlaneGeometry(0.38, 0.19), turret.decalMat);
-  decalMesh.position.set(-0.35, 0.62, 0.05);
-  decalMesh.rotation.y = -Math.PI / 2;
-  turret.modelRoot.add(decalMesh);
-
-  // Manómetro analógico en la parte posterior
-  const gaugeMesh = new THREE.Mesh(new THREE.PlaneGeometry(0.22, 0.22), turret.gaugeMat);
-  gaugeMesh.position.set(0, 0.65, 0.32);
-  gaugeMesh.rotation.y = Math.PI;
-  turret.modelRoot.add(gaugeMesh);
-
-  // Torreta superior y visor óptico
-  turret.addPart(new THREE.BoxGeometry(0.38, 0.18, 0.32), turret.darkMat, 0, 0.88, -0.08);
-  turret.addPart(new THREE.BoxGeometry(0.18, 0.09, 0.12), turret.accentMat, 0, 0.94, -0.22); // lente óptica
-
-  // Cañón principal con retroceso
+  // Grupo del cañón (retroceso real).
   const barrelGroup = new THREE.Group();
-  barrelGroup.position.set(0, 0.78, 0);
+  barrelGroup.position.set(0, 0.82, 0);
   turret.modelRoot.add(barrelGroup);
   turret.barrelRecoilMesh = barrelGroup;
   turret.barrelBaseZ = 0;
 
-  // Tubo del cañón principal
-  const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.08, 0.92, 8), turret.darkMat);
+  // Culata de coco y tubo de bambú ahuecado.
+  addCoconut(turret, 0, 0.02, 0.12, 0.23, { parent: barrelGroup });
+  const barrel = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.085, 0.115, 1.1, 8),
+    turret.bambooMat
+  );
   barrel.rotation.x = Math.PI / 2;
-  barrel.position.set(0, 0, -0.72);
+  barrel.position.set(0, 0.03, -0.48);
+  barrel.castShadow = true;
   barrelGroup.add(barrel);
 
-  // Camisa perforada de refrigeración
-  const shroud = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.11, 0.48, 8), turret.rustMat);
-  shroud.rotation.x = Math.PI / 2;
-  shroud.position.set(0, 0, -0.52);
-  barrelGroup.add(shroud);
+  const muzzle = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.115, 0.13, 0.12, 10),
+    turret.coconutFleshMat
+  );
+  muzzle.rotation.x = Math.PI / 2;
+  muzzle.position.set(0, 0.03, -1.02);
+  muzzle.castShadow = true;
+  barrelGroup.add(muzzle);
 
-  // Anillo de advertencia con franjas hazard en bocacha
-  const tipRing = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 0.12, 8), turret.hazardMat);
-  tipRing.rotation.x = Math.PI / 2;
-  tipRing.position.set(0, 0, -1.16);
-  barrelGroup.add(tipRing);
+  addEnergyRing(turret, 0, 0.03, -0.98, 0.16, { parent: barrelGroup, rx: Math.PI / 2 });
+  addRopeBand(turret, 0, 0.03, -0.25, 0.14, { parent: barrelGroup, rx: Math.PI / 2 });
+  addRopeBand(turret, 0, 0.03, -0.62, 0.14, { parent: barrelGroup, rx: Math.PI / 2 });
 
-  // Caja de munición lateral
-  turret.addPart(new THREE.BoxGeometry(0.24, 0.28, 0.32), turret.darkMat, 0.38, 0.58, 0.06);
-  turret.addPart(new THREE.BoxGeometry(0.26, 0.04, 0.34), turret.hazardMat, 0.38, 0.73, 0.06);
+  // Mira de concha y perla.
+  addGlowPearl(turret, 0, 0.28, -0.08, 0.055);
+  addRopeBand(turret, 0, 0.24, -0.08, 0.1, { rx: Math.PI / 2 });
 
-  // Piezas de mejora (ocultas)
+  // Varal de recarga y hoja de puntería.
+  addBambooPole(turret, 0.27, 0.5, 0.25, 0.46, 0.84, 0.02, 0.037);
+  addPalmLeaf(turret, -0.3, 0.92, 0.14, {
+    sx: 0.1, sy: 0.5, sz: 0.1, rx: 0.45, rz: -0.65, light: true
+  });
+
+  // Mejoras: cañón gemelo, cargador de cocos, ánima larga, bobinas,
+  // depósito de zumo inflamable y coco explosivo.
   turret.addHiddenPart(
     'twin_barrels',
-    new THREE.CylinderGeometry(0.07, 0.07, 0.92, 8),
-    turret.darkMat, 0.16, 0.78, -0.72, Math.PI / 2, 0, 0
+    new THREE.CylinderGeometry(0.08, 0.1, 1.05, 8),
+    turret.bambooMat, 0.17, 0.82, -0.73, Math.PI / 2, 0, 0
   );
   turret.addHiddenPart(
     'ammo_drum',
-    new THREE.CylinderGeometry(0.24, 0.24, 0.22, 12),
-    turret.rustMat, 0.42, 0.62, 0.05, 0, 0, Math.PI / 2
+    new THREE.CylinderGeometry(0.2, 0.2, 0.22, 10),
+    turret.coconutMat, 0.42, 0.63, 0.04, 0, 0, Math.PI / 2
   );
   turret.addHiddenPart(
     'long_barrel',
-    new THREE.CylinderGeometry(0.065, 0.075, 1.55, 8),
-    turret.accentMat, 0, 0.78, -1.05, Math.PI / 2, 0, 0
+    new THREE.CylinderGeometry(0.07, 0.1, 1.55, 8),
+    turret.coconutFleshMat, 0, 0.82, -1.02, Math.PI / 2, 0, 0
   );
   turret.addHiddenPart(
     'rail_coils',
-    new THREE.TorusGeometry(0.17, 0.035, 6, 12),
-    turret.glowMat, 0, 0.78, -1.15, 0, 0, 0
+    new THREE.TorusGeometry(0.17, 0.032, 6, 12),
+    turret.glowMat, 0, 0.82, -1.18, Math.PI / 2, 0, 0
   );
   turret.addHiddenPart(
     'fuel_tank',
-    new THREE.CylinderGeometry(0.16, 0.16, 0.52, 8),
-    turret.rustMat, -0.38, 0.62, 0.08, 0, 0, Math.PI / 2
+    new THREE.CylinderGeometry(0.15, 0.15, 0.45, 8),
+    turret.accentMat, -0.42, 0.61, 0.02, 0, 0, Math.PI / 2
   );
   turret.addHiddenPart(
     'explosive_tank',
-    new THREE.CylinderGeometry(0.18, 0.18, 0.46, 8),
-    turret.accentMat, 0.4, 0.6, 0.1, 0, 0, Math.PI / 2
+    new THREE.SphereGeometry(0.17, 8, 6),
+    turret.glowMat, 0.44, 0.6, 0.12
   );
 
-  turret.muzzleHeight = 0.78;
-  turret.muzzleForward = 1.25;
+  turret.muzzleHeight = 0.85;
+  turret.muzzleForward = 1.12;
 }
