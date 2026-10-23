@@ -386,11 +386,44 @@ export const AudioSys = {
     return true;
   },
 
-  _registerSource(source) {
+  _registerSource(source, nodes = null) {
     if (!source) return;
     this._activeVoices.add(source);
-    const cleanup = () => this._activeVoices.delete(source);
+    let cleaned = false;
+    let fallbackTimer = null;
+    const cleanup = () => {
+      if (cleaned) return;
+      cleaned = true;
+      if (fallbackTimer !== null) {
+        clearTimeout(fallbackTimer);
+        fallbackTimer = null;
+      }
+      this._activeVoices.delete(source);
+      try { source.disconnect(); } catch (e) {}
+      if (Array.isArray(nodes)) {
+        for (let i = 0; i < nodes.length; i++) {
+          const n = nodes[i];
+          if (n && typeof n.disconnect === 'function') {
+            try { n.disconnect(); } catch (e) {}
+          }
+        }
+      }
+    };
     try { source.addEventListener('ended', cleanup, { once: true }); } catch (e) {}
+    // Temporizador de seguridad por si el evento 'ended' no se dispara (pestaña suspendida/minimizada)
+    fallbackTimer = setTimeout(cleanup, 6000);
+    if (fallbackTimer && typeof fallbackTimer.unref === 'function') fallbackTimer.unref();
+  },
+
+  stopAllVoices() {
+    if (this._activeVoices) {
+      for (const source of Array.from(this._activeVoices)) {
+        try { source.stop(); } catch (e) {}
+        try { source.disconnect(); } catch (e) {}
+      }
+      this._activeVoices.clear();
+    }
+    this.stopPlayerDownHum();
   },
 
   _busNode(bus) {
@@ -404,15 +437,17 @@ export const AudioSys = {
 
   _route(node, opts = {}) {
     const dest = this._busNode(opts.bus);
-    if (!dest) return;
+    if (!dest) return null;
     let out = node;
+    let panner = null;
     if (typeof opts.pan === 'number' && Math.abs(opts.pan) > 0.01 && this.ctx.createStereoPanner) {
-      const panner = this.ctx.createStereoPanner();
+      panner = this.ctx.createStereoPanner();
       panner.pan.value = Math.max(-1, Math.min(1, opts.pan));
       out.connect(panner);
       out = panner;
     }
     out.connect(dest);
+    return panner;
   },
 
   _vary(freq, amount = 0.06) {
@@ -436,10 +471,10 @@ export const AudioSys = {
       gain.gain.exponentialRampToValueAtTime(Math.max(0.0002, vol), now + Math.max(0.001, attack));
       gain.gain.exponentialRampToValueAtTime(0.0001, now + dur);
       osc.connect(gain);
-      this._route(gain, opts);
+      const panner = this._route(gain, opts);
       osc.start(now);
       osc.stop(now + dur + 0.02);
-      this._registerSource(osc);
+      this._registerSource(osc, panner ? [gain, panner] : [gain]);
       return { osc, gain };
     } catch (e) {
       return null;
@@ -468,10 +503,10 @@ export const AudioSys = {
       gain.gain.exponentialRampToValueAtTime(0.0001, now + dur);
       source.connect(filter);
       filter.connect(gain);
-      this._route(gain, opts);
+      const panner = this._route(gain, opts);
       source.start(now);
       source.stop(now + dur + 0.02);
-      this._registerSource(source);
+      this._registerSource(source, panner ? [filter, gain, panner] : [filter, gain]);
       return { source, gain };
     } catch (e) {
       return null;
@@ -893,10 +928,10 @@ export const AudioSys = {
     gain.gain.exponentialRampToValueAtTime(0.0001, t + 3.0);
     osc.connect(filter);
     filter.connect(gain);
-    this._route(gain, { bus: 'sfx' });
+    const panner = this._route(gain, { bus: 'sfx' });
     osc.start(t);
     osc.stop(t + 3.02);
-    this._registerSource(osc);
+    this._registerSource(osc, panner ? [filter, gain, panner] : [filter, gain]);
 
     this._osc('sawtooth', 125, t, 2.8, 0.06, { endFreq: 116, attack: 0.3, bus: 'sfx' });
     this._osc('sine', 55, t, 2.6, 0.09, { endFreq: 48, attack: 0.25, bus: 'sfx' });
@@ -950,6 +985,7 @@ export const AudioSys = {
       this.playerDownHumOsc = this.ctx.createOscillator();
       this.playerDownHumGain = this.ctx.createGain();
       const filter = this.ctx.createBiquadFilter();
+      this.playerDownHumFilter = filter;
       filter.type = 'lowpass';
       filter.frequency.value = 95;
 
@@ -974,13 +1010,21 @@ export const AudioSys = {
       this.playerDownHumGain?.gain?.cancelScheduledValues(now);
       this.playerDownHumGain?.gain?.linearRampToValueAtTime(0.0001, now + 0.2);
       this.playerDownHumOsc.stop(now + 0.22);
+      const osc = this.playerDownHumOsc;
+      const gain = this.playerDownHumGain;
+      const filter = this.playerDownHumFilter;
+      this.playerDownHumOsc = null;
+      this.playerDownHumGain = null;
+      this.playerDownHumFilter = null;
       setTimeout(() => {
-        this.playerDownHumOsc = null;
-        this.playerDownHumGain = null;
+        try { osc?.disconnect(); } catch (e) {}
+        try { gain?.disconnect(); } catch (e) {}
+        try { filter?.disconnect(); } catch (e) {}
       }, 250);
     } catch (e) {
       this.playerDownHumOsc = null;
       this.playerDownHumGain = null;
+      this.playerDownHumFilter = null;
     }
   },
 
@@ -1280,7 +1324,7 @@ export const AudioSys = {
     gain.connect(this.musicGain);
     osc.start(now);
     osc.stop(now + dur + 0.02);
-    this._registerSource(osc);
+    this._registerSource(osc, [filter, gain]);
   },
 
   _musicLead(freq, time, dur, vol) {

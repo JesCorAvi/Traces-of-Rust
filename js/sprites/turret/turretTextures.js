@@ -15,7 +15,7 @@ export function getHazardTexture() {
   if (hazardTex) return hazardTex;
   const c = document.createElement('canvas');
   c.width = c.height = 64;
-  const ctx = c.getContext('2d');
+  const ctx = c.getContext('2d', { willReadFrequently: true });
   ctx.fillStyle = '#121812';
   ctx.fillRect(0, 0, 64, 64);
   ctx.fillStyle = '#b89c46';
@@ -41,7 +41,7 @@ export function getTechPanelTexture() {
   if (techPanelTex) return techPanelTex;
   const c = document.createElement('canvas');
   c.width = c.height = 64;
-  const ctx = c.getContext('2d');
+  const ctx = c.getContext('2d', { willReadFrequently: true });
   ctx.fillStyle = '#1c241b';
   ctx.fillRect(0, 0, 64, 64);
   ctx.strokeStyle = '#0a0d0a';
@@ -78,7 +78,7 @@ export function getGaugeTexture(accentColor = '#b89c46') {
   if (gaugeTexCache[accentColor]) return gaugeTexCache[accentColor];
   const c = document.createElement('canvas');
   c.width = c.height = 64;
-  const ctx = c.getContext('2d');
+  const ctx = c.getContext('2d', { willReadFrequently: true });
   ctx.fillStyle = '#050605';
   ctx.fillRect(0, 0, 64, 64);
 
@@ -125,7 +125,7 @@ export function getTurretDecalTexture(type) {
   const c = document.createElement('canvas');
   c.width = 64;
   c.height = 32;
-  const ctx = c.getContext('2d');
+  const ctx = c.getContext('2d', { willReadFrequently: true });
 
   // Fondo de placa metálica remachada
   ctx.fillStyle = '#161d15';
@@ -240,7 +240,7 @@ export function getMuzzleFlashTexture(type) {
   if (muzzleFlashTexCache[type]) return muzzleFlashTexCache[type];
   const c = document.createElement('canvas');
   c.width = c.height = 64;
-  const ctx = c.getContext('2d');
+  const ctx = c.getContext('2d', { willReadFrequently: true });
 
   const isCryo = type === 'cryo';
   const coreColor = '#ffffff';

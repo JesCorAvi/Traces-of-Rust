@@ -18,6 +18,7 @@ const steps = [
   { name: 'Auditoría personajes', cmd: 'node', args: ['.agent/skills/playable-character-content/scripts/audit-characters.mjs'] },
   { name: 'Auditoría 3D y entidades', cmd: 'node', args: ['.agent/skills/procedural-3d-entity/scripts/audit-entities.mjs'] },
   { name: 'Auditoría audio y SFX', cmd: 'node', args: ['.agent/skills/procedural-sfx/scripts/audit-audio.mjs'] },
+  { name: 'Estabilidad y rendimiento', cmd: 'node', args: ['scripts/test-performance-stability.mjs'] },
 ];
 
 console.log('🧪 Iniciando suite de pruebas completas de Traces of Rust...\n');

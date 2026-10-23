@@ -140,7 +140,7 @@ export function buildAllyDirectionalSheets() {
     const canvas = document.createElement('canvas');
     canvas.width = w;
     canvas.height = h;
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
 
     const glowCanvas = document.createElement('canvas');
     glowCanvas.width = w;

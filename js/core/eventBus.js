@@ -66,7 +66,14 @@ class EventBus {
     if (eventName) {
       this.listeners.delete(eventName);
     } else {
+      // Preserva listeners del sistema y la interfaz que se configuran al importar módulos
+      const persistent = new Map();
+      const SYSTEM_EVENTS = ['i18n:change', 'mode:selected', 'game:menu'];
+      SYSTEM_EVENTS.forEach(evt => {
+        if (this.listeners.has(evt)) persistent.set(evt, this.listeners.get(evt));
+      });
       this.listeners.clear();
+      persistent.forEach((val, key) => this.listeners.set(key, val));
     }
   }
 }

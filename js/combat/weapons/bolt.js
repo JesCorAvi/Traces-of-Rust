@@ -5,6 +5,9 @@ import * as THREE from 'three';
 import { AudioSys } from '../../audio.js';
 import { getDirectionalHandPos, getWeaponScaling } from '../shared.js';
 
+const BOLT_MAT = new THREE.LineBasicMaterial({ color: 0xb89c46 });
+BOLT_MAT.userData = { sharedMat: true };
+
 // 6. DESFIBRILADOR ROTO
 export function fireDefibrillator(scene, playerPos, facingYaw, level, mods, enemies, vfx, onDamage) {
   const { cfg, mult } = getWeaponScaling('bolt', level);
@@ -25,9 +28,9 @@ export function fireDefibrillator(scene, playerPos, facingYaw, level, mods, enem
   });
   const bolt = new THREE.Line(
     new THREE.BufferGeometry().setFromPoints(pts),
-    new THREE.LineBasicMaterial({ color: 0xb89c46 })
+    BOLT_MAT
   );
   scene.add(bolt);
-  vfx.push({ mesh: bolt, disposeGeo: true, disposeMat: true, life: 0.12 });
+  vfx.push({ mesh: bolt, disposeGeo: true, disposeMat: false, life: 0.12 });
   return facingYaw;
 }

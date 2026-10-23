@@ -56,6 +56,7 @@ export function initCombatLight(scene) {
       alphaTest: 0.15,
       side: THREE.DoubleSide
     });
+    SHARED_MAT.slashMat.userData = { sharedMat: true };
   }
   if (!SHARED_MAT.orbitalMat && SpriteSheets.env && SpriteSheets.env.orbital) {
     SHARED_MAT.orbitalMat = new THREE.MeshBasicMaterial({
@@ -64,6 +65,7 @@ export function initCombatLight(scene) {
       alphaTest: 0.2,
       side: THREE.DoubleSide
     });
+    SHARED_MAT.orbitalMat.userData = { sharedMat: true };
   }
 }
 
@@ -116,10 +118,12 @@ export function spawnEnemyProjectile(scene, projectiles, origin, dir, speed, dmg
 // Genera rociada direccional de gotas y trozos de sangre al recibir daño
 export function spawnHitBlood(scene, vfx, pos, opts = {}) {
   if (!scene || !Array.isArray(vfx) || !pos) return;
+  if (vfx.length > 250) return;
   const isCrit = !!opts.isCrit;
   const damage = opts.damage || 0;
   const hitDir = opts.hitDir || null;
-  const count = isCrit ? 10 : (damage >= 35 ? 7 : (opts.count || 4));
+  let count = isCrit ? 10 : (damage >= 35 ? 7 : (opts.count || 4));
+  if (vfx.length > 120) count = Math.min(count, 3);
   const floorY = (opts.floorY ?? (pos.y - 0.95)) + 0.04;
 
   for (let i = 0; i < count; i++) {
@@ -158,9 +162,11 @@ export function spawnHitBlood(scene, vfx, pos, opts = {}) {
 // Explosión visceral de gore, sangre y charco expansivo al morir una unidad
 export function spawnEnemyDeathGore(scene, vfx, pos, opts = {}) {
   if (!scene || !Array.isArray(vfx) || !pos) return;
+  if (vfx.length > 250) return;
   const isBoss = !!opts.isBoss;
   const baseSize = opts.size || 2.0;
-  const count = isBoss ? 26 : (opts.count || 12);
+  let count = isBoss ? 26 : (opts.count || 12);
+  if (vfx.length > 120 && !isBoss) count = Math.min(count, 6);
   const floorY = pos.y + 0.02;
   const hitDir = opts.hitDir || null;
 
@@ -228,6 +234,7 @@ export function spawnEnemyDeathGore(scene, vfx, pos, opts = {}) {
 // Briznas de ceniza y vapor de óxido que ascienden mientras el cadáver se disuelve
 export function spawnDissolveAshWisp(scene, vfx, pos, opts = {}) {
   if (!scene || !Array.isArray(vfx) || !pos) return;
+  if (vfx.length > 150) return;
   const count = opts.count || 2;
   const height = opts.height || 0.6;
   const isBoss = !!opts.isBoss;

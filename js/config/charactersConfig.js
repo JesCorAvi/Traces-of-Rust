@@ -123,15 +123,25 @@ export const CHARACTERS = {
 };
 
 const STORAGE_KEY = 'traces_selected_character';
+let cachedSelectedCharId = null;
 
 export function getSelectedCharacterId() {
-  const saved = localStorage.getItem(STORAGE_KEY);
-  return (saved && CHARACTERS[saved]) ? saved : DEFAULT_CHARACTER_ID;
+  if (cachedSelectedCharId) return cachedSelectedCharId;
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    cachedSelectedCharId = (saved && CHARACTERS[saved]) ? saved : DEFAULT_CHARACTER_ID;
+  } catch (e) {
+    cachedSelectedCharId = DEFAULT_CHARACTER_ID;
+  }
+  return cachedSelectedCharId;
 }
 
 export function setSelectedCharacterId(id) {
   if (CHARACTERS[id]) {
-    localStorage.setItem(STORAGE_KEY, id);
+    cachedSelectedCharId = id;
+    try {
+      localStorage.setItem(STORAGE_KEY, id);
+    } catch (e) {}
   }
 }
 

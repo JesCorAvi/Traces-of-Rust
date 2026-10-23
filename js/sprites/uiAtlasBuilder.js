@@ -13,7 +13,7 @@ export function buildMasterUIAtlas() {
   const canvas = document.createElement('canvas');
   canvas.width = UI.ATLAS_W;
   canvas.height = UI.ATLAS_H;
-  const ctx = canvas.getContext('2d');
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
 
   drawPanels(ctx, UI);
   drawBars(ctx, UI);

@@ -6,6 +6,16 @@ import * as THREE from 'three';
 import { AudioSys } from '../../audio.js';
 import { SHARED_GEO, getDirectionalHandPos, getWeaponScaling } from '../shared.js';
 
+// Materiales compartidos para partículas de fuego (evita asignar/destruir decenas de materiales por segundo)
+const SHARED_FLAME_MATS = {
+  cyan: new THREE.MeshBasicMaterial({ color: 0x3fe0f5, transparent: true, opacity: 0.88, side: THREE.DoubleSide }),
+  yellow: new THREE.MeshBasicMaterial({ color: 0xffcc33, transparent: true, opacity: 0.88, side: THREE.DoubleSide }),
+  orange: new THREE.MeshBasicMaterial({ color: 0xff6611, transparent: true, opacity: 0.88, side: THREE.DoubleSide })
+};
+SHARED_FLAME_MATS.cyan.userData = { sharedMat: true };
+SHARED_FLAME_MATS.yellow.userData = { sharedMat: true };
+SHARED_FLAME_MATS.orange.userData = { sharedMat: true };
+
 // Estado persistente del lanzallamas entre frames (similar al soldador/láser)
 const state = {
   phase: 'ready', // 'ready' -> 'active' -> 'cooldown' -> 'ready'
@@ -145,25 +155,20 @@ function applyFlameTick(scene, nozzle, playerPos, fwd, range, coneHalfAngle, dmg
   for (let i = 0; i < particleCount; i++) {
     const spread = (Math.random() - 0.5) * (coneHalfAngle * 1.4);
     const dir = fwd.clone().applyAxisAngle(new THREE.Vector3(0, 1, 0), spread);
-    const flameColor = Math.random() < 0.18 ? 0x3fe0f5 : (Math.random() < 0.5 ? 0xffcc33 : 0xff6611);
-    const flame = new THREE.Mesh(
-      SHARED_GEO.flame,
-      new THREE.MeshBasicMaterial({
-        color: flameColor,
-        transparent: true,
-        opacity: 0.88,
-        side: THREE.DoubleSide
-      })
-    );
+    const flameMat = Math.random() < 0.18
+      ? SHARED_FLAME_MATS.cyan
+      : (Math.random() < 0.5 ? SHARED_FLAME_MATS.yellow : SHARED_FLAME_MATS.orange);
+    const flame = new THREE.Mesh(SHARED_GEO.flame, flameMat);
     flame.position.copy(nozzle);
     scene.add(flame);
     vfx.push({
       mesh: flame,
-      disposeMat: true,
+      disposeMat: false,
+      disposeGeo: false,
       life: 0.26,
       maxLife: 0.26,
       billboard: true,
-      fade: true,
+      fade: false,
       scaleSpeed: 3.6,
       vel: dir.multiplyScalar(range * 3.2).add(new THREE.Vector3(0, 0.8 + Math.random() * 0.4, 0))
     });

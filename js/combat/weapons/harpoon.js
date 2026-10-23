@@ -5,6 +5,9 @@ import * as THREE from 'three';
 import { AudioSys } from '../../audio.js';
 import { getDirectionalHandPos, getWeaponScaling } from '../shared.js';
 
+const HARPOON_MAT = new THREE.LineBasicMaterial({ color: 0xc8c2ac });
+HARPOON_MAT.userData = { sharedMat: true };
+
 // 5. ARPÓN NEUMÁTICO
 export function fireHarpoon(scene, playerPos, facingYaw, level, mods, enemies, vfx, onDamage, bodyYaw = facingYaw) {
   const alive = enemies.filter(e => e.state !== 'dead');
@@ -26,10 +29,10 @@ export function fireHarpoon(scene, playerPos, facingYaw, level, mods, enemies, v
 
     const cable = new THREE.Line(
       new THREE.BufferGeometry().setFromPoints([start, end]),
-      new THREE.LineBasicMaterial({ color: 0xc8c2ac })
+      HARPOON_MAT
     );
     scene.add(cable);
-    vfx.push({ mesh: cable, disposeGeo: true, disposeMat: true, life: 0.18, maxLife: 0.18, fade: true });
+    vfx.push({ mesh: cable, disposeGeo: true, disposeMat: false, life: 0.18, maxLife: 0.18, fade: false });
 
     let pierced = 0;
     alive.forEach(e => {

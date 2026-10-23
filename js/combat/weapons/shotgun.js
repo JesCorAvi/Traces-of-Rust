@@ -5,6 +5,15 @@ import * as THREE from 'three';
 import { AudioSys } from '../../audio.js';
 import { SHARED_GEO, SHARED_MAT, triggerCombatFlash, getDirectionalHandPos, getWeaponScaling } from '../shared.js';
 
+const FLASH_MAT = new THREE.MeshBasicMaterial({ color: 0xffe699, transparent: true, opacity: 0.95, side: THREE.DoubleSide });
+FLASH_MAT.userData = { sharedMat: true };
+
+const TRACER_MAT_LIGHT = new THREE.LineBasicMaterial({ color: 0xffe699, transparent: true, opacity: 0.85 });
+TRACER_MAT_LIGHT.userData = { sharedMat: true };
+
+const TRACER_MAT_DARK = new THREE.LineBasicMaterial({ color: 0xd97724, transparent: true, opacity: 0.85 });
+TRACER_MAT_DARK.userData = { sharedMat: true };
+
 // 2. ESCOPETA CALIBRE 12
 export function fireBuckshot(scene, playerPos, aimYaw, bodyYaw, level, mods, enemies, vfx, onDamage, triggerFlash) {
   const alive = enemies.filter(e => e.state !== 'dead');
@@ -27,12 +36,12 @@ export function fireBuckshot(scene, playerPos, aimYaw, bodyYaw, level, mods, ene
   triggerCombatFlash(muzzlePos, 0xffaa33, 150, 0.08);
 
   const flashSprite = new THREE.Mesh(
-    SHARED_GEO.muzzleFlash,
-    new THREE.MeshBasicMaterial({ color: 0xffe699, transparent: true, opacity: 0.95, side: THREE.DoubleSide })
+    SHARED_GEO.muzzleFlash, FLASH_MAT
+
   );
   flashSprite.position.copy(muzzlePos);
   scene.add(flashSprite);
-  vfx.push({ mesh: flashSprite, disposeMat: true, life: 0.08, maxLife: 0.08, billboard: true, scaleSpeed: 6 });
+  vfx.push({ mesh: flashSprite, disposeMat: false, life: 0.08, maxLife: 0.08, billboard: true, scaleSpeed: 6 });
 
   const shell = new THREE.Mesh(SHARED_GEO.shell, SHARED_MAT.shellRed);
   shell.position.copy(muzzlePos);
@@ -76,10 +85,10 @@ export function fireBuckshot(scene, playerPos, aimYaw, bodyYaw, level, mods, ene
     const endPos = muzzlePos.clone().add(pelletDir.clone().multiplyScalar(hitDist));
     const tracer = new THREE.Line(
       new THREE.BufferGeometry().setFromPoints([muzzlePos.clone(), endPos]),
-      new THREE.LineBasicMaterial({ color: i % 2 === 0 ? 0xffe699 : 0xd97724, transparent: true, opacity: 0.85 })
+      i % 2 === 0 ? TRACER_MAT_LIGHT : TRACER_MAT_DARK
     );
     scene.add(tracer);
-    vfx.push({ mesh: tracer, disposeGeo: true, disposeMat: true, life: 0.13, maxLife: 0.13, fade: true });
+    vfx.push({ mesh: tracer, disposeGeo: true, disposeMat: false, life: 0.13, maxLife: 0.13, fade: false });
 
     if (hitEnemy) {
       onDamage(hitEnemy, dmgPerPellet, pelletDir.clone().multiplyScalar(0.42));

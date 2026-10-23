@@ -9,6 +9,7 @@ import { MultiplayerSync } from '../online/multiplayerSync.js';
 
 export function setupGameFlow(rt) {
 function clearSharedRunState() {
+  rt.AudioSys?.stopAllVoices?.();
   rt.ModeManager.cleanupActiveMode(rt.buildModeContext());
   rt.enemyPool.clearAll();
   rt.drops.forEach(d => rt.scene.remove(d.group)); rt.drops.length = 0;
@@ -94,6 +95,7 @@ function startGame(options = {}) {
 }
 
 function finishRun(outcome, options = {}) {
+  rt.AudioSys?.stopAllVoices?.();
   if (rt.state === 'GAME_OVER') return;
   rt.state = 'GAME_OVER';
   if (document.pointerLockElement) document.exitPointerLock();
@@ -137,6 +139,7 @@ function finishRun(outcome, options = {}) {
 }
 
 function returnToMainMenu(reasonMsg = null) {
+  rt.AudioSys?.stopAllVoices?.();
   rt.AudioSys.playUISelect();
   GameEvents.emit('game:menu');
   // Avisa al compañero si somos Host (MATCH_END) o si somos Cliente (PEER_LEFT)
@@ -161,6 +164,8 @@ function returnToMainMenu(reasonMsg = null) {
   clearSharedRunState();
   rt.resetPlayerDeathState?.();
   rt.state = 'START';
+  rt.targetCamDistMult = 1.0;
+  rt.camDistMult = 1.0;
   rt.playerGroup.position.set(0, 0, 0);
   document.querySelectorAll('.overlay').forEach(el => el.classList.add('hidden'));
   document.getElementById('hud').classList.add('hidden');

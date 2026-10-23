@@ -241,9 +241,9 @@ export class TurretSystem {
     for (const item of this.fx) {
       this.scene.remove(item.mesh);
       if (!item.shared) {
-        if (item.mesh.geometry) item.mesh.geometry.dispose();
-        if (item.mat) item.mat.dispose();
-        else if (item.mesh.material) item.mesh.material.dispose();
+        if (item.mesh.geometry && !item.mesh.geometry.userData?.sharedGeo) item.mesh.geometry.dispose();
+        if (item.mat && !item.mat.userData?.sharedMat) item.mat.dispose();
+        else if (item.mesh.material && !item.mesh.material.userData?.sharedMat) item.mesh.material.dispose();
       }
     }
     this.fx.length = 0;

@@ -6,7 +6,7 @@ import { applyCleanSpriteOutlineRect, makeTexture } from '../spritePalette.js';
 export function buildPickupSheets() {
   const serumCan = document.createElement('canvas');
   serumCan.width = 256; serumCan.height = 64;
-  const sCtx = serumCan.getContext('2d');
+  const sCtx = serumCan.getContext('2d', { willReadFrequently: true });
 
   for (let f = 0; f < 4; f++) {
     sCtx.save();
@@ -48,7 +48,7 @@ export function buildPickupSheets() {
 
   const toothCan = document.createElement('canvas');
   toothCan.width = 256; toothCan.height = 64;
-  const tCtx = toothCan.getContext('2d');
+  const tCtx = toothCan.getContext('2d', { willReadFrequently: true });
 
   for (let f = 0; f < 4; f++) {
     tCtx.save();
@@ -87,7 +87,7 @@ export function buildPickupSheets() {
 
   const chestCan = document.createElement('canvas');
   chestCan.width = 256; chestCan.height = 64;
-  const cCtx = chestCan.getContext('2d');
+  const cCtx = chestCan.getContext('2d', { willReadFrequently: true });
 
   for (let f = 0; f < 4; f++) {
     cCtx.save();
@@ -125,7 +125,7 @@ export function buildPickupSheets() {
   // Chatarra: engranaje roto que gira y suelta chispas
   const scrapCan = document.createElement('canvas');
   scrapCan.width = 256; scrapCan.height = 64;
-  const scCtx = scrapCan.getContext('2d');
+  const scCtx = scrapCan.getContext('2d', { willReadFrequently: true });
 
   for (let f = 0; f < 4; f++) {
     scCtx.save();

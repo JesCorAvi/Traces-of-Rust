@@ -5,6 +5,19 @@ import * as THREE from 'three';
 import { AudioSys } from '../../../audio.js';
 import { getEffectiveDamage, getMuzzleWorldPos } from '../targeting.js';
 
+const INCINERATOR_FLAME_GEO = new THREE.PlaneGeometry(0.55, 0.55);
+INCINERATOR_FLAME_GEO.userData = { sharedGeo: true };
+
+const INCINERATOR_MAT_ORANGE = new THREE.MeshBasicMaterial({
+  color: 0xff7711, transparent: true, opacity: 0.75, side: THREE.DoubleSide, depthWrite: false
+});
+INCINERATOR_MAT_ORANGE.userData = { sharedMat: true };
+
+const INCINERATOR_MAT_YELLOW = new THREE.MeshBasicMaterial({
+  color: 0xffcc33, transparent: true, opacity: 0.75, side: THREE.DoubleSide, depthWrite: false
+});
+INCINERATOR_MAT_YELLOW.userData = { sharedMat: true };
+
 export function fireIncinerator(turret, primary, enemies) {
   if (!primary) return;
 
@@ -53,20 +66,15 @@ export function fireIncinerator(turret, primary, enemies) {
   const ctx = turret.system.ctx;
   if (ctx?.vfx) {
     for (let i = 0; i < 3; i++) {
-      const flame = new THREE.Mesh(
-        new THREE.PlaneGeometry(0.55, 0.55),
-        new THREE.MeshBasicMaterial({
-          color: i % 2 === 0 ? 0xff7711 : 0xffcc33,
-          transparent: true, opacity: 0.75, side: THREE.DoubleSide, depthWrite: false
-        })
-      );
+      const flameMat = i % 2 === 0 ? INCINERATOR_MAT_ORANGE : INCINERATOR_MAT_YELLOW;
+      const flame = new THREE.Mesh(INCINERATOR_FLAME_GEO, flameMat);
       flame.position.copy(muzzle);
       ctx.scene.add(flame);
       const spread = (Math.random() - 0.5) * 0.42;
       const flameDir = dir.clone().applyAxisAngle(new THREE.Vector3(0, 1, 0), spread);
       ctx.vfx.push({
-        mesh: flame, disposeGeo: true, disposeMat: true,
-        life: 0.24, maxLife: 0.24, billboard: true, fade: true, scaleSpeed: 2.6,
+        mesh: flame, disposeGeo: false, disposeMat: false,
+        life: 0.24, maxLife: 0.24, billboard: true, fade: false, scaleSpeed: 2.6,
         vel: flameDir.multiplyScalar(7.5).add(new THREE.Vector3(0, 0.7, 0))
       });
     }

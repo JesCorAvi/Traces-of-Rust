@@ -194,7 +194,7 @@ window.addEventListener('wheel', e => {
   const zoomStep = Math.sign(rawDelta) * Math.min(0.25, Math.max(0.08, Math.abs(rawDelta) * 0.002));
 
   const current = rt.targetCamDistMult ?? 1.0;
-  const next = Math.max(0.0, Math.min(2.5, current + zoomStep));
+  const next = Math.max(0.0, Math.min(1.8, current + zoomStep));
   rt.targetCamDistMult = Math.round(next * 100) / 100;
 
   try {

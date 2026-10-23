@@ -22,10 +22,17 @@ function disposeObject(root, scene) {
   if (!root) return;
   if (scene) scene.remove(root);
   root.traverse?.(obj => {
-    if (obj.geometry) obj.geometry.dispose();
-    if (obj.material) {
-      if (Array.isArray(obj.material)) obj.material.forEach(mat => mat.dispose());
-      else obj.material.dispose();
+    if (obj.geometry && !obj.geometry.userData?.sharedGeo && !obj.userData?.sharedGeo) {
+      obj.geometry.dispose();
+    }
+    if (obj.material && !obj.material.userData?.sharedMat && !obj.userData?.sharedMat) {
+      if (Array.isArray(obj.material)) {
+        obj.material.forEach(mat => {
+          if (!mat?.userData?.sharedMat) mat.dispose();
+        });
+      } else {
+        obj.material.dispose();
+      }
     }
   });
 }

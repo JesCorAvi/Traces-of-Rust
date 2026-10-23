@@ -8,7 +8,7 @@ import { buildPickupSheets } from './pickupSheets.js';
 export function buildEnvironmentTextures() {
   const gCan = document.createElement('canvas');
   gCan.width = gCan.height = 128;
-  const gCtx = gCan.getContext('2d');
+  const gCtx = gCan.getContext('2d', { willReadFrequently: true });
   gCtx.fillStyle = '#121812'; gCtx.fillRect(0, 0, 128, 128);
   for (let y = 0; y < 128; y += 32) {
     for (let x = 0; x < 128; x += 32) {
@@ -25,7 +25,7 @@ export function buildEnvironmentTextures() {
 
   const cCan = document.createElement('canvas');
   cCan.width = cCan.height = 64;
-  const cCtx = cCan.getContext('2d');
+  const cCtx = cCan.getContext('2d', { willReadFrequently: true });
   cCtx.fillStyle = '#4a2518'; cCtx.fillRect(0, 0, 64, 64);
   cCtx.fillStyle = '#243022'; cCtx.fillRect(6, 6, 52, 52);
   cCtx.strokeStyle = '#877a5c'; cCtx.lineWidth = 4;
@@ -35,7 +35,7 @@ export function buildEnvironmentTextures() {
 
   const mCan = document.createElement('canvas');
   mCan.width = mCan.height = 64;
-  const mCtx = mCan.getContext('2d');
+  const mCtx = mCan.getContext('2d', { willReadFrequently: true });
   mCtx.fillStyle = '#182018'; mCtx.fillRect(0, 0, 64, 64);
   for (let y = 0; y < 64; y += 8) {
     mCtx.fillStyle = y % 16 === 0 ? '#4a2518' : '#364832';
@@ -49,7 +49,7 @@ export function buildEnvironmentTextures() {
   // Placa de cruce / plataforma giratoria para intersección de caminos
   const iCan = document.createElement('canvas');
   iCan.width = iCan.height = 64;
-  const iCtx = iCan.getContext('2d');
+  const iCtx = iCan.getContext('2d', { willReadFrequently: true });
   iCtx.fillStyle = '#182018';
   iCtx.fillRect(0, 0, 64, 64);
 
@@ -134,7 +134,7 @@ export function buildEnvironmentTextures() {
 
   const aCan = document.createElement('canvas');
   aCan.width = aCan.height = 128;
-  const aCtx = aCan.getContext('2d');
+  const aCtx = aCan.getContext('2d', { willReadFrequently: true });
   aCtx.strokeStyle = '#68863a'; aCtx.lineWidth = 5;
   aCtx.beginPath(); aCtx.arc(64, 64, 56, 0, Math.PI * 2); aCtx.stroke();
   aCtx.strokeStyle = '#b89c46'; aCtx.lineWidth = 2;
@@ -143,7 +143,7 @@ export function buildEnvironmentTextures() {
 
   const pCan = document.createElement('canvas');
   pCan.width = pCan.height = 64;
-  const pCtx = pCan.getContext('2d');
+  const pCtx = pCan.getContext('2d', { willReadFrequently: true });
   pCtx.fillStyle = '#243022'; pCtx.fillRect(22, 0, 20, 64);
   pCtx.fillStyle = '#4a2518'; pCtx.fillRect(25, 0, 6, 64);
   applyEnvironmentDither(pCtx, 64, 64);
