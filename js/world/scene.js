@@ -5,6 +5,8 @@ import * as THREE from 'three';
 import { TERRAIN, terrainHeightAt, sandTintAt } from './terrain.js';
 
 const SUN_DIR = new THREE.Vector3(-0.34, 0.11, -1).normalize();
+// Luna baja sobre el mar, en el arco de visión por defecto del chiringuito.
+const MOON_DIR = new THREE.Vector3(0.584, 0.122, -0.803).normalize();
 
 function createSkyDome() {
   // Domo de atardecer pintado en canvas. Un MeshBasicMaterial conserva los
@@ -79,6 +81,118 @@ function createSkyDome() {
   sky.renderOrder = -30;
   sky.frustumCulled = false;
   return sky;
+}
+
+function createNightSkyDome() {
+  const c = document.createElement('canvas');
+  c.width = 2048;
+  c.height = 1024;
+  const ctx = c.getContext('2d');
+
+  const gradient = ctx.createLinearGradient(0, 0, 0, c.height);
+  gradient.addColorStop(0.00, '#050a1c');
+  gradient.addColorStop(0.34, '#0b1736');
+  gradient.addColorStop(0.58, '#172b52');
+  gradient.addColorStop(0.72, '#28456c');
+  gradient.addColorStop(0.84, '#35516f');
+  gradient.addColorStop(1.00, '#1b2b3e');
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, c.width, c.height);
+
+  // Estrellas deterministas: el mismo cielo cada noche.
+  let seed = 20261024;
+  const rand = () => {
+    seed = (seed * 1664525 + 1013904223) >>> 0;
+    return seed / 4294967296;
+  };
+  for (let i = 0; i < 820; i++) {
+    const x = rand() * c.width;
+    const y = rand() * c.height * 0.62;
+    const size = rand() < 0.72 ? 2 : 3 + Math.floor(rand() * 2);
+    const alpha = 0.35 + rand() * 0.55;
+    ctx.fillStyle = rand() < 0.16
+      ? `rgba(180, 210, 255, ${alpha})`
+      : `rgba(255, 248, 225, ${alpha})`;
+    ctx.fillRect(x, y, size, size);
+  }
+
+  // Velo de nubes nocturnas, muy tenue, para no romper la silueta lunar.
+  ctx.save();
+  ctx.globalAlpha = 0.10;
+  ctx.fillStyle = '#6f86ad';
+  for (let i = 0; i < 8; i++) {
+    ctx.beginPath();
+    ctx.ellipse(180 + i * 240, 640 + (i % 3) * 34, 210 + (i % 4) * 50, 26, 0.06, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.minFilter = THREE.NearestFilter;
+  tex.magFilter = THREE.NearestFilter;
+  tex.generateMipmaps = false;
+  tex.wrapS = THREE.RepeatWrapping;
+  tex.wrapT = THREE.ClampToEdgeWrapping;
+
+  const material = new THREE.MeshBasicMaterial({
+    map: tex,
+    side: THREE.BackSide,
+    transparent: true,
+    opacity: 0,
+    depthWrite: false,
+    fog: false,
+    toneMapped: false
+  });
+  const sky = new THREE.Mesh(new THREE.SphereGeometry(430, 40, 24), material);
+  sky.renderOrder = -29;
+  sky.frustumCulled = false;
+  return sky;
+}
+
+function makeMoonTexture() {
+  const c = document.createElement('canvas');
+  c.width = c.height = 128;
+  const ctx = c.getContext('2d');
+  const glow = ctx.createRadialGradient(64, 64, 31, 64, 64, 64);
+  glow.addColorStop(0, 'rgba(205, 225, 255, 0.42)');
+  glow.addColorStop(0.55, 'rgba(160, 195, 245, 0.16)');
+  glow.addColorStop(1, 'rgba(140, 180, 235, 0)');
+  ctx.fillStyle = glow;
+  ctx.fillRect(0, 0, 128, 128);
+  ctx.fillStyle = '#eef3ff';
+  ctx.beginPath();
+  ctx.arc(64, 64, 27, 0, Math.PI * 2);
+  ctx.fill();
+  // Mares y cráteres.
+  ctx.fillStyle = 'rgba(156, 174, 208, 0.42)';
+  for (const [x, y, r] of [[54, 55, 7], [72, 72, 9], [58, 78, 5], [78, 54, 4], [68, 45, 3]]) {
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.minFilter = THREE.NearestFilter;
+  tex.magFilter = THREE.NearestFilter;
+  tex.generateMipmaps = false;
+  return tex;
+}
+
+function makeMoonGlowTexture() {
+  const c = document.createElement('canvas');
+  c.width = c.height = 128;
+  const ctx = c.getContext('2d');
+  const g = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
+  g.addColorStop(0, 'rgba(225, 238, 255, 0.95)');
+  g.addColorStop(0.22, 'rgba(186, 214, 255, 0.62)');
+  g.addColorStop(0.52, 'rgba(135, 178, 240, 0.24)');
+  g.addColorStop(1, 'rgba(110, 150, 220, 0)');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, 128, 128);
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
 }
 
 function makeSunTexture() {
@@ -207,6 +321,9 @@ export function createWorldScene(materials) {
   const skyDome = createSkyDome();
   scene.add(skyDome);
 
+  const nightSky = createNightSkyDome();
+  scene.add(nightSky);
+
   const sunTexture = makeSunTexture();
   const sunGlow = new THREE.Sprite(new THREE.SpriteMaterial({
     map: sunTexture,
@@ -239,6 +356,43 @@ export function createWorldScene(materials) {
   sunDisc.renderOrder = -13;
   scene.add(sunDisc);
 
+  const moonTexture = makeMoonTexture();
+  const moonGlow = new THREE.Sprite(new THREE.SpriteMaterial({
+    map: makeMoonGlowTexture(),
+    color: 0xbcd6ff,
+    transparent: true,
+    opacity: 0,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+    fog: false,
+    toneMapped: false
+  }));
+  moonGlow.position.copy(MOON_DIR).multiplyScalar(356);
+  moonGlow.scale.set(90, 90, 1);
+  moonGlow.renderOrder = -14;
+  scene.add(moonGlow);
+
+  const moonDisc = new THREE.Sprite(new THREE.SpriteMaterial({
+    map: moonTexture,
+    color: 0xffffff,
+    transparent: true,
+    opacity: 0,
+    blending: THREE.NormalBlending,
+    depthTest: false,
+    depthWrite: false,
+    fog: false,
+    toneMapped: false
+  }));
+  moonDisc.position.copy(MOON_DIR).multiplyScalar(352);
+  moonDisc.scale.set(30, 30, 1);
+  moonDisc.renderOrder = -12;
+  scene.add(moonDisc);
+
+  const moonLight = new THREE.DirectionalLight(0x9fb8e8, 0);
+  moonLight.position.copy(MOON_DIR).multiplyScalar(100);
+  moonLight.target.position.set(0, 0, 0);
+  scene.add(moonLight, moonLight.target);
+
   // Las nubes van pintadas en el domo; los sprites adicionales podían
   // recortarse sobre el sol a baja resolución.
   const clouds = [];
@@ -267,8 +421,13 @@ export function createWorldScene(materials) {
 
   scene.userData.tropical = {
     skyDome,
+    nightSky,
     sunGlow,
     sunDisc,
+    moonGlow,
+    moonDisc,
+    moonLight,
+    nightFactor: 0,
     clouds,
     ocean,
     shoreFoam,
@@ -278,7 +437,21 @@ export function createWorldScene(materials) {
     foamTex: materials.foamTex
   };
 
-  return { scene, ambientLight, sunLight, skyDome, ocean, shoreFoam, clouds, sunGlow, sunDisc };
+  return {
+    scene,
+    ambientLight,
+    sunLight,
+    skyDome,
+    nightSky,
+    moonGlow,
+    moonDisc,
+    moonLight,
+    ocean,
+    shoreFoam,
+    clouds,
+    sunGlow,
+    sunDisc
+  };
 }
 
 export function updateWorldScene(scene, camera, dt = 0) {
@@ -290,11 +463,28 @@ export function updateWorldScene(scene, camera, dt = 0) {
   if (fx.skyDome) {
     if (camera) fx.skyDome.position.copy(camera.position);
   }
+  if (fx.nightSky) {
+    if (camera) fx.nightSky.position.copy(camera.position);
+    fx.nightSky.material.opacity = fx.nightFactor || 0;
+  }
   if (fx.sunGlow && camera) {
     fx.sunGlow.position.copy(camera.position).addScaledVector(SUN_DIR, 355);
+    fx.sunGlow.material.opacity = 0.5 * (1 - (fx.nightFactor || 0));
   }
   if (fx.sunDisc && camera) {
     fx.sunDisc.position.copy(camera.position).addScaledVector(SUN_DIR, 358);
+    fx.sunDisc.material.opacity = 1 - (fx.nightFactor || 0);
+  }
+  if (fx.moonGlow && camera) {
+    fx.moonGlow.position.copy(camera.position).addScaledVector(MOON_DIR, 356);
+    fx.moonGlow.material.opacity = 0.7 * (fx.nightFactor || 0);
+  }
+  if (fx.moonDisc && camera) {
+    fx.moonDisc.position.copy(camera.position).addScaledVector(MOON_DIR, 352);
+    fx.moonDisc.material.opacity = fx.nightFactor || 0;
+  }
+  if (fx.moonLight) {
+    fx.moonLight.intensity = 0.75 * (fx.nightFactor || 0);
   }
   if (fx.waterTex) {
     fx.waterTex.offset.x = (t * 0.006) % 1;

@@ -379,6 +379,8 @@ function setupResetControls() {
           localStorage.removeItem('traces_career_v2');
           localStorage.removeItem('echoes_rust_career_v1');
           localStorage.removeItem('traces_td_map_records');
+          localStorage.removeItem('traces_chiringuito_campaign_v1');
+          localStorage.removeItem('traces_chiringuito_records_v1');
           localStorage.removeItem('traces_camera_dist');
           localStorage.removeItem('traces_selected_character');
         } catch (_) {}

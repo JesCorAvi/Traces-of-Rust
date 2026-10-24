@@ -1,11 +1,48 @@
 // Relieve de playa compartido entre la malla visual y la física del mundo.
 // Exporta: terrainHeightAt, terrainNormalAt, sandTintAt, TERRAIN.
 
+import { ISLAND } from '../config/chiringuito/island.js';
+
 const clamp01 = v => Math.max(0, Math.min(1, v));
 const smoothstep = (a, b, v) => {
   const t = clamp01((v - a) / (b - a));
   return t * t * (3 - 2 * t);
 };
+
+// La cala del chiringuito se nivela como una plataforma de resort: así el
+// deck, la terraza, la granja y el paseo comparten cota y nada queda
+// enterrado por las dunas. El borde se funde con la playa natural.
+const RESORT_PLATEAU = (() => {
+  const base = ISLAND.base;
+  const plots = ISLAND.farm?.plots || [];
+  const plotXs = plots.map(plot => plot.x);
+  const plotZs = plots.map(plot => plot.z);
+  return {
+    minX: Math.min(base.deckMinX, ...plotXs) - 5,
+    maxX: Math.max(base.deckMaxX, ...plotXs) + 11,
+    minZ: Math.min(base.deckMinZ, ...plotZs) - 6,
+    maxZ: Math.max(base.deckMaxZ, ...plotZs) + 10,
+    height: 3.3,
+    blend: 8
+  };
+})();
+
+function plateauWeight(x, z, zone) {
+  const wx = smoothstep(zone.minX - zone.blend, zone.minX, x)
+    * (1 - smoothstep(zone.maxX, zone.maxX + zone.blend, x));
+  const wz = smoothstep(zone.minZ - zone.blend, zone.minZ, z)
+    * (1 - smoothstep(zone.maxZ, zone.maxZ + zone.blend, z));
+  return wx * wz;
+}
+
+function lagoonCarve(x, z) {
+  const lagoon = ISLAND.fishing?.lagoon;
+  if (!lagoon) return 0;
+  const nx = (x - lagoon.x) / (lagoon.width / 2);
+  const nz = (z - lagoon.z) / (lagoon.depth / 2);
+  const distance = Math.hypot(nx, nz);
+  return 1 - smoothstep(0.55, 1.15, distance);
+}
 
 export const TERRAIN = Object.freeze({
   size: 520,
@@ -70,6 +107,20 @@ export function terrainHeightAt(x, z) {
   // Mantén plana la plaza de la despensa para que las torretas no queden torcidas.
   const plazaBlend = 1 - smoothstep(4.5, 10.5, radius);
   h = h * (1 - plazaBlend * 0.45);
+
+  // Plataforma nivelada del resort (deck, granja y paseo).
+  const resortWeight = plateauWeight(x, z, RESORT_PLATEAU);
+  if (resortWeight > 0) {
+    h = h * (1 - resortWeight) + RESORT_PLATEAU.height * resortWeight;
+  }
+
+  // Alberca de marea: sin esta depresión el plano de agua quedaba coplanar
+  // con la duna o directamente enterrado.
+  const lagoonWeight = lagoonCarve(x, z);
+  if (lagoonWeight > 0) {
+    const lagoonBottom = RESORT_PLATEAU.height - 0.95;
+    h = h * (1 - lagoonWeight) + Math.min(h, lagoonBottom) * lagoonWeight;
+  }
 
   return h;
 }

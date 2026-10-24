@@ -56,14 +56,16 @@ function renderResults(data) {
   const endRowVal = document.getElementById('go-endgame');
 
   if (modeId === 'core_defense') {
-    if (endRowLabel) endRowLabel.textContent = t('ui.results.td_status_label');
+    if (endRowLabel) endRowLabel.textContent = outcome.campaign ? 'CAMPAÑA:' : t('ui.results.td_status_label');
     if (endRowVal) {
-      endRowVal.textContent = t('ui.results.td_status_val', {
-        waves: outcome.wavesCompleted || 0,
-        totalWaves: outcome.totalWaves || 12,
-        coreHp: outcome.coreHpLeft || 0,
-        coreMaxHp: outcome.coreMaxHp || 100
-      });
+      endRowVal.textContent = outcome.campaign
+        ? `${outcome.seasonLabel || 'TEMPORADA'} · DÍA ${outcome.day || 1}/15 · ${outcome.customersServed || 0} CLIENTES · ${outcome.pearls || 0} PERLAS`
+        : t('ui.results.td_status_val', {
+            waves: outcome.wavesCompleted || 0,
+            totalWaves: outcome.totalWaves || 12,
+            coreHp: outcome.coreHpLeft || 0,
+            coreMaxHp: outcome.coreMaxHp || 100
+          });
       endRowVal.style.color = isVictory ? '#a8c499' : '#ff6b6b';
     }
   } else {
@@ -82,8 +84,15 @@ function renderResults(data) {
   const pSummary = Object.entries(passives)
     .map(([k, v]) => `<span style="display:inline-flex;align-items:center;gap:4px;margin-right:8px;">${renderSpriteIconHTML(CONFIG.PASSIVES[k]?.icon || 'dmg', 'sm')} ${CONFIG.PASSIVES[k]?.name || k} ${renderSpriteBadgeHTML(v)}</span>`)
     .join('');
-  document.getElementById('go-loadout').innerHTML =
-    `<div style="margin-bottom:6px;"><b>${t('ui.common.weapons')}</b> ${wSummary || t('ui.common.none')}</div><div><b>${t('ui.common.passives')}</b> ${pSummary || t('ui.common.none')}</div>`;
+  if (outcome.campaign) {
+    document.getElementById('go-loadout').innerHTML = `
+      <div style="margin-bottom:6px;"><b>CLIENTES ATENDIDOS:</b> ${outcome.customersServed || 0} · <b>PERDIDOS:</b> ${outcome.customersLost || 0}</div>
+      <div style="margin-bottom:6px;"><b>REPUTACIÓN:</b> ${Math.round(outcome.reputation || 0)}/100 · <b>PLATO ESTRELLA:</b> ${outcome.bestDish?.name || '—'}</div>
+      <div><b>DÍAS DE CAMPAÑA:</b> ${outcome.daysCompleted || 0} / 45 · <b>TEMPORADA:</b> ${outcome.seasonLabel || '—'}</div>`;
+  } else {
+    document.getElementById('go-loadout').innerHTML =
+      `<div style="margin-bottom:6px;"><b>${t('ui.common.weapons')}</b> ${wSummary || t('ui.common.none')}</div><div><b>${t('ui.common.passives')}</b> ${pSummary || t('ui.common.none')}</div>`;
+  }
 }
 
 GameEvents.on('i18n:change', () => {
@@ -114,9 +123,9 @@ export function presentRunResultsScreen(data) {
   }
 
   if (modeId === 'core_defense') {
-    const wavesDone = outcome.wavesCompleted || 0;
-    if (wavesDone > (modeCareer.bestMetric || 0)) {
-      modeCareer.bestMetric = wavesDone;
+    const progressDone = outcome.campaign ? (outcome.daysCompleted || 0) : (outcome.wavesCompleted || 0);
+    if (progressDone > (modeCareer.bestMetric || 0)) {
+      modeCareer.bestMetric = progressDone;
     }
   } else {
     if (gameTime > (modeCareer.bestMetric || 0)) {

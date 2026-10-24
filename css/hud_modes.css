@@ -1,7 +1,11 @@
 /* Estilos por modo, agregados por temática.
    Hojas: hud_core.css (HUD en juego), hud_menus.css (menús, tienda y level-up),
-   hud_turrets.css (economía y terminal de torretas) y hud_tutorial.css. */
+   hud_turrets.css (economía y terminal de torretas), hud_tutorial.css,
+   hud_chiringuito.css, hud_chiringuito_minigames.css y hud_minigames.css. */
 @import url('./hud_core.css');
 @import url('./hud_menus.css');
 @import url('./hud_turrets.css');
 @import url('./hud_tutorial.css');
+@import url('./hud_chiringuito.css');
+@import url('./hud_chiringuito_minigames.css');
+@import url('./hud_minigames.css');

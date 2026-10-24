@@ -1,13 +1,13 @@
 // Selector de modo y expediente de carrera en el menú principal.
 // Exports: renderModeSelectorUI, updateCareerDossierForSelectedMode, setupDefenseDifficultySelector, updateStartPlayButton.
 
-import { CONFIG } from '../config.js';
 import { AudioSys } from '../audio.js';
 import { renderSpriteIconHTML } from '../spritesheets.js';
 import { ModeManager } from '../modes/gameModeManager.js';
-import { DIFFICULTIES, getMapById, DEFAULT_MAP_IDS } from '../defense/mapGenerator.js';
 import { t } from '../core/i18n.js';
 import { GameEvents } from '../core/eventBus.js';
+import { hasActiveCampaign } from '../core/chiringuitoSave.js';
+import { CAMPAIGN } from '../config/chiringuito/seasons.js';
 
 let lastCareerByMode = null;
 let lastOnModeChanged = null;
@@ -20,18 +20,16 @@ export function updateStartPlayButton(activeId, currentDiff = 'normal') {
 
   if (activeId === 'core_defense') {
     startBtn.className = 'rust-btn primary play-hero-btn is-td-mode';
-    labelEl.textContent = t('ui.menu.play_td');
-    const selectedMapId = localStorage.getItem('traces_td_selected_map') || DEFAULT_MAP_IDS[currentDiff];
-    const mapObj = getMapById(selectedMapId);
-    const mapDiff = mapObj?.difficulty || currentDiff;
-    const diffMeta = DIFFICULTIES[mapDiff] || DIFFICULTIES.normal;
-
+    const active = hasActiveCampaign();
+    labelEl.textContent = active ? '[ CONTINUAR CAMPAÑA ]' : '[ ABRIR EL CHIRINGUITO ]';
     if (subEl) {
-      const diffName = t(`diff.${mapDiff}`) || diffMeta.name;
-      const mapNameStr = mapObj ? t('ui.mode.sector_tag', { name: mapObj.name.toUpperCase(), diff: diffName }) : '';
-      subEl.textContent = t('ui.mode.campaign_banner', { sector: mapNameStr });
+      subEl.textContent = active
+        ? '★ TEMPORADAS DE 15 DÍAS · GUARDADO CONTINUO · CO-OP 2 JUGADORES'
+        : '★ NUEVA CAMPAÑA · 3 TEMPORADAS · GRANJA, TORRETAS Y COCINA';
       subEl.style.color = '#8ef77b';
     }
+    const newCampaignBtn = document.getElementById('btn-new-chiringuito-campaign');
+    if (newCampaignBtn) newCampaignBtn.classList.toggle('hidden', !active);
   } else {
     startBtn.className = 'rust-btn primary play-hero-btn is-survival-mode';
     labelEl.textContent = t('ui.menu.play_surv');
@@ -76,8 +74,8 @@ export function renderModeSelectorUI(careerByMode, onModeChanged) {
     <div class="mode-capsule-body">
       <div class="mode-capsule-icon">${renderSpriteIconHTML('core', 'sm')}</div>
       <div class="mode-capsule-text">
-        <div class="mode-capsule-title">${t('mode.core_defense.shortTitle')}</div>
-        <div class="mode-capsule-sub">${t('ui.mode.td_sub')}</div>
+        <div class="mode-capsule-title">CHIRINGUITO DEL ATARDECER</div>
+        <div class="mode-capsule-sub">3 TEMPORADAS · MAÑANA DE GRANJA · TARDE DE TORRETAS · NOCHE DE COCINA</div>
       </div>
     </div>
   `;
@@ -131,10 +129,12 @@ export function renderModeSelectorUI(careerByMode, onModeChanged) {
   // Actualizar el botón principal de inicio
   updateStartPlayButton(activeId, currentDiff);
 
-  // Actualizar botón de tutorial de TD
+  // El tutorial clásico de la despensa ya no aplica al chiringuito.
   const tutBtn = document.getElementById('btn-td-tutorial');
-  if (tutBtn) {
-    tutBtn.classList.toggle('hidden', activeId !== 'core_defense');
+  if (tutBtn) tutBtn.classList.add('hidden');
+  const newCampaignBtn = document.getElementById('btn-new-chiringuito-campaign');
+  if (newCampaignBtn) {
+    newCampaignBtn.classList.toggle('hidden', activeId !== 'core_defense' || !hasActiveCampaign());
   }
 }
 
@@ -145,16 +145,16 @@ export function updateCareerDossierForSelectedMode(careerByMode) {
 
   const titleEl = document.getElementById('dossier-mode-label');
   if (titleEl) {
-    titleEl.textContent = modeId === 'core_defense' ? t('ui.menu.dossier_mode_td') : t('ui.menu.dossier_mode_surv');
+    titleEl.textContent = modeId === 'core_defense' ? 'EXPEDIENTE // CHIRINGUITO DEL ATARDECER' : t('ui.menu.dossier_mode_surv');
   }
 
   const metricLabelEl = document.getElementById('career-best-metric-label');
   const metricValEl = document.getElementById('career-best-time');
 
   if (modeId === 'core_defense') {
-    if (metricLabelEl) metricLabelEl.textContent = t('ui.menu.dossier_metric_td');
+    if (metricLabelEl) metricLabelEl.textContent = 'MEJOR DÍA DE CAMPAÑA:';
     if (metricValEl) {
-      metricValEl.textContent = `${data.bestMetric || 0} / ${CONFIG.CORE_DEFENSE.WAVES.totalWavesForVictory}`;
+      metricValEl.textContent = `${data.bestMetric || 0} / ${CAMPAIGN.daysPerSeason * CAMPAIGN.seasonCount}`;
     }
   } else {
     if (metricLabelEl) metricLabelEl.textContent = t('ui.menu.dossier_metric_surv');

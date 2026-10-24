@@ -76,13 +76,13 @@ try {
 // Valid weapons (from CONFIG.SKILLS in config.js)
 const VALID_WEAPONS = new Set([
   'slash', 'shotgun', 'flamethrower', 'aura', 'mines', 'harpoon', 'orbital', 'bolt',
-  'chakram', 'welder', 'grenade', 'hammer', 'acid'
+  'chakram', 'welder', 'grenade', 'hammer', 'acid', 'none'
 ]);
 
 // Valid weapon icons (row 0 in CONFIG.UI_SPRITES.ICONS)
 const VALID_ICONS = new Set([
   'slash', 'shotgun', 'flamethrower', 'aura', 'mines', 'harpoon', 'orbital', 'bolt',
-  'chakram', 'welder', 'grenade', 'hammer', 'acid',
+  'chakram', 'welder', 'grenade', 'hammer', 'acid', 'cook',
   'turret_gunner', 'turret_mortar', 'turret_cryo', 'turret_barracks', 'turret_support',
   'turret_tesla', 'turret_incinerator', 'turret_railgun', 'turret_collector', 'turret_press', 'turret_ejector'
 ]);

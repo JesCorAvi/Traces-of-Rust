@@ -15,15 +15,15 @@ export const MODES_CONFIG = {
   CATALOG: {
     core_defense: {
       id: 'core_defense',
-      get title() { return _t('mode.core_defense.title', 'DEFIENDE LA DESPENSA'); },
-      get subtitle() { return _t('mode.core_defense.subtitle', 'ASALTO CANGREJO'); },
-      get badge() { return _t('mode.core_defense.badge', '★ MODO PRINCIPAL // CAMPAÑA DE PLAYA'); },
+      get title() { return _t('mode.core_defense.title', 'CHIRINGUITO DEL ATARDECER'); },
+      get subtitle() { return _t('mode.core_defense.subtitle', 'GRANJA · TORRETAS · COCINA'); },
+      get badge() { return _t('mode.core_defense.badge', '★ MODO PRINCIPAL // CAMPAÑA DE TEMPORADAS'); },
       isPrimary: true,
-      get shortTitle() { return _t('mode.core_defense.shortTitle', 'DEFIENDE'); },
+      get shortTitle() { return _t('mode.core_defense.shortTitle', 'CHIRINGUITO'); },
       icon: 'core',
-      get tagline() { return _t('mode.core_defense.tagline', 'El sol cae y la marea trae cangrejos ladrones. Construye defensas de madera y protege la comida durante 12 oleadas.'); },
-      get objectiveTitle() { return _t('mode.core_defense.objectiveTitle', 'PROTOCOLO DE DEFENSA'); },
-      get objectiveDefault() { return _t('mode.core_defense.objectiveDefault', 'Impide que los cangrejos escapen con la comida de la despensa'); }
+      get tagline() { return _t('mode.core_defense.tagline', 'Recoge ingredientes por la mañana, defiende la despensa con torretas por la tarde y cocina para tus clientes por la noche. Tres temporadas de 15 días en la misma caleta.'); },
+      get objectiveTitle() { return _t('mode.core_defense.objectiveTitle', 'TEMPORADA DEL CHIRINGUITO'); },
+      get objectiveDefault() { return _t('mode.core_defense.objectiveDefault', 'Sobrevive a 3 temporadas de 15 días: granja, defensa y servicio nocturno.'); }
     },
     survival: {
       id: 'survival',

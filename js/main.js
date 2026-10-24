@@ -116,6 +116,19 @@ import { initFirstBootLanguageFlow, isFirstBootLanguagePending } from './ui/lang
 
 
 
+// El modo Chiringuito usa un avatar fijo de cocinero; Supervivencia conserva
+// el operador seleccionado por el jugador.
+function getAvatarCharacterId() {
+  const activeMode = ModeManager.activeMode;
+  if (typeof activeMode?.getPlayerCharacterId === 'function') {
+    return activeMode.getPlayerCharacterId();
+  }
+  if (ModeManager.getSelectedModeId?.() === 'core_defense') return 'cook';
+  return getSelectedCharacterId();
+}
+
+
+
 // Aplica muteo y volúmenes persistidos antes de crear el audio contextual.
 
 AudioSys.applyGameSettings(gameSettings);
@@ -126,7 +139,7 @@ AudioSys.applyGameSettings(gameSettings);
 
 const world = createWorld();
 
-const { scene, ambientLight, propBillboards, beachLights, dust, worldPhysics } = world;
+const { scene, ambientLight, sunLight, propBillboards, beachLights, dust, worldPhysics } = world;
 
 const updateWorld = world.update;
 
@@ -298,6 +311,7 @@ function isOnlineSimulationActive() {
 }
 
 let pendingTutorial = false;
+let pendingResumeCampaign = false;
 
 let yaw = 0, pitch = -0.14, playerFacingYaw = 0;
 
@@ -815,7 +829,7 @@ function syncOrbitalsCount() {
 
   if (!skills.orbital) return;
 
-  const activeChar = getCharacterById(getSelectedCharacterId());
+  const activeChar = getCharacterById(getAvatarCharacterId());
 
   const charExtra = activeChar?.statMods?.extraOrbitals || 0;
 
@@ -935,6 +949,12 @@ function buildModeContext(camFwd = new THREE.Vector3(0, 0, -1)) {
 
     onBossPhaseChange: () => hudController.updateBossHUD(activeBoss, true),
 
+    clearActiveBoss: () => {
+      activeBoss = null;
+      hudController.hideBossHUDDelayed?.();
+      refreshHUD();
+    },
+
     onCoreDamaged: () => {
 
       hudController.triggerCoreDamageFeedback();
@@ -1010,6 +1030,14 @@ function buildModeContext(camFwd = new THREE.Vector3(0, 0, -1)) {
     },
 
     triggerRunEnd: outcome => flowRuntime.finishRun(outcome),
+
+    openTurretBuildMenu: (...args) => flowRuntime.openTurretBuildMenu?.(...args),
+
+    hudController,
+
+    sunLight,
+
+    resumeCampaign: !!pendingResumeCampaign,
 
     tutorialRequested: pendingTutorial
 
@@ -1095,7 +1123,7 @@ function animate() {
 
   if (state === 'PLAYING') {
 
-    const activeChar = getCharacterById(getSelectedCharacterId());
+    const activeChar = getCharacterById(getAvatarCharacterId());
 
     const mods = getActiveModifiers(save, gameSettings, passives, activeChar);
 
@@ -1687,7 +1715,11 @@ function animate() {
 
       downTimer,
 
-      charId: getSelectedCharacterId()
+      charId: getAvatarCharacterId(),
+
+      carrying: !!ModeManager.activeMode?.getCarriedPlate?.(),
+
+      carriedRecipeId: ModeManager.activeMode?.getCarriedPlate?.()?.recipeId || null
 
     });
 
@@ -1837,7 +1869,7 @@ function animate() {
 
       downTimer,
 
-      charId: getSelectedCharacterId()
+      charId: getAvatarCharacterId()
 
     });
 
@@ -1943,7 +1975,7 @@ const { prewarmLoadoutSheets, syncPlayerVisualLoadout } = playerVisuals;
 
 const combatRuntime = createCombatRuntime({
 
-  getMods: () => getActiveModifiers(save, gameSettings, passives, getCharacterById(getSelectedCharacterId())),
+  getMods: () => getActiveModifiers(save, gameSettings, passives, getCharacterById(getAvatarCharacterId())),
 
   get state() { return state; }, set state(v) { state = v; },
 
@@ -2045,6 +2077,8 @@ const flowRuntime = {
 
   get pendingTutorial() { return pendingTutorial; }, set pendingTutorial(v) { pendingTutorial = v; },
 
+  get resumeCampaign() { return pendingResumeCampaign; }, set resumeCampaign(v) { pendingResumeCampaign = !!v; },
+
   get currentHandWeapon() { return currentHandWeapon; }, set currentHandWeapon(v) { currentHandWeapon = v; },
 
   get yaw() { return yaw; }, set yaw(v) { yaw = v; },
@@ -2102,6 +2136,15 @@ const flowRuntime = {
 };
 
 setupGameFlow(flowRuntime);
+
+// La UI del chiringuito delega el panel clásico de mejoras/venta de torretas
+// en el runtime principal, que ya conoce el estado PLAYING y el pointer lock.
+document.addEventListener('chiringuito:open-turret', event => {
+  const turretId = event.detail?.turretId;
+  const mode = ModeManager.activeMode;
+  const turret = turretId ? mode?.getTurretById?.(turretId) : null;
+  if (turret) flowRuntime.openTurretBuildMenu?.(turret);
+});
 
 
 
@@ -2298,6 +2341,20 @@ MultiplayerSync.init({
 });
 
 onCharacterChange(char => {
+
+  if (ModeManager.getSelectedModeId() === 'core_defense') {
+
+    activeCharacter = getCharacterById('cook');
+
+    skills = {};
+
+    currentHandWeapon = 'none';
+
+    syncPlayerVisualLoadout('none', 'cook');
+
+    return;
+
+  }
 
   activeCharacter = char;
 

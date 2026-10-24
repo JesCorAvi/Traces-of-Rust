@@ -119,6 +119,21 @@ export const CHARACTERS = {
     color: '#3fe0f5',
     accentColor: '#124e58',
     icon: 'bolt'
+  },
+  cook: {
+    id: 'cook',
+    selectable: false,
+    weapon: 'none',
+    get weaponTitle() { return _t('char.cook.weaponTitle', 'Bandeja de Servicio'); },
+    get title() { return _t('char.cook.title', 'El Cocinero del Chiringuito'); },
+    get role() { return _t('char.cook.role', 'Cocinero Isleño'); },
+    get desc() { return _t('char.cook.desc', 'Delantal de cocina, camisa hawaiana y una misión: convertir cada cangrejo en un plato que valga una propina.'); },
+    get passive() { return _t('char.cook.passive', 'Sazón del Atardecer'); },
+    get passiveDesc() { return _t('char.cook.passiveDesc', 'Sin armas. Cosecha, cocina y sirve. La defensa depende de sus torretas.'); },
+    statMods: {},
+    color: '#f2c15b',
+    accentColor: '#2c6b62',
+    icon: 'cook'
   }
 };
 

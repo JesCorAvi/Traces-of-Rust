@@ -4,6 +4,7 @@
 
 import * as THREE from 'three';
 import { isNearDefenseRouteOrSpawn } from './routeClearance.js';
+import { isInIslandWorldExclusion } from '../config/chiringuito/island.js';
 import { terrainHeightAt, TERRAIN } from './terrain.js';
 
 const PALM_COUNT = 42;
@@ -79,6 +80,7 @@ function pickPalmSpots() {
     const z = Math.sin(angle) * radius + 5;
     if (z < -50) continue;
     if (Math.hypot(x, z) < 12) continue;
+    if (isInIslandWorldExclusion(x, z)) continue;
     if (isNearDefenseRouteOrSpawn(x, z, 1.9)) continue;
     if (spots.some(s => Math.hypot(s.x - x, s.z - z) < 5.2)) continue;
     spots.push({ x, z, ground: terrainHeightAt(x, z) });
@@ -190,6 +192,7 @@ function buildGrassAndRocks(scene, materials, physics) {
     const z = (Math.random() - 0.5) * 180 + 8;
     if (z < -48) continue;
     if (Math.hypot(x, z) < 7) continue;
+    if (isInIslandWorldExclusion(x, z)) continue;
     if (isNearDefenseRouteOrSpawn(x, z, 1.2)) continue;
     const y = terrainHeightAt(x, z);
     dummy.position.set(x, y + 0.02, z);
@@ -215,6 +218,7 @@ function buildGrassAndRocks(scene, materials, physics) {
     const z = (Math.random() - 0.5) * 160 + 6;
     if (z < -58) continue;
     if (Math.hypot(x, z) < 8) continue;
+    if (isInIslandWorldExclusion(x, z)) continue;
     if (isNearDefenseRouteOrSpawn(x, z, 2.8)) continue;
     const scale = 0.35 + Math.pow(Math.random(), 2.2) * 1.55;
     const y = terrainHeightAt(x, z);
@@ -243,6 +247,7 @@ function buildGrassAndRocks(scene, materials, physics) {
   for (let i = 0; i < 60 && lIdx < 22; i++) {
     const x = (Math.random() - 0.5) * 180;
     const z = -52 + Math.random() * 26;
+    if (isInIslandWorldExclusion(x, z)) continue;
     if (isNearDefenseRouteOrSpawn(x, z, 2.8)) continue;
     const y = terrainHeightAt(x, z);
     dummy.position.set(x, y + 0.3, z);

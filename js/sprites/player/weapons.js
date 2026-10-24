@@ -2,6 +2,9 @@
 // Exports: renderWeaponByDirection.
 
 export function renderWeaponByDirection(rawPx, rawGlow, handWeapon, dir, stateIdx, col, anchorX, anchorY, facingSign) {
+  // El cocinero no lleva armas. Sin este corte, el fallback histórico dibujaba
+  // una sierra en cualquier loadout vacío.
+  if (!handWeapon || handWeapon === 'none' || handWeapon === 'tray') return;
   // Clamping estricto para evitar que ningún píxel o destello sangre a las celdas adyacentes del spritesheet (1..62)
   const px = (x, y, w, h, color) => {
     if (w <= 0 || h <= 0) return;

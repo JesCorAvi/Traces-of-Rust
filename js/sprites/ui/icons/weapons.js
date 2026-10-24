@@ -2,6 +2,16 @@
 // Exports: WEAPON_ICONS.
 
 export const WEAPON_ICONS = {
+  cook: px => {
+    // Bandeja con plato y vapor: identidad del cocinero no combatiente.
+    px(3, 10, 10, 3, '#6a482c');
+    px(2, 12, 12, 2, '#3f2b1b');
+    px(5, 7, 6, 3, '#e7d7b5');
+    px(6, 6, 4, 1, '#f7ead0');
+    px(7, 4, 1, 2, '#d7c6a2');
+    px(10, 3, 1, 3, '#d7c6a2');
+    px(5, 2, 1, 2, '#d7c6a2');
+  },
   slash: px => {
     px(2, 11, 4, 3, '#4a2518');
     px(5, 9, 2, 4, '#b89c46');

@@ -588,6 +588,104 @@ export const AudioSys = {
     });
   },
 
+  // Patch data-driven para minijuegos: capas de osciladores y ruido filtrado.
+  // Mantiene el bus, el muteo, el límite de voces y la limpieza de AudioSys.
+  playSynthPatch(patch = {}, options = {}) {
+    if (!patch || !Array.isArray(patch.layers) || patch.layers.length === 0) return false;
+    if (!this.ctx) this.init();
+    if (!this.ctx) return false;
+
+    const key = options.key || patch.key || 'mg:patch';
+    if (!this._allow(key, patch.cooldown || 0)) return false;
+
+    const rate = Math.max(0.25, Math.min(4, Number(options.rate) || 1));
+    const volume = clamp01(options.volume ?? 1);
+    if (volume <= 0) return false;
+    const t0 = this.ctx.currentTime + Math.max(0, Number(options.delay) || 0);
+    const baseBus = options.bus || patch.bus || 'sfx';
+
+    for (let i = 0; i < patch.layers.length; i++) {
+      const layer = patch.layers[i];
+      if (!layer) continue;
+      const when = t0 + Math.max(0, Number(layer.when) || 0);
+      const dur = Math.max(0.008, Number(layer.dur) || 0.08);
+      const vol = clamp01((Number(layer.vol) || 0.02) * volume);
+      if (vol <= 0) continue;
+      const bus = layer.bus || baseBus;
+      const pan = Number.isFinite(options.pan) ? options.pan : layer.pan;
+      if (layer.kind === 'noise') {
+        this._noise(when, dur, vol, {
+          filter: layer.filter || 'bandpass',
+          freq: Math.max(20, (Number(layer.freq) || 1200) * rate),
+          endFreq: layer.endFreq ? Math.max(20, layer.endFreq * rate) : undefined,
+          q: Number.isFinite(layer.q) ? layer.q : undefined,
+          pink: !!layer.pink,
+          attack: layer.attack,
+          playbackRate: layer.playbackRate,
+          bus,
+          pan
+        });
+      } else {
+        this._osc(layer.type || 'triangle', Math.max(20, (Number(layer.freq) || 440) * rate), when, dur, vol, {
+          endFreq: layer.endFreq ? Math.max(20, layer.endFreq * rate) : undefined,
+          attack: layer.attack,
+          detune: layer.detune,
+          bus,
+          pan
+        });
+      }
+    }
+    return true;
+  },
+
+  // Reproduce un AudioBuffer externo (hook de sustitución de assets) por el
+  // mismo grafo de mezcla y con la misma limpieza que el resto de SFX.
+  playBuffer(buffer, options = {}) {
+    if (!buffer) return false;
+    if (!this.ctx) this.init();
+    if (!this.ctx) return false;
+    const audioBuffer = buffer instanceof AudioBuffer ? buffer : buffer.buffer;
+    if (!(audioBuffer instanceof AudioBuffer)) return false;
+    const key = options.key || 'mg:buffer';
+    if (!this._allow(key, options.cooldown || 0)) return false;
+
+    const rate = Math.max(0.25, Math.min(4, Number(options.rate) || 1));
+    const volume = Math.max(0.0002, Math.min(1, Number(options.volume) || 1));
+    const now = this.ctx.currentTime + Math.max(0, Number(options.delay) || 0);
+    const duration = Math.max(0.03, audioBuffer.duration / rate);
+    const end = now + duration;
+
+    try {
+      const source = this.ctx.createBufferSource();
+      source.buffer = audioBuffer;
+      source.playbackRate.value = rate;
+      const gain = this.ctx.createGain();
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.exponentialRampToValueAtTime(volume, now + 0.004);
+      const fadeAt = Math.max(now + 0.01, end - 0.015);
+      gain.gain.setValueAtTime(volume, fadeAt);
+      gain.gain.exponentialRampToValueAtTime(0.0001, end);
+      source.connect(gain);
+
+      let panner = null;
+      if (Number.isFinite(options.pan) && Math.abs(options.pan) > 0.01 && this.ctx.createStereoPanner) {
+        panner = this.ctx.createStereoPanner();
+        panner.pan.value = Math.max(-1, Math.min(1, options.pan));
+        gain.connect(panner);
+        panner.connect(this._busNode(options.bus || 'sfx'));
+      } else {
+        gain.connect(this._busNode(options.bus || 'sfx'));
+      }
+
+      this._registerSource(source, panner ? [gain, panner] : [gain]);
+      source.start(now);
+      source.stop(end + 0.02);
+      return true;
+    } catch (error) {
+      return false;
+    }
+  },
+
   // Tick de cassette al pasar el ratón.
   playUIHover() {
     if (!this._allow('ui:hover', 35)) return;
@@ -631,6 +729,98 @@ export const AudioSys = {
     this._osc('sawtooth', 96, t, 0.15, 0.05, { endFreq: 72, bus: 'ui' });
     this._osc('square', 72, t + 0.06, 0.17, 0.045, { endFreq: 54, bus: 'ui' });
     this._noise(t, 0.09, 0.018, { filter: 'lowpass', freq: 420, bus: 'ui' });
+  },
+
+  // ---------------------------------------------------------------------------
+  // Chiringuito: granja, servicio y cocina
+  // ---------------------------------------------------------------------------
+
+  playHarvest() {
+    if (!this._allow('chiringuito:harvest', 80)) return;
+    const t = this.ctx.currentTime;
+    this._noise(t, 0.12, 0.045, { filter: 'bandpass', freq: 1800, q: 1.5, endFreq: 900 });
+    this._osc('triangle', 420, t + 0.03, 0.08, 0.03, { endFreq: 620, bus: 'ui' });
+    this._osc('sine', 780, t + 0.1, 0.08, 0.02, { endFreq: 940, bus: 'ui' });
+  },
+
+  playBell() {
+    if (!this._allow('chiringuito:bell', 200)) return;
+    const t = this.ctx.currentTime;
+    this._osc('sine', 1480, t, 0.5, 0.06, { endFreq: 1320, bus: 'ui' });
+    this._osc('sine', 2020, t + 0.01, 0.34, 0.025, { endFreq: 1880, bus: 'ui' });
+    this._osc('triangle', 740, t + 0.02, 0.24, 0.025, { endFreq: 680, bus: 'ui' });
+  },
+
+  playCustomerArrive() {
+    if (!this._allow('chiringuito:customer', 130)) return;
+    const t = this.ctx.currentTime;
+    this._osc('triangle', 360, t, 0.08, 0.03, { endFreq: 440, bus: 'ui' });
+    this._osc('triangle', 520, t + 0.08, 0.1, 0.026, { endFreq: 620, bus: 'ui' });
+  },
+
+  playOrderTicket() {
+    if (!this._allow('chiringuito:ticket', 90)) return;
+    const t = this.ctx.currentTime;
+    this._noise(t, 0.04, 0.022, { filter: 'bandpass', freq: 2600, q: 5, bus: 'ui' });
+    this._osc('square', 640, t + 0.02, 0.03, 0.018, { endFreq: 420, bus: 'ui' });
+  },
+
+  playChop() {
+    if (!this._allow('chiringuito:chop', 55)) return;
+    const t = this.ctx.currentTime;
+    this._noise(t, 0.035, 0.045, { filter: 'highpass', freq: 1900, endFreq: 700 });
+    this._osc('triangle', 180, t, 0.045, 0.025, { endFreq: 110, bus: 'sfx' });
+  },
+
+  playSizzle() {
+    if (!this._allow('chiringuito:sizzle', 120)) return;
+    const t = this.ctx.currentTime;
+    this._noise(t, 0.22, 0.025, { pink: true, filter: 'highpass', freq: 2800, endFreq: 1600 });
+    this._osc('sine', 120, t, 0.16, 0.012, { endFreq: 90, bus: 'sfx' });
+  },
+
+  playPlate() {
+    if (!this._allow('chiringuito:plate', 80)) return;
+    const t = this.ctx.currentTime;
+    this._osc('sine', 1280, t, 0.08, 0.025, { endFreq: 1080, bus: 'ui' });
+    this._noise(t, 0.03, 0.018, { filter: 'highpass', freq: 3200, bus: 'ui' });
+  },
+
+  playServeDish() {
+    if (!this._allow('chiringuito:serve', 100)) return;
+    const t = this.ctx.currentTime;
+    this._osc('triangle', 660, t, 0.08, 0.03, { endFreq: 840, bus: 'ui' });
+    this._osc('sine', 990, t + 0.06, 0.12, 0.022, { endFreq: 1180, bus: 'ui' });
+  },
+
+  playPearls(amount = 1) {
+    if (!this._allow('chiringuito:pearls', 90)) return;
+    const t = this.ctx.currentTime;
+    const notes = amount > 10 ? [880, 1100, 1320, 1760] : [880, 1180];
+    notes.forEach((f, i) => {
+      this._osc('triangle', f, t + i * 0.045, 0.1, 0.02, { endFreq: f * 1.06, bus: 'ui' });
+    });
+  },
+
+  playCookResult(quality = 'ok') {
+    if (!this._allow(`chiringuito:cook:${quality}`, 130)) return;
+    const t = this.ctx.currentTime;
+    if (quality === 'perfect' || quality === 'good') {
+      const notes = quality === 'perfect' ? [523, 659, 784, 1046] : [440, 554, 659];
+      notes.forEach((f, i) => this._osc('triangle', f, t + i * 0.07, 0.16, 0.028, { endFreq: f * 1.02, bus: 'ui' }));
+    } else {
+      this._osc('sawtooth', 180, t, 0.25, 0.03, { endFreq: 90, bus: 'sfx' });
+      this._noise(t, 0.2, 0.025, { filter: 'lowpass', freq: 900, endFreq: 220 });
+    }
+  },
+
+  playSeasonFanfare() {
+    if (!this._allow('chiringuito:season', 2000)) return;
+    const t = this.ctx.currentTime;
+    [392, 523, 659, 784].forEach((f, i) => {
+      this._osc('triangle', f, t + i * 0.16, 0.3, 0.03, { endFreq: f, bus: 'ui' });
+    });
+    this._osc('sine', 196, t, 1.1, 0.02, { endFreq: 196, bus: 'ui' });
   },
 
   // Relé mecánico y cinta deteniéndose al pausar/reanudar.

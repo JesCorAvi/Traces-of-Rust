@@ -5,11 +5,12 @@ const _t = (k, fb) => (typeof t === 'function' ? t(k) : fb);
 // Exports: CONFIG, MODES_CONFIG, CORE_DEFENSE_CONFIG, BOSS_AI, ENEMY_TYPES, CHARACTERS.
 import { MODES_CONFIG } from './config/modesConfig.js';
 import { CORE_DEFENSE_CONFIG } from './config/coreDefenseConfig.js';
+import { CHIRINGUITO_CONFIG } from './config/chiringuitoConfig.js';
 import { BOSS_AI } from './config/bossAI.js';
 import { ENEMY_TYPES } from './config/enemiesConfig.js';
 import { CHARACTERS, DEFAULT_CHARACTER_ID, getSelectedCharacterId, setSelectedCharacterId, getCharacterById } from './config/charactersConfig.js';
 
-export { MODES_CONFIG, CORE_DEFENSE_CONFIG, BOSS_AI, ENEMY_TYPES, CHARACTERS, DEFAULT_CHARACTER_ID, getSelectedCharacterId, setSelectedCharacterId, getCharacterById };
+export { MODES_CONFIG, CORE_DEFENSE_CONFIG, CHIRINGUITO_CONFIG, BOSS_AI, ENEMY_TYPES, CHARACTERS, DEFAULT_CHARACTER_ID, getSelectedCharacterId, setSelectedCharacterId, getCharacterById };
 
 export const CONFIG = {
   CHARACTERS,
@@ -22,6 +23,7 @@ export const CONFIG = {
   // Reexportación directa de las configuraciones de cada modo en el punto de entrada único
   MODES: MODES_CONFIG,
   CORE_DEFENSE: CORE_DEFENSE_CONFIG,
+  CHIRINGUITO: CHIRINGUITO_CONFIG,
 
   // ==========================================================================
   // CONFIGURACIÓN CENTRALIZADA DE INTERFAZ POR SPRITES (9-SLICE, ATLAS Y ESCALA)
@@ -111,6 +113,7 @@ export const CONFIG = {
       grenade:      { col: 21, row: 0 },
       hammer:       { col: 22, row: 0 },
       acid:         { col: 23, row: 0 },
+      cook:         { col: 24, row: 0 },
 
       // 9 Pasivas (Fila 1)
       multishot:    { col: 0, row: 1 },

@@ -3,7 +3,7 @@
 import { MODES_CONFIG } from '../config.js';
 import { GameEvents } from '../core/eventBus.js';
 import { SurvivalMode } from './survivalMode.js';
-import { CoreDefenseMode } from './coreDefenseMode.js';
+import { ChiringuitoMode } from './chiringuitoMode.js';
 
 // ============================================================================
 // GESTOR CENTRAL DE MODOS DE JUEGO (Registro único, sin condicionales dispersos)
@@ -17,7 +17,7 @@ class GameModeManager {
 
     // Registro inicial de los dos modos oficiales
     this.registerMode('survival', () => new SurvivalMode());
-    this.registerMode('core_defense', () => new CoreDefenseMode());
+    this.registerMode('core_defense', () => new ChiringuitoMode());
   }
 
   /**

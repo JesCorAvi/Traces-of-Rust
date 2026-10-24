@@ -74,21 +74,16 @@ function buildSplineRoute(controlPoints, worldPhysics, sampleCount = 65) {
 }
 
 /**
- * Genera o instancia un mapa procedimental de la dificultad o ID especificado.
- * @param {string} diffKey - 'facil' | 'normal' | 'dificil'
- * @param {Object} worldPhysics - Instancia de física del mundo para muestreo de alturas
- * @param {string|null} mapId - ID específico del mapa en MAP_CATALOG (opcional)
+ * Construye la geometría de ruta, entradas y salidas de una definición del
+ * catálogo. Se reutiliza tanto en el modo clásico como en la isla persistente
+ * del chiringuito, donde la ruta cambia cada temporada sin recrear la escena.
  */
-export function generateProceduralMap(diffKey = 'normal', worldPhysics = null, mapId = null) {
-  const diff = DIFFICULTIES[diffKey] || DIFFICULTIES.normal;
-  const targetId = mapId || DEFAULT_MAP_IDS[diff.id] || 'easy_plaza';
-  const catalogMap = getMapById(targetId) || getMapById(DEFAULT_MAP_IDS[diff.id]) || MAP_CATALOG.easy_plaza;
-
+export function buildRouteLayout(catalogMap, worldPhysics = null) {
   const routes = {};
   const spawnPoints = [];
   const exitPoints = [];
+  if (!catalogMap) return { routes, spawnPoints, exitPoints };
 
-  // 1. Construir las rutas 3D con splines Catmull-Rom sobre el terreno
   if (catalogMap.routes) {
     Object.entries(catalogMap.routes).forEach(([rId, routeDef]) => {
       const sampleCount = Math.max(50, (routeDef.controlPoints?.length || 10) * 5);
@@ -102,7 +97,6 @@ export function generateProceduralMap(diffKey = 'normal', worldPhysics = null, m
     });
   }
 
-  // 2. Construir puntos de entrada (spawn)
   if (catalogMap.spawnPoints) {
     catalogMap.spawnPoints.forEach((sp, idx) => {
       const targetRoute = routes[sp.pathId];
@@ -117,7 +111,6 @@ export function generateProceduralMap(diffKey = 'normal', worldPhysics = null, m
     });
   }
 
-  // 3. Construir puntos de salida (evacuación)
   if (catalogMap.exitPoints) {
     catalogMap.exitPoints.forEach((ep, idx) => {
       const targetRoute = routes[ep.pathId];
@@ -132,6 +125,23 @@ export function generateProceduralMap(diffKey = 'normal', worldPhysics = null, m
       });
     });
   }
+
+  return { routes, spawnPoints, exitPoints };
+}
+
+/**
+ * Genera o instancia un mapa procedimental de la dificultad o ID especificado.
+ * @param {string} diffKey - 'facil' | 'normal' | 'dificil'
+ * @param {Object} worldPhysics - Instancia de física del mundo para muestreo de alturas
+ * @param {string|null} mapId - ID específico del mapa en MAP_CATALOG (opcional)
+ */
+export function generateProceduralMap(diffKey = 'normal', worldPhysics = null, mapId = null) {
+  const diff = DIFFICULTIES[diffKey] || DIFFICULTIES.normal;
+  const targetId = mapId || DEFAULT_MAP_IDS[diff.id] || 'easy_plaza';
+  const catalogMap = getMapById(targetId) || getMapById(DEFAULT_MAP_IDS[diff.id]) || MAP_CATALOG.easy_plaza;
+
+  // 1-3. Rutas, entradas y salidas.
+  const { routes, spawnPoints, exitPoints } = buildRouteLayout(catalogMap, worldPhysics);
 
   return {
     mapId: catalogMap.id,

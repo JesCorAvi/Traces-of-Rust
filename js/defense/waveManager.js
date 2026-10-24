@@ -29,8 +29,66 @@ export class WaveManager {
     this.wavesCompleted = 0;
     this.totalQueuedAtStart = 0;
 
+    // Encuentro personalizado del Chiringuito: dos oleadas por tarde, sin
+    // eventos especiales ni victoria de campaña al terminar.
+    this.customWaves = null;
+    this.customScaling = null;
+    this.encounterMode = null;
+    this.encounterStarted = false;
+    this.customBetweenWavesRestSec = this.cfg.betweenWavesRestSec;
+
     // En co-op online solo el Host decide transiciones de fase/oleada.
     this.isAuthority = true;
+  }
+
+  configureEncounter({ waves, scaling = null, betweenWavesRestSec = 15, mode = 'afternoon' } = {}) {
+    if (!Array.isArray(waves) || waves.length === 0) return false;
+    this.customWaves = waves.map((wave, idx) => ({
+      ...wave,
+      wave: wave.wave || idx + 1,
+      composition: { ...(wave.composition || { zombie: 1 }) }
+    }));
+    this.customScaling = scaling ? { ...scaling } : null;
+    this.encounterMode = mode;
+    this.customBetweenWavesRestSec = Math.max(0, Number(betweenWavesRestSec) || 0);
+    this.totalWaves = this.customWaves.length;
+    this.currentWaveIndex = 0;
+    this.wavesCompleted = 0;
+    this.state = 'PREP';
+    this.prepTimer = 0;
+    this.spawnTimer = 0;
+    this.spawnQueue = [];
+    this.pendingBossCfg = null;
+    this.encounterStarted = false;
+    return true;
+  }
+
+  beginEncounter() {
+    if (!this.customWaves || this.encounterStarted || !this.isAuthority) return false;
+    this.encounterStarted = true;
+    this.state = 'SPAWNING';
+    this.currentWaveIndex = 0;
+    this.wavesCompleted = 0;
+    this.startNextWave();
+    return true;
+  }
+
+  resetEncounter() {
+    this.customWaves = null;
+    this.customScaling = null;
+    this.encounterMode = null;
+    this.encounterStarted = false;
+    this.currentWaveIndex = 0;
+    this.wavesCompleted = 0;
+    this.spawnQueue = [];
+    this.pendingBossCfg = null;
+    this.state = 'PREP';
+    this.prepTimer = 0;
+    this.spawnTimer = 0;
+  }
+
+  isEncounterComplete() {
+    return this.state === 'COMPLETE';
   }
 
   setAuthority(isAuthority) {
@@ -102,7 +160,7 @@ export class WaveManager {
     // Solo el Host genera la cola (Math.random local) y avanza la oleada.
     if (!this.isAuthority) return;
     this.currentWaveIndex++;
-    const schedule = this.cfg.SCHEDULE;
+    const schedule = this.customWaves || this.cfg.SCHEDULE;
     const waveCfg = schedule[Math.min(schedule.length - 1, this.currentWaveIndex - 1)];
 
     this.activeRoutes = this.getActiveRoutes(waveCfg);
@@ -131,6 +189,15 @@ export class WaveManager {
   }
 
   getWaveScalingMultipliers() {
+    if (this.customScaling) {
+      const waveBoost = 1 + Math.max(0, this.currentWaveIndex - 1) * 0.08;
+      return {
+        hpMult: (this.customScaling.hpMult ?? 1.0) * waveBoost,
+        bossHpMult: (this.customScaling.bossHpMult ?? 1.1) * waveBoost,
+        dmgMult: this.customScaling.dmgMult ?? 1.0,
+        spdMult: this.customScaling.spdMult ?? 1.0
+      };
+    }
     const w = Math.max(0, this.currentWaveIndex - 1);
     const baseMult = this.cfg.tdBaseHpMult ?? 1.0;
     const bossBaseMult = this.cfg.tdBossHpMult ?? 1.1;
@@ -236,11 +303,12 @@ export class WaveManager {
   }
 
   update(dt, playerPos, gameTime, playerFwd, onBossSpawned) {
-    if (this.state === 'VICTORY') return;
+    if (this.state === 'VICTORY' || this.state === 'COMPLETE') return;
 
     // Cliente no autoritativo: no instancia enemigos ni avanza fases. Los
     // enemigos llegan por ENEMY_SPAWN y el estado por WAVE_STATE del Host.
     if (!this.isAuthority) return;
+    if (this.customWaves && !this.encounterStarted) return;
 
     if (this.state === 'PREP') {
       // En la primera ronda (currentWaveIndex === 0), la preparación no tiene límite de tiempo
@@ -281,7 +349,14 @@ export class WaveManager {
         });
 
         if (this.currentWaveIndex >= this.totalWaves) {
-          if (this.cfg.enableEndgameSwarmAfterVictory) {
+          if (this.customWaves && this.encounterMode === 'afternoon') {
+            this.state = 'COMPLETE';
+            this.prepTimer = 0;
+            GameEvents.emit('chiringuito:afternoon_complete', {
+              wavesCompleted: this.wavesCompleted,
+              totalWaves: this.totalWaves
+            });
+          } else if (this.cfg.enableEndgameSwarmAfterVictory) {
             this.state = 'ENDGAME_SWARM';
           } else {
             this.state = 'VICTORY';
@@ -290,6 +365,9 @@ export class WaveManager {
               totalWaves: this.totalWaves
             });
           }
+        } else if (this.customWaves) {
+          this.state = 'PREP';
+          this.prepTimer = this.customBetweenWavesRestSec;
         } else {
           const evCfg = this.cfg.EVENTS || { intervalWaves: 3 };
           if (evCfg.intervalWaves > 0 && this.currentWaveIndex % evCfg.intervalWaves === 0) {
@@ -315,6 +393,52 @@ export class WaveManager {
     this.state = 'PREP';
     this.prepTimer = this.cfg.betweenWavesRestSec;
     AudioSys.playUISelect();
+  }
+
+  serialize() {
+    return {
+      customWaves: this.customWaves ? this.customWaves.map(w => ({ ...w, composition: { ...w.composition } })) : null,
+      customScaling: this.customScaling ? { ...this.customScaling } : null,
+      encounterMode: this.encounterMode,
+      encounterStarted: this.encounterStarted,
+      currentWaveIndex: this.currentWaveIndex,
+      totalWaves: this.totalWaves,
+      state: this.state,
+      prepTimer: this.prepTimer,
+      spawnTimer: this.spawnTimer,
+      spawnQueue: (this.spawnQueue || []).map(item => ({ ...item })),
+      pendingBossId: this.pendingBossCfg?.id || null,
+      activeRoutes: [...(this.activeRoutes || [])],
+      wavesCompleted: this.wavesCompleted,
+      spawnInterval: this.spawnInterval,
+      totalQueuedAtStart: this.totalQueuedAtStart
+    };
+  }
+
+  restore(snapshot = {}) {
+    if (!snapshot) return false;
+    if (Array.isArray(snapshot.customWaves) && snapshot.customWaves.length) {
+      this.customWaves = snapshot.customWaves.map(w => ({ ...w, composition: { ...(w.composition || {}) } }));
+    }
+    this.customScaling = snapshot.customScaling ? { ...snapshot.customScaling } : this.customScaling;
+    this.encounterMode = snapshot.encounterMode || this.encounterMode;
+    this.encounterStarted = !!snapshot.encounterStarted;
+    this.currentWaveIndex = Math.max(0, Number(snapshot.currentWaveIndex) || 0);
+    this.totalWaves = Math.max(1, Number(snapshot.totalWaves) || this.totalWaves);
+    this.state = snapshot.state || 'PREP';
+    this.prepTimer = Math.max(0, Number(snapshot.prepTimer) || 0);
+    this.spawnTimer = Math.max(0, Number(snapshot.spawnTimer) || 0);
+    this.spawnQueue = Array.isArray(snapshot.spawnQueue) ? snapshot.spawnQueue.map(item => ({ ...item })) : [];
+    this.pendingBossCfg = snapshot.pendingBossId
+      ? (CONFIG.BOSS_SCHEDULE.find(b => b.id === snapshot.pendingBossId) || null)
+      : null;
+    this.activeRoutes = Array.isArray(snapshot.activeRoutes) && snapshot.activeRoutes.length
+      ? [...snapshot.activeRoutes]
+      : this.activeRoutes;
+    this.wavesCompleted = Math.max(0, Number(snapshot.wavesCompleted) || 0);
+    this.spawnInterval = Number(snapshot.spawnInterval) || this.spawnInterval;
+    this.totalQueuedAtStart = Math.max(0, Number(snapshot.totalQueuedAtStart) || 0);
+    return true;
   }
 
   // Snapshot autoritativo enviado por el Host. El cliente lo aplica sin

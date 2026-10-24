@@ -174,6 +174,21 @@ export class TurretSystem {
     return refund;
   }
 
+  clearAll() {
+    cancelPlacement(this);
+    for (const turret of Array.from(this.turrets.values())) {
+      this.removeStructure(turret);
+      this.scene.remove(turret.group);
+      turret.destroy();
+    }
+    this.turrets.clear();
+    this.nextTurretId = 1;
+    for (const ally of this.allies) ally.destroy?.();
+    this.allies.length = 0;
+    this.fx.length = 0;
+    this.hazards.length = 0;
+  }
+
   getTurretCount() {
     return this.turrets.size;
   }

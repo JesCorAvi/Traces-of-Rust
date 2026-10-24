@@ -15,6 +15,7 @@ import {
 import { getMapById } from '../defense/mapGenerator.js';
 import { t } from '../core/i18n.js';
 import { GameEvents } from '../core/eventBus.js';
+import { hasActiveCampaign } from '../core/chiringuitoSave.js';
 
 let modalEl = null;
 let currentLobbyData = null;
@@ -486,8 +487,17 @@ export function startCoopCharacterSelectionFlow(matchData, isHost) {
     } catch (e) {}
   }
 
+  if (matchData.mode === 'core_defense') {
+    // El cocinero es fijo: no hay selección de personaje en la campaña.
+    coopMatchStage.localReady = true;
+    coopMatchStage.localCharId = 'cook';
+    MultiplayerSync.broadcast('CHAR_READY', { charId: 'cook' }, true);
+    if (coopMatchStage.peerReady) finalizeAndLaunchCoopMatch();
+    return;
+  }
+
   const mapObj = matchData.mapId ? getMapById(matchData.mapId) : null;
-  const mapTitle = mapObj ? mapObj.name : (matchData.mode === 'core_defense' ? 'DEFENSA DE LA DESPENSA' : 'SUPERVIVENCIA');
+  const mapTitle = mapObj ? mapObj.name : (matchData.mode === 'core_defense' ? 'CHIRINGUITO DEL ATARDECER' : 'SUPERVIVENCIA');
 
   openCharacterSelectorModal({
     isCoop: true,
@@ -535,7 +545,10 @@ function finalizeAndLaunchCoopMatch() {
     closeCharacterSelectorModal();
     MultiplayerSync.onMatchStarted({ ...stage.matchData, isHost: stage.isHost });
     if (gameFlowRuntime && typeof gameFlowRuntime.startGame === 'function') {
-      gameFlowRuntime.startGame({ tutorial: false, onlineMatch: stage.matchData });
+      const resumeCampaign = stage.isHost
+        && stage.matchData.mode === 'core_defense'
+        && hasActiveCampaign();
+      gameFlowRuntime.startGame({ tutorial: false, onlineMatch: stage.matchData, resumeCampaign });
     }
   }, 600);
 }
@@ -560,15 +573,8 @@ async function handleHostStartCoopMatch() {
 
   if (selectedMode === 'core_defense') {
     closeSteamOnlineModal();
-    const currentDiff = localStorage.getItem('traces_td_difficulty') || 'normal';
-    openMapSelector(currentDiff, async (selectedMapId, chosenDiff) => {
-      const matchData = {
-        mode: 'core_defense',
-        mapId: selectedMapId,
-        diff: chosenDiff
-      };
-      startCoopCharacterSelectionFlow(matchData, true);
-    });
+    // La campaña del chiringuito fija mapa, avatar y dificultad por temporada.
+    startCoopCharacterSelectionFlow({ mode: 'core_defense', campaign: true }, true);
   } else {
     closeSteamOnlineModal();
     const matchData = {

@@ -1,0 +1,647 @@
+/* Carta de hoy y minijuegos visuales del Chiringuito. */
+
+/* Los cuerpos de minijuego deben poder desplazarse en 720p/540p sin que el
+   marcador de ritmo o el botón de confirmar queden fuera de pantalla. */
+.cg-cooking-body,
+.cg-farm-body,
+.cg-fishing-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.cg-stage {
+  min-height: 240px;
+}
+
+.cg-cooking-overlay .cg-cook-gauge-track {
+  height: 200px;
+}
+
+.cg-menu-banner {
+  padding: 10px 14px;
+  margin: 6px 0 12px;
+  border: 1px solid rgba(160, 135, 84, 0.55);
+  background: linear-gradient(180deg, rgba(34, 43, 32, 0.9), rgba(15, 20, 16, 0.9));
+}
+
+.cg-menu-banner-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  color: #f2ce7a;
+  letter-spacing: 0.12em;
+}
+
+.cg-menu-banner-head span {
+  color: #bda97b;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+}
+
+.cg-menu-banner p {
+  margin: 7px 0 0;
+  color: #b9c2a5;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.cg-recipe-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 9px;
+}
+
+.cg-menu-toggle.is-on {
+  border-color: #87c06b;
+  color: #c9efb4;
+  box-shadow: inset 0 0 0 1px rgba(135, 192, 107, 0.28);
+}
+
+.cg-recipe-card.is-on-menu {
+  border-color: rgba(150, 199, 112, 0.5);
+}
+
+.cg-kitchen-scene {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  margin: 2px 0 4px;
+}
+
+.cg-cutting-board {
+  position: relative;
+  width: min(540px, 80vw);
+  height: 128px;
+  overflow: hidden;
+  border: 3px solid #7c5733;
+  border-radius: 8px;
+  background:
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.055) 0 3px, transparent 3px 38px),
+    repeating-linear-gradient(0deg, #a97645 0 18px, #9b6a3c 18px 36px);
+  box-shadow:
+    inset 0 0 28px rgba(28, 16, 8, 0.6),
+    0 8px 18px rgba(0, 0, 0, 0.3);
+}
+
+.cg-board-pieces {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: center;
+  justify-content: center;
+  gap: 12px 16px;
+  padding: 18px 56px;
+  z-index: 2;
+}
+
+.cg-board-piece {
+  position: relative;
+  width: 34px;
+  height: 30px;
+  border-radius: 45% 55% 48% 52%;
+  background: var(--piece, #d7b57a);
+  box-shadow:
+    inset -5px -6px 0 rgba(0, 0, 0, 0.18),
+    inset 4px 4px 0 rgba(255, 255, 255, 0.16),
+    0 4px 8px rgba(0, 0, 0, 0.28);
+  transition: transform 0.2s ease, opacity 0.2s ease, filter 0.2s ease;
+}
+
+.cg-board-piece.is-cut {
+  transform: translateY(16px) rotate(17deg) scale(0.68);
+  opacity: 0.45;
+  filter: saturate(0.65);
+}
+
+.cg-board-grain {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 22% 34%, rgba(67, 42, 22, 0.22) 0 2px, transparent 3px),
+    radial-gradient(circle at 67% 72%, rgba(67, 42, 22, 0.18) 0 3px, transparent 4px),
+    linear-gradient(105deg, transparent 0 48%, rgba(255, 255, 255, 0.05) 48% 49%, transparent 49%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.cg-knife {
+  position: absolute;
+  right: 16px;
+  top: 10px;
+  width: 104px;
+  height: 38px;
+  z-index: 3;
+  transform-origin: 86% 64%;
+  transform: rotate(-16deg);
+  filter: drop-shadow(0 5px 4px rgba(0, 0, 0, 0.35));
+}
+
+.cg-knife i {
+  display: block;
+  width: 70px;
+  height: 24px;
+  background: linear-gradient(180deg, #dfe5e2 0 38%, #aeb8b4 40% 100%);
+  clip-path: polygon(0 18%, 76% 0, 100% 50%, 76% 100%, 0 82%);
+  border-radius: 2px;
+}
+
+.cg-knife::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  top: 9px;
+  width: 34px;
+  height: 13px;
+  border-radius: 3px;
+  background: linear-gradient(180deg, #4d3322, #2b1b12);
+}
+
+.cg-knife.is-chopping {
+  animation: cg-knife-chop 0.24s ease-in-out;
+}
+
+@keyframes cg-knife-chop {
+  0% { transform: rotate(-16deg) translate(0, 0); }
+  45% { transform: rotate(13deg) translate(-24px, 30px); }
+  100% { transform: rotate(-16deg) translate(0, 0); }
+}
+
+.cg-cook-scene {
+  flex-wrap: wrap;
+  gap: 18px 28px;
+}
+
+.cg-burner {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  width: 230px;
+  height: 190px;
+}
+
+.cg-burner-ring {
+  position: absolute;
+  bottom: 8px;
+  width: 180px;
+  height: 30px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, #2a2723 0 52%, #171513 54% 64%, transparent 66%);
+  box-shadow: inset 0 0 12px rgba(255, 120, 48, 0.25);
+}
+
+.cg-burner-flame {
+  position: absolute;
+  bottom: 20px;
+  width: 160px;
+  height: 74px;
+  border-radius: 50% 50% 42% 42%;
+  background:
+    radial-gradient(ellipse at 50% 100%, rgba(255, 230, 140, 0.95) 0 12%, rgba(255, 150, 58, 0.8) 32%, rgba(201, 62, 25, 0.45) 60%, transparent 74%);
+  filter: blur(1.5px);
+  opacity: calc(0.32 + var(--heat, 0) * 0.62);
+  animation: cg-flame-flicker 0.42s infinite alternate ease-in-out;
+}
+
+@keyframes cg-flame-flicker {
+  from { transform: scaleX(0.94) scaleY(0.9); }
+  to { transform: scaleX(1.05) scaleY(1.08); }
+}
+
+.cg-pan {
+  position: relative;
+  width: 178px;
+  height: 112px;
+  margin-bottom: 34px;
+  border: 7px solid #2c2925;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at 42% 38%, #57524a 0 24%, #302d29 64%, #1c1a18 100%);
+  box-shadow:
+    inset 0 0 24px rgba(0, 0, 0, 0.7),
+    0 10px 14px rgba(0, 0, 0, 0.35);
+  transform: perspective(360px) rotateX(46deg);
+  transition: box-shadow 0.2s ease;
+}
+
+.cg-pan.is-perfect {
+  box-shadow:
+    inset 0 0 24px rgba(0, 0, 0, 0.7),
+    0 0 30px rgba(255, 188, 83, 0.42),
+    0 10px 14px rgba(0, 0, 0, 0.35);
+}
+
+.cg-pan-handle {
+  position: absolute;
+  right: -96px;
+  top: 42px;
+  width: 110px;
+  height: 18px;
+  border-radius: 4px 10px 10px 4px;
+  background: linear-gradient(180deg, #5b3d28, #2e1d14);
+  transform: rotate(-4deg);
+}
+
+.cg-pan-food {
+  position: absolute;
+  inset: 12px 20px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  filter: sepia(calc(var(--doneness, 0) * 0.62)) brightness(calc(1 + var(--doneness, 0) * 0.16));
+  transition: filter 0.12s linear;
+}
+
+.cg-pan.is-burning .cg-pan-food {
+  filter: sepia(1) brightness(0.52) saturate(1.4);
+}
+
+.cg-pan-piece {
+  width: 28px;
+  height: 23px;
+  border-radius: 45% 55% 48% 52%;
+  background: var(--piece, #d7b57a);
+  box-shadow: inset -4px -4px 0 rgba(0, 0, 0, 0.18), 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.cg-steam {
+  position: absolute;
+  left: 50%;
+  bottom: 76px;
+  display: flex;
+  gap: 12px;
+  transform: translateX(-50%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.cg-pan.is-steaming .cg-steam { opacity: 0.75; }
+
+.cg-steam i {
+  display: block;
+  width: 8px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(0deg, rgba(239, 236, 220, 0.1), rgba(239, 236, 220, 0.6));
+  filter: blur(2px);
+  animation: cg-steam-rise 1.3s infinite ease-in-out;
+}
+
+.cg-steam i:nth-child(2) { animation-delay: 0.32s; height: 56px; }
+.cg-steam i:nth-child(3) { animation-delay: 0.62s; }
+
+@keyframes cg-steam-rise {
+  0% { transform: translateY(8px) scaleY(0.6); opacity: 0; }
+  40% { opacity: 0.8; }
+  100% { transform: translateY(-24px) scaleY(1.1); opacity: 0; }
+}
+
+.cg-plate-scene {
+  display: grid;
+  grid-template-columns: minmax(190px, 250px) minmax(280px, 1fr);
+  align-items: center;
+  gap: 22px 30px;
+  width: min(780px, 92vw);
+  margin: 0 auto;
+}
+
+.cg-plate-drop {
+  position: relative;
+  width: 230px;
+  height: 230px;
+  margin: 0 auto;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 46% 42%, #fffaf0 0 44%, #f1e7d0 45% 58%, #d9c9a5 59% 63%, #8d744f 64% 67%, transparent 68%);
+  box-shadow: 0 14px 24px rgba(0, 0, 0, 0.32);
+  transition: transform 0.15s ease, filter 0.15s ease;
+  cursor: pointer;
+}
+
+.cg-plate-drop.is-over {
+  transform: scale(1.045);
+  filter: brightness(1.08);
+  box-shadow: 0 0 30px rgba(255, 208, 115, 0.5), 0 14px 24px rgba(0, 0, 0, 0.32);
+}
+
+.cg-plate-drop.is-wrong {
+  animation: cg-wrong-shake 0.28s linear;
+}
+
+.cg-plate-stack {
+  position: absolute;
+  inset: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cg-plate-piece {
+  position: absolute;
+  width: clamp(28px, 4.2vw, 42px);
+  height: clamp(22px, 3.2vw, 32px);
+  border-radius: 46% 54% 48% 52%;
+  background: var(--piece, #d7b57a);
+  box-shadow:
+    inset -5px -5px 0 rgba(0, 0, 0, 0.16),
+    inset 4px 4px 0 rgba(255, 255, 255, 0.2),
+    0 5px 7px rgba(0, 0, 0, 0.25);
+  transform: translate(var(--dx, 0), var(--dy, 0)) rotate(var(--rot, 0deg));
+  animation: cg-plate-drop-in 0.22s ease-out;
+}
+
+@keyframes cg-plate-drop-in {
+  from { transform: translate(var(--dx, 0), calc(var(--dy, 0px) - 34px)) scale(1.25) rotate(var(--rot, 0deg)); opacity: 0.2; }
+  to { transform: translate(var(--dx, 0), var(--dy, 0)) scale(1) rotate(var(--rot, 0deg)); opacity: 1; }
+}
+
+.cg-plate-empty {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #8a7656;
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  pointer-events: none;
+}
+
+.cg-plate-garnish {
+  position: absolute;
+  inset: 62px;
+  border-radius: 50%;
+  border: 1px dashed rgba(93, 129, 74, 0.28);
+  pointer-events: none;
+}
+
+.cg-plate-instructions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.cg-plate-step {
+  display: inline-flex;
+  align-items: center;
+  opacity: 0.48;
+  transition: opacity 0.2s ease, filter 0.2s ease;
+}
+
+.cg-plate-step.is-next {
+  opacity: 1;
+  filter: drop-shadow(0 0 8px rgba(255, 210, 112, 0.45));
+}
+
+.cg-plate-step.is-done {
+  opacity: 0.62;
+  filter: saturate(0.7);
+}
+
+.cg-plate-step.is-done .cg-ingredient {
+  text-decoration: line-through;
+}
+
+.cg-token.is-dragging {
+  opacity: 0.32;
+}
+
+.cg-drag-ghost {
+  position: fixed;
+  z-index: 10000;
+  display: inline-flex;
+  pointer-events: none;
+  padding: 8px 11px;
+  transform: translate(-50%, -50%) rotate(-4deg);
+  border: 1px solid color-mix(in srgb, var(--token, #d7b57a) 55%, #7f6b46);
+  background: rgba(22, 28, 22, 0.94);
+  color: #f0e6cb;
+  font-size: 12px;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.4);
+}
+
+.cg-result-plate {
+  position: relative;
+  width: 190px;
+  height: 190px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 46% 42%, #fffaf0 0 45%, #f1e7d0 46% 58%, #d9c9a5 59% 63%, #8d744f 64% 67%, transparent 68%);
+  box-shadow: 0 12px 22px rgba(0, 0, 0, 0.32);
+}
+
+.cg-result-stack {
+  position: absolute;
+  inset: 42px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.cg-result-piece {
+  width: 28px;
+  height: 22px;
+  border-radius: 46% 54% 48% 52%;
+  background: var(--piece, #d7b57a);
+  box-shadow: inset -4px -4px 0 rgba(0, 0, 0, 0.16), inset 4px 4px 0 rgba(255, 255, 255, 0.2);
+  transform: rotate(calc(var(--i, 0) * 23deg));
+}
+
+.cg-farm-scene {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 22px 30px;
+  width: min(700px, 90vw);
+  margin: 2px auto 4px;
+}
+
+.cg-farm-plot {
+  position: relative;
+  width: 270px;
+  height: 116px;
+  border: 3px solid #6b4a2e;
+  border-radius: 6px;
+  background:
+    repeating-linear-gradient(0deg, #4c3421 0 8px, #5d4029 8px 16px);
+  box-shadow: inset 0 0 24px rgba(24, 14, 7, 0.6), 0 8px 18px rgba(0, 0, 0, 0.3);
+  transform: perspective(400px) rotateX(20deg);
+}
+
+.cg-farm-row {
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  height: 5px;
+  border-radius: 3px;
+  background: #3a291c;
+  transition: background 0.25s ease, transform 0.25s ease;
+}
+
+.cg-farm-row:nth-child(1) { top: 26px; }
+.cg-farm-row:nth-child(2) { top: 54px; }
+.cg-farm-row:nth-child(3) { top: 82px; }
+
+.cg-farm-plot[data-hits="1"] .cg-farm-row,
+.cg-farm-plot[data-hits="2"] .cg-farm-row,
+.cg-farm-plot[data-hits="3"] .cg-farm-row {
+  background: #2d1e12;
+  transform: scaleY(1.5);
+}
+
+.cg-farm-sprout {
+  position: absolute;
+  left: 50%;
+  bottom: 34px;
+  display: flex;
+  gap: 14px;
+  transform: translateX(-50%);
+  opacity: 0;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.cg-farm-sprout i {
+  display: block;
+  width: 8px;
+  height: 24px;
+  border-radius: 50% 50% 0 0;
+  background: linear-gradient(0deg, #4f7a42, #8ec46a);
+  transform-origin: bottom center;
+}
+
+.cg-farm-plot[data-hits="2"] .cg-farm-sprout {
+  opacity: 0.55;
+  transform: translateX(-50%) scale(0.55);
+}
+
+.cg-farm-plot[data-hits="3"] .cg-farm-sprout {
+  opacity: 1;
+  transform: translateX(-50%) scale(1);
+}
+
+.cg-farm-water {
+  position: absolute;
+  right: 26px;
+  top: 16px;
+  display: flex;
+  gap: 7px;
+  opacity: 0;
+}
+
+.cg-farm-plot[data-hits="3"] .cg-farm-water { opacity: 1; }
+
+.cg-farm-water i {
+  display: block;
+  width: 6px;
+  height: 12px;
+  border-radius: 50% 50% 60% 60%;
+  background: #7fc7d9;
+  animation: cg-water-drop 1.1s infinite ease-in;
+}
+
+.cg-farm-water i:nth-child(2) { animation-delay: 0.24s; }
+.cg-farm-water i:nth-child(3) { animation-delay: 0.48s; }
+
+@keyframes cg-water-drop {
+  0% { transform: translateY(-6px); opacity: 0; }
+  25% { opacity: 0.9; }
+  100% { transform: translateY(42px); opacity: 0; }
+}
+
+.cg-farm-tools {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 130px;
+}
+
+.cg-farm-tool {
+  padding: 7px 10px;
+  border: 1px solid #6f5b3a;
+  background: rgba(17, 23, 18, 0.8);
+  color: #9b8d70;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  transition: color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.cg-farm-tool.is-active {
+  color: #f4d27e;
+  border-color: #d0a950;
+  box-shadow: inset 0 0 12px rgba(224, 171, 66, 0.18);
+}
+
+.cg-farm-tool.is-done {
+  color: #9fd07c;
+  border-color: rgba(130, 184, 103, 0.55);
+}
+
+@media (max-width: 760px) {
+  .cg-plate-scene {
+    grid-template-columns: 1fr;
+  }
+  .cg-cutting-board {
+    width: min(430px, 86vw);
+    height: 132px;
+  }
+  .cg-board-pieces { gap: 9px 11px; padding: 14px 48px; }
+  .cg-burner { transform: scale(0.9); }
+}
+
+/* En 720p y portátiles bajos el minijuego completo debe caber de un vistazo:
+   el marcador de ritmo no puede quedar tras el pliegue. */
+@media (max-height: 720px) {
+  .cg-overlay { padding: 8px; }
+  .cg-panel { max-height: 96vh; padding: 10px; }
+  .cg-panel-header { padding-bottom: 5px; }
+  .cg-panel-footer { padding-top: 5px; font-size: 11px; line-height: 1.25; }
+  .cg-cooking-body,
+  .cg-farm-body,
+  .cg-fishing-body { padding: 5px 2px; }
+
+  .cg-stage { min-height: 0; gap: 6px; }
+  .cg-stage-kicker { font-size: 10px; }
+  .cg-stage h2 { font-size: 15px; }
+  .cg-stage-hint { font-size: 11.5px; line-height: 1.3; }
+  .cg-stage-stats { font-size: 12px; gap: 16px; }
+
+  .cg-cutting-board { height: 96px; }
+  .cg-board-pieces { gap: 7px 11px; padding: 10px 44px; }
+  .cg-board-piece { width: 28px; height: 24px; }
+  .cg-knife { right: 8px; transform: scale(0.82) rotate(-16deg); }
+  .cg-chop-track,
+  .cg-farm-track { height: 40px; }
+
+  .cg-burner { width: 180px; height: 140px; transform: scale(0.88); }
+  .cg-pan { width: 142px; height: 90px; margin-bottom: 22px; }
+  .cg-cooking-overlay .cg-cook-gauge-track { height: 146px; }
+  .cg-cook-side { gap: 7px; }
+  .cg-cook-time { font-size: 18px; }
+  .cg-cook-meter { font-size: 13px; }
+
+  .cg-farm-plot { width: 220px; height: 88px; }
+  .cg-farm-row:nth-child(1) { top: 18px; }
+  .cg-farm-row:nth-child(2) { top: 41px; }
+  .cg-farm-row:nth-child(3) { top: 64px; }
+  .cg-farm-sprout { bottom: 24px; }
+  .cg-farm-tools { gap: 5px; min-width: 112px; }
+  .cg-farm-tool { padding: 5px 8px; font-size: 10.5px; }
+
+  .cg-plate-scene { gap: 12px 20px; }
+  .cg-plate-drop { width: 170px; height: 170px; }
+  .cg-plate-stack { inset: 32px; }
+  .cg-plate-order { padding: 6px 8px; gap: 5px; }
+  .cg-token { padding: 7px 9px; font-size: 11px; }
+  .cg-fishing-reel .cg-cook-gauge-track { height: 156px; }
+}

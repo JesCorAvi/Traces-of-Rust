@@ -7,6 +7,7 @@ import { getMapById } from '../defense/mapGenerator.js';
 import { GameEvents } from './eventBus.js';
 import { MultiplayerSync } from '../online/multiplayerSync.js';
 import { t } from './i18n.js';
+import { hasActiveCampaign, clearCampaign } from './chiringuitoSave.js';
 
 export function setupGameFlow(rt) {
 function clearSharedRunState() {
@@ -43,10 +44,13 @@ function startGame(options = {}) {
   clearSharedRunState();
 
   const modeId = rt.ModeManager.getSelectedModeId();
+  const isChiringuito = modeId === 'core_defense';
   rt.careerByMode[modeId].runs = (rt.careerByMode[modeId].runs || 0) + 1;
   rt.saveCareer();
 
-  const charId = rt.getSelectedCharacterId ? rt.getSelectedCharacterId() : (localStorage.getItem('traces_selected_character') || 'otto');
+  const charId = isChiringuito
+    ? 'cook'
+    : (rt.getSelectedCharacterId ? rt.getSelectedCharacterId() : (localStorage.getItem('traces_selected_character') || 'otto'));
   const character = (rt.getCharacterById ? rt.getCharacterById(charId) : null) || rt.CONFIG.CHARACTERS?.[charId] || rt.CONFIG.CHARACTERS?.otto;
   rt.activeCharacter = character;
 
@@ -61,8 +65,8 @@ function startGame(options = {}) {
   const initCdBar = document.getElementById('dash-cd-bar');
   if (initCdBar) initCdBar.style.width = '100%';
   rt.resetPlayerDeathState?.();
-  const startWp = character?.weapon || 'slash';
-  rt.skills = { [startWp]: 1 };
+  const startWp = isChiringuito ? 'none' : (character?.weapon || 'slash');
+  rt.skills = isChiringuito ? {} : { [startWp]: 1 };
   rt.passives = {};
   Object.keys(rt.weaponTimers).forEach(k => { rt.weaponTimers[k] = 0; });
   rt.maxRerollsRun = rt.CONFIG.LIMITS.REROLLS_PER_RUN + Math.min(3, rt.save.reroll || 0);
@@ -70,9 +74,10 @@ function startGame(options = {}) {
   rt.currentHandWeapon = startWp;
   rt.yaw = 0; rt.playerFacingYaw = 0; rt.dashTimer = 0; rt.playerYVel = 0;
   rt.gameTime = 0; rt.runSouls = 0; rt.kills = 0;
+  rt.resumeCampaign = !!options.resumeCampaign;
 
   rt.prewarmLoadoutSheets();
-  rt.syncPlayerVisualLoadout(startWp);
+  rt.syncPlayerVisualLoadout(startWp, isChiringuito ? 'cook' : charId);
 
   rt.ModeManager.startActiveMode(rt.buildModeContext());
   // Música de partida: preparación tensa en Defensa, combate directo en Supervivencia.
@@ -89,10 +94,17 @@ function startGame(options = {}) {
   rt.refreshHUD(true);
   rt.refreshStaticDOMIcons();
   rt.state = 'PLAYING';
+  // Los resúmenes de campaña del chiringuito viven en overlays propios: el
+  // barrido anterior ocultó todos los overlays y hay que devolver el que toca.
+  rt.ModeManager.activeMode?.restorePhaseUI?.();
   // El match online ya se anunció en steamLobbyUI (onMatchStarted). Ahora que
   // el modo está cargado, se solicita el snapshot completo de red.
   MultiplayerSync.onLocalModeReady?.(options);
-  document.body.requestPointerLock();
+  const activeMode = rt.ModeManager.activeMode;
+  if (!activeMode?.blocksGameplayInput?.()) {
+    const lockPromise = document.body.requestPointerLock?.();
+    if (lockPromise?.catch) lockPromise.catch(() => {});
+  }
 }
 
 function finishRun(outcome, options = {}) {
@@ -113,6 +125,7 @@ function finishRun(outcome, options = {}) {
   // En co-op la simulación sigue con menús locales abiertos; ciérralos para
   // que la pantalla de resultados no quede tapada.
   rt.turretBuildMenu?.closeSilently?.();
+  rt.ModeManager.activeMode?.ui?.closeAllPanels?.();
   rt.hudController?.hidePlayerDownOverlay?.();
   rt.AudioSys?.stopPlayerDownHum?.();
   document.getElementById('pause-screen')?.classList.add('hidden');
@@ -253,36 +266,17 @@ function restartMatch() {
 
 function requestStartGame() {
   rt.AudioSys.playUISelect();
-  const tutorialKey = rt.CONFIG.CORE_DEFENSE.TUTORIAL.choiceKey;
   const selectedMode = rt.ModeManager.getSelectedModeId();
 
   if (selectedMode === 'core_defense') {
-    if (!localStorage.getItem(tutorialKey)) {
-      showTutorialPrompt();
-      return;
+    // La campaña del chiringuito usa una única isla persistente y un save
+    // continuo. No hay selectores de mapa, dificultad ni personaje.
+    if (hasActiveCampaign()) {
+      startGame({ tutorial: false, resumeCampaign: true });
+    } else {
+      clearCampaign();
+      startGame({ tutorial: false, resumeCampaign: false });
     }
-    const currentDiff = localStorage.getItem('traces_td_difficulty') || 'normal';
-    openMapSelector(currentDiff, (chosenMapId, chosenDiff) => {
-      const mapData = getMapById(chosenMapId);
-      const mapName = mapData ? mapData.name : 'MISIÓN';
-      openCharacterSelectorModal({
-        title: t('ui.char_modal.title'),
-        sub: t('ui.char_modal.sub_td', {
-          map: mapName,
-          diff: t(`diff.${chosenDiff || currentDiff}`)
-        }),
-        confirmText: t('ui.char_modal.confirm'),
-        onConfirm: () => {
-          startGame({ tutorial: false });
-        },
-        onClose: () => {
-          document.getElementById('character-modal')?.classList.add('hidden');
-          openMapSelector(chosenDiff || currentDiff, (mId, dVal) => {
-            requestStartGame();
-          });
-        }
-      });
-    });
     return;
   }
 
@@ -298,12 +292,28 @@ function requestStartGame() {
 
 function updateTdTutorialButton() {
   const btn = document.getElementById('btn-td-tutorial');
-  if (!btn) return;
-  btn.classList.toggle('hidden', rt.ModeManager.getSelectedModeId() !== 'core_defense');
+  if (btn) btn.classList.add('hidden');
+  const newBtn = document.getElementById('btn-new-chiringuito-campaign');
+  if (newBtn) {
+    const canShow = rt.ModeManager.getSelectedModeId() === 'core_defense' && hasActiveCampaign();
+    newBtn.classList.toggle('hidden', !canShow);
+  }
 }
 
 document.getElementById('btn-start').onclick = requestStartGame;
 document.getElementById('btn-shop-play').onclick = requestStartGame;
+const newCampaignBtn = document.getElementById('btn-new-chiringuito-campaign');
+if (newCampaignBtn) {
+  newCampaignBtn.onclick = () => {
+    if (hasActiveCampaign()) {
+      const ok = window.confirm('¿Empezar una campaña nueva? La campaña activa y todo su progreso se borrarán. Los récords se conservan.');
+      if (!ok) return;
+    }
+    clearCampaign();
+    clearSharedRunState();
+    startGame({ tutorial: false, resumeCampaign: false });
+  };
+}
 document.getElementById('btn-restart').onclick = () => restartMatch();
 document.getElementById('btn-results-menu').onclick = () => returnToMainMenu();
 document.getElementById('btn-pause-to-menu').onclick = () => returnToMainMenu();

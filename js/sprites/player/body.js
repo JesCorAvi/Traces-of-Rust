@@ -68,6 +68,14 @@ export const CHARACTER_THEMES = {
     legs: '#123b44', boots: '#0b242c', bootTrim: '#6df4e8',
     maskBase: '#7a4d34', maskHi: '#bd8b64', eyeGlow: '#6df4e8',
     feature: 'electric_sparks'
+  },
+  cook: {
+    // El cocinero del chiringuito: camisa hawaiana, delantal y bandana isleña.
+    coatBase: '#efc45b', coatHi: '#ffe59a', coatDark: '#b57535', coatTrim: '#f7ead0',
+    belt: '#3e6f68', buckle: '#f2c15b',
+    legs: '#2e6d72', boots: '#42372b', bootTrim: '#d8ad6a',
+    maskBase: '#c98d61', maskHi: '#efc39c', eyeGlow: '#66e0d2',
+    feature: 'chef_bandana'
   }
 };
 
@@ -339,6 +347,21 @@ export function drawPlayer8DirCell(ctx, gCtx, dir, stateIdx, col, ox, oy, skills
     px(32, 4, 2, 4, '#17393d');
     glow(22, 6, 2, 2, '#6df4e8');
     glow(34, 6, 2, 2, '#6df4e8');
+  } else if (theme.feature === 'chef_bandana') {
+    // Cocinero: bandana isleña y delantal de servicio.
+    px(22, 5, 18, 2, '#2c6b62');
+    px(23, 7, 16, 2, '#3e8b80');
+    px(30, 4, 4, 2, '#e05b4f');
+    if (!isBackView) {
+      px(25, 25, 13, 12, '#f7ead0');
+      px(26, 25, 11, 2, '#d8c49a');
+      px(28, 27, 7, 1, '#3e6f68');
+      px(29, 30, 5, 4, '#e7d7b5');
+      px(20, 26, 2, 2, '#e05b4f');
+      px(21, 25, 1, 1, '#ffe59a');
+      px(34, 29, 2, 2, '#6fd1c4');
+      px(35, 28, 1, 1, '#fff0c7');
+    }
   }
 
   // Flor de hibisco en la solapa: firma visual del equipo de la playa.

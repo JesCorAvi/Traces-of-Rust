@@ -12,7 +12,7 @@ export function clearMovementKeys() {
 
 export function setupInput(rt) {
 window.addEventListener('keydown', e => {
-  if (e.key === 'F3' || (e.key.toLowerCase() === 'b' && rt.state === 'PLAYING')) {
+  if (e.key === 'F3') {
     e.preventDefault();
     rt.debugOverlay.toggle();
     return;
@@ -29,9 +29,24 @@ window.addEventListener('keydown', e => {
 
   const k = e.key.toLowerCase();
 
+  // Los overlays del chiringuito bloquean el gameplay, pero no la UI DOM.
+  // La UI registra sus propios atajos (Espacio, Escape, etc.).
+  const activeMode = rt.ModeManager?.activeMode;
+  if (rt.state === 'PLAYING' && activeMode?.blocksGameplayInput?.()) {
+    if (
+      ['w', 'a', 's', 'd', 'shift', 'e', 'f', 'v', 'p', 't'].includes(k)
+      || e.code === 'Space'
+    ) {
+      e.preventDefault();
+    }
+    return;
+  }
+
   // Transferencia rápida de chatarra en co-op: T envía +5, Shift+T envía +1.
+  // El chiringuito usa una economía compartida, así que no hay transferencia.
   if (
     k === 't' && !e.repeat && rt.MultiplayerSync?.isMatchActive &&
+    rt.ModeManager.getSelectedModeId() !== 'core_defense' &&
     (rt.state === 'PLAYING' || rt.state === 'BUILD' || rt.state === 'LEVEL_UP' || rt.state === 'PAUSED')
   ) {
     e.preventDefault();
@@ -64,18 +79,6 @@ window.addEventListener('keydown', e => {
 
   if (rt.state === 'PLAYING' && rt.ModeManager.getSelectedModeId() === 'core_defense') {
     const mode = rt.ModeManager.activeMode;
-    if (mode?.handleTutorialKey?.(k)) {
-      e.preventDefault();
-      return;
-    }
-    if (k === 'v' && !e.repeat) {
-      e.preventDefault();
-      const visible = mode?.toggleTurretRanges?.();
-      AudioSys.playUIClick?.();
-      const btn = document.getElementById('btn-toggle-turret-ranges');
-      if (btn) btn.classList.toggle('is-active', !!visible);
-      return;
-    }
     if (mode?.isTurretPlacementActive?.()) {
       if (k === 'e') {
         e.preventDefault();
@@ -89,10 +92,52 @@ window.addEventListener('keydown', e => {
         return;
       }
     }
-    if ((k === 'f' || k === 'g') && mode?.canSkipPrep?.()) {
+    if (mode?.isFurniturePlacementActive?.()) {
+      if (k === 'e') {
+        e.preventDefault();
+        mode.confirmFurniturePlacement();
+        return;
+      }
+      if (k === 'escape') {
+        e.preventDefault();
+        mode.cancelFurniturePlacement();
+        document.body.requestPointerLock();
+        return;
+      }
+    }
+    if (k === 'v' && !e.repeat) {
       e.preventDefault();
-      mode.skipPrep();
+      const visible = mode?.toggleTurretRanges?.();
+      AudioSys.playUIClick?.();
+      const btn = document.getElementById('btn-toggle-turret-ranges');
+      if (btn) btn.classList.toggle('is-active', !!visible);
       return;
+    }
+    if (k === 'b' && !e.repeat) {
+      e.preventDefault();
+      if (mode?.director?.canBuildTurrets?.() || mode?.director?.canBuildFurniture?.()) {
+        mode?.ui?.openBuildMenu?.();
+      }
+      return;
+    }
+    if (k === 'i' && !e.repeat) {
+      e.preventDefault();
+      mode?.ui?.openRecipeBook?.();
+      return;
+    }
+    if (k === 'f' && !e.repeat) {
+      e.preventDefault();
+      mode?.handlePhaseAction?.();
+      return;
+    }
+    if (k === 'e' && !e.repeat) {
+      e.preventDefault();
+      mode?.handleInteract?.();
+      return;
+    }
+    if (k === 'escape') {
+      mode?.cancelTurretPlacement?.();
+      mode?.cancelFurniturePlacement?.();
     }
   }
 
@@ -110,19 +155,6 @@ window.addEventListener('keydown', e => {
   if (k === 'p' && (rt.state === 'PLAYING' || rt.state === 'PAUSED')) {
     e.preventDefault();
     rt.togglePauseGame();
-    return;
-  }
-
-  if (k === 'e' && rt.state === 'PLAYING' && rt.ModeManager.getSelectedModeId() === 'core_defense') {
-    const mode = rt.ModeManager.activeMode;
-    if (mode?.isTurretPlacementActive?.()) {
-      e.preventDefault();
-      mode.confirmTurretPlacement();
-      return;
-    }
-    const nearby = mode?.getNearbyTurret?.(rt.playerGroup.position) || null;
-    e.preventDefault();
-    rt.openTurretBuildMenu(nearby);
     return;
   }
 
@@ -186,6 +218,7 @@ window.addEventListener('wheel', e => {
   if (rt.state !== 'PLAYING' || rt.isDead) return;
   // Si hay menús modales interactivos en pantalla, permitir scroll de la UI y no hacer zoom
   if (rt.state === 'BUILD' || rt.state === 'PAUSED' || rt.state === 'LEVEL_UP') return;
+  if (rt.ModeManager.activeMode?.blocksGameplayInput?.()) return;
 
   // Ajuste de distancia de cámara con la rueda del ratón:
   // - deltaY > 0 (rueda hacia abajo / atrás): aleja la cámara (máximo 2.5x distancia base)
@@ -206,6 +239,7 @@ window.addEventListener('mousedown', e => {
   document.body.classList.add('mouse-pressed');
   if (rt.state !== 'PLAYING' || rt.isDead) return;
   const mode = rt.ModeManager.activeMode;
+  if (mode?.blocksGameplayInput?.()) return;
 
   if (mode?.isTurretPlacementActive?.()) {
     if (e.button === 0) {
@@ -214,6 +248,17 @@ window.addEventListener('mousedown', e => {
     } else if (e.button === 2) {
       e.preventDefault();
       mode.cancelTurretPlacement();
+    }
+    return;
+  }
+
+  if (mode?.isFurniturePlacementActive?.()) {
+    if (e.button === 0) {
+      e.preventDefault();
+      mode.confirmFurniturePlacement();
+    } else if (e.button === 2) {
+      e.preventDefault();
+      mode.cancelFurniturePlacement();
     }
     return;
   }

@@ -197,6 +197,9 @@ export function createCombatRuntime(rt) {
   }
 
   function dealDamageToPlayer(dmgAmount) {
+    // El cocinero del chiringuito no participa en combate: es inmune y los
+    // cangrejos no pueden convertir la noche en una derrota de personaje.
+    if (rt.ModeManager?.activeMode?.isPlayerDamageImmune?.()) return;
     // En co-op el mundo sigue vivo mientras el jugador está en un menú local.
     const simActive = rt.state === 'PLAYING' || rt.isOnlineSimulationActive?.();
     if (rt.isPlayerDead?.() || rt.invuln > 0 || !simActive || rt.stats.hp <= 0) return;

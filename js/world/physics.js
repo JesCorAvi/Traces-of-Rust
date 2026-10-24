@@ -16,6 +16,26 @@ export function createWorldPhysics() {
     return r.startY + Math.max(0, Math.min(1, t)) * (r.endY - r.startY);
   }
   const worldPhysics = {
+    addWalkableBox(box) {
+      if (box) walkableBoxes.push(box);
+      return box;
+    },
+
+    removeWalkableBox(box) {
+      const idx = walkableBoxes.indexOf(box);
+      if (idx !== -1) walkableBoxes.splice(idx, 1);
+    },
+
+    addCylinder(cylinder) {
+      if (cylinder) cylinders.push(cylinder);
+      return cylinder;
+    },
+
+    removeCylinder(cylinder) {
+      const idx = cylinders.indexOf(cylinder);
+      if (idx !== -1) cylinders.splice(idx, 1);
+    },
+
     registerDynamicCylinder(id, x, z, r, topY = 6.0) {
       dynamicCylinders.set(id, { x, z, r, topY });
     },

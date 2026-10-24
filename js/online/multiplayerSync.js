@@ -15,6 +15,7 @@ import { spawnEnemyProjectile, spawnHitBlood } from '../combat.js';
 import { ModeManager } from '../modes/gameModeManager.js';
 import { getCurrentLobbyData, getLocalPlayerSteamId, launchClientMatch, getLastLaunchedMatchTimestamp, setLastLaunchedMatchTimestamp, handleRemoteStageMatch, handleRemoteCharReady, handleRemoteCancelStage } from './steamLobbyUI.js';
 import { t } from '../core/i18n.js';
+import { ChiringuitoSync } from './chiringuitoSync.js';
 
 const _t = (k, fb, params) => (typeof t === 'function' ? t(k, params) : fb);
 
@@ -108,6 +109,22 @@ class RemotePlayer {
 
     this.scene.add(this.group);
 
+    // Bandeja de servicio visible para el compañero cuando lleva un plato.
+    this.carryTray = new THREE.Group();
+    this.carryTray.position.set(0.34, 1.02, -0.26);
+    const trayMesh = new THREE.Mesh(
+      new THREE.BoxGeometry(0.62, 0.05, 0.44),
+      new THREE.MeshStandardMaterial({ color: 0x9a6b3f, roughness: 0.85, flatShading: true })
+    );
+    this.carryTray.add(trayMesh);
+    this.carryPlateMat = new THREE.MeshStandardMaterial({ color: 0xf3e6c8, roughness: 0.75 });
+    const plateMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.17, 0.04, 10), this.carryPlateMat);
+    plateMesh.position.y = 0.06;
+    this.carryTray.add(plateMesh);
+    this.carryTray.visible = false;
+    this.group.add(this.carryTray);
+    this.carriedRecipeId = null;
+
     this.targetPos = new THREE.Vector3();
     this.facingYaw = 0;
     this.targetYaw = 0;
@@ -188,6 +205,16 @@ class RemotePlayer {
 
     if (data.charId && data.charId !== this.charId) {
       this.applyCharacterVisual(data.charId);
+    }
+
+    const carriedRecipeId = data.carrying ? (data.carriedRecipeId || null) : null;
+    if (carriedRecipeId !== this.carriedRecipeId) {
+      this.carriedRecipeId = carriedRecipeId;
+      if (this.carryTray) this.carryTray.visible = !!carriedRecipeId;
+      if (carriedRecipeId && this.carryPlateMat) {
+        const recipe = CONFIG.CHIRINGUITO?.getRecipe?.(carriedRecipeId);
+        this.carryPlateMat.color.setHex(recipe?.color ?? 0xf3e6c8);
+      }
     }
   }
 
@@ -364,7 +391,11 @@ const BUFFERED_PACKET_TYPES = new Set([
   'PICKUP_SPAWN',
   'PICKUP_COLLECTED',
   'MATCH_INFO',
-  'MATCH_VICTORY'
+  'MATCH_VICTORY',
+  'CG_STATE',
+  'CG_SNAPSHOT',
+  'CG_ACTION',
+  'CG_ACTION_RESULT'
 ]);
 
 // Orquestador Central de Red Multijugador en tiempo real
@@ -565,7 +596,7 @@ export const MultiplayerSync = {
       }
     }
 
-    const charId = localStorage.getItem('traces_selected_character') || 'otto';
+    const charId = ModeManager.activeMode?.getPlayerCharacterId?.() || (ModeManager.getSelectedModeId?.() === 'core_defense' ? 'cook' : (localStorage.getItem('traces_selected_character') || 'otto'));
     const initPos = this.ctx?.playerGroup?.position || { x: 0, y: 0, z: 0 };
     const initYaw = this.ctx?.playerGroup?.rotation?.y || 0;
 
@@ -665,23 +696,30 @@ export const MultiplayerSync = {
       this.sendToPeer(targetPeerId, 'MATCH_INFO', { ...this._matchInfo }, true);
     }
 
-    this.sendTurretStateSync(targetPeerId);
-    this.sendWaveSnapshot(targetPeerId);
-    this.sendCoreSnapshot(targetPeerId);
+    if (mode.id !== 'core_defense') {
+      this.sendTurretStateSync(targetPeerId);
+      this.sendWaveSnapshot(targetPeerId);
+      this.sendCoreSnapshot(targetPeerId);
+      this.sendEventStart(targetPeerId);
+      this.sendEventState(targetPeerId);
+      if (typeof mode.getInitialNetworkScrapShare === 'function') {
+        this.sendToPeer(targetPeerId, 'ECONOMY_SYNC', {
+          scrap: mode.getInitialNetworkScrapShare(),
+          initial: true
+        }, true);
+      }
+    }
     this.sendExistingEnemies(targetPeerId);
     this.sendExistingPickups(targetPeerId);
-    this.sendEventStart(targetPeerId);
-    this.sendEventState(targetPeerId);
-
-    if (typeof mode.getInitialNetworkScrapShare === 'function') {
-      this.sendToPeer(targetPeerId, 'ECONOMY_SYNC', {
-        scrap: mode.getInitialNetworkScrapShare(),
-        initial: true
-      }, true);
-    }
 
     // Última instantánea de posiciones/HP para alinear a los cangrejos ya vivos.
     this.sendEnemyBatch(targetPeerId);
+
+    // Estado persistente completo del chiringuito (fase, restaurante,
+    // clientes, pedidos, mobiliario, torretas y oleada).
+    if (mode.id === 'core_defense') {
+      ChiringuitoSync.sendSnapshot(this, targetPeerId);
+    }
 
     // Marca explícita de fin de snapshot (aunque no haya torretas).
     this.sendToPeer(targetPeerId, 'STATE_SYNC_COMPLETE', { modeId: mode.id }, true);
@@ -1098,6 +1136,16 @@ export const MultiplayerSync = {
       bossesDefeated: outcome.bossesDefeated || 0,
       totalBosses: outcome.totalBosses || 0,
       isEndgame: !!outcome.isEndgame,
+      campaign: !!outcome.campaign,
+      seasonIndex: outcome.seasonIndex ?? 0,
+      seasonLabel: outcome.seasonLabel || null,
+      day: outcome.day ?? 1,
+      daysCompleted: outcome.daysCompleted || 0,
+      customersServed: outcome.customersServed || 0,
+      customersLost: outcome.customersLost || 0,
+      pearls: outcome.pearls || 0,
+      reputation: outcome.reputation || 0,
+      bestDish: outcome.bestDish || null,
       matchTimestamp: this._matchInfo?.timestamp || 0
     };
   },
@@ -1490,8 +1538,10 @@ export const MultiplayerSync = {
     const localMap = localStorage.getItem('traces_td_selected_map');
     const localDiff = localStorage.getItem('traces_td_difficulty');
     const modeMismatch = data.mode && data.mode !== localMode;
-    const mapMismatch = data.mode === 'core_defense' && data.mapId && localMap && data.mapId !== localMap;
-    const diffMismatch = data.mode === 'core_defense' && data.diff && localDiff && data.diff !== localDiff;
+    // El chiringuito no usa selector de mapa/dificultad: la Host elige ruta y
+    // temporada, y el snapshot CG_STATE las replica.
+    const mapMismatch = false;
+    const diffMismatch = false;
     if (!modeMismatch && !mapMismatch && !diffMismatch) return;
 
     this._lastMatchInfoRestartAt = now;
@@ -1907,6 +1957,7 @@ export const MultiplayerSync = {
   },
 
   sendTurretStateSync(targetPeerId = null) {
+    if (ModeManager.activeMode?.id === 'core_defense') return;
     const turretSystem = ModeManager?.activeMode?.turretSystem || this.ctx?.getTurretSystem?.();
     if (!turretSystem || !turretSystem.turrets) return;
     const turretList = [];
@@ -1944,7 +1995,7 @@ export const MultiplayerSync = {
 
     // Sincronización de torretas construidas
     on('turret:built', ({ turret, typeId }) => {
-      if (this.isApplyingRemote || !this.isOnline()) return;
+      if (this.isApplyingRemote || !this.isOnline() || ModeManager.activeMode?.id === 'core_defense') return;
       const pos = turret.position || turret.group.position;
       this.broadcast('TURRET_BUILD', {
         typeId,
@@ -1958,7 +2009,7 @@ export const MultiplayerSync = {
 
     // Sincronización de torretas mejoradas
     on('turret:upgraded', ({ turret, pathIndex, level }) => {
-      if (this.isApplyingRemote || !this.isOnline()) return;
+      if (this.isApplyingRemote || !this.isOnline() || ModeManager.activeMode?.id === 'core_defense') return;
       const pos = turret.position || turret.group.position;
       this.broadcast('TURRET_UPGRADE', {
         turretId: turret.id,
@@ -1972,7 +2023,7 @@ export const MultiplayerSync = {
 
     // Sincronización de torretas vendidas
     on('turret:sold', ({ turret }) => {
-      if (this.isApplyingRemote || !this.isOnline()) return;
+      if (this.isApplyingRemote || !this.isOnline() || ModeManager.activeMode?.id === 'core_defense') return;
       const pos = turret.position || turret.group.position;
       this.broadcast('TURRET_SELL', {
         turretId: turret.id,
@@ -1989,12 +2040,12 @@ export const MultiplayerSync = {
     });
 
     on('wave:started', () => {
-      if (this.isApplyingRemote || !this.isOnline() || !this.isHost()) return;
+      if (this.isApplyingRemote || !this.isOnline() || !this.isHost() || ModeManager.activeMode?.id === 'core_defense') return;
       this.sendWaveSnapshot();
     });
 
     on('wave:completed', () => {
-      if (this.isApplyingRemote || !this.isOnline() || !this.isHost()) return;
+      if (this.isApplyingRemote || !this.isOnline() || !this.isHost() || ModeManager.activeMode?.id === 'core_defense') return;
       this.sendWaveSnapshot();
       // Este listener se registra después del modo, así que el heal de fin de
       // oleada ya se aplicó; el snapshot de la Despensa lleva el HP curado.
@@ -2030,7 +2081,7 @@ export const MultiplayerSync = {
 
     // Sincronización de daño a la Despensa (emitido por el Host)
     on('core:damaged', payload => {
-      if (this.isApplyingRemote || !this.isOnline() || !this.isHost()) return;
+      if (this.isApplyingRemote || !this.isOnline() || !this.isHost() || ModeManager.activeMode?.id === 'core_defense') return;
       const currentHp = payload?.currentHp ?? payload?.hp;
       if (currentHp === undefined) return;
       this.broadcast('CORE_SYNC', { currentHp, maxHp: payload.maxHp }, true);
@@ -2059,6 +2110,16 @@ export const MultiplayerSync = {
   sendWaveAction(action, payload = {}) {
     if (!this.isOnline()) return;
     this.broadcast('WAVE_ACTION', { action, ...payload }, true);
+  },
+
+  sendChiringuitoAction(action, payload = {}) {
+    if (!this.isOnline() || this.isHost()) return;
+    this.broadcast('CG_ACTION', { action, payload }, true);
+  },
+
+  sendChiringuitoState() {
+    if (!this.isOnline() || !this.isHost()) return;
+    ChiringuitoSync.sendState(this);
   },
 
   ensureRemotePlayer(senderSteamId, data = null) {
@@ -2159,7 +2220,7 @@ export const MultiplayerSync = {
 
         case 'HELLO': {
           console.log('[MultiplayerSync] Handshake HELLO recibido de:', senderSteamId, data);
-          const myChar = localStorage.getItem('traces_selected_character') || 'otto';
+          const myChar = ModeManager.activeMode?.getPlayerCharacterId?.() || (ModeManager.getSelectedModeId?.() === 'core_defense' ? 'cook' : (localStorage.getItem('traces_selected_character') || 'otto'));
           const curPos = this.ctx?.playerGroup?.position || { x: 0, y: 0, z: 0 };
           this.broadcast('HELLO_ACK', {
             charId: myChar,
@@ -2637,6 +2698,26 @@ export const MultiplayerSync = {
           }
           break;
         }
+
+        case 'CG_SNAPSHOT': {
+          ChiringuitoSync.handleSnapshot(this, data);
+          break;
+        }
+
+        case 'CG_STATE': {
+          ChiringuitoSync.handleState(this, data);
+          break;
+        }
+
+        case 'CG_ACTION': {
+          ChiringuitoSync.handleAction(this, senderSteamId, data);
+          break;
+        }
+
+        case 'CG_ACTION_RESULT': {
+          // La UI aplica los rechazos del Host mediante el siguiente snapshot.
+          break;
+        }
       }
     } catch (e) {
       console.warn('[MultiplayerSync] Error al parsear paquete:', e);
@@ -2667,7 +2748,9 @@ export const MultiplayerSync = {
         maxHp: localState.maxHp,
         down: !!localState.down,
         downTimer: localState.downTimer || 0,
-        charId: localState.charId
+        charId: localState.charId,
+        carrying: !!localState.carrying,
+        carriedRecipeId: localState.carriedRecipeId || null
       }, false);
     }
 
@@ -2696,9 +2779,13 @@ export const MultiplayerSync = {
     if (this.stateHeartbeat >= 1.0) {
       this.stateHeartbeat = 0;
       if (this.isHost() && this.modeReady) {
-        this.sendWaveSnapshot();
-        this.sendCoreSnapshot();
-        this.sendEventState();
+        if (ModeManager.activeMode?.id !== 'core_defense') {
+          this.sendWaveSnapshot();
+          this.sendCoreSnapshot();
+          this.sendEventState();
+        } else {
+          ChiringuitoSync.tick(this, 1.0);
+        }
       }
     }
 

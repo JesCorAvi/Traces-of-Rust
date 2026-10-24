@@ -154,7 +154,7 @@ function renderCharacterGrid() {
   const activeId = getSelectedCharacterId();
   gridEl.innerHTML = '';
 
-  Object.values(CHARACTERS).forEach(char => {
+  Object.values(CHARACTERS).filter(char => char.selectable !== false).forEach(char => {
     const isSelected = char.id === activeId;
     const card = document.createElement('div');
     card.className = `character-card ${isSelected ? 'is-selected' : ''}`;

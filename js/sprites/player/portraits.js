@@ -176,5 +176,17 @@ export function drawCharacterPortrait(ctx, charId = 'otto') {
     // Ojos eléctricos
     px(12, 13, 2, 2, '#3fe0f5');
     px(18, 13, 2, 2, '#3fe0f5');
+  } else if (charId === 'cook') {
+    // El cocinero: bandana isleña, delantal y flor de hibisco.
+    px(8, 6, 16, 3, '#2c6b62');
+    px(10, 5, 12, 1, '#3e8b80');
+    px(23, 5, 2, 3, '#e05b4f');
+    px(8, 24, 16, 8, '#f7ead0');
+    px(12, 22, 8, 2, '#3e6f68');
+    px(10, 26, 3, 3, '#e05b4f');
+    px(11, 25, 1, 1, '#ffe59a');
+    px(20, 27, 3, 3, '#6fd1c4');
+    px(13, 13, 2, 2, '#66e0d2');
+    px(18, 13, 2, 2, '#66e0d2');
   }
 }

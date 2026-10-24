@@ -4,6 +4,7 @@
 
 import * as THREE from 'three';
 import { isNearDefenseRouteOrSpawn } from './routeClearance.js';
+import { isInIslandWorldExclusion } from '../config/chiringuito/island.js';
 import { terrainHeightAt, TERRAIN } from './terrain.js';
 
 export function buildWorldGeometry(scene, materials, physics) {
@@ -38,6 +39,7 @@ export function buildWorldGeometry(scene, materials, physics) {
 
   function pickSpot(candidates, clearance = 4.2) {
     for (const spot of candidates) {
+      if (isInIslandWorldExclusion(spot.x, spot.z)) continue;
       if (!isNearDefenseRouteOrSpawn(spot.x, spot.z, clearance)) return spot;
     }
     return null;
@@ -298,6 +300,7 @@ export function buildWorldGeometry(scene, materials, physics) {
     const cx = Math.cos(angle) * dist;
     const cz = Math.sin(angle) * dist + 5;
     if (cz < -44) continue;
+    if (isInIslandWorldExclusion(cx, cz)) continue;
     if (Math.hypot(cx, cz) < 9) continue;
     if (isNearDefenseRouteOrSpawn(cx, cz, 3.8)) continue;
     const y = terrainHeightAt(cx, cz);
@@ -326,6 +329,7 @@ export function buildWorldGeometry(scene, materials, physics) {
     const bx = (Math.random() - 0.5) * 190;
     const bz = (Math.random() - 0.5) * 150 + 8;
     if (bz < -42) continue;
+    if (isInIslandWorldExclusion(bx, bz)) continue;
     if (Math.hypot(bx, bz) < 9.5) continue;
     if (isNearDefenseRouteOrSpawn(bx, bz, 3.6)) continue;
     const y = terrainHeightAt(bx, bz);

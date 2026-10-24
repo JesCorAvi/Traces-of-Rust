@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Minigames Lab // Crabs wants your food!</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="css/style.css">
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.160.0/build/three.module.js"
+      }
+    }
+  </script>
+</head>
+<body class="mg-lab">
+  <main class="mg-lab-shell">
+    <header class="mg-lab-header">
+      <div>
+        <span class="mg-lab-kicker">CHIRINGUITO // MINIGAMES LAB</span>
+        <h1 class="mg-lab-title">LABORATORIO DE GESTOS</h1>
+        <p class="mg-lab-subtitle">
+          Banco de pruebas del sistema base: cuatro fases, gestos con puntero, juice, puntuación,
+          sonido sintetizado y assets procedurales. No es la cocina final.
+        </p>
+      </div>
+      <div class="mg-lab-header-actions">
+        <div class="mg-lab-status">
+          <div id="lab-status">CARGANDO SISTEMAS...</div>
+          <div>AUDIO: <span id="lab-audio-status">NO</span></div>
+        </div>
+        <button type="button" class="mg-btn ghost" id="lab-audio">ACTIVAR AUDIO</button>
+      </div>
+    </header>
+
+    <div class="mg-lab-grid">
+      <section class="mg-lab-card mg-lab-launch" aria-labelledby="lab-sandbox-title">
+        <div class="mg-lab-launch-copy">
+          <h2 id="lab-sandbox-title">SANDBOX + COCINA</h2>
+          <p>
+            Sandbox de gestos, COCINA con receta real, PESCA, COSECHA y SIEMBRA con cuatro fases.
+            Elige receta, cultivo, dificultad y prueba cada experiencia.
+          </p>
+        </div>
+        <div class="mg-lab-controls">
+          <label class="mg-lab-level" for="lab-level">
+            DIFICULTAD
+            <input id="lab-level" type="range" min="1" max="5" step="1" value="2">
+            <b id="lab-level-value">2/5</b>
+          </label>
+          <label class="mg-lab-level" for="lab-recipe">
+            RECETA
+            <select id="lab-recipe" class="mg-lab-select"></select>
+          </label>
+          <label class="mg-lab-level" for="lab-crop">
+            CULTIVO
+            <select id="lab-crop" class="mg-lab-select"></select>
+          </label>
+          <div class="mg-lab-actions">
+            <button type="button" class="mg-btn" id="lab-play">[ SANDBOX ]</button>
+            <button type="button" class="mg-btn primary" id="lab-play-cooking">[ JUGAR COCINA ]</button>
+            <button type="button" class="mg-btn" id="lab-play-fishing">[ JUGAR PESCA ]</button>
+            <button type="button" class="mg-btn" id="lab-play-harvest">[ JUGAR COSECHA ]</button>
+            <button type="button" class="mg-btn" id="lab-play-planting">[ JUGAR PLANTAR ]</button>
+            <button type="button" class="mg-btn ghost" id="lab-retry">[ REPETIR ]</button>
+          </div>
+        </div>
+        <div class="mg-lab-result hidden" id="lab-result" aria-live="polite"></div>
+        <div class="mg-lab-log" id="lab-log" aria-live="polite"></div>
+      </section>
+
+      <section class="mg-lab-card" aria-labelledby="lab-sprites-title">
+        <h2 id="lab-sprites-title">SPRITES 2D PROCEDURALES</h2>
+        <div class="mg-lab-gallery" id="lab-sprites"></div>
+      </section>
+
+      <section class="mg-lab-card" aria-labelledby="lab-models-title">
+        <h2 id="lab-models-title">MODELOS 3D TOON + OUTLINE</h2>
+        <div class="mg-lab-models" id="lab-models"></div>
+        <div class="mg-lab-3d">
+          <canvas id="lab-3d" aria-label="Visor 3D de modelos procedurales"></canvas>
+        </div>
+        <div class="mg-lab-3d-meta">
+          <span id="lab-model-name">SELECCIONA UN MODELO</span>
+          <b id="lab-3d-status">WEBGL // ESPERANDO</b>
+        </div>
+      </section>
+
+      <section class="mg-lab-card" aria-labelledby="lab-sounds-title">
+        <h2 id="lab-sounds-title">SOUNDBOARD SINTETIZADO</h2>
+        <div class="mg-lab-sounds" id="lab-sounds"></div>
+      </section>
+
+      <section class="mg-lab-card" aria-labelledby="lab-system-title">
+        <h2 id="lab-system-title">SISTEMA BASE</h2>
+        <div class="mg-lab-log">
+          <div>MINIGAME / PHASE: init, start, update, render, end y dispose con fases encadenadas.</div>
+          <div>GESTOS: arrastre, círculos, agitar, frotar, zigzag, mantener/soltar, taps y flicks.</div>
+          <div>JUICE: tweens con easings, partículas, texto flotante, squash, shake y flash.</div>
+          <div>ASSETS: AssetFactory cachea sprites, sonidos y modelos; register* permite sustituirlos por archivos reales.</div>
+          <div>RENDIMIENTO: canvas 2D con DPR limitado, pools de partículas y limpieza de listeners al cerrar.</div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <div id="lab-error" class="mg-lab-error hidden" role="alert"></div>
+
+  <script type="module" src="js/minigames/dev/lab.js"></script>
+</body>
+</html>

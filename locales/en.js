@@ -591,7 +591,7 @@ export default {
   "hud.boss.phase1": "PHASE I",
   "hud.boss.phase2": "PHASE II // FRENZY",
   "hud.event.emergency_detected": "EMERGENCY DETECTED",
-  "hud.event.completed_title": "{title}! +{wood} WOOD",
+  "hud.event.completed_title": "{title}! +{scrap} WOOD",
   "hud.event.leak_banner_tag": "PANTRY LEAK // CRABS ESCAPING",
   "hud.event.sector_alert_tag": "TIDE ALERT // CRABS ON THE SHORE",
   "hud.event.started_title": "SPECIAL EVENT STARTED! ({seconds}s)",
