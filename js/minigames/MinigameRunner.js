@@ -133,7 +133,10 @@ export class MinigameRunner {
     canvas.style.height = '100%';
     this._canvasInfo = { width, height, dpr };
     this._ctx = canvas.getContext('2d', { alpha: false });
-    if (this._ctx) this._ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    if (this._ctx) {
+      this._ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      this._ctx.imageSmoothingEnabled = false;
+    }
     this.game.resize(width, height);
     this._render(0);
   }
@@ -169,6 +172,7 @@ export class MinigameRunner {
     if (!ctx) return;
     const { width, height, dpr } = this._canvasInfo;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.imageSmoothingEnabled = false;
     ctx.clearRect(0, 0, width, height);
     ctx.fillStyle = PALETTE.inkBlue;
     ctx.fillRect(0, 0, width, height);

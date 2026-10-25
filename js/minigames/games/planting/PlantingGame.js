@@ -166,31 +166,31 @@ export class PlantingGame extends MiniGame {
     ctx.fillRect(0, 0, width, height * 0.65);
     circle(ctx, sunX, sunY, sunR, '#fff4c8');
 
-    // Invernadero: estructura de madera y cristales.
+    // Huerto isleño: pérgola de bambú y cañizo de palapa tropical (sin cristales urbanos)
     ctx.save();
-    ctx.strokeStyle = '#6d4328';
-    ctx.lineWidth = 10;
+    ctx.strokeStyle = '#5c331a';
+    ctx.lineWidth = 8;
     ctx.beginPath();
-    ctx.moveTo(0, height * 0.08);
-    ctx.lineTo(width * 0.17, height * 0.18);
-    ctx.lineTo(width * 0.34, height * 0.08);
+    ctx.moveTo(0, height * 0.12);
+    ctx.lineTo(width * 0.38, height * 0.12);
     ctx.stroke();
-    ctx.lineWidth = 6;
+    // Postes de bambú
     for (let i = 0; i < 4; i++) {
-      const x = width * (0.02 + i * 0.09);
+      const x = width * (0.02 + i * 0.1);
       ctx.beginPath();
-      ctx.moveTo(x, height * 0.1);
+      ctx.moveTo(x, height * 0.12);
       ctx.lineTo(x, height * 0.5);
       ctx.stroke();
     }
-    ctx.fillStyle = 'rgba(180, 236, 222, 0.16)';
-    for (let i = 0; i < 4; i++) {
-      const x = width * (0.02 + i * 0.09);
-      fillRoundRect(ctx, x + 3, height * 0.12, width * 0.08, height * 0.36, 4, 'rgba(180,236,222,0.13)');
+    // Cañizo de paja de palapa filtrando la luz solar
+    for (let i = 0; i < 18; i++) {
+      const x = width * (0.01 + i * 0.019);
+      ctx.fillStyle = i % 2 === 0 ? '#9c6f37' : '#cba052';
+      ctx.fillRect(x, height * 0.1, 5, height * 0.08 + (i % 3) * 6);
     }
     ctx.restore();
 
-    // Suelo del invernadero.
+    // Suelo de huerto tropical sobre arena fertilizada
     const ground = ctx.createLinearGradient(0, height * 0.46, 0, height);
     ground.addColorStop(0, '#6da85a');
     ground.addColorStop(1, '#3f6e38');
@@ -206,28 +206,28 @@ export class PlantingGame extends MiniGame {
     }
     ctx.restore();
 
-    // Mesas de semillero a los lados.
+    // Mesas de semillero a los lados de madera rústica
     drawWoodSurface(ctx, width * 0.02, height * 0.52, width * 0.2, height * 0.16, {
       base: '#8a5a3b', dark: '#4d2c19', light: '#b67b4d', radius: 8, lineWidth: 3
     });
     drawWoodSurface(ctx, width * 0.78, height * 0.54, width * 0.2, height * 0.16, {
       base: '#8a5a3b', dark: '#4d2c19', light: '#b67b4d', radius: 8, lineWidth: 3
     });
-    // Macetas.
+    // Semilleros en medias cáscaras de coco partidas
     for (let i = 0; i < 4; i++) {
       const x = width * 0.055 + i * width * 0.045;
-      fillRoundRect(ctx, x, height * 0.48, 24, 22, 5, PALETTE.coral);
+      fillRoundRect(ctx, x, height * 0.48, 24, 22, 5, '#52311c');
       strokeRoundRect(ctx, x, height * 0.48, 24, 22, 5, PALETTE.ink, 2);
-      circle(ctx, x + 12, height * 0.47, 10, PALETTE.leaf, PALETTE.ink, 2);
+      circle(ctx, x + 12, height * 0.47, 9, PALETTE.leafLight, PALETTE.ink, 1.5);
     }
-    // Sacos de semillas.
+    // Sacos de semillas de arpillera
     for (let i = 0; i < 2; i++) {
       const x = width * 0.8 + i * width * 0.06;
       fillRoundRect(ctx, x, height * 0.63, 40, 48, 10, PALETTE.paper);
       strokeRoundRect(ctx, x, height * 0.63, 40, 48, 10, PALETTE.ink, 3);
       circle(ctx, x + 20, height * 0.66, 8, PALETTE.pineapple, PALETTE.ink, 2);
     }
-    // Regadera y herramientas colgadas.
+    // Herramientas náuticas colgadas
     ctx.save();
     ctx.strokeStyle = '#7f8c7b';
     ctx.lineWidth = 4;
@@ -247,7 +247,7 @@ export class PlantingGame extends MiniGame {
     }
     ctx.restore();
 
-    // Valla y fondo.
+    // Valla y palmeras
     drawPalmLeaf(ctx, width + 10, height * 0.08, width * 0.2, Math.PI - 0.4, PALETTE.leafDark);
     ctx.save();
     ctx.strokeStyle = PALETTE.woodDark;

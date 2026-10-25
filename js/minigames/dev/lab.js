@@ -126,6 +126,7 @@ function renderSounds() {
 
 function spriteLabel(id) {
   return ({
+    crab: 'CANGREJO',
     carrot: 'ZANAHORIA',
     tomato: 'TOMATE',
     fish: 'PESCADO',
@@ -160,6 +161,8 @@ function spriteLabel(id) {
 
 function modelLabel(id) {
   return ({
+    crab: 'CANGREJO PLAYERO',
+    coconut: 'COCO TROPICAL',
     carrot: 'ZANAHORIA',
     knife: 'CUCHILLO',
     pot: 'OLLA',

@@ -49,6 +49,7 @@ function createSpriteAsset(id, def) {
   const ctx = canvas.getContext('2d');
   if (ctx) {
     ctx.scale(scale, scale);
+    ctx.imageSmoothingEnabled = false;
     ctx.lineJoin = 'round';
     ctx.lineCap = 'round';
     try {
@@ -82,6 +83,7 @@ function createSpriteAsset(id, def) {
       } = options;
       if (!target || !canvas.width) return;
       target.save();
+      target.imageSmoothingEnabled = false;
       target.globalAlpha *= Math.max(0, Math.min(1, alpha));
       target.translate(x, y);
       target.rotate(rotation);
